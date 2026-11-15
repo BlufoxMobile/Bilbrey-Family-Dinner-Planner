@@ -140,6 +140,12 @@ export function render() {
   const v = VIEWS[app.route.view];
   const changedView = lastView !== `${app.route.view}/${app.route.params.join('/')}`;
   const y = window.scrollY;
+  const act = document.activeElement;
+  let keep = null;
+  if (act && act.id && root.contains(act)) {
+    keep = { id: act.id, start: null, end: null };
+    try { keep.start = act.selectionStart; keep.end = act.selectionEnd; } catch { /* inputs without a caret */ }
+  }
   root.className = `app ${app.route.view === 'cook' ? 'is-cook' : ''}`;
   setHTML(root, shell());
   const main = root.querySelector('#view');
@@ -149,6 +155,10 @@ export function render() {
   if (changedView) { window.scrollTo(0, 0); if (lastView && lastView !== 'gate') main.focus({ preventScroll: true }); }
   else window.scrollTo(0, y);
   lastView = `${app.route.view}/${app.route.params.join('/')}`;
+  if (keep && !changedView) {
+    const el = document.getElementById(keep.id);
+    if (el) { el.focus({ preventScroll: true }); try { if (keep.start != null) el.setSelectionRange(keep.start, keep.end); } catch { /* not a text input */ } }
+  }
 }
 
 function applyTheme() {

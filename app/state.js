@@ -86,10 +86,30 @@ export function makeStorage(ls = globalThis.localStorage) {
   };
 }
 
-const K = { server: 'bfdp.v2.server', pending: 'bfdp.v2.pending', device: 'bfdp.v2.device' };
+export function waitText(sec) {
+  const s = Math.max(1, Math.round(Number(sec) || 60));
+  if (s < 90) return `${s} second${s === 1 ? '' : 's'}`;
+  const m = Math.ceil(s / 60);
+  return `${m} minute${m === 1 ? '' : 's'}`;
+}
+
+const K = { server: 'bfdp.v2.server', pending: 'bfdp.v2.pending', device: 'bfdp.v2.device', inflight: 'bfdp.v2.inflight' };
 
 export class ApiError extends Error {
-  constructor(status, message) { super(message); this.status = status; }
+  constructor(status, message, data = null, retryAfter = 0) {
+    super(message);
+    this.status = status;
+    this.data = data;
+    this.retryAfter = retryAfter;
+  }
+}
+
+/** The Worker rejects set/push ops without a value; never queue one. */
+function validOp(op) {
+  if (!op || !Array.isArray(op.path) || !op.path.length) return false;
+  if (!op.path.every((k) => (typeof k === 'string' && k.length > 0 && k.length <= 200) || (Number.isInteger(k) && k >= 0))) return false;
+  if (op.op === 'del') return true;
+  return (op.op === 'set' || op.op === 'push') && op.value !== undefined;
 }
 
 /**
@@ -108,7 +128,10 @@ export class Store {
     this.device = { who: dev.who || null, key: dev.key || null, localOnly: !!dev.localOnly, clientId: dev.clientId || uid('c'), dismissedGate: !!dev.dismissedGate, theme: dev.theme || 'auto' };
     const srv = storage.get(K.server);
     this.server = srv && typeof srv === 'object' ? { revision: Number(srv.revision) || 0, state: srv.state || {}, updatedAt: srv.updatedAt || null } : { revision: 0, state: {}, updatedAt: null };
-    this.pending = Array.isArray(storage.get(K.pending)) ? storage.get(K.pending) : [];
+    this.pending = Array.isArray(storage.get(K.pending)) ? storage.get(K.pending).filter(validOp) : [];
+    // The batch currently being sent; persisted so a retry resends the same batchId (idempotent on the Worker).
+    const inflight = storage.get(K.inflight);
+    this.inflight = inflight && Array.isArray(inflight.ids) && inflight.batchId ? inflight : null;
     this.status = this.device.localOnly ? 'local' : 'offline';
     this.statusDetail = '';
     this.health = null;
@@ -133,6 +156,8 @@ export class Store {
   saveData() {
     this.storage.set(K.server, this.server);
     this.storage.set(K.pending, this.pending);
+    if (this.inflight) this.storage.set(K.inflight, this.inflight);
+    else this.storage.remove(K.inflight);
   }
 
   setDevice(patch) {
@@ -150,7 +175,7 @@ export class Store {
 
   /** Apply ops locally right away, queue them for the server. */
   commit(ops) {
-    const list = (ops || []).filter(Boolean);
+    const list = (ops || []).filter(validOp);
     if (!list.length) return;
     for (const op of list) this.pending.push({ ...clone(op), _id: uid('o') });
     this.recompute();
@@ -185,7 +210,10 @@ export class Store {
     }
     let data = null;
     try { data = await res.json(); } catch { data = null; }
-    if (!res.ok) throw new ApiError(res.status, data?.error || `Request failed (${res.status})`);
+    if (!res.ok) {
+      const ra = Number(data?.retryAfter) || Number(res.headers?.get?.('Retry-After')) || 0;
+      throw new ApiError(res.status, data?.error || `Request failed (${res.status})`, data, ra);
+    }
     return data;
   }
 
@@ -233,8 +261,10 @@ export class Store {
       this.acceptServer(r);
     } catch (e) {
       this.device.key = prev;
+      if (e.status === 401 && e.data?.needsSetup) throw new ApiError(401, 'No family passcode exists yet. Create one instead.', { needsSetup: true });
+      if (e.status === 401 && e.data?.locked) throw new ApiError(429, `That passcode doesn't match, and tries are paused for ${waitText(e.retryAfter)}.`);
       if (e.status === 401) throw new ApiError(401, "That passcode doesn't match. Check with Jeff or Candi.");
-      if (e.status === 429) throw new ApiError(429, 'Too many tries. Wait a minute, then try again.');
+      if (e.status === 429) throw new ApiError(429, `Too many tries. Wait ${waitText(e.retryAfter)}, then try again.`);
       throw e;
     }
     this.setDevice({ key, localOnly: false });
@@ -257,30 +287,57 @@ export class Store {
     this.emit('state');
   }
 
-  scheduleRetry() {
+  scheduleRetry(afterSec = 0) {
     if (this.device.localOnly) return;
     clearTimeout(this.retryTimer);
-    this.retryMs = Math.min(60000, this.retryMs ? this.retryMs * 2 : 5000);
+    this.retryMs = afterSec > 0 ? afterSec * 1000 : Math.min(60000, this.retryMs ? this.retryMs * 2 : 5000);
     this.retryTimer = setTimeout(() => (this.device.key ? this.sync() : this.connect()), this.retryMs);
   }
 
-  /** Push pending ops (≤200 per request), then pull. Safe to call any time. */
+  /** Push pending ops (≤200 per request, each batch with a stable batchId), then pull. Safe to call any time. */
   async sync() {
     if (this.device.localOnly) { this.setStatus('local'); return; }
     if (!this.device.key) return;
     if (this.syncing) { this.again = true; return; }
     this.syncing = true;
+    this.dropped = 0;
     try {
       while (this.pending.length) {
         this.setStatus('syncing');
-        const batch = this.pending.slice(0, 200);
-        const ids = new Set(batch.map((o) => o._id));
-        const r = await this.api('POST', '/api/ops', {
-          ops: batch.map(({ _id, ...op }) => op),
-          by: this.device.who || 'Family',
-          clientId: this.device.clientId,
-        });
+        if (this.inflight) {
+          const ids = new Set(this.inflight.ids);
+          if (!this.pending.some((o) => ids.has(o._id))) this.inflight = null;
+        }
+        if (!this.inflight) {
+          this.inflight = { batchId: uid('b'), ids: this.pending.slice(0, 200).map((o) => o._id) };
+          this.saveData();
+        }
+        const ids = new Set(this.inflight.ids);
+        const batch = this.pending.filter((o) => ids.has(o._id));
+        let r;
+        try {
+          r = await this.api('POST', '/api/ops', {
+            ops: batch.map(({ _id, ...op }) => op),
+            by: this.device.who || 'Family',
+            clientId: this.device.clientId,
+            batchId: this.inflight.batchId,
+          });
+        } catch (e) {
+          // The Worker refused this batch outright (bad op, or the plan would pass 1 MB): nothing was
+          // applied, so drop it rather than retrying forever.
+          if (e.status === 400 || e.status === 413) {
+            this.pending = this.pending.filter((o) => !ids.has(o._id));
+            this.inflight = null;
+            this.dropped += batch.length;
+            this.recompute();
+            this.saveData();
+            this.emit('state');
+            continue;
+          }
+          throw e;
+        }
         this.pending = this.pending.filter((o) => !ids.has(o._id));
+        this.inflight = null;
         this.server = { revision: Number(r.revision) || 0, state: r.state || {}, updatedAt: r.updatedAt || null };
         this.recompute();
         this.saveData();
@@ -290,12 +347,15 @@ export class Store {
       this.acceptServer(r);
       this.retryMs = 0;
       this.lastSyncAt = Date.now();
-      this.setStatus('synced');
+      if (this.dropped) this.setStatus('error', `${this.dropped} change${this.dropped === 1 ? '' : 's'} couldn't be saved for the family and ${this.dropped === 1 ? 'was' : 'were'} undone.`);
+      else this.setStatus('synced');
     } catch (e) {
-      if (e.status === 401) this.setStatus('needs-passcode', 'The family passcode changed. Enter the new one to keep syncing.');
-      else if (e.status === 429) { this.setStatus('error', 'Too many tries. Syncing will try again shortly.'); this.scheduleRetry(); }
+      if (e.status === 401 && e.data?.needsSetup) { this.device.key = null; this.saveDevice(); this.setStatus('needs-setup'); }
+      else if (e.status === 401) this.setStatus('needs-passcode', 'The family passcode changed. Enter the new one to keep syncing.');
+      else if (e.status === 429) { this.setStatus('error', `Too many tries. Syncing again in ${waitText(e.retryAfter || 60)}.`); this.scheduleRetry(e.retryAfter || 60); }
+      else if (e.status === 403) this.setStatus('error', 'The family server didn’t accept this address.');
       else if (e.status >= 400 && e.status < 500 && e.status !== 408) this.setStatus('error', e.message);
-      else { this.setStatus('offline'); this.scheduleRetry(); }
+      else { this.setStatus('offline'); this.scheduleRetry(e.retryAfter || 0); }
     } finally {
       this.syncing = false;
       if (this.again) { this.again = false; if (this.pending.length) this.sync(); }
@@ -317,8 +377,10 @@ export class Store {
   resetLocal({ keepDevice = false } = {}) {
     this.storage.remove(K.server);
     this.storage.remove(K.pending);
+    this.storage.remove(K.inflight);
     this.server = { revision: 0, state: {}, updatedAt: null };
     this.pending = [];
+    this.inflight = null;
     if (!keepDevice) {
       this.storage.remove(K.device);
       this.device = { who: null, key: null, localOnly: false, clientId: uid('c'), dismissedGate: false, theme: 'auto' };

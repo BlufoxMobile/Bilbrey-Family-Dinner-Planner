@@ -1,0 +1,481 @@
+// Sheets shared by Tonight, Plan and Recipes: a night's actions, picking a dinner,
+// moving/swapping, not eating at home, substituting sides, who's on this phone, sync.
+import { html, ic, when, openSheet, closeSheet, toast, avatar, renderSheet, confirmSheet, stepper } from '../ui.js';
+import { AWAY_REASONS, FAMILY } from '../config.js';
+import {
+  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName,
+} from '../util.js';
+import {
+  dinnerById, rotationList, findInPlan, openNights, parseSideRef, shelfRef, sideInfo, isFavorite, kindOf,
+  dinnerFeasibleAt, sideSlotsFor,
+} from '../planner.js';
+import {
+  placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps,
+  resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps,
+} from '../actions.js';
+import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason } from './common.js';
+import { waitText } from '../state.js';
+
+const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
+
+// ---------------------------------------------------------------- night sheet
+
+export function openNight(app, date) {
+  openSheet({
+    id: `night:${date}`,
+    live: true,
+    size: 'tall',
+    get title() { return relativeDay(date, app.today()) === 'Tonight' ? `Tonight, ${shortDate(date)}` : `${weekdayName(date)}, ${shortDate(date)}`; },
+    render: () => nightBody(app, date),
+  });
+}
+
+function nightBody(app, date) {
+  const today = app.today();
+  const e = app.state.plan?.[date];
+  const d = e?.dinner ? dinnerById(app.db, app.state, e.dinner) : null;
+  const past = date < today;
+  if (e?.status === 'away') {
+    const r = awayReason(e);
+    return html`
+      <div class="away-card away-card-sheet">
+        <span class="away-ic">${ic('moon', { size: 26 })}</span>
+        <div><p class="away-title">${r.label}</p><p class="away-note">${e.away?.note || r.note}</p></div>
+      </div>
+      ${when(d, () => html`<p class="sheet-text">${d.title} was planned. Its groceries are off the list while you’re away.</p>`)}
+      <div class="action-list">
+        <button type="button" class="action-row" data-action="night:back" data-date="${date}">${ic('home')}<span><b>${d ? `Bring back ${d.title}` : 'We’re home after all'}</b><small>${d ? 'Its groceries go back on the list.' : 'Then pick a dinner for the night.'}</small></span></button>
+        <button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('edit')}<span><b>Change the reason</b></span></button>
+      </div>`;
+  }
+  if (!d) {
+    return html`
+      <p class="sheet-text">Nothing is planned ${past ? 'for that night' : 'yet'}.</p>
+      <div class="action-list">
+        ${when(!past, () => html`<button type="button" class="action-row" data-action="night:auto" data-date="${date}">${ic('sparkle')}<span><b>Pick one for me</b><small>Follows the house rules and what’s in the pantry.</small></span></button>`)}
+        <button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('recipes')}<span><b>Choose a dinner</b><small>From the recipe box.</small></span></button>
+        ${when(!past, () => html`<button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('away')}<span><b>Not eating at home</b></span></button>`)}
+      </div>`;
+  }
+  const sides = sidesFor(app, d.id, e);
+  const cooked = e.status === 'cooked';
+  const slots = sideSlotsFor(d);
+  return html`
+    <div class="night-head">
+      ${dinnerPhoto(app, d, { size: 'thumb' })}
+      <div>
+        <p class="night-title">${d.title}</p>
+        ${equipment(d, { compact: true })}
+        ${favoriteBadge(app, d)}
+      </div>
+    </div>
+    ${when(cooked, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked${e.cookedBy ? ` by ${e.cookedBy}` : ''}.</p>`)}
+    <h3 class="sheet-h">Sides</h3>
+    <ul class="side-rows">
+      ${sides.map((s) => html`<li class="side-row">
+        ${sidePhoto(app, s, { size: 'thumb' })}
+        <span class="side-name">${s.info?.title}${when(s.remembered, () => html`<small class="remembered">${ic('check', { size: 14 })}Remembered for ${d.title}</small>`)}</span>
+        ${when(!cooked, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="${s.slot}">Substitute</button>`)}
+      </li>`)}
+    </ul>
+    ${when(!cooked && slots === 1 && sides.length < 2, () => html`<button type="button" class="btn btn-quiet btn-small add-side" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="1">${ic('plus', { size: 18 })}Add a side</button>`)}
+    <div class="action-list">
+      <a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>Big steps for the dinner and both sides.</small></span></a>
+      ${when(!cooked && date !== today && !past, () => html`<button type="button" class="action-row" data-action="night:tonight" data-date="${date}">${ic('tonight')}<span><b>Make this tonight</b><small>Tonight’s dinner moves to ${relativeDay(date, today).toLowerCase() === 'tomorrow' ? 'tomorrow' : weekdayName(date)}.</small></span></button>`)}
+      ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:move" data-date="${date}">${ic('move')}<span><b>Move to another night</b><small>If that night has a dinner, they trade places.</small></span></button>`)}
+      ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('swap')}<span><b>Swap for a different dinner</b></span></button>`)}
+      ${when(!cooked && !past, () => html`<button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('away')}<span><b>Not eating at home</b><small>Removes this dinner’s groceries.</small></span></button>`)}
+      ${cooked
+        ? html`<button type="button" class="action-row" data-action="night:uncook" data-date="${date}">${ic('undo')}<span><b>Mark as not cooked</b><small>Puts what it used back in the pantry.</small></span></button>`
+        : html`<button type="button" class="action-row" data-action="night:cooked" data-date="${date}">${ic('checkCircle')}<span><b>Mark cooked</b><small>Takes what it used out of the pantry.</small></span></button>`}
+      <a class="action-row" href="#/recipe/${d.id}">${ic('recipes')}<span><b>Open the recipe</b></span></a>
+      ${when(!cooked, () => html`<button type="button" class="action-row action-quiet" data-action="night:clear" data-date="${date}">${ic('trash')}<span><b>Clear this night</b></span></button>`)}
+    </div>`;
+}
+
+// ---------------------------------------------------------------- pick a dinner
+
+function pickBody(app, { date, query }) {
+  const today = app.today();
+  const q = (query || '').trim().toLowerCase();
+  const planStore = app.settings.planStore;
+  const list = rotationList(app.db, app.state)
+    .filter((d) => !q || d.title.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || d.protein.includes(q))
+    .sort((a, b) => (isFavorite(app.state, b) - isFavorite(app.state, a)) || a.title.localeCompare(b.title));
+  const current = app.state.plan?.[date]?.dinner;
+  return html`
+    <label class="search">${ic('search', { size: 20 })}<input type="search" placeholder="Search dinners" value="${query || ''}" data-input="pick:query" data-date="${date}" aria-label="Search dinners" autocomplete="off"></label>
+    <ul class="pick-list">
+      ${list.length ? list.map((d) => {
+        const where = findInPlan(app.state, d.id, { exclude: date, from: today, near: date })[0];
+        const off = planStore !== 'both' && !dinnerFeasibleAt(app.db, app.state, d.id, planStore);
+        return html`<li><button type="button" class="pick-row ${d.id === current ? 'is-current' : ''}" data-action="pick:choose" data-date="${date}" data-dinner="${d.id}" ${d.id === current ? html`aria-current="true"` : ''}>
+          ${dinnerPhoto(app, d, { size: 'thumb' })}
+          <span class="pick-main"><b>${d.title}</b>
+            <small>${d.minutes} min${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small></span>
+        </button></li>`;
+      }) : html`<li class="muted pad">No dinners match “${query}”.</li>`}
+    </ul>`;
+}
+
+export function openPick(app, date, title) {
+  const st = { date, query: '' };
+  openSheet({
+    id: `pick:${date}`,
+    size: 'tall',
+    title: title || `Choose a dinner for ${relativeDay(date, app.today()).toLowerCase() === 'tonight' ? 'tonight' : weekdayName(date)}`,
+    render: () => pickBody(app, st),
+    onMount: (el) => {
+      const input = el.querySelector('input[type=search]');
+      input?.addEventListener('input', () => {
+        st.query = input.value;
+        const ul = el.querySelector('.pick-list');
+        const tmp = document.createElement('div');
+        tmp.innerHTML = pickBody(app, st).s;
+        ul.replaceWith(tmp.querySelector('.pick-list'));
+      });
+    },
+  });
+}
+
+/** Places a dinner on a night with Jeff's swap semantics, then deals with whatever it displaced. */
+export async function place(app, { dinnerId, date, fromDate }) {
+  const today = app.today();
+  const target = app.state.plan?.[date];
+  if (target?.status === 'away') {
+    const ok = await confirmSheet({
+      title: `${relativeDay(date, today)} is marked ${awayReason(target).label.toLowerCase()}`,
+      body: `Cook ${dinnerById(app.db, app.state, dinnerId)?.title || 'this dinner'} at home that night instead?`,
+      confirm: 'Yes, we’re home',
+    });
+    if (!ok) return;
+  }
+  const res = placeDinnerOps(app.db, app.state, { dinnerId, date, fromDate, who: app.who(), today });
+  if (!app.commit(res)) return;
+  if (res.displaced) openDisplaced(app, res.displaced, date);
+  else closeSheet();
+}
+
+function openDisplaced(app, displaced, fromDate) {
+  const today = app.today();
+  const d = dinnerById(app.db, app.state, displaced.dinner);
+  const open = openNights(app.state, today, { limit: 6, exclude: [fromDate] });
+  openSheet({
+    id: 'displaced',
+    title: `What about ${d?.title || 'the other dinner'}?`,
+    subtitle: 'It was planned for that night.',
+    render: () => html`
+      <h3 class="sheet-h">Move it to an open night</h3>
+      ${open.length ? html`<div class="chip-grid">${open.map((x) => html`<button type="button" class="chip chip-lg" data-action="displaced:move" data-to="${x}" data-dinner="${displaced.dinner}">${relativeDay(x, today)}<small>${shortDate(x)}</small></button>`)}</div>`
+        : html`<p class="sheet-text">No open nights in the next six weeks.</p>`}
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-quiet btn-block" data-action="sheet:close">Drop it from the plan</button>
+      </div>`,
+    onMount: (el) => {
+      el.querySelectorAll('[data-action="displaced:move"]').forEach((b) => b.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const res = moveDisplacedOps(app.db, app.state, { dinner: displaced.dinner, sides: displaced.sides, toDate: b.dataset.to, who: app.who(), today });
+        app.commit(res);
+        closeSheet();
+      }));
+    },
+  });
+}
+
+// ---------------------------------------------------------------- move to another night
+
+export function openMove(app, fromDate) {
+  const today = app.today();
+  const e = app.state.plan?.[fromDate];
+  const d = dinnerById(app.db, app.state, e?.dinner);
+  if (!d) return;
+  const start = today;
+  const nights = datesBetween(start, addDays(start, 27)).filter((x) => x !== fromDate);
+  openSheet({
+    id: `move:${fromDate}`,
+    size: 'tall',
+    title: `Move ${d.title}`,
+    subtitle: 'Pick the night. If it already has a dinner, the two trade places.',
+    render: () => html`<ul class="move-list">${nights.map((x) => {
+      const t = app.state.plan?.[x];
+      const td = t?.dinner ? dinnerById(app.db, app.state, t.dinner) : null;
+      const cooked = t?.status === 'cooked';
+      const what = t?.status === 'away' ? `Away: ${awayReason(t).label}` : td ? (cooked ? `${td.title} (cooked)` : `Trade with ${td.title}`) : 'Open';
+      return html`<li><button type="button" class="move-row ${td && !cooked ? '' : 'is-open'}" data-action="move:to" data-from="${fromDate}" data-to="${x}" data-dinner="${d.id}" ${cooked ? 'disabled' : ''}>
+        <span class="move-day"><b>${relativeDay(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${what}</span>${ic('right', { size: 18 })}
+      </button></li>`;
+    })}</ul>`,
+  });
+}
+
+// ---------------------------------------------------------------- not eating at home
+
+export function openAway(app, date) {
+  const today = app.today();
+  const e = app.state.plan?.[date];
+  const d = e?.dinner && e.status !== 'away' ? dinnerById(app.db, app.state, e.dinner) : null;
+  const st = { mode: 'one', from: date, to: addDays(date, 2), reason: e?.away?.reason || 'Date night', note: e?.away?.note || '', push: 'skip', pushTo: openNights(app.state, addDays(date, 1), { limit: 1 })[0] || '' };
+  const opens = openNights(app.state, addDays(today, 0), { limit: 10, exclude: [date] });
+  openSheet({
+    id: `away:${date}`,
+    size: 'tall',
+    title: 'Not eating at home',
+    subtitle: `${relativeDay(date, today)}, ${longDay(date)}`,
+    render: () => html`
+      <form class="form" data-submit="away:save" data-date="${date}">
+        <div class="seg" role="radiogroup" aria-label="How many nights">
+          <button type="button" role="radio" class="seg-opt ${st.mode === 'one' ? 'is-on' : ''}" aria-checked="${st.mode === 'one'}" data-away-mode="one">Just this night</button>
+          <button type="button" role="radio" class="seg-opt ${st.mode === 'range' ? 'is-on' : ''}" aria-checked="${st.mode === 'range'}" data-away-mode="range">A few nights (trip)</button>
+        </div>
+        ${when(st.mode === 'range', () => html`<div class="field-row">
+          <label class="field"><span class="field-label">From</span><input class="input" type="date" name="from" value="${st.from}" min="${today}" required></label>
+          <label class="field"><span class="field-label">Through</span><input class="input" type="date" name="to" value="${st.to}" min="${today}" required></label>
+        </div>`)}
+        <fieldset class="field">
+          <legend class="field-label">Why?</legend>
+          <div class="chip-grid">
+            ${AWAY_REASONS.map((r) => html`<label class="chip chip-radio ${st.reason === r.id ? 'is-on' : ''}"><input type="radio" name="reason" value="${r.id}" ${st.reason === r.id ? 'checked' : ''}>${r.label}</label>`)}
+          </div>
+        </fieldset>
+        <label class="field"><span class="field-label">Note <small>(optional)</small></span><input class="input" name="note" value="${st.note}" maxlength="80" placeholder="Grandma’s birthday, Knox’s game…"></label>
+        ${when(st.mode === 'one' && d, () => html`<fieldset class="field">
+          <legend class="field-label">What about ${d.title}?</legend>
+          <label class="radio-row"><input type="radio" name="push" value="skip" ${st.push === 'skip' ? 'checked' : ''}><span><b>Skip it this time</b><small>Its groceries come off the list.</small></span></label>
+          ${opens.length ? html`<label class="radio-row"><input type="radio" name="push" value="move" ${st.push === 'move' ? 'checked' : ''}><span><b>Push it to another night</b>
+            <select class="input input-inline" name="pushTo" aria-label="Night to push it to">${opens.map((x) => html`<option value="${x}" ${x === st.pushTo ? 'selected' : ''}>${relativeDay(x, today)}, ${shortDate(x)}</option>`)}</select></span></label>` : ''}
+        </fieldset>`)}
+        <button type="submit" class="btn btn-primary btn-block">Mark not eating at home</button>
+      </form>`,
+    onMount: (el) => {
+      const form = el.querySelector('form');
+      const keep = () => {
+        const f = new FormData(form);
+        st.reason = f.get('reason') || st.reason;
+        st.note = f.get('note') ?? st.note;
+        if (f.get('from')) st.from = f.get('from');
+        if (f.get('to')) st.to = f.get('to');
+        if (f.get('push')) st.push = f.get('push');
+        if (f.get('pushTo')) st.pushTo = f.get('pushTo');
+      };
+      el.querySelectorAll('[data-away-mode]').forEach((b) => b.addEventListener('click', () => { keep(); st.mode = b.dataset.awayMode; renderSheet(); }));
+      form.addEventListener('change', (ev) => {
+        if (ev.target.name === 'reason') { keep(); form.querySelectorAll('.chip-radio').forEach((c) => c.classList.toggle('is-on', c.querySelector('input').checked)); }
+        if (ev.target.name === 'pushTo') { const r = form.querySelector('input[name=push][value=move]'); if (r) r.checked = true; }
+      });
+    },
+  });
+}
+
+// ---------------------------------------------------------------- substitute a side
+
+export function openSubstitute(app, { date, dinnerId, slot }) {
+  const d = dinnerById(app.db, app.state, dinnerId);
+  if (!d) return;
+  const st = { tab: 'box', qty: {}, newName: '', newQty: 2, newUnit: 'cans' };
+  const adding = slot >= sideSlotsFor(d) && !app.state.substitutions?.[dinnerId]?.[String(slot)];
+  openSheet({
+    id: `sub:${dinnerId}:${slot}`,
+    size: 'tall',
+    title: adding ? `Add a side to ${d.title}` : 'Substitute a side',
+    subtitle: adding ? 'Remembered every time it’s on the menu.' : `For ${d.title}. Remembered every time it’s on the menu.`,
+    render: () => subBody(app, d, slot, st, date),
+    onMount: (el) => {
+      el.querySelectorAll('[data-sub-tab]').forEach((b) => b.addEventListener('click', () => { st.tab = b.dataset.subTab; renderSheet(); }));
+    },
+  });
+  openSubstitute.state = st;
+}
+
+function shelfItems(app) {
+  const out = [];
+  for (const [id, p] of Object.entries(app.state.pantry || {})) {
+    if (!p || p.low) continue;
+    const ing = app.db.ingredients[id];
+    const c = app.state.custom?.[id];
+    if (!ing && !c) continue;
+    if ((ing?.kind || c?.kind) === 'staple') continue;
+    if (!(typeof p.qty === 'number' && p.qty > 0) && !p.stocked) continue;
+    out.push({ id, type: ing ? 'item' : 'custom', name: ing?.name || c.name, unit: ing?.unit || c.unit || 'each', have: p.qty, aisle: ing?.aisle || c.aisle });
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function defaultQty(unit) {
+  if (unit === 'lb') return 1.5;
+  if (unit === 'oz') return 16;
+  if (unit === 'cups') return 3;
+  if (unit === 'cans') return 2;
+  return 2;
+}
+
+function subBody(app, d, slot, st, date) {
+  const current = sidesFor(app, d.id, date ? app.state.plan?.[date] : null).find((s) => s.slot === slot);
+  const other = sidesFor(app, d.id, null).filter((s) => s.slot !== slot).map((s) => s.ref);
+  const remembered = !!app.state.substitutions?.[d.id]?.[String(slot)];
+  const sides = app.db.sideList.filter((s) => s.id !== current?.ref && !other.includes(s.id));
+  const shelf = shelfItems(app);
+  return html`
+    ${when(current, () => html`<div class="current-side">
+      ${sidePhoto(app, current, { size: 'thumb' })}
+      <span><small>${remembered ? 'Now (remembered)' : 'Now'}</small><b>${current.info?.title}</b></span>
+      ${when(remembered, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:reset" data-dinner="${d.id}" data-slot="${slot}">${slot >= sideSlotsFor(d) ? 'Remove' : 'Reset to the recipe’s side'}</button>`)}
+    </div>`)}
+    <div class="seg" role="tablist" aria-label="Where the side comes from">
+      <button type="button" role="tab" aria-selected="${st.tab === 'box'}" class="seg-opt ${st.tab === 'box' ? 'is-on' : ''}" data-sub-tab="box">Recipe box</button>
+      <button type="button" role="tab" aria-selected="${st.tab === 'shelf'}" class="seg-opt ${st.tab === 'shelf' ? 'is-on' : ''}" data-sub-tab="shelf">On the shelf</button>
+    </div>
+    ${st.tab === 'box'
+      ? html`<ul class="pick-list">${sides.map((s) => html`<li><button type="button" class="pick-row" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-ref="${s.id}">
+          ${sidePhoto(app, { parsed: { type: 'side', id: s.id }, info: { kind: s.kind } }, { size: 'thumb' })}
+          <span class="pick-main"><b>${s.title}</b><small>${s.minutes ? `${s.minutes} min` : ''}${s.kind ? `${s.minutes ? ', ' : ''}${s.kind}` : ''}</small></span></button></li>`)}</ul>`
+      : html`
+        ${shelf.length ? html`<ul class="shelf-list">${shelf.map((it) => {
+          const q = st.qty[it.id] ?? Math.min(defaultQty(it.unit), typeof it.have === 'number' ? it.have : defaultQty(it.unit));
+          return html`<li class="shelf-row">
+            <span class="shelf-name"><b>${it.name}</b><small>${typeof it.have === 'number' ? `${fmtQty(it.have)} ${it.unit} on the shelf` : 'Stocked'}</small></span>
+            ${stepper({ value: fmtQty(q), step: it.unit === 'lb' ? 0.5 : 1, min: 0.5, action: 'side:qty', data: { id: it.id }, unit: it.unit, label: `How much ${it.name}` })}
+            <button type="button" class="btn btn-small btn-primary" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-ref="${shelfRef(it.type, it.id, q)}">Use</button>
+          </li>`;
+        })}</ul>` : html`<p class="sheet-text">Nothing measured is in the pantry yet. Add what’s on the shelf below, or scan the pantry from the Pantry tab.</p>`}
+        <form class="form form-inline-card" data-submit="side:new" data-dinner="${d.id}" data-slot="${slot}">
+          <p class="field-label">Something else on the shelf</p>
+          <input class="input" name="name" placeholder="Canned green beans" required maxlength="60" aria-label="Item name">
+          <div class="field-row">
+            <input class="input" name="qty" type="number" inputmode="decimal" min="0.25" step="0.25" value="2" aria-label="Amount">
+            <select class="input" name="unit" aria-label="Unit">${['cans', 'lb', 'oz', 'bags', 'boxes', 'jars', 'each'].map((u) => html`<option>${u}</option>`)}</select>
+          </div>
+          <button type="submit" class="btn btn-secondary btn-block">Use it as the side</button>
+        </form>`}`;
+}
+
+// ---------------------------------------------------------------- who's on this phone
+
+export function openWho(app, { onDone } = {}) {
+  openSheet({
+    id: 'who',
+    title: 'Who’s using this phone?',
+    subtitle: 'Votes and changes show your name.',
+    render: () => html`<div class="who-grid">${FAMILY.map((n) => html`<button type="button" class="who-pick ${app.who() === n ? 'is-on' : ''}" data-action="who:set" data-who="${n}" aria-pressed="${app.who() === n}">${avatar(n, { size: 'lg' })}<span>${n}</span></button>`)}</div>`,
+  });
+  openWho.onDone = onDone;
+}
+
+// ---------------------------------------------------------------- sync
+
+export function openSync(app) {
+  openSheet({
+    id: 'sync',
+    live: true,
+    title: 'Family sync',
+    render: () => {
+      const s = app.store;
+      const pending = s.pending.length;
+      const text = {
+        synced: 'Everyone in the family sees the same plan, votes, pantry and list.',
+        syncing: 'Sending your changes to the family…',
+        offline: `No connection to the family server right now. ${pending ? `${pending} change${pending === 1 ? ' is' : 's are'} saved on this phone and will sync when you’re back online.` : 'Changes you make are saved on this phone and sync later.'}`,
+        local: 'This phone keeps its own plan. Nothing is shared with the family.',
+        'needs-setup': 'The family passcode hasn’t been created yet. Create it once; everyone else enters it on their phone.',
+        'needs-passcode': s.statusDetail || 'Enter the family passcode to share the plan with everyone.',
+        error: s.statusDetail || 'Sync is paused.',
+      }[s.status] || '';
+      return html`
+        <p class="sheet-text">${text}</p>
+        ${when(s.lastSyncAt, () => html`<p class="muted small">Last synced ${new Date(s.lastSyncAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' })}.</p>`)}
+        <div class="sheet-actions">
+          ${when(['offline', 'synced', 'error'].includes(s.status) && s.device.key, () => html`<button type="button" class="btn btn-primary btn-block" data-action="sync:now">${ic('refresh', { size: 20 })}Sync now</button>`)}
+          ${when(s.status === 'offline' && !s.device.key, () => html`<button type="button" class="btn btn-primary btn-block" data-action="sync:retry">${ic('refresh', { size: 20 })}Try to connect</button>`)}
+          ${when(['needs-setup', 'needs-passcode'].includes(s.status), () => html`<a class="btn btn-primary btn-block" href="#/family" data-action="sync:passcode">${ic('lock', { size: 20 })}${s.status === 'needs-setup' ? 'Create the family passcode' : 'Enter the family passcode'}</a>`)}
+          ${when(s.status === 'local', () => html`<button type="button" class="btn btn-primary btn-block" data-action="sync:family">Share with the family</button>`)}
+        </div>`;
+    },
+  });
+}
+
+// ---------------------------------------------------------------- actions
+
+export const actions = {
+  'night:open': (app, el) => openNight(app, el.dataset.date),
+  'night:pick': (app, el) => openPick(app, el.dataset.date),
+  'night:move': (app, el) => openMove(app, el.dataset.date),
+  'night:away': (app, el) => openAway(app, el.dataset.date),
+  'night:tonight': (app, el) => {
+    const e = app.state.plan?.[el.dataset.date];
+    if (e?.dinner) place(app, { dinnerId: e.dinner, date: app.today(), fromDate: el.dataset.date });
+  },
+  'night:back': (app, el) => {
+    const res = bringBackOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() });
+    app.commit(res);
+    if (res.open) openPick(app, el.dataset.date);
+    else closeSheet();
+  },
+  'night:cooked': (app, el) => { app.commit(markCookedOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() })); closeSheet(); },
+  'night:uncook': (app, el) => { app.commit(unmarkCookedOps(app.db, app.state, { date: el.dataset.date })); closeSheet(); },
+  'night:clear': (app, el) => { app.commit(clearNightOps(app.db, app.state, { date: el.dataset.date, today: app.today() })); closeSheet(); },
+  'night:auto': (app, el) => {
+    const res = generateOps(app.db, app.state, { dates: [el.dataset.date], who: app.who(), today: app.today(), seedKey: el.dataset.date });
+    if (app.commit(res)) renderSheet();
+  },
+  'pick:choose': (app, el) => place(app, { dinnerId: el.dataset.dinner, date: el.dataset.date }),
+  'move:to': (app, el) => place(app, { dinnerId: el.dataset.dinner, date: el.dataset.to, fromDate: el.dataset.from }),
+  'away:save': (app, form) => {
+    const date = form.dataset.date;
+    const f = new FormData(form);
+    const reason = f.get('reason') || 'Other';
+    const note = String(f.get('note') || '').trim();
+    let dates = [date];
+    const from = f.get('from');
+    const to = f.get('to');
+    if (from && to) {
+      if (!isISODate(from) || !isISODate(to) || to < from) { toast('Pick a “through” date on or after the first night.'); return; }
+      if (diffDays(to, from) > 60) { toast('That’s more than two months. Pick a shorter trip.'); return; }
+      dates = datesBetween(from, to);
+    }
+    const pushTo = f.get('push') === 'move' ? f.get('pushTo') : null;
+    app.commit(markAwayOps(app.db, app.state, { dates, reason, note, who: app.who(), today: app.today(), pushTo }));
+    closeSheet();
+  },
+  'side:sub': (app, el) => openSubstitute(app, { date: el.dataset.date, dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot) }),
+  'side:use': (app, el) => {
+    app.commit(substituteOps(app.db, app.state, { dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot), ref: el.dataset.ref }));
+    closeSheet();
+  },
+  'side:reset': (app, el) => { app.commit(resetSideOps(app.db, app.state, { dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot) })); closeSheet(); },
+  'side:qty': (app, el) => {
+    const st = openSubstitute.state;
+    if (!st) return;
+    const id = el.dataset.id;
+    const it = shelfItems(app).find((x) => x.id === id);
+    const cur = st.qty[id] ?? Math.min(defaultQty(it?.unit), typeof it?.have === 'number' ? it.have : defaultQty(it?.unit));
+    st.qty[id] = Math.max(0.5, Math.round((cur + Number(el.dataset.delta)) * 100) / 100);
+    renderSheet();
+  },
+  'side:new': (app, form) => {
+    const f = new FormData(form);
+    const name = String(f.get('name') || '').trim();
+    const qty = Number(f.get('qty')) || 1;
+    const unit = String(f.get('unit') || 'each');
+    if (!name) return;
+    const c = customItemOps(app.state, { name, unit });
+    const pantry = setPantryOps(app.db, app.state, { id: c.id, qty: Math.max(qty, app.state.pantry?.[c.id]?.qty || 0), who: app.who() });
+    app.store.commit([...c.ops, ...pantry.ops]);
+    app.commit(substituteOps(app.db, app.store.state, { dinnerId: form.dataset.dinner, slot: Number(form.dataset.slot), ref: shelfRef('custom', c.id, qty) }));
+    closeSheet();
+  },
+  'who:set': (app, el) => {
+    app.store.setDevice({ who: el.dataset.who });
+    closeSheet();
+    toast(`Hi, ${el.dataset.who}. This phone is yours.`);
+    openWho.onDone?.();
+    openWho.onDone = null;
+    if (!app.store.health && !app.store.device.localOnly) app.store.connect();
+  },
+  'sheet:who': (app) => openWho(app),
+  'sheet:sync': (app) => openSync(app),
+  'sync:now': (app) => app.store.sync(),
+  'sync:retry': (app) => app.store.connect(),
+  'sync:family': (app) => { app.store.useFamilySync(); },
+  'sync:passcode': (app) => { closeSheet(); app.ui.showPasscode = true; app.navigate('#/family'); },
+};
+
+export { STORE_NAMES, waitText };

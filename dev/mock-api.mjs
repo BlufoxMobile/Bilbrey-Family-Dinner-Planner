@@ -24,9 +24,9 @@ export function applyOpServer(state, op) {
 }
 
 export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = false, latency = 0 } = {}) {
-  const db = { salt: null, hash: null, revision: 0, updatedAt: null, state: {}, fails: 0, lastFail: 0 };
+  const db = { salt: null, hash: null, revision: 0, updatedAt: null, state: {}, fails: 0, lastFail: 0, batches: new Map(), opsRequests: 0 };
   const setKey = (key) => { db.salt = randomBytes(8).toString('hex'); db.hash = createHash('sha256').update(db.salt + key).digest('hex'); };
-  const reset = (pc) => { db.salt = db.hash = null; db.revision = 0; db.updatedAt = null; db.state = {}; db.fails = 0; if (pc) setKey(keyFor(pc)); };
+  const reset = (pc) => { db.salt = db.hash = null; db.revision = 0; db.updatedAt = null; db.state = {}; db.fails = 0; db.batches = new Map(); db.opsRequests = 0; if (pc) setKey(keyFor(pc)); };
   reset(passcode);
 
   const cors = (req) => {
@@ -55,7 +55,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     const url = new URL(req.url, 'http://x');
     if (req.method === 'OPTIONS') { res.writeHead(204, cors(req)); return res.end(); }
     const p = url.pathname;
-    if (p === '/__mock/state') return send(res, req, 200, db);
+    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests });
     if (p === '/__mock/reset' && req.method === 'POST') { const b = await readBody(req); reset(b?.passcode || null); return send(res, req, 200, { ok: true }); }
     if (p === '/api/health') return send(res, req, 200, { ok: true, hasPasscode: !!db.hash, ai, revision: db.revision });
     if (p === '/api/setup' && req.method === 'POST') {
@@ -66,11 +66,12 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
       return send(res, req, 201, { ok: true });
     }
     // Everything below needs the family key.
+    if (!db.hash) return send(res, req, 401, { error: "The family passcode hasn't been set up yet.", needsSetup: true });
     if (!authed(req)) {
       const now = Date.now();
       if (now - db.lastFail < 60000) db.fails++; else db.fails = 1;
       db.lastFail = now;
-      if (db.fails > 8) return send(res, req, 429, { error: 'Too many wrong passcodes. Wait a minute and try again.' });
+      if (db.fails > 8) { res.setHeader('Retry-After', '60'); return send(res, req, 429, { error: 'Too many wrong passcodes. Try again in 1 minute.', retryAfter: 60 }); }
       return send(res, req, 401, { error: 'Wrong family passcode' });
     }
     db.fails = 0;
@@ -87,10 +88,17 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     }
     if (p === '/api/ops' && req.method === 'POST') {
       const b = await readBody(req);
-      if (!b || !Array.isArray(b.ops)) return send(res, req, 400, { error: 'ops must be an array' });
-      if (b.ops.length > 200) return send(res, req, 413, { error: 'At most 200 ops per request' });
+      db.opsRequests++;
+      if (!b || !Array.isArray(b.ops) || !b.ops.length) return send(res, req, 400, { error: 'ops must be a non-empty array' });
+      if (b.ops.length > 200) return send(res, req, 400, { error: 'At most 200 ops per request' });
+      const bad = b.ops.findIndex((op) => !op || !['set', 'del', 'push'].includes(op.op) || !Array.isArray(op.path) || !op.path.length || (op.op !== 'del' && op.value === undefined));
+      if (bad >= 0) return send(res, req, 400, { error: `ops[${bad}] is not a valid op` });
+      const bk = b.clientId && b.batchId ? `${b.clientId}/${b.batchId}` : null;
+      if (bk && db.batches.has(bk)) return send(res, req, 200, { revision: db.revision, updatedAt: db.updatedAt, state: db.state, duplicate: true });
+      const before = JSON.stringify(db.state);
       for (const op of b.ops) applyOpServer(db.state, op);
-      if (JSON.stringify(db.state).length > 1_000_000) return send(res, req, 413, { error: 'State is over 1 MB' });
+      if (JSON.stringify(db.state).length > 1_000_000) { db.state = JSON.parse(before); return send(res, req, 413, { error: 'State is over 1 MB' }); }
+      if (bk) db.batches.set(bk, db.revision + 1);
       db.revision++; db.updatedAt = new Date().toISOString();
       return send(res, req, 200, { revision: db.revision, updatedAt: db.updatedAt, state: db.state });
     }

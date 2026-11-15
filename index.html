@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The Bilbrey Family Dinner Planner</title>
+  <meta name="description" content="Dinners for the five Bilbreys, planned around bulk buys at Sam's Club and top-ups at Jewel-Osco.">
+  <meta name="theme-color" content="#F3EAD7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#131C17" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bilbrey Dinners">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="preload" href="fonts/young-serif-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/atkinson-next-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/app.css">
+  <link rel="stylesheet" href="styles/print.css" media="print">
+  <script>
+    // Apply the phone's chosen appearance before first paint.
+    try { var d = JSON.parse(localStorage.getItem('bfdp.v2.device') || '{}'); if (d.theme === 'light' || d.theme === 'dark') document.documentElement.dataset.theme = d.theme; } catch (e) {}
+  </script>
+  <script type="module" src="app/main.js"></script>
+</head>
+<body>
+  <div id="app" class="app is-boot" aria-busy="true">
+    <div class="boot"><span class="wm-mark wm-lg" aria-hidden="true"></span><p>The Bilbrey Family Dinner Planner</p></div>
+  </div>
+  <noscript><p class="noscript">The Bilbrey Family Dinner Planner needs JavaScript turned on.</p></noscript>
+</body>
+</html>

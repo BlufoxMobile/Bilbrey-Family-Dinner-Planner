@@ -1,0 +1,3503 @@
+{
+  "version": 2,
+  "updated": "2026-11-14",
+  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. No oven or broiler anywhere; stovetop burners, Blackstone, electric grill, outdoor grill, air fryer and microwave only. No seafood, no tofu. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit.",
+  "dinners": [
+    {
+      "id": "smashburgers",
+      "title": "Blackstone smashburgers",
+      "subtitle": "Two crispy-edged smashed patties, melted cheddar and dill pickles on a toasted bun.",
+      "category": "Burgers",
+      "protein": "beef",
+      "minutes": 30,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "burger",
+        "family favorite"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2.5,
+        "buns": 5,
+        "cheese": 5,
+        "pickles": 5,
+        "mustard": 3,
+        "ketchup": 3,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
+        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip. Lay cheddar on five of the patties.",
+        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
+        "Spread the buns with mustard and ketchup, stack a plain patty on each cheese patty, add pickles and serve two patties per bun."
+      ],
+      "sides": [
+        "jewel-fries"
+      ],
+      "sideSlots": 1,
+      "photo": "A double smashburger with two thin, crispy-edged beef patties, melted cheddar and dill pickle chips on a toasted bun, on a plate beside golden french fries."
+    },
+    {
+      "id": "onion-burgers",
+      "title": "Griddled onion burgers",
+      "subtitle": "Paper-thin onions smashed into double beef patties and caramelized under melted cheddar.",
+      "category": "Burgers",
+      "protein": "beef",
+      "minutes": 30,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "burger"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2.5,
+        "buns": 5,
+        "onions": 0.75,
+        "cheese": 5,
+        "mustard": 3,
+        "pickles": 5,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Slice the onions as thin as you can. Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
+        "Set the balls on the griddle, pile a handful of onions on each and smash hard so the onions press into the meat. Season with the salt and pepper.",
+        "Cook until the bottoms are deeply browned, 2–3 minutes, then flip so the onions are underneath and let them caramelize. Lay cheddar on five patties.",
+        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
+        "Spread the buns with mustard and stack two onion patties (cheese patty on the bottom) and pickles on each."
+      ],
+      "sides": [
+        "jewel-fries"
+      ],
+      "sideSlots": 1,
+      "photo": "A double cheeseburger with caramelized paper-thin onions pressed into crispy beef patties, melted cheddar and pickles on a toasted bun, plated with french fries."
+    },
+    {
+      "id": "green-chile-burgers",
+      "title": "Green chile cheeseburgers",
+      "subtitle": "Double patties with melted cheddar, pickled jalapeños and a cool lime-yogurt spread.",
+      "category": "Burgers",
+      "protein": "beef",
+      "minutes": 30,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "burger"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2.5,
+        "buns": 5,
+        "cheese": 5,
+        "jalapenos": 3,
+        "yogurt": 4,
+        "limes": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Stir the yogurt with the zest and juice of the lime and a pinch of the salt; chill. Chop the jalapeños (use fewer for milder burgers).",
+        "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
+        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip. Lay cheddar on five of the patties.",
+        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
+        "Spread the buns with the lime yogurt, stack two patties on each and finish with the jalapeños."
+      ],
+      "sides": [
+        "jewel-fries"
+      ],
+      "sideSlots": 1,
+      "photo": "A double cheeseburger with melted cheddar and bright green pickled jalapeño slices over a creamy white spread on a toasted bun, plated with french fries."
+    },
+    {
+      "id": "mushroom-burgers",
+      "title": "Mushroom melt burgers",
+      "subtitle": "Garlicky browned mushrooms and melted cheddar over double griddled patties.",
+      "category": "Burgers",
+      "protein": "beef",
+      "minutes": 35,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "burger"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2.5,
+        "buns": 5,
+        "mushrooms": 8,
+        "cheese": 5,
+        "butter": 1,
+        "garlic": 2,
+        "mustard": 3,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
+        "Melt the butter on one side of the griddle and cook the mushrooms, stirring, until browned and their liquid cooks off, 6–8 minutes. Add the minced garlic for the last minute and move them to a cool corner.",
+        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip. Pile the mushrooms on five patties and top with the cheddar.",
+        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
+        "Spread the buns with mustard and stack a plain patty under each mushroom-cheese patty."
+      ],
+      "sides": [
+        "jewel-fries"
+      ],
+      "sideSlots": 1,
+      "photo": "A double beef burger smothered in browned sliced mushrooms and melted cheddar on a toasted bun, plated with french fries."
+    },
+    {
+      "id": "bbq-slaw-burgers",
+      "title": "BBQ slaw burgers",
+      "subtitle": "Double patties brushed with barbecue sauce and topped with crunchy, tangy slaw.",
+      "category": "Burgers",
+      "protein": "beef",
+      "minutes": 30,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "burger"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2.5,
+        "buns": 5,
+        "slaw": 8,
+        "yogurt": 2,
+        "ciderVinegar": 1,
+        "bbq": 6,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Toss the coleslaw mix with the yogurt, cider vinegar and 1 tablespoon of the barbecue sauce; chill.",
+        "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
+        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip. Brush the tops with the remaining barbecue sauce.",
+        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
+        "Stack two saucy patties on each bun and pile on the slaw."
+      ],
+      "sides": [
+        "jewel-fries"
+      ],
+      "sideSlots": 1,
+      "photo": "A double beef burger glazed with dark barbecue sauce and piled with creamy crunchy coleslaw on a toasted bun, plated with french fries."
+    },
+    {
+      "id": "mustard-pickle-burgers",
+      "title": "Dill pickle burgers",
+      "subtitle": "Double patties with a tangy chopped-pickle mustard sauce and extra pickle chips.",
+      "category": "Burgers",
+      "protein": "beef",
+      "minutes": 30,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "burger"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2.5,
+        "buns": 5,
+        "pickles": 8,
+        "mustard": 3,
+        "yogurt": 4,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Finely chop half the pickles and stir them into the yogurt and mustard.",
+        "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
+        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip.",
+        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
+        "Spread the buns with the pickle sauce and fill each with two patties and the remaining pickle chips."
+      ],
+      "sides": [
+        "jewel-fries"
+      ],
+      "sideSlots": 1,
+      "photo": "A double beef burger layered with dill pickle chips and a creamy chopped-pickle mustard sauce on a toasted bun, plated with french fries."
+    },
+    {
+      "id": "orange-chicken",
+      "title": "Sticky orange chicken",
+      "subtitle": "Crispy-edged chicken thighs tossed in a glossy fresh-orange, garlic and honey glaze.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 35,
+      "equipment": [
+        "blackstone",
+        "stovetop"
+      ],
+      "tags": [
+        "family favorite"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "oranges": 3,
+        "soy": 3,
+        "honey": 3,
+        "riceVinegar": 1,
+        "starch": 4,
+        "garlic": 3,
+        "ginger": 0.5,
+        "oil": 2,
+        "salt": 0.5
+      },
+      "steps": [
+        "Zest one orange, then juice all three (about 1 cup). In a small saucepan whisk the juice and zest with the soy sauce, honey, rice vinegar, minced garlic, grated ginger and 1 tablespoon of the cornstarch.",
+        "Cut the chicken into 1-inch pieces, sprinkle with the salt and toss with the remaining 3 tablespoons of cornstarch until coated.",
+        "Heat the Blackstone over medium-high and spread the oil over it. Sear the chicken in a single layer, turning every couple of minutes, until browned and crisp-edged and the thickest pieces read 165°F, 8–10 minutes.",
+        "While the chicken cooks, bring the sauce to a simmer over medium heat, stirring, and cook 1–2 minutes until thick and glossy.",
+        "Toss the hot chicken with the glaze in a large bowl and serve right away."
+      ],
+      "sides": [
+        "steamed-broccoli",
+        "crispy-potstickers"
+      ],
+      "sideSlots": 2,
+      "photo": "Bite-size crispy chicken pieces coated in a shiny amber orange glaze with thin strips of orange zest, piled in a white bowl."
+    },
+    {
+      "id": "tikka-masala",
+      "title": "Chicken tikka masala",
+      "subtitle": "Browned chicken thighs simmered in a creamy spiced tomato sauce with wilted spinach.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 35,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "family favorite"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "tikka": 15,
+        "tomatoes": 1,
+        "garlic": 3,
+        "ginger": 0.5,
+        "cumin": 1,
+        "paprika": 1,
+        "spinach": 5,
+        "yogurt": 8,
+        "oil": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Cut the chicken into 1½-inch pieces, pat dry and season with the salt.",
+        "Heat the oil in a large, deep skillet over medium-high. Brown the chicken in two batches, 2–3 minutes per side (it finishes cooking in the sauce), and move it to a plate.",
+        "Lower the heat to medium. Add the minced garlic, grated ginger, cumin and smoked paprika to the pan and stir 30 seconds until fragrant. Add the diced tomatoes with their juice and simmer 5 minutes, scraping up the browned bits.",
+        "Stir in the jar of tikka masala sauce and return the chicken. Cover and simmer gently, stirring now and then, until the thickest pieces read 165°F, about 10 minutes.",
+        "Stir in the spinach a handful at a time until wilted. Take the pan off the heat, then stir in the yogurt (adding it off the heat keeps the sauce silky)."
+      ],
+      "sides": [
+        "warm-naan",
+        "buttered-peas"
+      ],
+      "sideSlots": 2,
+      "photo": "Chunks of chicken in a rich orange-red creamy tikka masala sauce with wilted spinach in a shallow bowl, a swirl of yogurt on top and torn naan alongside."
+    },
+    {
+      "id": "chicken-lo-mein",
+      "title": "Chicken lo mein",
+      "subtitle": "Garlicky soy-sesame noodles tossed with sliced chicken, cabbage and carrots.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop",
+        "blackstone"
+      ],
+      "tags": [
+        "noodle night"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "spaghetti": 20,
+        "slaw": 14,
+        "carrots": 0.5,
+        "soy": 6,
+        "sesame": 3,
+        "brownSugar": 1,
+        "garlic": 4,
+        "ginger": 0.5,
+        "oil": 2,
+        "salt": 3
+      },
+      "steps": [
+        "Bring a large pot of water to a boil with 1 tablespoon of salt. Cook the spaghetti 1 minute less than the box says, drain, rinse briefly with warm water and toss with 1 teaspoon of the sesame oil.",
+        "Whisk the soy sauce, brown sugar, remaining sesame oil, minced garlic and grated ginger in a small bowl. Slice the chicken into thin strips and cut the carrots into matchsticks.",
+        "Heat the Blackstone over medium-high with the oil. Cook the chicken in a single layer, turning, until the thickest strips read 165°F, 5–7 minutes, then push it to a cooler zone.",
+        "Stir-fry the carrots and coleslaw mix until just tender, 2–3 minutes. Add the noodles and sauce and fold everything together with the chicken until glossy and hot."
+      ],
+      "sides": [
+        "steamed-broccoli",
+        "orange-wedges"
+      ],
+      "sideSlots": 2,
+      "photo": "Glossy brown lo mein noodles tossed with strips of chicken, shredded cabbage and carrot matchsticks, piled high on a platter."
+    },
+    {
+      "id": "chicken-fried-rice",
+      "title": "Chicken fried rice",
+      "subtitle": "Hibachi-style jasmine rice griddled with garlic butter, egg, chicken and colorful vegetables.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 45,
+      "equipment": [
+        "stovetop",
+        "blackstone"
+      ],
+      "tags": [
+        "rice",
+        "family favorite"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "jasmine": 2,
+        "eggs": 5,
+        "vegetables": 1,
+        "soy": 6,
+        "butter": 2,
+        "garlic": 3,
+        "sesame": 2,
+        "oil": 3,
+        "salt": 0.5
+      },
+      "steps": [
+        "Rinse the jasmine rice in a strainer until the water runs mostly clear. Combine it in a saucepan with 3 cups water and ½ teaspoon of the salt, bring to a boil, then cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat and fluff with a fork. Spread it on a large platter to steam off and cool while you prep (day-old rice works even better).",
+        "Cut the chicken into ½-inch pieces. Heat the Blackstone over medium-high with 1 tablespoon of the oil and cook the chicken, turning, until the thickest pieces read 165°F, 6–8 minutes. Move it to a cooler zone.",
+        "Cook the frozen vegetables on the griddle until hot, 3–4 minutes. Push them aside, add another tablespoon of oil and scramble the beaten eggs until just set.",
+        "Spread the remaining oil and the butter on the hot zone, add the rice and minced garlic and let it sizzle untouched for a minute to toast. Fold in the chicken, vegetables, eggs, soy sauce and sesame oil, tossing until hot throughout."
+      ],
+      "sides": [
+        "sesame-cucumber",
+        "orange-wedges"
+      ],
+      "sideSlots": 2,
+      "photo": "A heaping plate of golden fried jasmine rice with scrambled egg, diced chicken, peas, carrots and corn, glistening with soy and sesame."
+    },
+    {
+      "id": "beef-broccoli-noodles",
+      "title": "Beef & broccoli noodles",
+      "subtitle": "Soy-ginger glazed beef and broccoli tangled through garlicky noodles.",
+      "category": "Asian-inspired",
+      "protein": "beef",
+      "minutes": 35,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "noodle night"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2.25,
+        "spaghetti": 20,
+        "broccoli": 1.5,
+        "soy": 6,
+        "honey": 2,
+        "brownSugar": 1,
+        "garlic": 4,
+        "ginger": 0.5,
+        "starch": 1,
+        "sesame": 1,
+        "salt": 3
+      },
+      "steps": [
+        "Bring a large pot of water to a boil with 1 tablespoon of salt. Cook the spaghetti until al dente, adding the frozen broccoli to the pot for the last 2 minutes. Scoop out 1 cup of the water, then drain.",
+        "Meanwhile whisk the soy sauce, honey, brown sugar, cornstarch, sesame oil and ½ cup water in a small bowl.",
+        "Brown the beef in a large, deep skillet over medium-high, breaking it up, until it reads 160°F, 8–10 minutes. Spoon off the excess fat, then stir in the minced garlic and grated ginger for 30 seconds.",
+        "Pour in the sauce and simmer until thickened, about 1 minute. Add the noodles and broccoli and toss, loosening with the saved water, until everything is glossy."
+      ],
+      "sides": [
+        "carrot-sticks",
+        "sesame-cucumber"
+      ],
+      "sideSlots": 2,
+      "photo": "Noodles tossed with browned ground beef crumbles and bright green broccoli florets in a glossy dark soy-ginger glaze, in a wide bowl."
+    },
+    {
+      "id": "peanut-lime-wraps",
+      "title": "Peanut-lime chicken wraps",
+      "subtitle": "Grilled chicken, crunchy cabbage and a tangy peanut-lime sauce rolled in warm tortillas.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 30,
+      "equipment": [
+        "electric grill",
+        "stovetop"
+      ],
+      "tags": [
+        "wraps"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "tortillas": 10,
+        "slaw": 14,
+        "carrots": 0.5,
+        "peanut": 6,
+        "soy": 3,
+        "honey": 1,
+        "limes": 2,
+        "garlic": 2,
+        "oil": 1
+      },
+      "steps": [
+        "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and 1 tablespoon of the soy sauce. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Whisk the peanut butter, lime juice, remaining soy sauce, honey, minced garlic and 3–4 tablespoons warm water into a drizzly sauce. Shred the carrots and toss with the coleslaw mix.",
+        "Warm the tortillas one or two at a time in a dry skillet over medium-high, 20–30 seconds per side, and stack them in a clean towel to stay soft.",
+        "Fill each tortilla with slaw and chicken, spoon over the peanut sauce and roll up. Two wraps per person."
+      ],
+      "sides": [
+        "steamed-broccoli",
+        "orange-wedges"
+      ],
+      "sideSlots": 2,
+      "photo": "Flour tortilla wraps cut in half to show sliced grilled chicken, crunchy shredded cabbage and carrots with a creamy peanut sauce drizzle, on a plate with lime wedges."
+    },
+    {
+      "id": "ginger-beef-cabbage",
+      "title": "Ginger turkey lettuce cups",
+      "subtitle": "Crisp romaine cups filled with ginger-soy ground turkey, cabbage and shredded carrots.",
+      "category": "Asian-inspired",
+      "protein": "turkey",
+      "minutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "wraps",
+        "healthier"
+      ],
+      "rotation": "core",
+      "items": {
+        "groundTurkey": 2.25,
+        "slaw": 14,
+        "lettuce": 3,
+        "carrots": 0.5,
+        "ginger": 0.75,
+        "garlic": 4,
+        "soy": 5,
+        "honey": 1,
+        "riceVinegar": 1,
+        "sesame": 1,
+        "oil": 1
+      },
+      "steps": [
+        "Separate the romaine into whole leaves, rinse and pat dry. Shred the carrots.",
+        "Heat the oil in a large skillet over medium-high and brown the turkey, breaking it into small crumbles, until it reads 165°F, 8–10 minutes.",
+        "Add the grated ginger and minced garlic and cook 30 seconds. Add the coleslaw mix, carrots, soy sauce, honey and rice vinegar and toss until the cabbage just softens, 3–4 minutes. Drizzle with the sesame oil.",
+        "Spoon the warm filling into the romaine leaves and eat them like tacos."
+      ],
+      "sides": [
+        "crispy-potstickers",
+        "edamame"
+      ],
+      "sideSlots": 2,
+      "photo": "Crisp romaine lettuce leaves filled with glossy ginger-soy ground meat, shredded cabbage and carrots, arranged on a platter."
+    },
+    {
+      "id": "honey-ginger-noodles",
+      "title": "Honey-ginger chicken noodles",
+      "subtitle": "Golden chicken and bell pepper strips in a sticky honey-ginger glaze over noodles.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "noodle night"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "spaghetti": 20,
+        "peppers": 3,
+        "ginger": 0.75,
+        "honey": 3,
+        "soy": 5,
+        "garlic": 4,
+        "starch": 1,
+        "oil": 2,
+        "salt": 3
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt. Cook the spaghetti until al dente, 9–11 minutes (check the box). Scoop out 1 cup of the pasta water, then drain.",
+        "Whisk the honey, soy sauce, cornstarch, grated ginger, minced garlic and ⅓ cup water. Cut the chicken into 1-inch pieces and the peppers into strips.",
+        "Heat half the oil in a large, deep skillet over medium-high. Cook the chicken in two batches until browned and the thickest pieces read 165°F, 6–8 minutes per batch, and move to a plate.",
+        "Add the remaining oil and the peppers and stir-fry 2–3 minutes. Return the chicken, pour in the sauce and simmer until sticky, 1 minute. Toss with the noodles, loosening with pasta water."
+      ],
+      "sides": [
+        "canned-green-beans",
+        "sesame-cucumber"
+      ],
+      "sideSlots": 2,
+      "photo": "Noodles tossed with golden chicken pieces and red and yellow bell pepper strips in a sticky honey-ginger glaze, in a large shallow bowl."
+    },
+    {
+      "id": "egg-fried-rice",
+      "title": "Pork & egg fried rice",
+      "subtitle": "Takeout-style jasmine fried rice with savory ground pork, plenty of egg and mixed vegetables.",
+      "category": "Asian-inspired",
+      "protein": "pork",
+      "minutes": 45,
+      "equipment": [
+        "stovetop",
+        "blackstone"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "rotation": "core",
+      "items": {
+        "groundPork": 2.25,
+        "jasmine": 2,
+        "eggs": 6,
+        "vegetables": 1.5,
+        "soy": 6,
+        "ginger": 0.5,
+        "garlic": 3,
+        "oil": 2,
+        "sesame": 2,
+        "salt": 0.5
+      },
+      "steps": [
+        "Rinse the jasmine rice in a strainer until the water runs mostly clear. Combine it in a saucepan with 3 cups water and ½ teaspoon of the salt, bring to a boil, then cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat and fluff with a fork. Spread it on a large platter to cool while you prep (day-old rice works even better).",
+        "Heat the Blackstone over medium-high. Brown the pork, breaking it up, until it reads 160°F, 8–10 minutes. Scrape off excess fat and move the pork to a cooler zone.",
+        "Add half the oil and stir-fry the frozen vegetables with the grated ginger and minced garlic until hot. Push aside, add the remaining oil and scramble the beaten eggs until just set.",
+        "Add the rice to the hot zone and toss everything together with the soy sauce and sesame oil until steaming hot throughout."
+      ],
+      "sides": [
+        "sesame-cucumber",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "A heaping plate of fried jasmine rice with browned ground pork, ribbons of scrambled egg and peas, carrots and corn."
+    },
+    {
+      "id": "sesame-tofu-noodles",
+      "title": "Crispy sesame chicken noodles",
+      "subtitle": "Air-crisped chicken bites over sesame-soy noodles with cabbage and carrots.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 50,
+      "equipment": [
+        "air fryer",
+        "stovetop"
+      ],
+      "tags": [
+        "noodle night"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "spaghetti": 20,
+        "carrots": 0.75,
+        "slaw": 10,
+        "soy": 6,
+        "sesame": 3,
+        "honey": 2,
+        "riceVinegar": 2,
+        "starch": 4,
+        "garlic": 2,
+        "oil": 2,
+        "salt": 3
+      },
+      "steps": [
+        "Cut the chicken into 1-inch pieces. Toss with 1 tablespoon of the oil and 1 tablespoon of the soy sauce, then with the cornstarch until coated.",
+        "Air-fry at 400°F in single-layer batches, shaking halfway, until crisp and the thickest pieces read 165°F, 10–12 minutes per batch.",
+        "Meanwhile bring a large pot of water to a boil with 1 tablespoon of salt. Shred the carrots. Cook the spaghetti until al dente, adding the carrots and coleslaw mix for the last minute, then drain.",
+        "Whisk the remaining soy sauce, sesame oil, honey, rice vinegar, remaining oil and minced garlic. Toss with the hot noodles and vegetables and top with the crispy chicken."
+      ],
+      "sides": [
+        "cucumber-spears",
+        "orange-wedges"
+      ],
+      "sideSlots": 2,
+      "photo": "Sesame-soy noodles with shredded cabbage and carrots topped with crispy golden chicken bites, in a bowl."
+    },
+    {
+      "id": "pepper-chicken-potatoes",
+      "title": "Black pepper chicken",
+      "subtitle": "Juicy grilled chicken with a bold cracked-pepper, garlic and soy glaze.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 30,
+      "equipment": [
+        "electric grill",
+        "stovetop"
+      ],
+      "tags": [
+        "grill night"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "pepper": 2,
+        "soy": 4,
+        "honey": 1,
+        "garlic": 2,
+        "oil": 1
+      },
+      "steps": [
+        "Rub the chicken thighs with the oil and press the black pepper onto both sides. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "While the chicken rests, simmer the soy sauce, honey and minced garlic in a small saucepan for 1 minute.",
+        "Toss the sliced chicken with the warm glaze and serve."
+      ],
+      "sides": [
+        "potato-wedges",
+        "pepper-onions"
+      ],
+      "sideSlots": 2,
+      "photo": "Sliced grilled chicken with dark grill marks, coated in cracked black pepper and a shiny soy-garlic glaze, fanned on a plate."
+    },
+    {
+      "id": "veggie-chow-mein",
+      "title": "Pork & mushroom chow mein",
+      "subtitle": "Noodles stir-fried with savory ground pork, mushrooms, cabbage and ribbons of egg.",
+      "category": "Asian-inspired",
+      "protein": "pork",
+      "minutes": 45,
+      "equipment": [
+        "stovetop",
+        "blackstone"
+      ],
+      "tags": [
+        "noodle night"
+      ],
+      "rotation": "core",
+      "items": {
+        "groundPork": 2.25,
+        "spaghetti": 20,
+        "slaw": 14,
+        "mushrooms": 8,
+        "eggs": 4,
+        "soy": 6,
+        "sesame": 2,
+        "brownSugar": 1,
+        "garlic": 3,
+        "oil": 2,
+        "salt": 3
+      },
+      "steps": [
+        "Bring a large pot of water to a boil with 1 tablespoon of salt. Cook the spaghetti until just tender, drain and toss with 1 teaspoon of the sesame oil. Whisk the soy sauce, brown sugar and remaining sesame oil.",
+        "Heat the Blackstone over medium-high. Brown the pork, breaking it up, until it reads 160°F, 8–10 minutes. Scrape off excess fat and move the pork to a cooler zone.",
+        "Add the oil and cook the mushrooms until browned, 4–5 minutes. Add the coleslaw mix and minced garlic and stir-fry until the cabbage softens. Push aside and scramble the beaten eggs until set.",
+        "Add the noodles and sauce and toss everything together with the pork until glossy and hot."
+      ],
+      "sides": [
+        "cucumber-spears",
+        "canned-carrots"
+      ],
+      "sideSlots": 2,
+      "photo": "Stir-fried noodles with browned ground pork, sliced mushrooms, shredded cabbage and strips of egg, piled on a platter."
+    },
+    {
+      "id": "peanut-sweet-potatoes",
+      "title": "Peanut chicken sweet potatoes",
+      "subtitle": "Split sweet potatoes stuffed with grilled chicken, crunchy slaw and peanut-lime sauce.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "microwave",
+        "electric grill"
+      ],
+      "tags": [
+        "healthier"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "sweet": 3.5,
+        "slaw": 10,
+        "peanut": 6,
+        "limes": 2,
+        "soy": 3,
+        "honey": 1,
+        "oil": 1
+      },
+      "steps": [
+        "Scrub the sweet potatoes and pierce each several times. Microwave in two batches, turning halfway, until a knife slides easily into the centers, 8–15 minutes per batch.",
+        "Rub the chicken thighs with the oil and 1 tablespoon of the soy sauce. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Whisk the peanut butter, lime juice, remaining soy sauce, honey and 3–4 tablespoons warm water into a pourable sauce.",
+        "Split the potatoes, fill with slaw and sliced chicken and drizzle with the peanut sauce."
+      ],
+      "sides": [
+        "canned-green-beans",
+        "orange-wedges"
+      ],
+      "sideSlots": 2,
+      "photo": "Split orange sweet potatoes stuffed with sliced grilled chicken and crunchy shredded cabbage, drizzled with creamy peanut sauce."
+    },
+    {
+      "id": "orange-tofu-bowls",
+      "title": "Orange chicken basmati bowls",
+      "subtitle": "Air-crisped chicken and broccoli over fluffy basmati with a bright orange-ginger sauce.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 45,
+      "equipment": [
+        "air fryer",
+        "stovetop"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "basmati": 2,
+        "oranges": 3,
+        "broccoli": 1.5,
+        "starch": 4,
+        "soy": 3,
+        "honey": 2,
+        "ginger": 0.5,
+        "oil": 2,
+        "salt": 0.5
+      },
+      "steps": [
+        "Rinse the basmati rice in a strainer until the water runs mostly clear. Combine it in a saucepan with 3 cups water and ½ teaspoon of the salt, bring to a boil, then cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat and fluff with a fork.",
+        "Cut the chicken into 1-inch pieces, toss with the oil, then with 3 tablespoons of the cornstarch. Air-fry at 400°F in single-layer batches, shaking halfway, until crisp and 165°F inside, 10–12 minutes per batch.",
+        "Steam the frozen broccoli in a covered saucepan with ½ inch of boiling water until tender-crisp, 5–7 minutes, and drain.",
+        "Juice the oranges into a small saucepan and whisk in the soy sauce, honey, grated ginger and remaining 1 tablespoon cornstarch. Simmer, stirring, until thick and glossy, 1–2 minutes.",
+        "Build bowls of rice, chicken and broccoli and spoon the orange sauce over the top."
+      ],
+      "sides": [
+        "sesame-cucumber",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "A bowl of fluffy white basmati rice topped with crispy chicken pieces glazed in orange sauce and steamed broccoli florets."
+    },
+    {
+      "id": "brown-butter-spaghetti",
+      "title": "Brown butter spaghetti with grilled chicken",
+      "subtitle": "Spaghetti tossed in nutty brown butter, Parmesan and cracked pepper, topped with sliced grilled chicken.",
+      "category": "Pasta",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop",
+        "electric grill"
+      ],
+      "tags": [
+        "family favorite"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "spaghetti": 24,
+        "butter": 8,
+        "parm": 4,
+        "pepper": 1,
+        "salt": 4,
+        "oil": 1
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt.",
+        "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and season with the remaining 1 teaspoon salt and half the pepper. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Cook the spaghetti until al dente, 9–11 minutes. Scoop out 1 cup of the pasta water, then drain.",
+        "While the pasta cooks, melt the butter in a large skillet over medium heat. Keep cooking, swirling often, until it foams and the bits on the bottom turn golden brown and smell nutty, 4–6 minutes. Pull the pan off the heat so it doesn’t burn.",
+        "Add the spaghetti, Parmesan and remaining pepper to the skillet with a splash of pasta water and toss until glossy, adding more water as needed. Divide among five plates and top with the sliced chicken."
+      ],
+      "sides": [
+        "buttered-peas",
+        "romaine-salad"
+      ],
+      "sideSlots": 2,
+      "photo": "A twirled nest of spaghetti glossy with golden brown butter, flecked with black pepper and grated Parmesan, topped with sliced grilled chicken breast."
+    },
+    {
+      "id": "classic-spaghetti",
+      "title": "Classic spaghetti with meat sauce",
+      "subtitle": "Spaghetti under a hearty beef-and-Italian-sausage tomato sauce with Parmesan.",
+      "category": "Pasta",
+      "protein": "mixed",
+      "minutes": 45,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "family favorite"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 1,
+        "italianSausage": 1.25,
+        "spaghetti": 20,
+        "marinara": 24,
+        "tomatoes": 1,
+        "onions": 0.5,
+        "garlic": 3,
+        "oregano": 1,
+        "parm": 2,
+        "salt": 3
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt.",
+        "Dice the onion. In a large, deep skillet over medium-high, brown the beef and the sausage (squeezed out of its casings) with the onion, breaking it up, until it reads 160°F, 10–12 minutes. Spoon off the excess fat and stir in the minced garlic and oregano.",
+        "Pour in the marinara and the diced tomatoes with their juice and simmer gently, stirring now and then, 10 minutes.",
+        "Cook the spaghetti until al dente, 9–11 minutes. Save 1 cup of the pasta water and drain.",
+        "Toss the spaghetti with about a third of the sauce (loosen with pasta water if needed), divide among plates, spoon the rest over the top and finish with Parmesan."
+      ],
+      "sides": [
+        "romaine-salad",
+        "garlic-toast"
+      ],
+      "sideSlots": 2,
+      "photo": "A generous plate of spaghetti topped with a thick, chunky tomato meat sauce and a snowfall of grated Parmesan."
+    },
+    {
+      "id": "lemon-chicken-penne",
+      "title": "Lemon chicken & broccoli penne",
+      "subtitle": "Grilled chicken, broccoli and penne in a bright lemon, garlic and Parmesan butter sauce.",
+      "category": "Pasta",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop",
+        "electric grill"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "penne": 20,
+        "broccoli": 1.25,
+        "lemons": 2,
+        "parm": 3,
+        "butter": 3,
+        "garlic": 3,
+        "oil": 1,
+        "pepper": 0.5,
+        "salt": 4
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt.",
+        "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and season with the remaining 1 teaspoon salt and the pepper. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Cook the penne until al dente, 10–12 minutes, adding the frozen broccoli for the last 2 minutes. Save 1 cup of the pasta water and drain.",
+        "In the empty pot melt the butter over medium heat and cook the minced garlic 1 minute. Add the penne and broccoli, the zest and juice of the lemons, the Parmesan and a splash of pasta water and toss until creamy. Top with the sliced chicken."
+      ],
+      "sides": [
+        "canned-green-beans",
+        "apple-slices"
+      ],
+      "sideSlots": 2,
+      "photo": "Penne tossed with bright green broccoli florets, lemon zest and Parmesan, topped with sliced grilled chicken, a lemon wedge on the side."
+    },
+    {
+      "id": "tomato-spinach-penne",
+      "title": "Creamy chicken & spinach penne",
+      "subtitle": "Grilled chicken and wilted spinach in a creamy, garlicky tomato sauce.",
+      "category": "Pasta",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop",
+        "electric grill"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "penne": 20,
+        "spinach": 5,
+        "marinara": 24,
+        "tomatoes": 1,
+        "yogurt": 6,
+        "parm": 2,
+        "garlic": 2,
+        "oil": 1,
+        "salt": 4
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt.",
+        "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and season with the remaining 1 teaspoon salt. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Cook the penne until al dente, 10–12 minutes. Save 1 cup of the pasta water and drain.",
+        "Meanwhile simmer the marinara, the diced tomatoes with their juice and the minced garlic in a large, deep skillet for 5 minutes. Stir in the spinach a handful at a time until wilted.",
+        "Take the sauce off the heat and stir in the yogurt until creamy. Toss with the penne, loosening with pasta water, and top with the chicken and Parmesan."
+      ],
+      "sides": [
+        "garlic-toast",
+        "buttered-peas"
+      ],
+      "sideSlots": 2,
+      "photo": "Penne in a creamy pink tomato sauce with wilted spinach, topped with sliced grilled chicken and grated Parmesan."
+    },
+    {
+      "id": "chickpea-pepper-pasta",
+      "title": "Charred pepper & sausage penne",
+      "subtitle": "Italian sausage and blistered bell peppers in a garlicky oregano tomato sauce.",
+      "category": "Pasta",
+      "protein": "sausage",
+      "minutes": 40,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "italianSausage": 2.25,
+        "penne": 20,
+        "peppers": 2,
+        "onions": 0.5,
+        "marinara": 24,
+        "garlic": 4,
+        "oil": 1,
+        "oregano": 1,
+        "parm": 2,
+        "salt": 3
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt. Cook the penne until al dente, 10–12 minutes (check the box). Scoop out 1 cup of the pasta water, then drain.",
+        "Meanwhile slice the peppers and onion into strips. Heat the oil in a large, deep skillet over medium-high and cook them without stirring too often until blistered and charred in spots, 6–8 minutes. Move to a plate.",
+        "In the same skillet brown the sausage (squeezed out of its casings), breaking it up, until it reads 160°F, 8–10 minutes. Spoon off the excess fat and stir in the minced garlic and oregano.",
+        "Add the marinara and peppers, simmer 5 minutes, then fold in the penne with a splash of pasta water. Finish with the Parmesan."
+      ],
+      "sides": [
+        "romaine-salad",
+        "garlic-toast"
+      ],
+      "sideSlots": 2,
+      "photo": "Penne in a chunky tomato sauce with browned crumbled sausage and charred red and green bell pepper strips, topped with Parmesan."
+    },
+    {
+      "id": "cheeseburger-penne",
+      "title": "Cheeseburger penne",
+      "subtitle": "Penne in a velvety cheddar-tomato sauce with crumbled beef — a homemade skillet supper.",
+      "category": "Pasta",
+      "protein": "beef",
+      "minutes": 35,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "beef": 2.25,
+        "penne": 20,
+        "cheese": 6,
+        "marinara": 16,
+        "milk": 1.5,
+        "mustard": 1,
+        "ketchup": 1,
+        "onions": 0.5,
+        "salt": 3
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt. Cook the penne until al dente, 10–12 minutes (check the box). Scoop out 1 cup of the pasta water, then drain.",
+        "Meanwhile dice the onion and brown it with the beef in a large, deep skillet over medium-high, breaking up the meat, until it reads 160°F, 8–10 minutes. Spoon off the excess fat.",
+        "Stir in the marinara, milk, mustard and ketchup and bring to a simmer. Lower the heat and stir in the shredded cheddar a handful at a time until melted and smooth.",
+        "Fold in the penne, loosening with pasta water until creamy."
+      ],
+      "sides": [
+        "buttered-peas",
+        "apple-slices"
+      ],
+      "sideSlots": 2,
+      "photo": "Penne coated in a creamy orange cheddar-tomato sauce with crumbled ground beef, in a bowl with melted cheese."
+    },
+    {
+      "id": "lemon-pea-spaghetti",
+      "title": "Lemon chicken spaghetti",
+      "subtitle": "Peppery lemon-butter Parmesan spaghetti topped with sliced grilled chicken.",
+      "category": "Pasta",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop",
+        "electric grill"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "spaghetti": 20,
+        "lemons": 2,
+        "parm": 3,
+        "butter": 4,
+        "garlic": 2,
+        "pepper": 1,
+        "oil": 1,
+        "salt": 4
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt.",
+        "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and season with the remaining 1 teaspoon salt and half the pepper. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Cook the spaghetti until al dente, 9–11 minutes. Save 1 cup of the pasta water and drain.",
+        "In the empty pot melt the butter over medium heat with the minced garlic for 1 minute. Add the spaghetti, the zest and juice of the lemons, the Parmesan, remaining pepper and a splash of pasta water and toss until glossy. Top with the chicken."
+      ],
+      "sides": [
+        "buttered-peas",
+        "tomato-cucumber"
+      ],
+      "sideSlots": 2,
+      "photo": "Spaghetti glossy with lemon butter and Parmesan, flecked with lemon zest and black pepper, topped with sliced grilled chicken and a lemon wedge."
+    },
+    {
+      "id": "chicken-parm-penne",
+      "title": "Chicken Parmesan penne",
+      "subtitle": "Oregano-grilled chicken over penne, marinara and spinach under melted mozzarella and Parmesan.",
+      "category": "Pasta",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop",
+        "electric grill"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "penne": 20,
+        "spinach": 5,
+        "marinara": 24,
+        "mozzarella": 6,
+        "parm": 2,
+        "oregano": 1,
+        "oil": 1,
+        "salt": 4
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt.",
+        "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and season with the oregano and remaining 1 teaspoon salt. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Cook the penne until al dente, 10–12 minutes, and drain.",
+        "Warm the marinara in a large, deep skillet, stir in the spinach until wilted, then fold in the penne.",
+        "Lay the sliced chicken over the top, scatter with the mozzarella and Parmesan, cover and cook over low heat until the cheese melts, 3–4 minutes."
+      ],
+      "sides": [
+        "canned-green-beans",
+        "garlic-toast"
+      ],
+      "sideSlots": 2,
+      "photo": "Penne in marinara with wilted spinach topped with sliced grilled chicken under melted bubbly mozzarella and grated Parmesan, served from a skillet."
+    },
+    {
+      "id": "greek-chicken-pitas",
+      "title": "Lemon-oregano chicken flatbreads",
+      "subtitle": "Grilled lemon-oregano chicken on warm naan with tomato, cucumber and garlicky yogurt sauce.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 35,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "grill night"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "naan": 5,
+        "cucumber": 1,
+        "tomato": 0.75,
+        "yogurt": 8,
+        "lemons": 2,
+        "oregano": 2,
+        "garlic": 3,
+        "oil": 2,
+        "salt": 1
+      },
+      "steps": [
+        "Toss the chicken thighs with 1 tablespoon of the oil, the oregano, the zest and juice of 1 lemon, half the minced garlic and the salt. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Dice the cucumber and tomato. Stir half the cucumber into the yogurt with the remaining garlic and the juice of the second lemon.",
+        "Brush the naan with the remaining oil and warm on the grill, about 1 minute per side.",
+        "Top each naan with chicken, tomato, the remaining cucumber and plenty of yogurt sauce, and fold to eat."
+      ],
+      "sides": [
+        "lemon-chickpeas",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "Warm naan flatbreads topped with sliced grilled lemon-oregano chicken, diced tomato and cucumber and a drizzle of white garlic yogurt sauce, on a board."
+    },
+    {
+      "id": "paprika-chicken-wedges",
+      "title": "Smoky paprika chicken",
+      "subtitle": "Paprika-rubbed grilled chicken thighs with a cool garlic-yogurt dipping sauce.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 30,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "grill night",
+        "healthier"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "paprika": 2,
+        "garlicPowder": 1,
+        "garlic": 2,
+        "yogurt": 6,
+        "lemons": 1,
+        "oil": 1,
+        "salt": 1
+      },
+      "steps": [
+        "Rub the chicken thighs with the oil, smoked paprika, garlic powder and salt. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Stir the minced garlic and lemon juice into the yogurt with a splash of water.",
+        "Serve the chicken with the garlic yogurt for dipping or drizzling."
+      ],
+      "sides": [
+        "potato-wedges",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "Grilled chicken thighs with a deep red smoky paprika crust and char marks, on a plate with a small bowl of white garlic yogurt sauce."
+    },
+    {
+      "id": "bbq-chicken-sandwiches",
+      "title": "BBQ chicken sandwiches",
+      "subtitle": "Barbecue-glazed grilled chicken piled with a tangy apple slaw on toasted buns.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 30,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "sandwiches"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "buns": 5,
+        "bbq": 8,
+        "slaw": 8,
+        "apples": 0.5,
+        "yogurt": 2,
+        "mustard": 1,
+        "ciderVinegar": 1,
+        "oil": 1
+      },
+      "steps": [
+        "Rub the chicken thighs with the oil and brush with 1 tablespoon of the barbecue sauce. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Core and grate the apple. Toss it with the coleslaw mix, yogurt, mustard and cider vinegar.",
+        "Toss the sliced chicken with the remaining barbecue sauce. Toast the buns on the grill and fill with chicken and apple slaw."
+      ],
+      "sides": [
+        "canned-corn",
+        "canned-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "A toasted bun piled high with sliced barbecue-glazed grilled chicken and crunchy apple coleslaw, on a plate."
+    },
+    {
+      "id": "chicken-pepper-plates",
+      "title": "Garlic yogurt chicken",
+      "subtitle": "Paprika-grilled chicken finished with a garlicky lemon-yogurt sauce.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 30,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "grill night",
+        "healthier"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "yogurt": 8,
+        "lemons": 1,
+        "garlic": 3,
+        "oil": 1,
+        "paprika": 1,
+        "salt": 1
+      },
+      "steps": [
+        "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and season with the paprika and salt. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Whisk the yogurt with the minced garlic and lemon juice.",
+        "Drizzle the sauce over the sliced chicken and serve the rest on the side."
+      ],
+      "sides": [
+        "pepper-onions",
+        "warm-naan"
+      ],
+      "sideSlots": 2,
+      "photo": "Sliced paprika-dusted grilled chicken breast drizzled with a thick white garlic-lemon yogurt sauce, on a platter with lemon wedges."
+    },
+    {
+      "id": "mustard-pork-apples",
+      "title": "Honey mustard pork chops",
+      "subtitle": "Grilled boneless chops brushed with a sweet honey-mustard glaze.",
+      "category": "Grill",
+      "protein": "pork",
+      "minutes": 30,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "grill night"
+      ],
+      "rotation": "core",
+      "items": {
+        "pork": 2.5,
+        "mustard": 4,
+        "honey": 3,
+        "oil": 1,
+        "salt": 1,
+        "pepper": 0.5,
+        "garlicPowder": 0.5
+      },
+      "steps": [
+        "Stir the mustard and honey together and set half aside in a clean bowl for serving.",
+        "Pat the chops dry, rub with the oil and season with the salt, pepper and garlic powder.",
+        "Grill on the preheated electric grill over medium, 4–6 minutes per side, brushing with the other half of the glaze during the last 2 minutes, until the center reads 145°F.",
+        "Rest the chops on a clean plate for at least 3 minutes, then spoon the reserved glaze over the top."
+      ],
+      "sides": [
+        "sweet-potatoes",
+        "grilled-apples"
+      ],
+      "sideSlots": 2,
+      "photo": "Boneless pork chops with crosshatch grill marks and a shiny golden honey-mustard glaze, on a plate."
+    },
+    {
+      "id": "griddle-beef-pitas",
+      "title": "Spiced beef flatbreads",
+      "subtitle": "Grilled naan spread with hummus and topped with cumin-spiced beef, onions and a lemony yogurt drizzle.",
+      "category": "Grill",
+      "protein": "beef",
+      "minutes": 30,
+      "equipment": [
+        "stovetop",
+        "electric grill"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "beef": 2.25,
+        "naan": 5,
+        "hummus": 10,
+        "onions": 0.5,
+        "cumin": 2,
+        "paprika": 1,
+        "garlicPowder": 1,
+        "oregano": 1,
+        "salt": 1,
+        "yogurt": 4,
+        "lemons": 1
+      },
+      "steps": [
+        "Finely chop the onion. Brown it with the beef in a large skillet over medium-high, breaking the meat up, until it reads 160°F, 8–10 minutes. Spoon off the excess fat.",
+        "Stir in the cumin, paprika, garlic powder, oregano, salt and ¼ cup water and simmer until saucy, 2 minutes.",
+        "Warm the naan on the preheated electric grill, about 1 minute per side. Stir the lemon juice into the yogurt.",
+        "Spread each naan with hummus, top with the spiced beef and drizzle with lemon yogurt. Cut into wedges."
+      ],
+      "sides": [
+        "tomato-cucumber",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "Grilled naan flatbreads spread with creamy hummus and topped with cumin-spiced ground beef and onions, drizzled with yogurt and cut into wedges."
+    },
+    {
+      "id": "hummus-grill-plates",
+      "title": "Lemon chicken chopped salad",
+      "subtitle": "Lemon-dressed romaine, cucumber and tomato topped with grilled chicken and a scoop of hummus.",
+      "category": "Salads",
+      "protein": "chicken",
+      "minutes": 30,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "salad",
+        "healthier"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "lettuce": 3,
+        "cucumber": 1,
+        "tomato": 0.5,
+        "hummus": 10,
+        "oil": 3,
+        "lemons": 2,
+        "paprika": 1,
+        "oregano": 1,
+        "salt": 1
+      },
+      "steps": [
+        "Rub the chicken thighs with 1 tablespoon of the oil and season with the paprika, oregano and half the salt. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Chop the romaine, cucumber and tomato. Whisk the lemon juice with the remaining oil and salt and toss with the vegetables.",
+        "Divide the salad among five big bowls and top with the sliced chicken and a scoop of hummus."
+      ],
+      "sides": [
+        "warm-naan",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "A big bowl of chopped romaine, cucumber and tomato topped with sliced grilled chicken and a scoop of hummus dusted with paprika, lemon wedges alongside."
+    },
+    {
+      "id": "beef-tacos",
+      "title": "Seasoned beef tacos",
+      "subtitle": "Taco-seasoned beef and black beans in warm corn tortillas with lettuce, cheddar, salsa and lime.",
+      "category": "Tex-Mex",
+      "protein": "beef",
+      "minutes": 30,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "taco night"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2,
+        "cornwrap": 15,
+        "beans": 1,
+        "taco": 2.5,
+        "onions": 0.5,
+        "salsa": 8,
+        "lettuce": 1,
+        "cheese": 5,
+        "limes": 1
+      },
+      "steps": [
+        "Dice the onion. Brown the beef and onion in a large skillet over medium-high, breaking the meat up, until it reads 160°F, 8–10 minutes. Spoon off the excess fat.",
+        "Stir in the taco seasoning, the drained and rinsed black beans and ½ cup water. Simmer until saucy, 3–4 minutes.",
+        "Warm the tortillas one or two at a time in a dry skillet over medium-high, 20–30 seconds per side, and stack them in a clean towel to stay soft.",
+        "Shred the lettuce and cheese and cut the lime into wedges. Fill three tortillas per person and pass the lettuce, cheese, salsa and lime."
+      ],
+      "sides": [
+        "canned-corn",
+        "lime-slaw"
+      ],
+      "sideSlots": 2,
+      "photo": "Three soft corn tortilla tacos filled with seasoned ground beef and black beans, topped with shredded lettuce, cheddar and salsa, with lime wedges on a plate."
+    },
+    {
+      "id": "chicken-fajitas",
+      "title": "Sizzling chicken fajitas",
+      "subtitle": "Taco-spiced chicken thighs with charred peppers and onions, lime and warm flour tortillas.",
+      "category": "Tex-Mex",
+      "protein": "chicken",
+      "minutes": 35,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "taco night"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "peppers": 3,
+        "onions": 1,
+        "tortillas": 15,
+        "taco": 2.5,
+        "limes": 2,
+        "yogurt": 6,
+        "oil": 2
+      },
+      "steps": [
+        "Slice the chicken into thin strips and toss with 1 tablespoon of the oil, the taco seasoning and the juice of 1 lime. Slice the peppers and onions into strips.",
+        "Heat the Blackstone over medium-high. Cook the peppers and onions with the remaining oil on one zone, tossing, until tender and charred at the edges, 8–10 minutes.",
+        "Sear the chicken on another zone in a single layer, turning, until the thickest strips read 165°F, 6–8 minutes. Toss with the vegetables and squeeze over the second lime.",
+        "Warm the tortillas on a clean part of the griddle, about 15 seconds per side. Serve three per person with the fajita filling and yogurt."
+      ],
+      "sides": [
+        "black-beans",
+        "canned-corn"
+      ],
+      "sideSlots": 2,
+      "photo": "Sizzling strips of seasoned chicken with charred red, green and yellow pepper strips and onions beside warm flour tortillas, lime wedges and a dollop of white cream."
+    },
+    {
+      "id": "bean-cheddar-quesadillas",
+      "title": "Chicken & black bean quesadillas",
+      "subtitle": "Crispy griddled tortillas stuffed with taco-spiced chicken, black beans and melted cheddar.",
+      "category": "Tex-Mex",
+      "protein": "chicken",
+      "minutes": 35,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "beans": 1,
+        "tortillas": 10,
+        "cheese": 8,
+        "salsa": 8,
+        "taco": 2,
+        "oil": 2,
+        "yogurt": 4
+      },
+      "steps": [
+        "Dice the chicken thighs small and toss with the taco seasoning and 1 tablespoon of the oil. Heat the Blackstone over medium-high and cook the chicken, turning, until the thickest pieces read 165°F, 6–8 minutes.",
+        "Mash the drained beans with 4 tablespoons of the salsa and fold into the chicken.",
+        "Lower the griddle to medium and brush with the remaining oil. Lay down the tortillas, spread the filling and shredded cheddar over half of each and fold shut.",
+        "Toast until golden, 2–3 minutes per side, pressing gently, until the cheese melts. Cut into wedges and serve with the remaining salsa and the yogurt."
+      ],
+      "sides": [
+        "canned-corn",
+        "lime-slaw"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden crispy quesadilla wedges oozing melted cheddar, seasoned chicken and black beans, with salsa and a dollop of cream on the side."
+    },
+    {
+      "id": "burrito-basmati-bowls",
+      "title": "Beef burrito bowls",
+      "subtitle": "Basmati rice, taco beef, black beans and corn finished with salsa, cheddar and lime.",
+      "category": "Tex-Mex",
+      "protein": "beef",
+      "minutes": 40,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2,
+        "basmati": 1.75,
+        "beans": 1,
+        "corn": 0.75,
+        "salsa": 8,
+        "taco": 2,
+        "lettuce": 1,
+        "cheese": 4,
+        "limes": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Rinse the basmati rice in a strainer until the water runs mostly clear. Combine it in a saucepan with 2⅔ cups water and ½ teaspoon of the salt, bring to a boil, then cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat and fluff with a fork. Squeeze in the juice of half the lime.",
+        "Brown the beef in a large skillet over medium-high, breaking it up, until it reads 160°F, 8–10 minutes. Spoon off the excess fat, stir in the taco seasoning, rinsed beans and ½ cup water and simmer 3 minutes.",
+        "Cook the frozen corn in a small saucepan with a splash of water until hot, 3–4 minutes, and drain.",
+        "Shred the lettuce and cheese. Build bowls with rice, beef and beans, corn and lettuce, and finish with salsa, cheese and the rest of the lime in wedges."
+      ],
+      "sides": [
+        "orange-wedges",
+        "cucumber-spears"
+      ],
+      "sideSlots": 2,
+      "photo": "A burrito bowl with basmati rice, taco-seasoned ground beef, black beans, corn, shredded lettuce, cheddar and salsa, with a lime wedge."
+    },
+    {
+      "id": "sweet-potato-tacos",
+      "title": "Turkey & sweet potato tacos",
+      "subtitle": "Taco-spiced ground turkey and crispy air-fried sweet potato cubes in warm corn tortillas.",
+      "category": "Tex-Mex",
+      "protein": "turkey",
+      "minutes": 45,
+      "equipment": [
+        "air fryer",
+        "stovetop"
+      ],
+      "tags": [
+        "taco night",
+        "healthier"
+      ],
+      "rotation": "core",
+      "items": {
+        "groundTurkey": 2.25,
+        "sweet": 1.5,
+        "cornwrap": 15,
+        "taco": 3,
+        "oil": 2,
+        "salsa": 8,
+        "limes": 1,
+        "yogurt": 4
+      },
+      "steps": [
+        "Dice the sweet potatoes into ½-inch cubes and toss with 1 tablespoon of the oil and 1 tablespoon of the taco seasoning. Air-fry at 400°F in batches, shaking halfway, until tender and golden, 15–18 minutes per batch.",
+        "Heat the remaining oil in a large skillet over medium-high. Brown the turkey, breaking it up, until it reads 165°F, 8–10 minutes. Stir in the remaining taco seasoning and ½ cup water and simmer until saucy.",
+        "Warm the tortillas one or two at a time in a dry skillet over medium-high, 20–30 seconds per side, and stack them in a clean towel to stay soft.",
+        "Fill three tortillas per person with turkey and sweet potatoes and top with salsa, yogurt and a squeeze of lime."
+      ],
+      "sides": [
+        "black-beans",
+        "lime-slaw"
+      ],
+      "sideSlots": 2,
+      "photo": "Corn tortilla tacos filled with seasoned ground meat and golden crispy sweet potato cubes, topped with salsa and a drizzle of cream, lime wedges alongside."
+    },
+    {
+      "id": "chicken-tostadas",
+      "title": "Crispy chicken tostadas",
+      "subtitle": "Air-crisped corn tortillas layered with mashed black beans, grilled chicken, lettuce and cheddar.",
+      "category": "Tex-Mex",
+      "protein": "chicken",
+      "minutes": 45,
+      "equipment": [
+        "electric grill",
+        "air fryer",
+        "stovetop"
+      ],
+      "tags": [
+        "taco night"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "cornwrap": 15,
+        "beans": 2,
+        "lettuce": 1,
+        "salsa": 10,
+        "cheese": 5,
+        "taco": 2,
+        "oil": 2,
+        "limes": 1
+      },
+      "steps": [
+        "Rub the chicken thighs with 1 tablespoon of the oil and season with the taco seasoning. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Brush the tortillas lightly with the remaining oil. Air-fry at 370°F in single layers (use a rack so they stay flat), turning halfway, until crisp, 4–6 minutes per batch.",
+        "Mash the drained beans with 4 tablespoons of the salsa in a saucepan and warm over medium, stirring, until hot.",
+        "Spread beans on each tostada and top with chicken, shredded lettuce, cheddar, the remaining salsa and a squeeze of lime. Three per person."
+      ],
+      "sides": [
+        "canned-corn",
+        "cucumber-spears"
+      ],
+      "sideSlots": 2,
+      "photo": "Three crisp flat corn tostadas layered with mashed black beans, sliced chicken, shredded lettuce, cheddar and salsa, on a plate."
+    },
+    {
+      "id": "potato-beef-burritos",
+      "title": "Beef & potato burritos",
+      "subtitle": "Crispy potato cubes, seasoned beef, peppers and cheddar rolled up and toasted seam-side down.",
+      "category": "Tex-Mex",
+      "protein": "beef",
+      "minutes": 45,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "wraps"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2,
+        "potatoes": 1.5,
+        "tortillas": 10,
+        "peppers": 1,
+        "onions": 0.5,
+        "cheese": 6,
+        "salsa": 8,
+        "taco": 2.5,
+        "oil": 2,
+        "salt": 1
+      },
+      "steps": [
+        "Dice the potatoes into ½-inch cubes, cover with cold salted water in a saucepan (use half the salt), bring to a boil and cook 5 minutes. Drain well.",
+        "Heat the oil in a large skillet over medium-high and fry the potatoes with the diced pepper, onion and remaining salt until golden, 8–10 minutes. Move to a bowl.",
+        "Brown the beef in the same skillet, breaking it up, until it reads 160°F, 8–10 minutes. Spoon off the fat, stir in the taco seasoning and ½ cup water and simmer until saucy. Fold in the potatoes.",
+        "Warm the tortillas in a dry skillet. Fill with the beef mixture, cheddar and salsa, fold in the sides, roll snugly and toast seam-side down in the skillet until golden. Two per person."
+      ],
+      "sides": [
+        "black-beans",
+        "canned-corn"
+      ],
+      "sideSlots": 2,
+      "photo": "Two golden toasted flour tortilla burritos, one cut open to show seasoned ground beef, crispy potato cubes, peppers and melted cheese, with salsa on the side."
+    },
+    {
+      "id": "corn-black-bean-flatbreads",
+      "title": "Chicken & street corn flatbreads",
+      "subtitle": "Grilled chicken and creamy lime street corn over black-bean-smeared grilled naan.",
+      "category": "Tex-Mex",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "electric grill",
+        "stovetop"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "naan": 5,
+        "corn": 0.75,
+        "beans": 1,
+        "yogurt": 4,
+        "cheese": 3,
+        "paprika": 1,
+        "limes": 1,
+        "salsa": 4,
+        "oil": 2,
+        "salt": 1
+      },
+      "steps": [
+        "Rub the chicken thighs with 1 tablespoon of the oil and season with half the paprika and the salt. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Mash the drained beans with the salsa in a small saucepan and warm, stirring, until hot.",
+        "Heat the remaining oil in a large skillet over medium-high and cook the frozen corn, stirring rarely, until hot and charred in spots, 6–8 minutes. Off the heat, stir in the yogurt, remaining paprika, lime juice and shredded cheddar.",
+        "Warm the naan on the grill. Spread with beans, spoon over the street corn, top with chicken and cut into wedges."
+      ],
+      "sides": [
+        "lime-slaw",
+        "apple-slices"
+      ],
+      "sideSlots": 2,
+      "photo": "Grilled naan flatbreads topped with mashed black beans, creamy charred corn and sliced grilled chicken, dusted with paprika and cut into wedges with lime."
+    },
+    {
+      "id": "freezer-pizza",
+      "title": "Grilled chicken personal pizzas",
+      "subtitle": "Crispy air-fried personal cheese pizzas topped with Italian-seasoned grilled chicken.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 45,
+      "equipment": [
+        "electric grill",
+        "air fryer"
+      ],
+      "tags": [
+        "pizza",
+        "family favorite"
+      ],
+      "rotation": "core",
+      "items": {
+        "minis": 5,
+        "chickenThighs": 2,
+        "oil": 1,
+        "italianSeasoning": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Rub the chicken thighs with the oil and season with the Italian seasoning and salt. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice thin.",
+        "Use personal cheese pizzas that fit flat in your air fryer and have air-fryer directions on the box. Keep them frozen until you cook them.",
+        "Air-fry one or two at a time at the package temperature and time. Scatter sliced chicken over each pizza for the last 2 minutes so it heats through.",
+        "Let each pizza stand 1–2 minutes, then cut and serve."
+      ],
+      "sides": [
+        "romaine-salad",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "A crispy personal cheese pizza with bubbly golden mozzarella topped with strips of grilled chicken, cut into wedges on a board."
+    },
+    {
+      "id": "chili-jacket-potatoes",
+      "title": "Chili-stuffed potatoes",
+      "subtitle": "Fluffy split potatoes piled with turkey and black bean chili, melted cheddar and a cool dollop of yogurt.",
+      "category": "Comfort",
+      "protein": "turkey",
+      "minutes": 45,
+      "equipment": [
+        "microwave",
+        "stovetop"
+      ],
+      "tags": [
+        "healthier"
+      ],
+      "rotation": "core",
+      "items": {
+        "groundTurkey": 2,
+        "potatoes": 3,
+        "beans": 1,
+        "tomatoes": 1,
+        "taco": 2.5,
+        "cumin": 1,
+        "onions": 0.5,
+        "cheese": 4,
+        "yogurt": 4
+      },
+      "steps": [
+        "Scrub the potatoes and pierce each several times. Microwave in batches, turning halfway, until a knife slides easily into the centers, 8–15 minutes per batch.",
+        "Meanwhile chop the onion and brown it with the turkey in a large, deep skillet over medium-high, breaking it up, until the turkey reads 165°F, 8–10 minutes.",
+        "Stir in the taco seasoning, cumin, drained beans and the tomatoes with their juice. Simmer, stirring now and then, until thick, 10 minutes.",
+        "Split the potatoes, fluff the insides, spoon on the chili and finish with shredded cheddar and yogurt."
+      ],
+      "sides": [
+        "canned-green-beans",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "Fluffy split golden potatoes heaped with chunky ground meat and black bean chili, melted cheddar and a dollop of white cream."
+    },
+    {
+      "id": "breakfast-tacos",
+      "title": "Sausage, egg & potato breakfast tacos",
+      "subtitle": "Breakfast-for-dinner tacos with crumbled sausage, soft scrambled eggs, crispy potatoes, peppers and cheddar.",
+      "category": "Comfort",
+      "protein": "sausage",
+      "minutes": 45,
+      "equipment": [
+        "blackstone",
+        "microwave"
+      ],
+      "tags": [
+        "taco night"
+      ],
+      "rotation": "core",
+      "items": {
+        "italianSausage": 2,
+        "eggs": 10,
+        "potatoes": 1.5,
+        "peppers": 1,
+        "tortillas": 15,
+        "cheese": 5,
+        "salsa": 8,
+        "oil": 2,
+        "salt": 1
+      },
+      "steps": [
+        "Dice the potatoes into ½-inch cubes and microwave in a covered, vented dish with 2 tablespoons water, stirring halfway, until just tender, 6–8 minutes. Drain.",
+        "Heat the Blackstone over medium-high. Brown the sausage (squeezed out of its casings), breaking it up, until it reads 160°F, 8–10 minutes, and move it to a cooler zone.",
+        "Spread the oil on the hot zone and fry the potatoes and diced pepper with the salt until golden, 6–8 minutes.",
+        "Lower the heat to medium, pour the beaten eggs onto a clean zone and gently scramble until just set. Fold in the sausage, potatoes and shredded cheddar.",
+        "Warm the tortillas on the griddle and fill three per person, with salsa on top."
+      ],
+      "sides": [
+        "canned-corn",
+        "applesauce-cups"
+      ],
+      "sideSlots": 2,
+      "photo": "Soft flour tortilla tacos filled with fluffy scrambled eggs, crumbled sausage, crispy golden potato cubes, peppers and melted cheddar, topped with salsa."
+    },
+    {
+      "id": "tomato-soup-melts",
+      "title": "Chicken cheddar melts",
+      "subtitle": "Golden skillet-toasted sandwiches packed with sliced grilled chicken and melted cheddar.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "electric grill",
+        "stovetop"
+      ],
+      "tags": [
+        "sandwiches"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "bread": 10,
+        "cheese": 8,
+        "butter": 4,
+        "garlicPowder": 0.5,
+        "salt": 0.5
+      },
+      "steps": [
+        "Season the chicken thighs with the garlic powder and salt. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice thin.",
+        "Butter one side of each bread slice. Build five sandwiches with the buttered sides out, layering cheddar, chicken and more cheddar.",
+        "Toast in a large skillet over medium-low, two at a time, until deep golden and the cheese melts, 3–4 minutes per side. Cut in half."
+      ],
+      "sides": [
+        "tomato-soup",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden buttery grilled cheese sandwiches stuffed with sliced chicken and melted cheddar, cut diagonally and stacked to show the gooey center."
+    },
+    {
+      "id": "griddle-sloppy-joes",
+      "title": "Sweet & tangy sloppy joes",
+      "subtitle": "Sweet-tangy beef simmered with peppers and onions, piled on toasted buns — two each.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 30,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "sandwiches"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2.25,
+        "buns": 10,
+        "onions": 0.5,
+        "peppers": 1,
+        "tomatoes": 1,
+        "ketchup": 6,
+        "brownSugar": 2,
+        "mustard": 2,
+        "ciderVinegar": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Finely dice the onion and pepper. Brown them with the beef in a large skillet over medium-high, breaking up the meat, until it reads 160°F, 8–10 minutes. Spoon off the excess fat.",
+        "Stir in the diced tomatoes with their juice, ketchup, brown sugar, mustard, cider vinegar and salt. Simmer, stirring, until thick and saucy, 8–10 minutes.",
+        "Toast the cut sides of the buns in a dry skillet and pile with the beef."
+      ],
+      "sides": [
+        "potato-wedges",
+        "canned-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "A toasted bun overflowing with saucy sweet-and-tangy sloppy joe beef with diced peppers and onions, on a plate."
+    },
+    {
+      "id": "crispy-chicken-fingers",
+      "title": "Crispy Parmesan chicken fingers",
+      "subtitle": "Panko-Parmesan crusted chicken strips from the air fryer with a honey-mustard dip.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 50,
+      "equipment": [
+        "air fryer"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "panko": 6,
+        "parm": 2,
+        "eggs": 2,
+        "flour": 0.5,
+        "garlicPowder": 1,
+        "salt": 1,
+        "oil": 2,
+        "yogurt": 5,
+        "mustard": 2,
+        "honey": 2
+      },
+      "steps": [
+        "Cut the chicken into finger-size strips and season with the salt and garlic powder.",
+        "Set up three shallow dishes: flour, beaten eggs, and panko mixed with the Parmesan and oil. Coat each strip in flour, dip in egg, then press into the crumbs. Throw away leftover coating that touched raw chicken.",
+        "Air-fry at 390°F in single layers, turning halfway, until golden and the thickest strip reads 165°F, 10–14 minutes per batch.",
+        "Stir the yogurt, mustard and honey into a dip and serve with the chicken."
+      ],
+      "sides": [
+        "carrot-sticks",
+        "sweet-potatoes"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden crispy panko-crusted chicken tenders stacked on a plate with a small bowl of creamy honey-mustard dip."
+    },
+    {
+      "id": "broccoli-cheddar-potatoes",
+      "title": "Chicken, broccoli & cheddar potatoes",
+      "subtitle": "Fluffy split potatoes loaded with grilled chicken, broccoli and melted cheddar.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 45,
+      "equipment": [
+        "microwave",
+        "electric grill",
+        "stovetop"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "potatoes": 3,
+        "broccoli": 1.25,
+        "cheese": 6,
+        "yogurt": 5,
+        "butter": 2,
+        "pepper": 0.5,
+        "salt": 1
+      },
+      "steps": [
+        "Scrub the potatoes and pierce each several times. Microwave in batches, turning halfway, until a knife slides easily into the centers, 8–15 minutes per batch.",
+        "Pound the chicken breasts to an even ¾-inch thickness. Season with half the salt and the pepper. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then dice.",
+        "Steam the frozen broccoli in a covered saucepan with ½ inch of boiling water until tender, 5–7 minutes, and drain.",
+        "Split the potatoes and fluff the insides with the butter, yogurt and remaining salt. Top with broccoli, chicken and shredded cheddar, then microwave 30–60 seconds to melt the cheese."
+      ],
+      "sides": [
+        "apple-slices",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "Split fluffy golden potatoes loaded with steamed broccoli florets, diced grilled chicken and gooey melted cheddar."
+    },
+    {
+      "id": "teriyaki-chicken-bowls",
+      "title": "Teriyaki chicken rice bowls",
+      "subtitle": "Grilled chicken thighs lacquered in homemade garlic-ginger teriyaki over jasmine rice.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop",
+        "electric grill"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "rotation": "bench",
+      "items": {
+        "chickenThighs": 2.5,
+        "jasmine": 2,
+        "soy": 6,
+        "brownSugar": 4,
+        "honey": 1,
+        "garlic": 3,
+        "ginger": 0.5,
+        "starch": 1,
+        "riceVinegar": 1,
+        "sesame": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Rinse the jasmine rice in a strainer until the water runs mostly clear. Combine it in a saucepan with 3 cups water and ½ teaspoon of the salt, bring to a boil, then cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat and fluff with a fork.",
+        "Make the teriyaki: in a small saucepan whisk the soy sauce, brown sugar, honey, rice vinegar, minced garlic, grated ginger, cornstarch and ½ cup water. Simmer, stirring, until thick and glossy, 2–3 minutes. Pour a third of it into a separate cup for brushing.",
+        "Grill the chicken thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes, brushing with the cup of teriyaki during the last 2 minutes.",
+        "Rest 5 minutes, slice, and serve over the rice with the rest of the sauce and a drizzle of sesame oil."
+      ],
+      "sides": [
+        "steamed-broccoli",
+        "pineapple-chunks"
+      ],
+      "sideSlots": 2,
+      "photo": "Sliced grilled chicken thighs glazed in glossy dark teriyaki sauce over a mound of white jasmine rice, extra sauce drizzled on top."
+    },
+    {
+      "id": "hibachi-chicken-noodles",
+      "title": "Hibachi chicken & garlic butter noodles",
+      "subtitle": "Blackstone hibachi night: soy-garlic chicken, zucchini, onions and mushrooms with buttery noodles and yum yum sauce.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop",
+        "blackstone"
+      ],
+      "tags": [
+        "noodle night"
+      ],
+      "rotation": "bench",
+      "items": {
+        "chickenThighs": 2.25,
+        "spaghetti": 16,
+        "zucchini": 1.5,
+        "onions": 1,
+        "mushrooms": 8,
+        "butter": 4,
+        "garlic": 5,
+        "soy": 6,
+        "oil": 2,
+        "mayo": 6,
+        "ketchup": 1,
+        "honey": 1,
+        "paprika": 0.5,
+        "garlicPowder": 0.5,
+        "riceVinegar": 1,
+        "salt": 3
+      },
+      "steps": [
+        "Stir the mayo, ketchup, honey, paprika, garlic powder, rice vinegar and 1–2 tablespoons water into a smooth yum yum sauce and chill.",
+        "Bring a large pot of water to a boil with 1 tablespoon of the salt. Cook the spaghetti until al dente and drain.",
+        "Cut the chicken into 1-inch pieces, the zucchini into half-moons and the onion into chunks. Mince the garlic.",
+        "Heat the Blackstone over medium-high with the oil. Cook the chicken on one zone and the zucchini, onion and mushrooms on another, turning, until the vegetables are browned and the thickest chicken pieces read 165°F, 8–10 minutes. Splash both with half the soy sauce.",
+        "Move them to a cooler zone. Melt the butter with the garlic on the hot zone, add the noodles and remaining soy sauce and toss until glossy, 1–2 minutes.",
+        "Serve the noodles with the chicken and vegetables and pass the yum yum sauce."
+      ],
+      "sides": [
+        "edamame",
+        "asian-slaw"
+      ],
+      "sideSlots": 2,
+      "photo": "A hibachi-style plate of buttery garlic noodles, seared bite-size chicken, browned zucchini, onions and mushrooms, with a small cup of pale orange yum yum sauce."
+    },
+    {
+      "id": "kung-pao-chicken",
+      "title": "Kung pao–style chicken",
+      "subtitle": "Saucy, gently spicy chicken thighs with bell peppers and onion over jasmine rice (peanuts optional).",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 40,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "rotation": "bench",
+      "items": {
+        "chickenThighs": 2.25,
+        "jasmine": 2,
+        "peppers": 2,
+        "onions": 0.5,
+        "garlic": 4,
+        "ginger": 0.5,
+        "soy": 6,
+        "riceVinegar": 2,
+        "brownSugar": 2,
+        "starch": 3,
+        "sesame": 1,
+        "oil": 2,
+        "redPepperFlakes": 0.5,
+        "salt": 0.5
+      },
+      "steps": [
+        "Rinse the jasmine rice in a strainer until the water runs mostly clear. Combine it in a saucepan with 3 cups water and ½ teaspoon of the salt, bring to a boil, then cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat and fluff with a fork.",
+        "Cut the chicken into ¾-inch pieces and toss with 2 tablespoons of the soy sauce and 2 tablespoons of the cornstarch. Cut the peppers and onion into 1-inch pieces.",
+        "For the sauce, whisk the remaining soy sauce, rice vinegar, brown sugar, remaining cornstarch, sesame oil and ⅓ cup water.",
+        "Heat half the oil in a large skillet over medium-high. Cook the chicken in two batches, stirring, until browned and the thickest pieces read 165°F, 5–6 minutes per batch. Move to a plate.",
+        "Add the remaining oil, peppers and onion and stir-fry 2–3 minutes. Add the minced garlic, grated ginger and red pepper flakes (halve or skip them for less heat) for 30 seconds.",
+        "Return the chicken, pour in the sauce and toss until thick and glossy, about 1 minute. Serve over the rice. Peanuts are optional and not on the shopping list; toss in a handful if you have them."
+      ],
+      "sides": [
+        "edamame",
+        "orange-wedges"
+      ],
+      "sideSlots": 2,
+      "photo": "Glossy kung pao–style chicken with red and green bell pepper chunks and onion in a dark spicy-sweet sauce, beside white jasmine rice in a bowl."
+    },
+    {
+      "id": "egg-roll-in-a-bowl",
+      "title": "Egg roll in a bowl",
+      "subtitle": "All the flavor of a pork egg roll (ground pork, cabbage, carrots, ginger and garlic) in one big skillet.",
+      "category": "Asian-inspired",
+      "protein": "pork",
+      "minutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "healthier"
+      ],
+      "rotation": "bench",
+      "items": {
+        "groundPork": 2.25,
+        "slaw": 28,
+        "carrots": 0.5,
+        "garlic": 4,
+        "ginger": 0.75,
+        "soy": 6,
+        "riceVinegar": 2,
+        "sesame": 2,
+        "oil": 1
+      },
+      "steps": [
+        "Shred the carrots, mince the garlic and grate the ginger.",
+        "Heat the oil in your largest skillet over medium-high. Brown the pork, breaking it up, until it reads 160°F, 8–10 minutes. Spoon off the excess fat.",
+        "Stir in the garlic and ginger for 30 seconds, then add the coleslaw mix and carrots in two additions, tossing until the cabbage wilts but keeps some crunch, 4–5 minutes.",
+        "Stir in the soy sauce and rice vinegar, drizzle with the sesame oil and serve in bowls."
+      ],
+      "sides": [
+        "crispy-potstickers",
+        "sesame-cucumber"
+      ],
+      "sideSlots": 2,
+      "photo": "A bowl of savory stir-fried ground pork with wilted shredded cabbage and carrots, glistening with soy and sesame oil."
+    },
+    {
+      "id": "chicken-katsu",
+      "title": "Air-fryer chicken katsu",
+      "subtitle": "Panko-crusted chicken cutlets from the air fryer with a sweet-tangy homemade katsu sauce.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 50,
+      "equipment": [
+        "air fryer"
+      ],
+      "tags": [],
+      "rotation": "bench",
+      "items": {
+        "chicken": 2.25,
+        "panko": 8,
+        "flour": 0.5,
+        "eggs": 2,
+        "oil": 2,
+        "salt": 1,
+        "pepper": 0.5,
+        "ketchup": 4,
+        "soy": 2,
+        "honey": 1,
+        "ciderVinegar": 1,
+        "mustard": 0.5
+      },
+      "steps": [
+        "Slice the chicken breasts in half horizontally and pound into even ½-inch cutlets. Season with the salt and pepper.",
+        "Set up three shallow dishes: flour, beaten eggs, and panko tossed with the oil. Coat each cutlet in flour, dip in egg, then press firmly into the panko. Throw away leftover coating that touched raw chicken.",
+        "Air-fry at 390°F in single layers, flipping halfway, until deep golden and the thickest part reads 165°F, 10–14 minutes per batch. Rest on a rack 2 minutes.",
+        "Stir the ketchup, soy sauce, honey, cider vinegar and mustard into a smooth katsu sauce. Slice the cutlets into strips and drizzle with the sauce."
+      ],
+      "sides": [
+        "asian-slaw",
+        "crispy-potstickers"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden crispy panko-breaded chicken cutlets sliced into strips and drizzled with dark brown katsu sauce, beside a mound of finely shredded cabbage."
+    },
+    {
+      "id": "korean-beef-bowls",
+      "title": "Korean-style beef bowls",
+      "subtitle": "Sweet-savory garlic, ginger and sesame ground beef over jasmine rice with crunchy carrots.",
+      "category": "Asian-inspired",
+      "protein": "beef",
+      "minutes": 30,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "rotation": "bench",
+      "items": {
+        "beef": 2.25,
+        "jasmine": 2,
+        "soy": 5,
+        "brownSugar": 3,
+        "garlic": 4,
+        "ginger": 0.75,
+        "sesame": 2,
+        "redPepperFlakes": 0.5,
+        "carrots": 0.5,
+        "riceVinegar": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Rinse the jasmine rice in a strainer until the water runs mostly clear. Combine it in a saucepan with 3 cups water and ½ teaspoon of the salt, bring to a boil, then cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat and fluff with a fork.",
+        "Whisk the soy sauce, brown sugar, sesame oil, rice vinegar and red pepper flakes (skip them for no heat). Shred the carrots.",
+        "Brown the beef in a large skillet over medium-high, breaking it into small crumbles, until it reads 160°F, 8–10 minutes. Spoon off the excess fat.",
+        "Add the minced garlic and grated ginger for 30 seconds, then pour in the sauce and simmer until the beef is glazed and sticky, 2–3 minutes.",
+        "Spoon over the rice and top with the shredded carrots."
+      ],
+      "sides": [
+        "sesame-cucumber",
+        "edamame"
+      ],
+      "sideSlots": 2,
+      "photo": "A bowl of white jasmine rice topped with glossy caramelized Korean-style ground beef and shredded carrots, drizzled with sesame oil."
+    },
+    {
+      "id": "sweet-sour-pork",
+      "title": "Sweet & sour pork",
+      "subtitle": "Air-crisped pork bites with pineapple, peppers and onion in a bright sweet-and-sour sauce over rice.",
+      "category": "Asian-inspired",
+      "protein": "pork",
+      "minutes": 50,
+      "equipment": [
+        "air fryer",
+        "stovetop"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "rotation": "bench",
+      "items": {
+        "porkLoin": 2.25,
+        "starch": 5,
+        "eggs": 1,
+        "oil": 2,
+        "salt": 1,
+        "pineapple": 1,
+        "peppers": 2,
+        "onions": 0.5,
+        "ketchup": 4,
+        "riceVinegar": 3,
+        "brownSugar": 3,
+        "soy": 2,
+        "garlic": 2,
+        "jasmine": 2
+      },
+      "steps": [
+        "Rinse the jasmine rice in a strainer until the water runs mostly clear. Combine it in a saucepan with 3 cups water and ½ teaspoon of the salt, bring to a boil, then cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat and fluff with a fork.",
+        "Cut the pork into 1-inch cubes. Toss with the beaten egg and remaining ½ teaspoon salt, then with 4 tablespoons of the cornstarch until coated; shake off the excess and drizzle with 1 tablespoon of the oil.",
+        "Air-fry at 400°F in single-layer batches, shaking halfway, until golden and crisp and the thickest pieces read 145°F, 10–12 minutes per batch. Rest 3 minutes.",
+        "Drain the pineapple, saving ½ cup of the juice. Whisk that juice with the ketchup, rice vinegar, brown sugar, soy sauce and remaining 1 tablespoon cornstarch.",
+        "Heat the remaining oil in a large skillet over medium-high and stir-fry the peppers, onion and minced garlic 3 minutes. Add the pineapple and sauce and simmer until glossy, 1–2 minutes. Toss in the pork and serve over rice."
+      ],
+      "sides": [
+        "steamed-broccoli",
+        "cucumber-spears"
+      ],
+      "sideSlots": 2,
+      "photo": "Crispy golden pork bites tossed with pineapple chunks, red and green pepper and onion in a shiny red sweet-and-sour sauce, beside white rice."
+    },
+    {
+      "id": "pork-carnitas-tacos",
+      "title": "Griddle pork carnitas tacos",
+      "subtitle": "Citrus-and-cumin pork simmered tender, then crisped on the Blackstone and tucked into corn tortillas.",
+      "category": "Tex-Mex",
+      "protein": "pork",
+      "minutes": 55,
+      "equipment": [
+        "stovetop",
+        "blackstone"
+      ],
+      "tags": [
+        "taco night"
+      ],
+      "rotation": "bench",
+      "items": {
+        "porkLoin": 2.5,
+        "oranges": 1,
+        "limes": 3,
+        "cumin": 2,
+        "oregano": 1,
+        "garlic": 4,
+        "onions": 1,
+        "salt": 1.5,
+        "oil": 2,
+        "cornwrap": 15,
+        "salsa": 8,
+        "cilantro": 1
+      },
+      "steps": [
+        "Cut the pork into 1-inch cubes and put them in a large, deep skillet with the juice of the orange and 2 limes, the cumin, oregano, smashed garlic, salt, half the onion in chunks and 1 cup water.",
+        "Bring to a boil, then cover and simmer on medium-low until the pork is very tender, about 30 minutes (it will be well past 145°F). Uncover and boil off the remaining liquid, stirring, 5–8 minutes. Rest 3 minutes, then pull the chunks apart with two forks.",
+        "Heat the Blackstone over medium-high with the oil. Spread out the pork, press with a spatula and cook without moving until crisp underneath, 3–4 minutes; flip and crisp the other side. Warm the tortillas on the griddle.",
+        "Finely dice the rest of the onion and chop the cilantro. Fill three tortillas per person with pork, onion, cilantro, salsa and a squeeze of the last lime."
+      ],
+      "sides": [
+        "black-beans",
+        "chips-and-salsa"
+      ],
+      "sideSlots": 2,
+      "photo": "Corn tortilla street tacos piled with crispy-edged pulled pork carnitas, diced white onion, chopped cilantro and salsa, with lime wedges."
+    },
+    {
+      "id": "pork-souvlaki-plates",
+      "title": "Pork souvlaki plates",
+      "subtitle": "Lemon-garlic-oregano pork grilled until juicy, with warm naan and a cool cucumber tzatziki.",
+      "category": "Grill",
+      "protein": "pork",
+      "minutes": 40,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "grill night",
+        "healthier"
+      ],
+      "rotation": "bench",
+      "items": {
+        "porkLoin": 2.25,
+        "lemons": 2,
+        "garlic": 4,
+        "oregano": 2,
+        "oil": 3,
+        "salt": 1,
+        "pepper": 0.5,
+        "naan": 5,
+        "yogurt": 10,
+        "cucumber": 1,
+        "tomato": 0.75,
+        "onions": 0.25
+      },
+      "steps": [
+        "Cut the pork into ¾-inch-thick slices. Toss with the juice of 1 lemon, 2 tablespoons of the oil, half the minced garlic, the oregano, salt and pepper. Marinate 15 minutes (or up to a day in the fridge).",
+        "For the tzatziki, grate the cucumber, squeeze out the water and stir it into the yogurt with the remaining garlic and the juice of half the second lemon.",
+        "Grill the pork on the preheated electric grill over medium-high, turning once, until browned and the center reads 145°F, 8–12 minutes. Rest 3 minutes, then cut into strips.",
+        "Brush the naan with the remaining oil and warm on the grill. Serve the pork on the naan with tzatziki, diced tomato, thin onion slices and the remaining lemon in wedges."
+      ],
+      "sides": [
+        "lemon-chickpeas",
+        "garlic-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "Grilled lemon-oregano pork strips with char marks on warm flatbread with creamy cucumber tzatziki, diced tomatoes, sliced onion and lemon wedges."
+    },
+    {
+      "id": "breaded-pork-sandwiches",
+      "title": "Midwest breaded pork sandwiches",
+      "subtitle": "Crispy panko-crusted pork cutlets bigger than the bun, with pickles, mustard, onion and lettuce.",
+      "category": "Comfort",
+      "protein": "pork",
+      "minutes": 50,
+      "equipment": [
+        "air fryer"
+      ],
+      "tags": [
+        "sandwiches"
+      ],
+      "rotation": "bench",
+      "items": {
+        "porkLoin": 2.25,
+        "panko": 8,
+        "flour": 0.5,
+        "eggs": 2,
+        "oil": 2,
+        "salt": 1,
+        "pepper": 0.5,
+        "garlicPowder": 1,
+        "buns": 5,
+        "pickles": 4,
+        "mustard": 3,
+        "mayo": 3,
+        "onions": 0.25,
+        "lettuce": 1
+      },
+      "steps": [
+        "Cut the pork loin into 5 equal slices and pound each to about ¼ inch thick (they get big). Season with the salt, pepper and garlic powder.",
+        "Coat each cutlet in flour, then beaten egg, then panko tossed with the oil, pressing firmly. Throw away leftover coating that touched raw pork.",
+        "Air-fry one or two at a time at 390°F, flipping halfway, until deep golden and the center reads 145°F, 8–10 minutes per batch. Rest 3 minutes.",
+        "Toast the buns, spread with mustard and mayo, and stack each with a cutlet, pickles, thin onion slices and lettuce."
+      ],
+      "sides": [
+        "corn-on-the-cob",
+        "lime-slaw"
+      ],
+      "sideSlots": 2,
+      "photo": "A huge golden breaded pork cutlet hanging well past the edges of a toasted bun, topped with dill pickles, onion and lettuce."
+    },
+    {
+      "id": "honey-garlic-pork-chops",
+      "title": "Honey garlic pork chops",
+      "subtitle": "Skillet-seared boneless chops in a sticky honey, garlic and soy pan sauce.",
+      "category": "Comfort",
+      "protein": "pork",
+      "minutes": 30,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [],
+      "rotation": "bench",
+      "items": {
+        "pork": 2.5,
+        "honey": 4,
+        "garlic": 5,
+        "soy": 3,
+        "ciderVinegar": 1,
+        "butter": 2,
+        "oil": 1,
+        "salt": 1,
+        "pepper": 0.5,
+        "garlicPowder": 0.5
+      },
+      "steps": [
+        "Pat the chops dry and season both sides with the salt, pepper and garlic powder. Whisk the honey, soy sauce and cider vinegar.",
+        "Heat the oil in a large skillet over medium-high. Sear the chops (in two batches if crowded) until golden, 4–5 minutes per side, until the center reads 145°F. Move to a plate and rest at least 3 minutes.",
+        "Lower the heat to medium, melt the butter and cook the minced garlic 30 seconds. Pour in the honey mixture and simmer until syrupy, 1–2 minutes.",
+        "Return the chops and any juices, turn to coat in the glaze and serve with the sauce spooned over."
+      ],
+      "sides": [
+        "smashed-potatoes",
+        "garlic-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden seared boneless pork chops glistening with a sticky amber honey garlic glaze in a skillet."
+    },
+    {
+      "id": "sausage-broccoli-penne",
+      "title": "Italian sausage & broccoli penne",
+      "subtitle": "Browned Italian sausage, garlicky broccoli and penne tossed with Parmesan and a splash of broth.",
+      "category": "Pasta",
+      "protein": "sausage",
+      "minutes": 35,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [],
+      "rotation": "bench",
+      "items": {
+        "italianSausage": 2.25,
+        "penne": 20,
+        "broccoli": 1.5,
+        "garlic": 4,
+        "chickenBroth": 1,
+        "parm": 3,
+        "oil": 1,
+        "redPepperFlakes": 0.25,
+        "lemons": 1,
+        "salt": 3
+      },
+      "steps": [
+        "Bring a large pot of water (about 6 quarts) to a boil and add the salt. Cook the penne until al dente, 10–12 minutes, adding the frozen broccoli for the last 2 minutes. Save 1 cup of the pasta water and drain.",
+        "Meanwhile heat the oil in a large, deep skillet over medium-high. Brown the sausage (squeezed out of its casings), breaking it up, until it reads 160°F, 8–10 minutes.",
+        "Add the minced garlic and red pepper flakes for 30 seconds, then the chicken broth, scraping up the browned bits.",
+        "Add the penne and broccoli, the Parmesan and the juice of the lemon, and toss with splashes of pasta water until glossy."
+      ],
+      "sides": [
+        "romaine-salad",
+        "garlic-toast"
+      ],
+      "sideSlots": 2,
+      "photo": "Penne tossed with browned crumbled Italian sausage, bright green broccoli florets, garlic and grated Parmesan in a wide pasta bowl."
+    },
+    {
+      "id": "sausage-pepper-hoagies",
+      "title": "Sausage, pepper & onion hoagies",
+      "subtitle": "Griddled Italian sausage with sweet peppers and onions under melted mozzarella on toasted rolls.",
+      "category": "Grill",
+      "protein": "sausage",
+      "minutes": 35,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "sandwiches",
+        "grill night"
+      ],
+      "rotation": "bench",
+      "items": {
+        "italianSausage": 2.5,
+        "hoagies": 5,
+        "peppers": 3,
+        "onions": 1,
+        "mozzarella": 6,
+        "oil": 1,
+        "italianSeasoning": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Heat the Blackstone over medium. Slice the peppers into strips and the onions into thin half-moons.",
+        "Cook the peppers and onions with the oil, Italian seasoning and salt on one zone, stirring, until soft and charred at the edges, 10–12 minutes.",
+        "Meanwhile cook the sausage links on another zone, turning, for 8 minutes. Split each lengthwise and griddle cut-side down until browned and the center reads 160°F, 4–6 minutes more.",
+        "Gather the sausage and peppers into five piles, top with mozzarella and cover with a dome or foil to melt. Toast the split rolls and scoop a pile into each."
+      ],
+      "sides": [
+        "potato-wedges",
+        "canned-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "A toasted hoagie roll stuffed with griddled Italian sausage, charred peppers and onions under melted mozzarella."
+    },
+    {
+      "id": "chicken-cobb-salad",
+      "title": "Chicken Cobb salad",
+      "subtitle": "A big chopped salad with grilled chicken, crispy bacon, hard-cooked egg, tomato and cheddar with ranch.",
+      "category": "Salads",
+      "protein": "chicken",
+      "minutes": 35,
+      "equipment": [
+        "stovetop",
+        "electric grill"
+      ],
+      "tags": [
+        "salad"
+      ],
+      "rotation": "bench",
+      "items": {
+        "chickenThighs": 2.25,
+        "bacon": 0.5,
+        "eggs": 5,
+        "lettuce": 4,
+        "tomato": 0.75,
+        "cheese": 4,
+        "ranch": 10,
+        "oil": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Put the eggs in a saucepan, cover with cold water by an inch and bring to a boil. Cover, turn off the heat and let stand 11 minutes, then cool in ice water, peel and quarter.",
+        "Cook the bacon in a large skillet over medium, turning, until crisp, 8–10 minutes. Drain on paper towels and crumble.",
+        "Rub the chicken thighs with the oil, salt and pepper and grill on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes. Rest 5 minutes and slice.",
+        "Chop the romaine and divide among five big bowls. Arrange rows of chicken, bacon, egg, diced tomato and shredded cheddar on top and serve with ranch."
+      ],
+      "sides": [
+        "garlic-toast",
+        "applesauce-cups"
+      ],
+      "sideSlots": 2,
+      "photo": "A large bowl of chopped romaine with neat rows of sliced grilled chicken, crumbled bacon, quartered hard-cooked eggs, diced tomatoes and shredded cheddar, ranch on the side."
+    },
+    {
+      "id": "turkey-taco-salad",
+      "title": "Turkey taco salad",
+      "subtitle": "Crisp romaine loaded with taco-spiced turkey, black beans, cheddar, salsa, sour cream and crunchy chips.",
+      "category": "Salads",
+      "protein": "turkey",
+      "minutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "salad",
+        "taco night",
+        "healthier"
+      ],
+      "rotation": "bench",
+      "items": {
+        "groundTurkey": 2.25,
+        "taco": 3,
+        "beans": 1,
+        "lettuce": 4,
+        "cheese": 5,
+        "salsa": 12,
+        "sourCream": 8,
+        "tortillaChips": 8,
+        "limes": 1
+      },
+      "steps": [
+        "Brown the turkey in a large skillet over medium-high, breaking it up, until it reads 165°F, 8–10 minutes.",
+        "Stir in the taco seasoning, the rinsed beans and ½ cup water and simmer until saucy, 3–4 minutes.",
+        "Chop the romaine and divide among five big bowls. Top with the warm turkey, shredded cheddar, salsa and sour cream.",
+        "Crush a handful of chips over each salad and finish with a squeeze of lime."
+      ],
+      "sides": [
+        "canned-corn",
+        "orange-wedges"
+      ],
+      "sideSlots": 2,
+      "photo": "A big taco salad of chopped romaine topped with seasoned ground meat, black beans, shredded cheddar, salsa, sour cream and crushed tortilla chips, with a lime wedge."
+    },
+    {
+      "id": "asian-chicken-salad",
+      "title": "Sesame-ginger chicken salad",
+      "subtitle": "Grilled chicken over romaine and crunchy cabbage with fresh orange and a sesame-ginger dressing.",
+      "category": "Salads",
+      "protein": "chicken",
+      "minutes": 30,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "salad",
+        "healthier"
+      ],
+      "rotation": "bench",
+      "items": {
+        "chicken": 2.25,
+        "lettuce": 3,
+        "slaw": 14,
+        "carrots": 0.5,
+        "oranges": 2,
+        "soy": 4,
+        "riceVinegar": 3,
+        "sesame": 3,
+        "honey": 2,
+        "ginger": 0.5,
+        "oil": 3,
+        "garlic": 1
+      },
+      "steps": [
+        "Pound the chicken breasts to an even ¾-inch thickness and rub with 1 tablespoon of the oil and 1 tablespoon of the soy sauce. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes. Rest 5 minutes, then slice.",
+        "Whisk the remaining soy sauce and oil with the rice vinegar, sesame oil, honey, grated ginger and grated garlic.",
+        "Chop the romaine, shred the carrots and peel and segment the oranges. Toss the romaine, coleslaw mix and carrots with most of the dressing.",
+        "Divide among five bowls, top with the chicken and orange segments and drizzle with the rest of the dressing."
+      ],
+      "sides": [
+        "crispy-potstickers",
+        "edamame"
+      ],
+      "sideSlots": 2,
+      "photo": "A colorful salad of romaine and shredded cabbage with carrots and orange segments topped with sliced grilled chicken and a glossy sesame-ginger dressing."
+    },
+    {
+      "id": "turkey-chili",
+      "title": "Turkey & black bean chili",
+      "subtitle": "A big pot of hearty turkey chili with black beans, peppers and tomatoes, topped with cheddar and sour cream.",
+      "category": "Comfort",
+      "protein": "turkey",
+      "minutes": 45,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "healthier"
+      ],
+      "rotation": "bench",
+      "items": {
+        "groundTurkey": 2.5,
+        "beans": 2,
+        "tomatoes": 2,
+        "onions": 1,
+        "peppers": 1,
+        "garlic": 3,
+        "taco": 3,
+        "cumin": 2,
+        "chickenBroth": 1,
+        "cheese": 5,
+        "sourCream": 8,
+        "oil": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Dice the onion and pepper. Heat the oil in a large pot over medium-high and cook them until softened, 5 minutes.",
+        "Add the turkey and brown, breaking it up, until it reads 165°F, 8–10 minutes. Stir in the minced garlic, taco seasoning, cumin and salt for 1 minute.",
+        "Add the drained beans, the tomatoes with their juice and the chicken broth. Simmer, partly covered and stirring now and then, until thick, 20 minutes.",
+        "Ladle into bowls and top with shredded cheddar and sour cream."
+      ],
+      "sides": [
+        "chips-and-salsa",
+        "corn-on-the-cob"
+      ],
+      "sideSlots": 2,
+      "photo": "A deep bowl of thick turkey and black bean chili topped with shredded cheddar and a dollop of sour cream."
+    },
+    {
+      "id": "beef-stroganoff",
+      "title": "Beef stroganoff noodles",
+      "subtitle": "Ground beef and mushrooms in a creamy sour cream gravy over buttery egg noodles.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 35,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [],
+      "rotation": "bench",
+      "items": {
+        "beef": 2.25,
+        "eggNoodles": 16,
+        "mushrooms": 8,
+        "onions": 0.5,
+        "garlic": 3,
+        "flour": 0.25,
+        "chickenBroth": 2,
+        "sourCream": 10,
+        "butter": 2,
+        "paprika": 0.5,
+        "salt": 3,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Bring a large pot of water to a boil with 2 teaspoons of the salt. Cook the egg noodles until tender, 6–8 minutes, drain and toss with the butter.",
+        "Meanwhile dice the onion. Brown the beef with the onion and mushrooms in a large, deep skillet over medium-high, breaking up the meat, until it reads 160°F and the mushrooms are browned, 10–12 minutes. Spoon off the excess fat.",
+        "Stir in the minced garlic, flour, paprika, pepper and remaining salt for 1 minute. Pour in the broth and simmer, stirring, until thickened, 3–4 minutes.",
+        "Take the pan off the heat and stir in the sour cream until creamy. Spoon over the noodles."
+      ],
+      "sides": [
+        "buttered-peas",
+        "canned-carrots"
+      ],
+      "sideSlots": 2,
+      "photo": "Wide egg noodles topped with a creamy beef and mushroom stroganoff sauce, sprinkled with black pepper."
+    },
+    {
+      "id": "bacon-smashburgers",
+      "title": "Bacon cheeseburger smashburgers",
+      "subtitle": "Double smashed patties with crispy bacon, melted cheddar and a tangy burger sauce.",
+      "category": "Burgers",
+      "protein": "beef",
+      "minutes": 35,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "burger"
+      ],
+      "rotation": "bench",
+      "items": {
+        "beef": 2.5,
+        "bacon": 0.5,
+        "buns": 5,
+        "cheese": 5,
+        "mayo": 3,
+        "ketchup": 2,
+        "pickles": 4,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Heat the Blackstone over medium. Cook the bacon, turning, until crisp, 6–8 minutes, and drain on paper towels. Scrape the griddle and turn it up to medium-high.",
+        "Stir the mayo and ketchup with 1 tablespoon finely chopped pickles for burger sauce. Divide the beef into 10 loose balls.",
+        "Smash the balls thin on the hot griddle and season with the salt and pepper. Cook until the edges are crispy, 2–3 minutes, flip and lay cheddar on five patties.",
+        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Toast the cut buns on a clean part of the griddle.",
+        "Spread the buns with burger sauce and stack two patties, bacon and pickles on each."
+      ],
+      "sides": [
+        "jewel-fries"
+      ],
+      "sideSlots": 1,
+      "photo": "A double smashburger with crispy bacon strips, melted cheddar, pickles and burger sauce on a toasted bun, plated with french fries."
+    },
+    {
+      "id": "chicken-philly",
+      "title": "Chicken Philly cheesesteaks",
+      "subtitle": "Thin-sliced griddled chicken with peppers, onions and melted cheese stuffed into toasted hoagie rolls.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 35,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "sandwiches"
+      ],
+      "rotation": "bench",
+      "items": {
+        "chicken": 2.25,
+        "hoagies": 5,
+        "peppers": 2,
+        "onions": 1,
+        "mozzarella": 8,
+        "oil": 2,
+        "garlicPowder": 1,
+        "salt": 1,
+        "pepper": 0.5,
+        "mayo": 2
+      },
+      "steps": [
+        "Slice the chicken as thin as you can (it’s easier if it’s partly frozen). Season with the garlic powder, salt and pepper. Slice the peppers and onions into thin strips.",
+        "Heat the Blackstone over medium-high with the oil. Cook the peppers and onions on one zone until soft and browned, 8–10 minutes.",
+        "Cook the chicken on another zone in a thin layer, chopping and turning with two spatulas, until no pink remains and the thickest pieces read 165°F, 5–7 minutes.",
+        "Mix the chicken and vegetables into five piles, top with the mozzarella and cover to melt. Spread the rolls with mayo, toast them on the griddle and scoop a pile into each."
+      ],
+      "sides": [
+        "jewel-fries",
+        "lime-slaw"
+      ],
+      "sideSlots": 2,
+      "photo": "A toasted hoagie roll overflowing with thin-sliced griddled chicken, sautéed peppers and onions and gooey melted cheese."
+    }
+  ],
+  "sides": [
+    {
+      "id": "jewel-fries",
+      "title": "Air-fryer French fries",
+      "kind": "starch",
+      "minutes": 25,
+      "equipment": [
+        "air fryer"
+      ],
+      "items": {
+        "fries": 32,
+        "salt": 0.5
+      },
+      "steps": [
+        "Use one 32 oz bag of frozen fries, picking a bag that has air-fryer directions on the package.",
+        "Air-fry from frozen at the package temperature (usually 400°F) in single layers, shaking the basket halfway, until crisp and golden, about 12–18 minutes per batch.",
+        "Toss with the salt while hot. Tent finished batches loosely with foil while the rest cook, then serve right away."
+      ],
+      "photo": "A generous heap of golden, crispy straight-cut french fries lightly sprinkled with salt in a paper-lined basket."
+    },
+    {
+      "id": "steamed-broccoli",
+      "title": "Steamed broccoli with butter",
+      "kind": "vegetable",
+      "minutes": 10,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "broccoli": 1.25,
+        "butter": 1,
+        "salt": 0.25
+      },
+      "steps": [
+        "Bring about ½ inch of water to a boil in a large saucepan.",
+        "Add the frozen broccoli, cover and steam over medium heat until bright green and tender-crisp, 5–7 minutes.",
+        "Drain well, toss with the butter and salt, and serve."
+      ],
+      "photo": "A bowl of bright green steamed broccoli florets glistening with melted butter."
+    },
+    {
+      "id": "lime-slaw",
+      "title": "Creamy lime slaw",
+      "kind": "salad",
+      "minutes": 10,
+      "equipment": [],
+      "items": {
+        "slaw": 14,
+        "limes": 1,
+        "yogurt": 4,
+        "honey": 1,
+        "salt": 0.25
+      },
+      "steps": [
+        "Zest and juice the lime into a large bowl. Whisk in the yogurt, honey, salt and 1 tablespoon of water until smooth.",
+        "Add the coleslaw mix and toss until evenly coated.",
+        "Chill until serving (up to 2 hours) and toss again before serving."
+      ],
+      "photo": "A bowl of creamy shredded green and purple cabbage slaw with carrot strands and flecks of lime zest."
+    },
+    {
+      "id": "tomato-cucumber",
+      "title": "Tomato & cucumber salad",
+      "kind": "salad",
+      "minutes": 10,
+      "equipment": [],
+      "items": {
+        "cucumber": 1,
+        "tomato": 0.75,
+        "lemons": 1,
+        "oil": 1,
+        "oregano": 0.5,
+        "salt": 0.5
+      },
+      "steps": [
+        "Dice the cucumber and tomatoes into bite-size pieces and put them in a bowl.",
+        "Whisk the lemon juice with the oil, oregano and salt, pour over the vegetables and toss.",
+        "Let stand 5 minutes so the juices mingle, then toss again and serve."
+      ],
+      "photo": "A bowl of diced red tomatoes and crisp cucumber chunks glistening with lemon-oregano dressing."
+    },
+    {
+      "id": "romaine-salad",
+      "title": "Chopped romaine salad",
+      "kind": "salad",
+      "minutes": 10,
+      "equipment": [],
+      "items": {
+        "lettuce": 2,
+        "cucumber": 0.5,
+        "lemons": 1,
+        "oil": 2,
+        "salt": 0.25,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Chop the romaine and thinly slice the half cucumber; put them in a large bowl.",
+        "Whisk the lemon juice with the oil, salt and pepper.",
+        "Toss the salad with the dressing just before serving."
+      ],
+      "photo": "A large bowl of crisp chopped romaine and sliced cucumber tossed in a light lemon vinaigrette."
+    },
+    {
+      "id": "cucumber-spears",
+      "title": "Crunchy cucumber spears",
+      "kind": "vegetable",
+      "minutes": 5,
+      "equipment": [],
+      "items": {
+        "cucumber": 1.5,
+        "salt": 0.25
+      },
+      "steps": [
+        "Wash the cucumbers, trim the ends and cut lengthwise into spears (about 12 from 1½ English cucumbers).",
+        "Sprinkle lightly with the salt and divide among five plates."
+      ],
+      "photo": "Fresh green cucumber spears arranged in a row on a small white plate."
+    },
+    {
+      "id": "sesame-cucumber",
+      "title": "Sesame cucumber salad",
+      "kind": "salad",
+      "minutes": 10,
+      "equipment": [],
+      "items": {
+        "cucumber": 1.5,
+        "sesame": 2,
+        "soy": 1,
+        "riceVinegar": 2,
+        "honey": 0.5
+      },
+      "steps": [
+        "Thinly slice the cucumbers into rounds.",
+        "Whisk the sesame oil, soy sauce, rice vinegar and honey in a bowl.",
+        "Toss the cucumbers in the dressing and chill while the dinner cooks."
+      ],
+      "photo": "A bowl of thin cucumber rounds glossy with a sesame-soy dressing."
+    },
+    {
+      "id": "buttered-peas",
+      "title": "Buttered peas",
+      "kind": "vegetable",
+      "minutes": 8,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "peas": 16,
+        "butter": 1,
+        "salt": 0.25
+      },
+      "steps": [
+        "Bring ½ cup of water to a boil in a saucepan, add the frozen peas and cover.",
+        "Simmer until hot and tender, 3–4 minutes, then drain.",
+        "Stir in the butter and salt and serve warm."
+      ],
+      "photo": "A bowl of bright green sweet peas shining with melted butter."
+    },
+    {
+      "id": "canned-green-beans",
+      "title": "Buttered green beans",
+      "kind": "vegetable",
+      "minutes": 10,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "greenBeans": 2,
+        "butter": 1,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Drain the green beans and put them in a saucepan with 2 tablespoons of water.",
+        "Cover and heat over medium, stirring once or twice, until steaming, 4–5 minutes. Drain off any liquid.",
+        "Toss with the butter and black pepper and serve."
+      ],
+      "photo": "A bowl of tender cut green beans glossy with butter and cracked black pepper."
+    },
+    {
+      "id": "canned-corn",
+      "title": "Buttered sweet corn",
+      "kind": "vegetable",
+      "minutes": 8,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "cannedCorn": 2,
+        "butter": 1,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Drain the corn and put it in a saucepan with the butter.",
+        "Heat over medium, stirring, until hot and the butter coats every kernel, 3–4 minutes.",
+        "Season with the pepper and serve."
+      ],
+      "photo": "A bowl of golden buttered sweet corn kernels."
+    },
+    {
+      "id": "canned-carrots",
+      "title": "Honey-glazed carrots",
+      "kind": "vegetable",
+      "minutes": 10,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "cannedCarrots": 2,
+        "honey": 1,
+        "butter": 1
+      },
+      "steps": [
+        "Drain the sliced carrots well.",
+        "Melt the butter with the honey in a skillet over medium heat, add the carrots and cook, stirring gently, until hot and glazed, 4–5 minutes."
+      ],
+      "photo": "A bowl of shiny honey-glazed sliced carrot coins."
+    },
+    {
+      "id": "black-beans",
+      "title": "Seasoned black beans",
+      "kind": "vegetable",
+      "minutes": 10,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "beans": 2,
+        "taco": 0.5,
+        "limes": 1
+      },
+      "steps": [
+        "Rinse and drain the black beans and put them in a saucepan with the taco seasoning and ¼ cup water.",
+        "Simmer over medium, stirring, until hot and slightly thickened, 4–5 minutes.",
+        "Squeeze the lime over the top and serve."
+      ],
+      "photo": "A bowl of warm seasoned black beans with a lime wedge."
+    },
+    {
+      "id": "pepper-onions",
+      "title": "Grilled peppers & onions",
+      "kind": "vegetable",
+      "minutes": 15,
+      "equipment": [
+        "electric grill"
+      ],
+      "items": {
+        "peppers": 2,
+        "onions": 0.75,
+        "oil": 1,
+        "salt": 0.25
+      },
+      "steps": [
+        "Quarter the peppers and cut the onions into thick rounds. Brush with the oil and sprinkle with the salt.",
+        "Grill on the preheated electric grill until tender and charred at the edges, 8–10 minutes, turning once.",
+        "Slice into strips and serve warm."
+      ],
+      "photo": "Charred strips of red, yellow and green bell peppers and grilled onion rings with grill marks on a platter."
+    },
+    {
+      "id": "carrot-sticks",
+      "title": "Carrot sticks & ranch",
+      "kind": "vegetable",
+      "minutes": 10,
+      "equipment": [],
+      "items": {
+        "carrots": 1,
+        "ranch": 4
+      },
+      "steps": [
+        "Scrub or peel the carrots, trim the ends and cut into sticks.",
+        "Divide among five plates with a spoonful of ranch for dipping."
+      ],
+      "photo": "Bright orange carrot sticks arranged around a small bowl of creamy ranch dip."
+    },
+    {
+      "id": "apple-slices",
+      "title": "Crisp apple slices",
+      "kind": "fruit",
+      "minutes": 5,
+      "equipment": [],
+      "items": {
+        "apples": 1.75
+      },
+      "steps": [
+        "Wash and core the apples.",
+        "Slice just before serving so they stay bright, and divide among five plates."
+      ],
+      "photo": "Fanned slices of crisp red and green apples on a small plate."
+    },
+    {
+      "id": "orange-wedges",
+      "title": "Fresh orange wedges",
+      "kind": "fruit",
+      "minutes": 5,
+      "equipment": [],
+      "items": {
+        "oranges": 4
+      },
+      "steps": [
+        "Scrub the oranges under running water.",
+        "Cut each into 8 wedges and divide among five plates."
+      ],
+      "photo": "Juicy navel orange wedges arranged on a white plate."
+    },
+    {
+      "id": "potato-wedges",
+      "title": "Air-fryer potato wedges",
+      "kind": "starch",
+      "minutes": 30,
+      "equipment": [
+        "air fryer"
+      ],
+      "items": {
+        "potatoes": 2,
+        "oil": 2,
+        "salt": 1,
+        "paprika": 0.5,
+        "garlicPowder": 0.5
+      },
+      "steps": [
+        "Scrub the potatoes and cut into slim wedges. Toss with the oil, salt, paprika and garlic powder.",
+        "Air-fry at 390°F in single layers, shaking halfway, until tender inside and browned outside, 18–22 minutes per batch.",
+        "Tent finished batches with foil while the rest cook."
+      ],
+      "photo": "Golden crispy seasoned potato wedges with browned edges piled in a bowl."
+    },
+    {
+      "id": "sweet-potatoes",
+      "title": "Buttered sweet potatoes",
+      "kind": "starch",
+      "minutes": 20,
+      "equipment": [
+        "microwave"
+      ],
+      "items": {
+        "sweet": 2.5,
+        "butter": 2,
+        "salt": 0.25
+      },
+      "steps": [
+        "Scrub the sweet potatoes and pierce each several times with a fork.",
+        "Microwave on a plate in batches, turning halfway, until a knife slides easily into the centers, 8–15 minutes per batch depending on size.",
+        "Split open and top with the butter and a pinch of salt."
+      ],
+      "photo": "Split sweet potatoes with bright orange fluffy flesh topped with melting butter."
+    },
+    {
+      "id": "warm-naan",
+      "title": "Warm naan",
+      "kind": "bread",
+      "minutes": 8,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "naan": 5,
+        "butter": 1
+      },
+      "steps": [
+        "Heat a large dry skillet over medium.",
+        "Warm each naan 30–60 seconds per side until soft with a few golden spots.",
+        "Brush with the butter and cut into wedges."
+      ],
+      "photo": "Warm, golden-spotted naan flatbreads brushed with butter and cut into wedges in a basket."
+    },
+    {
+      "id": "garlic-toast",
+      "title": "Garlic toast",
+      "kind": "bread",
+      "minutes": 12,
+      "equipment": [
+        "air fryer"
+      ],
+      "items": {
+        "bread": 10,
+        "butter": 4,
+        "garlic": 3
+      },
+      "steps": [
+        "Soften the butter and stir in the minced garlic.",
+        "Spread it over one side of each bread slice.",
+        "Air-fry buttered-side up at 370°F in single layers until golden and crisp at the edges, 3–5 minutes per batch. Cut each slice in half."
+      ],
+      "photo": "Golden, crisp slices of garlic butter toast cut into halves on a board."
+    },
+    {
+      "id": "grilled-apples",
+      "title": "Grilled honey apples",
+      "kind": "fruit",
+      "minutes": 12,
+      "equipment": [
+        "electric grill"
+      ],
+      "items": {
+        "apples": 1.75,
+        "oil": 0.5,
+        "honey": 1
+      },
+      "steps": [
+        "Core the apples and cut into thick wedges. Brush lightly with the oil.",
+        "Grill on a clean electric grill until marked and just tender, 3–4 minutes per side.",
+        "Drizzle with the honey and serve warm."
+      ],
+      "photo": "Thick apple wedges with golden grill marks drizzled with honey on a plate."
+    },
+    {
+      "id": "tomato-soup",
+      "title": "Creamy tomato soup",
+      "kind": "soup",
+      "minutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "marinara": 24,
+        "chickenBroth": 2,
+        "milk": 1,
+        "butter": 1,
+        "oregano": 0.5
+      },
+      "steps": [
+        "Combine the marinara, chicken broth and oregano in a saucepan and bring to a simmer over medium heat, stirring.",
+        "Simmer gently 10 minutes so the flavors blend.",
+        "Lower the heat, stir in the milk and butter and heat until steaming (don’t let it boil). Ladle into five mugs or bowls."
+      ],
+      "photo": "A mug of smooth, creamy orange-red tomato soup with a swirl on top."
+    },
+    {
+      "id": "smashed-potatoes",
+      "title": "Buttery smashed potatoes",
+      "kind": "starch",
+      "minutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "potatoes": 2.25,
+        "butter": 3,
+        "milk": 0.5,
+        "salt": 1,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Scrub the potatoes and cut into 1½-inch chunks (skins on). Put them in a pot, cover with cold water and add half the salt.",
+        "Bring to a boil and simmer until fork-tender, 12–15 minutes. Drain and return to the pot.",
+        "Smash with the butter, milk, remaining salt and the pepper, leaving them a little chunky."
+      ],
+      "photo": "A bowl of rustic, buttery smashed gold potatoes with skins, topped with a melting pat of butter and black pepper."
+    },
+    {
+      "id": "lemon-chickpeas",
+      "title": "Warm lemon chickpeas",
+      "kind": "salad",
+      "minutes": 10,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "chickpeas": 2,
+        "lemons": 1,
+        "oil": 1,
+        "oregano": 0.5,
+        "garlic": 1,
+        "salt": 0.25
+      },
+      "steps": [
+        "Drain and rinse the chickpeas and pat dry.",
+        "Warm the oil in a skillet over medium, add the chickpeas and minced garlic and cook, stirring, until hot and lightly golden, 4–5 minutes.",
+        "Off the heat, toss with the oregano, salt and the juice of the lemon."
+      ],
+      "photo": "A bowl of golden warm chickpeas tossed with lemon, garlic and oregano."
+    },
+    {
+      "id": "garlic-green-beans",
+      "title": "Garlic green beans",
+      "kind": "vegetable",
+      "minutes": 15,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "freshGreenBeans": 1.25,
+        "garlic": 3,
+        "butter": 1,
+        "oil": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Trim the green beans. Bring ½ inch of water to a boil in a large skillet, add the beans, cover and steam until bright green and crisp-tender, 4–5 minutes. Drain the skillet.",
+        "Add the oil and butter to the skillet over medium-high and cook the beans, tossing, until blistered in spots, 3–4 minutes.",
+        "Add the minced garlic and salt and toss 30 seconds until fragrant. Serve right away."
+      ],
+      "photo": "A platter of blistered fresh green beans tossed with golden sliced garlic and butter."
+    },
+    {
+      "id": "corn-on-the-cob",
+      "title": "Buttered corn on the cob",
+      "kind": "vegetable",
+      "minutes": 15,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "cornCobs": 10,
+        "butter": 2,
+        "salt": 0.5
+      },
+      "steps": [
+        "Bring a large pot of water to a boil.",
+        "Add the frozen mini ears and cook until hot and tender, 6–8 minutes (or as the package directs).",
+        "Drain, roll in the butter and sprinkle with the salt. Two ears per person."
+      ],
+      "photo": "Golden mini ears of sweet corn on the cob glistening with melted butter and flaky salt."
+    },
+    {
+      "id": "cilantro-lime-rice",
+      "title": "Cilantro-lime rice",
+      "kind": "starch",
+      "minutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "items": {
+        "jasmine": 1.5,
+        "limes": 1,
+        "cilantro": 1,
+        "butter": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Rinse the rice until the water runs mostly clear. Combine with 2¼ cups water and the salt in a saucepan and bring to a boil.",
+        "Cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat.",
+        "Fluff with a fork and fold in the butter, the zest and juice of the lime and the chopped cilantro."
+      ],
+      "photo": "A bowl of fluffy white jasmine rice flecked with chopped green cilantro and lime zest, with a lime wedge."
+    },
+    {
+      "id": "steamed-jasmine-rice",
+      "title": "Steamed jasmine rice",
+      "kind": "starch",
+      "minutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "items": {
+        "jasmine": 1.5,
+        "salt": 0.25
+      },
+      "steps": [
+        "Rinse the rice until the water runs mostly clear. Combine with 2¼ cups water and the salt in a saucepan and bring to a boil.",
+        "Cover, turn the heat to low and cook 15 minutes.",
+        "Rest, covered, 10 minutes off the heat, then fluff with a fork."
+      ],
+      "photo": "A neat mound of fluffy steamed white jasmine rice in a bowl."
+    },
+    {
+      "id": "stovetop-mac",
+      "title": "Stovetop mac & cheese",
+      "kind": "starch",
+      "minutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "elbows": 12,
+        "cheese": 6,
+        "milk": 1.25,
+        "butter": 2,
+        "starch": 1,
+        "salt": 1
+      },
+      "steps": [
+        "Boil the macaroni in a pot of water with the salt until just tender, 7–8 minutes. Drain and return to the pot.",
+        "Whisk the cornstarch into the cold milk, pour it over the pasta with the butter and stir over medium-low heat until the milk thickens, 2–3 minutes.",
+        "Take off the heat and stir in the shredded cheddar until smooth and creamy."
+      ],
+      "photo": "A bowl of creamy, cheesy elbow macaroni with a glossy golden cheddar sauce."
+    },
+    {
+      "id": "asian-slaw",
+      "title": "Sesame-ginger slaw",
+      "kind": "salad",
+      "minutes": 10,
+      "equipment": [],
+      "items": {
+        "slaw": 14,
+        "carrots": 0.25,
+        "riceVinegar": 2,
+        "sesame": 2,
+        "soy": 1,
+        "honey": 1,
+        "ginger": 0.25
+      },
+      "steps": [
+        "Shred the carrot and toss it with the coleslaw mix in a large bowl.",
+        "Whisk the rice vinegar, sesame oil, soy sauce, honey and grated ginger.",
+        "Toss the slaw with the dressing and let stand 10 minutes before serving."
+      ],
+      "photo": "A bowl of crunchy shredded cabbage and carrot slaw glossy with sesame-ginger dressing."
+    },
+    {
+      "id": "edamame",
+      "title": "Sesame edamame",
+      "kind": "vegetable",
+      "minutes": 8,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "edamame": 1,
+        "sesame": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Bring a saucepan of water to a boil, add the frozen edamame and cook until hot and tender, 4–5 minutes.",
+        "Drain and toss with the sesame oil and salt."
+      ],
+      "photo": "A bowl of bright green shelled edamame beans glistening with sesame oil and flaky salt."
+    },
+    {
+      "id": "crispy-potstickers",
+      "title": "Crispy potstickers",
+      "kind": "starch",
+      "minutes": 15,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "potstickers": 15,
+        "oil": 2,
+        "soy": 2,
+        "riceVinegar": 1
+      },
+      "steps": [
+        "Heat the oil in a large nonstick skillet over medium-high. Add the frozen potstickers flat-side down and cook until the bottoms are golden, about 2 minutes.",
+        "Carefully add ½ cup water, cover right away and steam until the water is gone and the filling is hot, 6–8 minutes (follow the package if it differs).",
+        "Uncover and cook 1 minute more to re-crisp. Stir the soy sauce and rice vinegar together for dipping. Three per person."
+      ],
+      "photo": "Golden pan-fried potstickers with crispy browned bottoms arranged on a plate with a small bowl of soy dipping sauce."
+    },
+    {
+      "id": "air-fryer-veggies",
+      "title": "Air-fryer zucchini & peppers",
+      "kind": "vegetable",
+      "minutes": 20,
+      "equipment": [
+        "air fryer"
+      ],
+      "items": {
+        "zucchini": 1.25,
+        "peppers": 1,
+        "onions": 0.5,
+        "oil": 2,
+        "italianSeasoning": 1,
+        "garlicPowder": 0.5,
+        "salt": 0.5
+      },
+      "steps": [
+        "Cut the zucchini into half-moons and the pepper and onion into 1-inch pieces.",
+        "Toss with the oil, Italian seasoning, garlic powder and salt.",
+        "Air-fry at 400°F in single layers, shaking halfway, until tender and browned at the edges, 10–14 minutes per batch."
+      ],
+      "photo": "Browned, roasted-style zucchini half-moons with red and yellow pepper and onion pieces on a platter."
+    },
+    {
+      "id": "caesar-salad",
+      "title": "Caesar-style romaine salad",
+      "kind": "salad",
+      "minutes": 15,
+      "equipment": [
+        "air fryer"
+      ],
+      "items": {
+        "lettuce": 2,
+        "parm": 1.5,
+        "bread": 2,
+        "yogurt": 3,
+        "mayo": 2,
+        "lemons": 1,
+        "garlic": 1,
+        "mustard": 1,
+        "oil": 2,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Cut the bread into cubes, toss with 1 tablespoon of the oil and air-fry at 370°F, shaking once, until golden croutons, 5–7 minutes.",
+        "Whisk the yogurt, mayo, lemon juice, grated garlic, mustard, remaining oil, pepper and half the Parmesan into a creamy dressing (thin with a spoonful of water if needed).",
+        "Chop the romaine, toss with the dressing and top with the croutons and remaining Parmesan."
+      ],
+      "photo": "Crisp chopped romaine tossed in a creamy Caesar-style dressing with golden croutons and shaved Parmesan."
+    },
+    {
+      "id": "applesauce-cups",
+      "title": "Applesauce cups",
+      "kind": "fruit",
+      "minutes": 1,
+      "equipment": [],
+      "items": {
+        "applesauce": 5
+      },
+      "steps": [
+        "Chill the applesauce cups and set one at each plate."
+      ],
+      "photo": "A small glass dish of smooth golden applesauce."
+    },
+    {
+      "id": "pineapple-chunks",
+      "title": "Chilled pineapple chunks",
+      "kind": "fruit",
+      "minutes": 2,
+      "equipment": [],
+      "items": {
+        "pineapple": 2
+      },
+      "steps": [
+        "Chill the cans ahead of time if you can.",
+        "Drain the pineapple chunks and divide among five small bowls."
+      ],
+      "photo": "A bowl of juicy golden pineapple chunks."
+    },
+    {
+      "id": "pork-and-beans",
+      "title": "Smoky pork & beans",
+      "kind": "vegetable",
+      "minutes": 12,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "porkBeans": 1,
+        "bbq": 2,
+        "mustard": 1,
+        "brownSugar": 1
+      },
+      "steps": [
+        "Empty the pork and beans into a saucepan and stir in the barbecue sauce, mustard and brown sugar.",
+        "Simmer over medium-low, stirring often, until thick and bubbling, 8–10 minutes."
+      ],
+      "photo": "A bowl of thick, saucy barbecue-style beans in a glossy brown sauce."
+    },
+    {
+      "id": "chips-and-salsa",
+      "title": "Tortilla chips & salsa",
+      "kind": "starch",
+      "minutes": 2,
+      "equipment": [],
+      "items": {
+        "tortillaChips": 10,
+        "salsa": 12
+      },
+      "steps": [
+        "Pour the chips into a big bowl and the salsa into a smaller one for dipping."
+      ],
+      "photo": "A basket of golden tortilla chips beside a bowl of chunky red tomato salsa."
+    }
+  ]
+}

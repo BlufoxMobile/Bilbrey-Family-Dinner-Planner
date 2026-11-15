@@ -82,3 +82,45 @@ test('store: local-only mode never talks to the server', async () => {
   assert.equal(calls, 0);
   assert.equal(s.state.settings.brand, 'name');
 });
+
+test('store: retries reuse the batchId; a rejected batch is dropped, not retried forever', async () => {
+  const api = await startMockApi({ port: 0, quiet: true, passcode: 'tacos' });
+  const base = `http://127.0.0.1:${api.server.address().port}`;
+  try {
+    // Lose the first response after the server applied the batch.
+    let n = 0;
+    const flaky = async (url, init) => {
+      const res = await fetch(url, init);
+      if (url.endsWith('/api/ops') && n++ === 0) throw new TypeError('network dropped');
+      return res;
+    };
+    const s = new Store({ storage: memStorage(), apiBase: base, fetchFn: flaky, autoSync: false });
+    await s.enterPasscode('tacos');
+    s.commit([push(['receipts'], { id: 'r1', amount: 10 })]);
+    await s.sync();
+    assert.equal(s.status, 'offline');
+    clearTimeout(s.retryTimer);
+    assert.ok(s.inflight?.batchId, 'batch remembered');
+    await s.sync();
+    assert.equal(s.status, 'synced');
+    assert.equal(api.db.state.receipts.length, 1, 'the retried batch was not applied twice');
+
+    // A batch the server refuses (400) is dropped and reported.
+    const s2 = new Store({ storage: memStorage(), apiBase: base, autoSync: false });
+    await s2.enterPasscode('tacos');
+    s2.pending.push({ op: 'set', path: ['x'], _id: 'bad1' }); // no value → 400
+    await s2.sync();
+    assert.equal(s2.pending.length, 0);
+    assert.equal(s2.status, 'error');
+    assert.match(s2.statusDetail, /couldn't be saved/);
+
+    // No passcode on the server any more → needs-setup.
+    api.reset(null);
+    const s3 = new Store({ storage: memStorage(), apiBase: base, autoSync: false });
+    s3.device.key = 'a'.repeat(64);
+    await s3.sync();
+    assert.equal(s3.status, 'needs-setup');
+  } finally {
+    api.server.close();
+  }
+});
