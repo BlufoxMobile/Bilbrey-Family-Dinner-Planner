@@ -1,0 +1,21 @@
+{
+  "updated": "2026-11-15",
+  "notes": "Test fixture: a few real-looking options in the catalog unit.",
+  "products": {
+    "chicken": {
+      "sams": [
+        { "name": "Member's Mark Boneless Skinless Chicken Breasts", "brand": "Member's Mark", "size": "about 6.5 lb", "packSize": 6.5, "price": 19.43, "url": "https://www.samsclub.com/p/members-mark-boneless-skinless-chicken-breasts/prod21002962", "tier": "store" },
+        { "name": "Tyson Boneless Skinless Chicken Breasts", "brand": "Tyson", "size": "about 6 lb", "packSize": 6, "price": 23.88, "url": "", "tier": "name" }
+      ],
+      "jewel": [
+        { "name": "Signature Farms Boneless Skinless Chicken Breast Value Pack", "brand": "Signature Farms", "size": "about 3 lb", "packSize": 3, "price": 11.97, "url": "", "tier": "store" }
+      ]
+    },
+    "cheese": {
+      "sams": [
+        { "name": "Member's Mark Shredded Mild Cheddar", "brand": "Member's Mark", "size": "2 lb", "packSize": 32, "price": 8.48, "url": "", "tier": "store" },
+        { "name": "Tillamook Shredded Medium Cheddar", "brand": "Tillamook", "size": "2 lb", "packSize": 32, "price": 11.98, "url": "", "tier": "name" }
+      ]
+    }
+  }
+}

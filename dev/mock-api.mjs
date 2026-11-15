@@ -55,7 +55,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     const url = new URL(req.url, 'http://x');
     if (req.method === 'OPTIONS') { res.writeHead(204, cors(req)); return res.end(); }
     const p = url.pathname;
-    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests });
+    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests, receiptCalls: db.receiptCalls || 0, lastReceipt: db.lastReceipt || null });
     if (p === '/__mock/reset' && req.method === 'POST') { const b = await readBody(req); reset(b?.passcode || null); return send(res, req, 200, { ok: true }); }
     if (p === '/api/health') return send(res, req, 200, { ok: true, hasPasscode: !!db.hash, ai, revision: db.revision });
     if (p === '/api/setup' && req.method === 'POST') {
@@ -129,6 +129,32 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
         return { ...s, matchId: best ? best.id : null };
       });
       return send(res, req, 200, { items, model: 'mock-vision' });
+    }
+    if (p === '/api/receipt' && req.method === 'POST') {
+      // SPEC §9.3: { images: [dataURL ≤1.5 MB, …≤4], store?, known } → a read receipt.
+      const b = await readBody(req);
+      const imgs = Array.isArray(b?.images) ? b.images : [];
+      if (!imgs.length || imgs.length > 4 || !imgs.every((x) => typeof x === 'string' && x.startsWith('data:image/'))) return send(res, req, 400, { error: 'images must be 1–4 data URLs' });
+      if (imgs.some((x) => x.length > 1.5 * 1024 * 1024) || imgs.reduce((t, x) => t + x.length, 0) > 4.5 * 1024 * 1024) return send(res, req, 413, { error: 'Images are too large' });
+      if (!ai) return send(res, req, 503, { error: 'Receipt reading is not available right now' });
+      db.receiptCalls = (db.receiptCalls || 0) + 1;
+      db.lastReceipt = { images: imgs.length, store: b.store || null, known: Array.isArray(b.known) ? b.known.length : 0 };
+      const known = new Set((Array.isArray(b.known) ? b.known : []).map((k) => k.id));
+      const m = (id) => (known.has(id) ? id : null);
+      const lines = [
+        { text: 'MM CHKN BRST BNLS', product: "Member's Mark Boneless Skinless Chicken Breasts", brand: "Member's Mark", size: '6.5 lb', qty: 1, unitPrice: 19.43, lineTotal: 19.43, discount: 0, matchId: m('chicken'), confidence: 0.94 },
+        { text: 'MM SHRD MLD CHDR', product: "Member's Mark Shredded Mild Cheddar", brand: "Member's Mark", size: '2 lb', qty: 2, unitPrice: 8.48, lineTotal: 16.96, discount: 2, matchId: m('cheese'), confidence: 0.9 },
+        { text: 'MSN FLR TORT 40CT', product: 'Mission Medium Flour Tortillas', brand: 'Mission', size: '40 ct', qty: 1, unitPrice: 7.98, lineTotal: 7.98, discount: 0, matchId: null, confidence: 0.7 },
+        { text: 'MM PAPER TWL 12RL', product: "Member's Mark Paper Towels", brand: "Member's Mark", size: '12 rolls', qty: 1, unitPrice: 22.98, lineTotal: 22.98, discount: 0, matchId: null, confidence: 0.92 },
+      ];
+      // Tests can add lines (e.g. for an item they know is on this week's list).
+      for (const l of db.receiptExtraLines || []) lines.push({ discount: 0, confidence: 0.9, ...l });
+      const subtotal = Math.round(lines.reduce((t, l) => t + l.lineTotal - l.discount, 0) * 100) / 100;
+      const tax = 1.84;
+      return send(res, req, 200, {
+        store: b.store === 'jewel' ? 'jewel' : 'sams', date: '2026-11-15', subtotal, tax, total: Math.round((subtotal + tax) * 100) / 100, savings: 2,
+        lines, model: 'mock-vision',
+      });
     }
     send(res, req, 404, { error: 'Not found' });
   });

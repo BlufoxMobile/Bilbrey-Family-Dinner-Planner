@@ -7,13 +7,14 @@ import {
 } from '../util.js';
 import {
   dinnerById, rotationList, findInPlan, openNights, parseSideRef, shelfRef, sideInfo, isFavorite, kindOf,
-  dinnerFeasibleAt, sideSlotsFor,
+  dinnerFeasibleAt, sideSlotsFor, isRetired, isSideDropped, downVoters,
 } from '../planner.js';
 import {
   placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps,
   resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName, awayBlock, bringBackTripOps,
+  voteOps, sideVoteOps, lunchVoteOps,
 } from '../actions.js';
-import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip } from './common.js';
+import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote } from './common.js';
 import { plateNutrition, sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
 import { waitText } from '../state.js';
 
@@ -72,14 +73,19 @@ function nightBody(app, date) {
         ${favoriteBadge(app, d)}
         ${when(showNutrition(app), () => html`<p class="night-nutri">${nutri(app, plateNutrition(app.db, app.state, d.id, e), { suffix: 'a plate', compact: true })}</p>`)}
       </div>
+      ${thumbs(app, { kind: 'dinner', id: d.id, label: d.title })}
     </div>
+    ${when(isRetired(app.state, d.id) && !cooked, () => html`<p class="hint">${ic('down_vote', { size: 18 })}<span>${droppedBy(app, d.id)} gave ${d.title} a thumbs down, so it won’t be planned again. <button type="button" class="link-btn" data-action="night:pick" data-date="${date}">Swap this night</button></span></p>`)}
     ${when(cooked, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked${e.cookedBy ? ` by ${e.cookedBy}` : ''}.</p>`)}
     <h3 class="sheet-h">Sides</h3>
     <ul class="side-rows">
       ${sides.map((s) => html`<li class="side-row">
         ${sidePhoto(app, s, { size: 'thumb' })}
-        <span class="side-name">${s.info?.title}${when(s.remembered, () => html`<small class="remembered">${ic('check', { size: 14 })}Remembered for ${d.title}</small>`)}${when(showNutrition(app), () => { const sn = sideNutrition(app.db, app.state, s.parsed); return html`<small class="side-kcal">${sn ? `${fmtKcal(sn.kcal)} cal a plate` : '—'}</small>`; })}</span>
-        ${when(!cooked, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="${s.slot}">Substitute</button>`)}
+        <span class="side-name">${s.info?.title}${replacedNote(app, s)}${when(s.remembered && !s.replaced, () => html`<small class="remembered">${ic('check', { size: 14 })}Remembered for ${d.title}</small>`)}${when(showNutrition(app), () => { const sn = sideNutrition(app.db, app.state, s.parsed); return html`<small class="side-kcal">${sn ? `${fmtKcal(sn.kcal)} cal a plate` : '—'}</small>`; })}</span>
+        <span class="side-acts">
+          ${when(s.parsed.type === 'side' && app.db.sides[s.parsed.id], () => thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', compact: true }))}
+          ${when(!cooked, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="${s.slot}">Substitute</button>`)}
+        </span>
       </li>`)}
     </ul>
  ${when(!cooked, () => {
@@ -105,6 +111,13 @@ function nightBody(app, date) {
       ${when(!cooked, () => html`<button type="button" class="action-row action-quiet" data-action="night:clear" data-date="${date}">${ic('trash')}<span><b>Clear this night</b></span></button>`)}
     </div>`;
 }
+
+/** "Knox", "Knox and Jordan", or "Someone" (a parent retired it by hand). */
+export function droppedBy(app, dinnerId) {
+  const who = downVoters(app.state, dinnerId);
+  return who.length ? listJoinNames(who) : app.state.retired?.[dinnerId]?.by && FAMILY.includes(app.state.retired[dinnerId].by) ? app.state.retired[dinnerId].by : 'Someone';
+}
+const listJoinNames = (a) => (a.length < 2 ? a.join('') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`);
 
 // ---------------------------------------------------------------- pick a dinner
 
@@ -326,7 +339,7 @@ function subBody(app, d, slot, st, date) {
   const current = sidesFor(app, d.id, date ? app.state.plan?.[date] : null).find((s) => s.slot === slot);
   const other = sidesFor(app, d.id, null).filter((s) => s.slot !== slot).map((s) => s.ref);
   const remembered = !!app.state.substitutions?.[d.id]?.[String(slot)];
-  const sides = app.db.sideList.filter((s) => s.id !== current?.ref && !other.includes(s.id));
+  const sides = app.db.sideList.filter((s) => s.id !== current?.ref && !other.includes(s.id) && !isSideDropped(app.state, s.id));
   const shelf = shelfItems(app);
   return html`
     ${when(current, () => html`<div class="current-side">
@@ -489,6 +502,21 @@ export const actions = {
     if (!app.store.health && !app.store.device.localOnly) app.store.connect();
   },
   'sheet:who': (app) => openWho(app),
+  // Thumbs everywhere (SPEC §9.2). Every vote's message has Undo.
+  'vote:dinner': (app, el) => {
+    if (!app.who()) { openWho(app); return; }
+    app.commit(voteOps(app.db, app.state, { dinnerId: el.dataset.id, who: app.who(), value: Number(el.dataset.value), today: app.today() }));
+    renderSheet();
+  },
+  'vote:side': (app, el) => {
+    if (!app.who()) { openWho(app); return; }
+    app.commit(sideVoteOps(app.db, app.state, { sideId: el.dataset.id, who: app.who(), value: Number(el.dataset.value) }));
+    renderSheet();
+  },
+  'vote:lunch': (app, el) => {
+    app.commit(lunchVoteOps(app.db, app.state, { itemId: el.dataset.id, person: el.dataset.person, value: Number(el.dataset.value) }));
+    renderSheet();
+  },
   'lighter:dismiss': (app, el) => {
     const list = [...new Set([...(app.store.device.dismissed || []), el.dataset.key])].slice(-60);
     app.store.setDevice({ dismissed: list });

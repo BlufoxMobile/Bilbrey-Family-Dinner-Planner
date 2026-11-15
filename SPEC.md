@@ -434,6 +434,8 @@ priceHistory: { "<store>/<ingredientId>": [ { price, packSize, date } ] }   // n
   it from the browser console for the purchase-history import, then the app syncs as usual).
 
 ### 9.5 My products UI
+> 2026-11-15 (Jeff): "Remove the name brand vs generic and just use the actual products we buy." There are no brand tiers in the UI. Each item has ONE product per store: myProducts → catalog `usual` → first products.json option → catalog pack. `state.brands` / `settings.brand` are legacy and ignored. Recipes are built around the family's real brands (Rao's, Maya Kaimal, Cholula, La Preferida, Member's Mark patties, Ball Park, Kerrygold…).
+
 - On each list item: the chosen product name ("Member's Mark Boneless Skinless Chicken, 6.5 lb")
   with a "Change" action → picker: products learned from receipts, the options in
   `data/products.json`, or "Type my own" (name, size, price, link). Choosing one sets

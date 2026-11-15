@@ -2,12 +2,12 @@
 // state ops, plus the exact ops that undo it and a plain-language message.
 // Pure: (db, state, args) → { ops, undo, message, ... }. No DOM.
 
-import { set, del, push } from './state.js';
+import { set, del, push, applyOps as applyOpsPure } from './state.js';
 import { clone, listJoin, round2, slugify, uid, weekdayName, shortDate, diffDays } from './util.js';
 import { FAMILY } from './config.js';
 import {
   bestBenchFor, dinnerById, effectiveSides, findInPlan, generatePlan, itemsForNight, sideInfo, parseSideRef, kindOf,
-  voteInfo, isRetired, isPromoted,
+  voteInfo, isRetired, isPromoted, rotationList, isSideDropped, FAVORITE_UPS,
 } from './planner.js';
 import { boughtToPantry, readableId } from './shopping.js';
 import { personConfig, lunchItem, swappedConfig } from './lunch.js';
@@ -264,26 +264,30 @@ export function resetSideOps(db, state, { dinnerId, slot }) {
 
 // ---------------------------------------------------------------- votes, retire, promote
 
-function retireBundle(db, state, { dinnerId, by, at, today, manual }) {
+function retireBundle(db, state, { dinnerId, by, at, today, manual, voter }) {
   const ops = [set(['retired', dinnerId], { by: by || 'votes', at, ...(manual ? { manual: true } : {}) })];
   const bench = bestBenchFor(db, state, dinnerId);
   const d = dinnerById(db, state, dinnerId);
   let message;
   const name = d?.title || 'That dinner';
-  const lead = manual ? `${name} is out of the rotation.` : `Three thumbs down, so ${name} is taking a break.`;
+  const lead = manual ? `${name} is out of the rotation.` : `${voter || 'Someone'} gave it a thumbs down, so ${name} is off the menu.`;
   if (bench) {
     ops.push(set(['promoted', bench.id], { replaced: dinnerId, at }));
     const future = Object.entries(state?.plan || {}).filter(([date, e]) => e?.dinner === dinnerId && e.status === 'planned' && (!today || date >= today));
     for (const [date, e] of future) ops.push(set(['plan', date], { ...clone(e), dinner: bench.id, sides: [...bench.sides] }));
-    message = `${lead} Something new to try: ${bench.title} joins the rotation in its place`;
-    message += future.length ? `, and takes over ${future.length === 1 ? 'its planned night' : `its ${future.length} planned nights`}.` : '.';
+    message = `${lead} ${bench.title} takes its place`;
+    message += future.length ? ` in the rotation and on ${future.length === 1 ? 'its planned night' : `its ${future.length} planned nights`}.` : ' in the rotation.';
   } else {
     message = `${lead} Every bench dinner is already in the rotation, so nothing new comes in.`;
   }
   return { ops, message, promoted: bench?.id || null };
 }
 
-/** Tap thumbs up/down as `who`. Tapping the same thumb again clears it. */
+/**
+ * Tap thumbs up/down as `who`. Tapping the same thumb again clears it.
+ * SPEC §9.2: ONE thumbs-down from anyone drops the dinner (a bench dinner takes its place);
+ * two thumbs-up make it a family favorite.
+ */
 export function voteOps(db, state, { dinnerId, who, value, at, today }) {
   if (!FAMILY.includes(who)) return result(state, [], 'Pick who’s using this phone first.', { error: true, needsWho: true });
   const d = dinnerById(db, state, dinnerId);
@@ -296,19 +300,93 @@ export function voteOps(db, state, { dinnerId, who, value, at, today }) {
   const down = Object.values(nextVotes).filter((v) => v === -1).length;
   const up = Object.values(nextVotes).filter((v) => v === 1).length;
   const wasUp = voteInfo(state, dinnerId).up;
-  let message = clearing ? `Cleared your vote on ${d.title}.` : value === 1 ? `${who} likes ${d.title}.` : `${who} would rather skip ${d.title}.`;
+  const wasDropped = isRetired(state, dinnerId);
+  let message = clearing ? `Cleared ${who}’s vote on ${d.title}.` : value === 1 ? `${who} gave ${d.title} a thumbs up. It stays in the rotation.` : `${who} gave ${d.title} a thumbs down.`;
   let extra = {};
-  if (!clearing && value === -1 && down >= 3 && !isRetired(state, dinnerId)) {
-    const t = at || new Date().toISOString();
-    const b = retireBundle(db, state, { dinnerId, by: 'votes', at: t, today });
+  if (!clearing && value === -1 && !wasDropped) {
+    const b = retireBundle(db, state, { dinnerId, by: 'votes', at: at || new Date().toISOString(), today, voter: who });
     ops.push(...b.ops);
     message = b.message;
     extra = { retired: true, promoted: b.promoted };
-  } else if (!clearing && value === 1 && up >= 3 && wasUp < 3) {
-    message = `${d.title} is now a family favorite.`;
+  } else if (!clearing && value === -1) {
+    message = `${who} gave ${d.title} a thumbs down too. It’s already off the menu.`;
+  } else if (value === -1 && clearing && down === 0 && state?.retired?.[dinnerId] && !state.retired[dinnerId].manual) {
+    // Taking back the only thumbs-down brings the dinner back (the dinner that came in stays too).
+    ops.push(del(['retired', dinnerId]));
+    message = `${d.title} is back on the menu.`;
+    extra = { restored: true };
+  } else if (!clearing && value === 1 && up >= FAVORITE_UPS && wasUp < FAVORITE_UPS) {
+    message = `${who} gave ${d.title} a thumbs up, so it’s a family favorite now.`;
     extra = { favorite: true };
   }
   return result(state, ops, message, extra);
+}
+
+// ---------------------------------------------------------------- side votes (§9.2)
+
+/** What replaces a dropped side, for the dinners in the rotation that use it. */
+function sideReplacements(db, state, sideId) {
+  const out = new Map();
+  for (const d of rotationList(db, state)) {
+    const now = effectiveSides(db, state, d.id, null).find((s) => s.droppedId === sideId);
+    if (now) out.set(d.id, now.parsed.id);
+  }
+  return out;
+}
+
+export function sideVoteOps(db, state, { sideId, who, value }) {
+  if (!FAMILY.includes(who)) return result(state, [], 'Pick who’s using this phone first.', { error: true, needsWho: true });
+  const s = db.sides[sideId];
+  if (!s) return result(state, [], 'That side isn’t in the recipe box.', { error: true });
+  const current = state?.sideVotes?.[sideId]?.[who];
+  const clearing = current === value;
+  const ops = [clearing ? del(['sideVotes', sideId, who]) : set(['sideVotes', sideId, who], value)];
+  const was = isSideDropped(state, sideId);
+  const next = applyOpsPure(state, ops);
+  const now = isSideDropped(next, sideId);
+  let message;
+  if (!was && now) {
+    const reps = [...new Set(sideReplacements(db, next, sideId).values())].map((id) => db.sides[id]?.title).filter(Boolean);
+    message = `${who} gave ${s.title} a thumbs down, so it’s off the menu.`;
+    if (reps.length === 1) message += ` ${reps[0]} takes its place.`;
+    else if (reps.length > 1) message += ` Dinners that had it get a similar side, like ${listJoin(reps.slice(0, 2).map((x) => x.toLowerCase()))}.`;
+  } else if (was && !now) message = `${s.title} is back on the menu.`;
+  else if (clearing) message = `Cleared ${who}’s vote on ${s.title}.`;
+  else if (value === 1) message = `${who} gave ${s.title} a thumbs up.`;
+  else message = `${who} gave ${s.title} a thumbs down too. It’s already off the menu.`;
+  return result(state, ops, message, { dropped: !was && now });
+}
+
+/** "Restore" from the Dropped list: clears that side's thumbs-downs. */
+export function restoreSideOps(db, state, { sideId }) {
+  const ops = Object.entries(state?.sideVotes?.[sideId] || {}).filter(([, v]) => v === -1).map(([p]) => del(['sideVotes', sideId, p]));
+  const t = db.sides[sideId]?.title || 'That side';
+  return result(state, ops, ops.length ? `${t} is back on the menu.` : `${t} is already on the menu.`);
+}
+
+// ---------------------------------------------------------------- lunch votes (§9.2)
+
+/** A thumbs-down on a lunch item takes it out of THAT person's rotation only. */
+export function lunchVoteOps(db, state, { itemId, person, value }) {
+  if (!FAMILY.includes(person)) return result(state, [], 'Whose lunch is it?', { error: true });
+  const it = lunchItem(db, state, itemId);
+  if (!it) return result(state, [], 'That lunch item isn’t in the library.', { error: true });
+  const current = state?.lunchVotes?.[itemId]?.[person];
+  const clearing = current === value;
+  const ops = [clearing ? del(['lunchVotes', itemId, person]) : set(['lunchVotes', itemId, person], value)];
+  let message;
+  if (clearing && value === -1) {
+    const back = (personConfig(db, applyOpsPure(state, ops), person).slots[it.slot] || []).includes(itemId);
+    message = back ? `${it.title} is back in ${person}’s lunches.` : `${it.title} can go back in ${person}’s lunches. Add it in the editor.`;
+  }
+  else if (clearing) message = `Cleared the thumbs up on ${it.title}.`;
+  else if (value === 1) message = `${person} likes ${it.title}. It stays in the rotation.`;
+  else {
+    const cfg = personConfig(db, applyOpsPure(state, ops), person);
+    const left = (cfg.slots[it.slot] || []).length;
+    message = `${it.title} is out of ${person}’s lunches.${left ? '' : ` Pick another ${it.slot === 'main' ? 'main' : it.slot} in the editor.`}`;
+  }
+  return result(state, ops, message);
 }
 
 export function retireOps(db, state, { dinnerId, who, at, today }) {
@@ -320,10 +398,10 @@ export function retireOps(db, state, { dinnerId, who, at, today }) {
 export function restoreOps(db, state, { dinnerId }) {
   const d = dinnerById(db, state, dinnerId);
   const ops = [];
-  if (isRetired(state, dinnerId)) ops.push(del(['retired', dinnerId]));
+  if (state?.retired?.[dinnerId]) ops.push(del(['retired', dinnerId]));
   for (const [person, v] of Object.entries(state?.votes?.[dinnerId] || {})) if (v === -1) ops.push(del(['votes', dinnerId, person]));
   if (d?.rotation === 'bench' && !isPromoted(state, dinnerId)) ops.push(set(['promoted', dinnerId], { replaced: null, at: new Date().toISOString() }));
-  return result(state, ops, `${d?.title || 'That dinner'} is back in the rotation with a fresh start on votes.`);
+  return result(state, ops, `${d?.title || 'That dinner'} is back on the menu, with a fresh start on votes.`);
 }
 
 export function promoteOps(db, state, { dinnerId, at }) {
@@ -381,13 +459,39 @@ export function doneShoppingOps(db, state, { list, who, at }) {
   return result(state, ops, adds.length ? `Put ${adds.length} ${adds.length === 1 ? 'item' : 'items'} in the pantry. The list now shows only what's still needed.` : 'Check off what you bought first.', { count: adds.length });
 }
 
-export function setPriceOps(state, { store, brand, id, size, price, who, at }) {
-  const key = `${store}/${brand}/${id}`;
-  return result(state, [set(['prices', key], { size: Number(size), price: round2(Number(price)), ...stamp(who, at) })], 'Price saved for the whole family.');
+/**
+ * "Fix the price": the item's one product at that store keeps its name and gets this pack size
+ * and price, for the whole family (it becomes their product there). Older per-tier price fixes
+ * for the item are cleared so they can't come back.
+ */
+export function setPriceOps(db, state, { store, id, size, price, product = null, who, at }) {
+  const key = `${store}/${id}`;
+  const prev = state?.myProducts?.[key];
+  const name = String(prev?.name || product?.name || db?.ingredients?.[id]?.name || state?.custom?.[id]?.name || 'Item').slice(0, 120);
+  const p = {
+    ...(prev && typeof prev === 'object' ? prev : {}),
+    name,
+    packSize: Math.round(Number(size) * 1000) / 1000,
+    unit: db?.ingredients?.[id]?.unit || state?.custom?.[id]?.unit || prev?.unit || '',
+    price: round2(Number(price)),
+    ...stamp(who, at),
+    source: 'typed',
+  };
+  if (!prev && product?.brand) p.brand = String(product.brand).slice(0, 60);
+  if (!prev && product?.url && /^https:\/\//.test(product.url)) p.url = String(product.url).slice(0, 400);
+  delete p.date;
+  delete p.receipt;
+  const ops = [set(['myProducts', key], p), ...legacyPriceKeys(state, store, id).map((k) => del(['prices', k]))];
+  return result(state, ops, 'Price saved for the whole family.');
 }
 
-export function clearPriceOps(state, { store, brand, id }) {
-  return result(state, [del(['prices', `${store}/${brand}/${id}`])], 'Back to the estimated price.');
+/** Older price fixes were kept per brand tier: "sams/generic/chicken". Only the ones that exist. */
+function legacyPriceKeys(state, store, id) {
+  return [`${store}/generic/${id}`, `${store}/name/${id}`, `${store}/${id}`].filter((k) => state?.prices?.[k] !== undefined);
+}
+
+export function clearPriceOps(state, { store, id }) {
+  return result(state, legacyPriceKeys(state, store, id).map((k) => del(['prices', k])), 'Back to the product’s own price.');
 }
 
 export function notAtStoreOps(db, state, { store, id }) {
@@ -451,8 +555,12 @@ export function toggleLunchDayOps(db, state, { name, day }) {
 export function toggleLunchItemOps(db, state, { name, slot, id }) {
   const cfg = personConfig(db, state, name);
   const list = cfg.slots[slot] || [];
-  const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
-  return result(state, [set(lunchPath(name, 'slots', slot), next)], '');
+  const adding = !list.includes(id);
+  const next = adding ? [...list, id] : list.filter((x) => x !== id);
+  const ops = [set(lunchPath(name, 'slots', slot), next)];
+  // Putting a thumbs-downed item back in by hand takes the thumbs-down back too.
+  if (adding && state?.lunchVotes?.[id]?.[name] === -1) ops.push(del(['lunchVotes', id, name]));
+  return result(state, ops, '');
 }
 
 export function skipLunchOps(db, state, { name, date, reason = 'Other', today }) {
@@ -498,6 +606,38 @@ export function addCustomLunchOps(db, state, { title, slot, name }) {
     ops.push(set(lunchPath(name, 'slots', slot), [...(cfg.slots[slot] || []), id]));
   }
   return result(state, ops, `${clean} added${name ? ` to ${name}’s lunches` : ''}. Add its price on the shopping list.`, { id });
+}
+
+// ---------------------------------------------------------------- my products (§9.5)
+
+/** Choose the exact product for an ingredient at a store (from a receipt, products.json, or typed). */
+export function setProductOps(db, state, { store, id, product, who, at }) {
+  const name = String(product?.name || '').trim().slice(0, 120);
+  if (!name || !['sams', 'jewel'].includes(store)) return result(state, [], 'Give the product a name first.', { error: true });
+  const packSize = Number(product.packSize);
+  const price = product.price === '' || product.price == null ? null : Number(product.price);
+  const p = {
+    name,
+    packSize: packSize > 0 ? Math.round(packSize * 1000) / 1000 : null,
+    unit: db.ingredients[id]?.unit || state?.custom?.[id]?.unit || '',
+    price: Number.isFinite(price) && price >= 0 ? round2(price) : null,
+    ...stamp(who, at),
+    source: ['receipt', 'pick', 'typed'].includes(product.source) ? product.source : 'pick',
+  };
+  if (product.brand) p.brand = String(product.brand).slice(0, 60);
+  if (product.size) p.size = String(product.size).slice(0, 40);
+  if (product.url && /^https:\/\//.test(product.url)) p.url = String(product.url).slice(0, 400);
+  if (product.date) p.date = product.date;
+  if (product.receipt) p.receipt = product.receipt;
+  if (p.packSize == null) delete p.packSize;
+  if (p.price == null) delete p.price;
+  const storeName = db.stores?.[store]?.name || store;
+  return result(state, [set(['myProducts', `${store}/${id}`], p), ...legacyPriceKeys(state, store, id).map((k) => del(['prices', k]))], `${storeName}: ${name} from now on.`);
+}
+
+export function clearProductOps(db, state, { store, id }) {
+  const name = db.ingredients[id]?.name || state?.custom?.[id]?.name || 'That item';
+  return result(state, [del(['myProducts', `${store}/${id}`])], `${name} is back to the suggested product.`);
 }
 
 export { listJoin };

@@ -101,7 +101,7 @@ test('every tab renders cleanly at 390×844 and 1280×800', async () => {
   const someDinner = state.plan[TODAY].dinner;
   const routes = [['#/tonight', '.page-tonight'], ['#/plan', '.page-plan'], ['#/list', '.page-list'], ['#/pantry', '.page-pantry'],
     ['#/recipes', '.page-recipes'], [`#/recipe/${someDinner}`, '.page-recipe'], ['#/budget', '.page-budget'], ['#/family', '.page-family'], [`#/cook/${TODAY}`, '.cook'],
-    ['#/lunch', '.page-lunch']];
+    ['#/lunch', '.page-lunch'], ['#/products', '.page-products'], ['#/receipts', '.page-receipts']];
   for (const vp of [PHONE, DESKTOP]) {
     const p = await newPage(ctx, vp);
     for (const [hash, sel] of routes) {
@@ -260,7 +260,7 @@ test('shopping: fix a price, copy & open a store, check off, done shopping fills
   await page.click('dialog[open] form[data-submit="item:price"] button[type=submit]');
   await toastMatch(page, /Price saved/);
   let s = (await familyState(page)).state;
-  assert.ok(Object.entries(s.prices || {}).some(([k, v]) => k.endsWith(`/${key}`) && v.price === 1.11), 'family price saved');
+  assert.ok(Object.entries(s.myProducts || {}).some(([k, v]) => k === `jewel/${key}` && v.price === 1.11 && v.source === 'typed'), 'the family’s price is saved on the item’s product');
   await page.keyboard.press('Escape');
   await page.click('[data-action="list:handoff"][data-store="jewel"]');
   await page.waitForSelector('dialog[open] .steps-small li');
@@ -291,15 +291,18 @@ test('shopping: fix a price, copy & open a store, check off, done shopping fills
 test('messages show on top of an open sheet, Undo works there, and a dismissed message never blocks taps', async () => {
   await go(page, '#/list', '.page-list');
   await page.click('.store-sams .item .item-main');
-  await page.waitForSelector('dialog[open] [data-action="item:brand"]');
+  await page.waitForSelector('dialog[open] form[data-submit="item:price"]');
   const id = await page.evaluate(() => document.querySelector('dialog[open] form[data-submit="item:price"]').dataset.id);
-  await page.click('dialog[open] [data-action="item:brand"][data-value="name"]');
-  await toastMatch(page, /Name brand for this item/);
-  assert.equal((await familyState(page)).state.brands?.[id], 'name');
+  assert.equal(await page.$('dialog[open] [data-action="item:brand"]'), null, 'no store-brand / name-brand toggle any more');
+  const was = await page.inputValue('dialog[open] form[data-submit="item:price"] input[name="price"]');
+  await page.fill('dialog[open] form[data-submit="item:price"] input[name="price"]', String(Math.round((Number(was) + 1.11) * 100) / 100));
+  await page.click('dialog[open] form[data-submit="item:price"] button[type=submit]');
+  await toastMatch(page, /Price saved for the whole family/);
+  assert.equal((await familyState(page)).state.myProducts?.[`sams/${id}`]?.source, 'typed', 'the price is the item’s product at Sam’s now');
   await page.click('dialog[open] .toast-root .toast-btn'); // a modal sheet sits in the top layer: the toast must be inside it
   await toastMatch(page, /Undone/);
-  assert.equal((await familyState(page)).state.brands?.[id], undefined, 'Undo from inside the sheet reverted the brand');
-  assert.equal(await page.getAttribute('dialog[open] [data-action="item:brand"][data-value="generic"]', 'aria-checked'), 'true', 'the sheet shows the undone choice');
+  assert.equal((await familyState(page)).state.myProducts?.[`sams/${id}`], undefined, 'Undo from inside the sheet reverted the price');
+  assert.equal(await page.inputValue('dialog[open] form[data-submit="item:price"] input[name="price"]'), was, 'the sheet shows the undone price');
   await page.keyboard.press('Escape');
   await page.click('.toast-root .toast-x');
   await page.waitForTimeout(400);
@@ -411,6 +414,180 @@ test('coupons: Clip Jewel coupons and Sam’s Instant Savings, honestly explaine
   await page.click('[data-action="list:handoff"][data-store="jewel"]');
   await page.waitForSelector('dialog[open] .hint a[href*="jewelosco"]');
   await page.keyboard.press('Escape');
+});
+
+test('thumbs: one thumbs-down on Tonight drops the dinner and names who; Undo brings it back', async () => {
+  await go(page, '#/tonight', '.page-tonight');
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await page.waitForSelector('.hero-rate .rate-row');
+  await page.locator('.hero-rate').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  await shot(page, 'e2e-25-tonight-thumbs');
+  const before = (await familyState(page)).state.plan[TODAY].dinner;
+  await page.locator('.hero-rate [data-action="vote:dinner"][data-value="-1"]').click();
+  await toastMatch(page, /^Jeff gave it a thumbs down, so .+ is off the menu\. .+ takes its place/);
+  let s = (await familyState(page)).state;
+  assert.equal(s.votes[before].Jeff, -1);
+  assert.ok(s.retired[before], 'dropped right away: one vote is enough');
+  assert.notEqual(s.plan[TODAY].dinner, before, 'a bench dinner took tonight');
+  await page.click('.toast-root .toast-btn');
+  await toastMatch(page, /Undone/);
+  s = (await familyState(page)).state;
+  assert.equal(s.plan[TODAY].dinner, before);
+  assert.ok(!s.retired?.[before] && s.votes?.[before]?.Jeff === undefined);
+  // A thumbs up just keeps it in the rotation.
+  await page.locator('.hero-rate [data-action="vote:dinner"][data-value="1"]').click();
+  await toastMatch(page, /thumbs up/);
+  await page.waitForSelector('.hero-rate .thumb-up.is-on');
+  assert.equal((await familyState(page)).state.votes[before].Jeff, 1);
+  // Tapping it again takes the vote back.
+  await page.locator('.hero-rate [data-action="vote:dinner"][data-value="1"]').click();
+  await waitFor(async () => (await familyState(page)).state.votes?.[before]?.Jeff === undefined);
+});
+
+test('a side’s thumbs-down swaps in a similar side everywhere; Restore from Recipes, Dropped', async () => {
+  await go(page, '#/tonight', '.page-tonight');
+  const side = await page.getAttribute('.hero-rate [data-action="vote:side"][data-value="-1"]', 'data-id');
+  const sidesBefore = await page.textContent('.hero-sides');
+  const subsBefore = JSON.stringify((await familyState(page)).state.substitutions || {});
+  await page.locator(`.hero-rate [data-action="vote:side"][data-id="${side}"][data-value="-1"]`).click();
+  await toastMatch(page, /thumbs down, so it’s off the menu/);
+  let s = (await familyState(page)).state;
+  assert.equal(s.sideVotes[side].Jeff, -1);
+  assert.equal(JSON.stringify(s.substitutions || {}), subsBefore, 'nothing written to substitutions');
+  await waitFor(async () => (await page.textContent('.hero-sides').catch(() => '')) !== sidesBefore || !(await page.$('.hero-sides')));
+  if (await page.$('.hero-replaced')) assert.match(await page.textContent('.hero-replaced'), /which got a thumbs down/);
+  await go(page, '#/recipes', '.page-recipes');
+  await page.click('[data-action="rec:tab"][data-tab="out"]');
+  await page.waitForSelector(`[data-action="rec:restore-side"][data-id="${side}"]`);
+  await shot(page, 'e2e-26-dropped');
+  await page.click(`[data-action="rec:restore-side"][data-id="${side}"]`);
+  await toastMatch(page, /back on the menu/);
+  s = (await familyState(page)).state;
+  assert.ok(!Object.values(s.sideVotes?.[side] || {}).includes(-1));
+  await page.click('[data-action="rec:tab"][data-tab="rotation"]');
+  await go(page, '#/tonight', '.page-tonight');
+  assert.equal(await page.textContent('.hero-sides'), sidesBefore, 'the side is back');
+});
+
+test('“How was dinner?” shows after it’s cooked and the next morning, then waves off', async () => {
+  await go(page, '#/tonight', '.page-tonight');
+  assert.equal(await page.$('.howwas'), null, 'not before dinner is cooked');
+  await page.click('[data-action="tonight:cooked"]');
+  await page.waitForSelector('.howwas .rate-row');
+  assert.equal(await page.$('.hero-rate'), null, 'no second set of thumbs on the card above');
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await page.locator('.howwas').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  await shot(page, 'e2e-27-howwas');
+  // The next morning it asks about last night.
+  await page.clock.setSystemTime(new Date('2026-11-17T08:15:00-06:00'));
+  await page.reload();
+  await page.waitForSelector('.howwas');
+  assert.match(await page.textContent('.howwas'), /last night \(Monday\)/);
+  const sideId = await page.getAttribute('.howwas [data-action="vote:side"][data-value="1"]', 'data-id');
+  await page.locator(`.howwas [data-action="vote:side"][data-id="${sideId}"][data-value="1"]`).click();
+  await page.waitForSelector(`.howwas [data-action="vote:side"][data-id="${sideId}"].thumb-up.is-on`);
+  assert.equal((await familyState(page)).state.sideVotes[sideId].Jeff, 1);
+  await page.click('.howwas [data-action="lighter:dismiss"]');
+  await waitFor(async () => !(await page.$('.howwas')));
+  // Back to Monday evening: still waved off for that night; put tonight back to planned.
+  await page.clock.setSystemTime(NOW);
+  await page.reload();
+  await page.waitForSelector('.page-tonight');
+  assert.equal(await page.$('.howwas'), null, 'waved off stays waved off');
+  await page.click('[data-action="night:uncook"]');
+  await waitFor(async () => (await familyState(page)).state.plan[TODAY].status === 'planned');
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('receipts: scan → check every line → save; the list shows “paid”, Find it, and My products', async () => {
+  await go(page, '#/list', '.page-list');
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  // A line for something that's surely on this week's Sam's list.
+  const id0 = await page.getAttribute('.store-sams .item:not(.is-checked):has(a.find-it) .item-main', 'data-key');
+  const name0 = (await page.textContent(`.store-sams .item-main[data-key="${id0}"] .item-name`)).trim();
+  const extra = !['chicken', 'cheese'].includes(id0);
+  api.db.receiptExtraLines = extra ? [{ text: 'MM ITEM', product: `Member's Mark ${name0}`, brand: "Member's Mark", size: '', qty: 1, unitPrice: 12.34, lineTotal: 12.34, matchId: id0 }] : [];
+  await page.click('[data-action="rcpt:scan"]');
+  await page.waitForSelector('dialog[open] [data-testid="rcpt-files"]');
+  await page.click('dialog[open] [data-action="rcpt:store"][data-value="sams"]');
+  await page.setInputFiles('dialog[open] [data-testid="rcpt-files"]', path.join(ROOT, 'icons', 'icon-512.png'));
+  await page.waitForSelector('dialog[open] .rcpt-thumbs img');
+  await page.click('dialog[open] [data-action="rcpt:read"]');
+  await page.waitForSelector('dialog[open] .rcpt-line');
+  const mock = await (await fetch(`${apiBase}/__mock/state`)).json();
+  assert.equal(mock.lastReceipt.images, 1);
+  assert.equal(mock.lastReceipt.store, 'sams');
+  assert.ok(mock.lastReceipt.known > 50, 'sends the catalog so lines come back matched');
+  // The tortillas line had no match from the scanner; the review suggests one.
+  const tortSel = await page.$eval('dialog[open] .rcpt-line:nth-child(3) select', (el) => el.value);
+  assert.ok(tortSel, 'a suggested match for the tortillas');
+  // Paper towels: not on our list, still counted.
+  assert.equal(await page.$eval('dialog[open] .rcpt-line:nth-child(4) select', (el) => el.value), '');
+  assert.match(await page.textContent('dialog[open] .rcpt-check'), /Receipt total/);
+  await page.waitForTimeout(500);
+  await shot(page, 'e2e-28-receipt-review');
+  await page.click('dialog[open] [data-action="rcpt:save"]');
+  await toastMatch(page, /^Saved \$[\d.,]+ from Sam's Club, Nov 15\. Learned \d+ prices/);
+  const s = (await familyState(page)).state;
+  const rid = Object.keys(s.receiptLog)[0];
+  assert.match(rid, /^sams-2026-11-15-\d+$/);
+  assert.equal(s.myProducts['sams/chicken'].price, 19.43);
+  assert.equal(s.myProducts['sams/chicken'].packSize, 6.5);
+  assert.equal(s.myProducts['sams/cheese'].price, 7.48, 'paid per pack after the $2 off');
+  assert.ok(s.receipts.some((r) => r.receiptId === rid), 'counted once in the Budget');
+  // The list: the product, "paid $… · Nov 15", and Find it for that exact product.
+  await go(page, '#/list', '.page-list');
+  const row = page.locator(`.item:has(.item-main[data-key="${id0}"])`);
+  await row.locator('.paid').waitFor();
+  assert.match(await row.locator('.paid').textContent(), /^paid \$[\d.]+ · Nov 15$/);
+  const expectName = extra ? `Member's Mark ${name0}` : id0 === 'chicken' ? "Member's Mark Boneless Skinless Chicken Breasts" : "Member's Mark Shredded Mild Cheddar";
+  assert.ok((await row.locator('.item-product').textContent()).startsWith(expectName));
+  const href = await row.locator('a.find-it').getAttribute('href');
+  assert.ok(href.startsWith("https://www.samsclub.com/s/Member's+Mark+"), href);
+  await row.scrollIntoViewIfNeeded();
+  await shot(page, 'e2e-29-list-paid');
+  // Copy & open uses the exact product name.
+  await page.click('[data-action="list:handoff"][data-store="sams"]');
+  await page.waitForSelector('dialog[open] .copy-box');
+  assert.ok((await page.evaluate(() => navigator.clipboard.readText())).includes(expectName));
+  await page.keyboard.press('Escape');
+  // My products: the receipt filled it in; Change opens the picker.
+  await go(page, '#/products', '.page-products');
+  assert.match(await page.textContent('.product-row.is-mine'), /Paid \$[\d.]+ on Nov 15/);
+  await page.click('.product-row.is-mine [data-action="prod:pick"]');
+  await page.waitForSelector('dialog[open] .current-product');
+  assert.match(await page.getAttribute('dialog[open] .current-product a', 'href'), /^https:\/\/www\.samsclub\.com\//);
+  await page.keyboard.press('Escape');
+  await shot(page, 'e2e-30-my-products');
+  // Budget lists it with its lines; scanning the same receipt again doesn't double count.
+  await go(page, '#/budget', '.page-budget');
+  await page.click('.rcpt-card summary');
+  await page.waitForSelector('.rcpt-card[open] .rcpt-history-lines li');
+  await page.click('[data-action="rcpt:scan"]');
+  await page.setInputFiles('dialog[open] [data-testid="rcpt-files"]', path.join(ROOT, 'icons', 'icon-192.png'));
+  await page.click('dialog[open] [data-action="rcpt:read"]');
+  await page.waitForSelector('dialog[open] .hint-warn');
+  assert.equal(await page.getAttribute('dialog[open] [data-action="rcpt:save"]', 'disabled'), '');
+  await page.keyboard.press('Escape');
+  api.db.receiptExtraLines = [];
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('receipts: the console import helper runs past purchases through the same path, deduped', async () => {
+  await go(page, '#/budget', '.page-budget');
+  const r = await page.evaluate(() => window.bfdp.importReceipts([
+    { store: 'jewel', date: '2026-11-02', total: 23.5, lines: [{ product: 'Signature Select Shredded Cheddar', size: '8 oz', qty: 2, lineTotal: 7.98, matchId: 'cheese' }] },
+    { store: 'jewel', date: '2026-11-02', total: 23.5, lines: [] },
+  ]));
+  assert.deepEqual([r.receipts, r.lines, r.matched, r.productsSet, r.skippedDuplicates, r.saved], [1, 1, 1, 1, 1, true]);
+  const dry = await page.evaluate(() => window.bfdp.importReceipts([{ store: 'jewel', date: '2026-11-02', total: 23.5 }], { dryRun: true }));
+  assert.deepEqual([dry.skippedDuplicates, dry.saved], [1, false]);
+  const s = (await familyState(page)).state;
+  assert.equal(s.myProducts['jewel/cheese'].price, 3.99);
+  assert.equal(s.myProducts['jewel/cheese'].packSize, 8);
+  await waitFor(async () => (await (await fetch(`${apiBase}/__mock/state`)).json()).state.receiptLog?.['jewel-2026-11-02-2350']);
 });
 
 test('two-tap swap on the planner trades two nights', async () => {

@@ -58,7 +58,7 @@ test('pantry: stocked staples drop off; measured items buy only the shortfall', 
   assert.ok(salt && salt.packs === 1 && salt.reasons.includes('low'));
 });
 
-test('store & brand: per-item store toggle, name brand, family price correction, not-at-this-store', () => {
+test('store & product: per-item store toggle, old brand choices ignored, family price, not-at-this-store', () => {
   const base = nights(['2026-11-17', 'chix-grill']);
   const dates = ['2026-11-17'];
   let list = buildList(db, { ...base, storeFor: { chicken: 'jewel' } }, { dates });
@@ -66,12 +66,23 @@ test('store & brand: per-item store toggle, name brand, family price correction,
   assert.equal(c.store, 'jewel');
   assert.equal(c.packs, 1);
   assert.equal(c.cost, 12);
-  list = buildList(db, { ...base, brands: { chicken: 'name' } }, { dates });
-  assert.equal(list.items.find((i) => i.id === 'chicken').cost, 45);
-  const withPrice = applyOps(base, setPriceOps(base, { store: 'sams', brand: 'generic', id: 'chicken', size: 10, price: 27.5, who: 'Candi' }).ops);
-  c = buildList(db, withPrice, { dates }).items.find((i) => i.id === 'chicken');
+  // One product per store: the old store-brand / name-brand choices are read by nothing.
+  const plain = buildList(db, base, { dates }).items.find((i) => i.id === 'chicken').cost;
+  assert.equal(buildList(db, { ...base, brands: { chicken: 'name' }, settings: { brand: 'name' } }, { dates }).items.find((i) => i.id === 'chicken').cost, plain);
+  // An older per-tier family price still counts…
+  const legacy = { ...base, prices: { 'sams/generic/chicken': { size: 10, price: 27.5, by: 'Candi' } } };
+  c = buildList(db, legacy, { dates }).items.find((i) => i.id === 'chicken');
   assert.equal(c.cost, 27.5);
   assert.equal(c.pack.source, 'family');
+  // …and "Fix the price" now sets the item's product at that store (and clears the old fix).
+  const r = setPriceOps(db, legacy, { store: 'sams', id: 'chicken', size: 10, price: 26.5, product: { name: 'Chicken breast, 10 lb' }, who: 'Candi' });
+  const withPrice = applyOps(legacy, r.ops);
+  assert.equal(withPrice.prices['sams/generic/chicken'], undefined);
+  assert.deepEqual([withPrice.myProducts['sams/chicken'].name, withPrice.myProducts['sams/chicken'].packSize, withPrice.myProducts['sams/chicken'].price, withPrice.myProducts['sams/chicken'].source], ['Chicken breast, 10 lb', 10, 26.5, 'typed']);
+  c = buildList(db, withPrice, { dates }).items.find((i) => i.id === 'chicken');
+  assert.equal(c.cost, 26.5);
+  assert.equal(c.pack.source, 'typed');
+  assert.equal(c.product.chosen, true);
   const noSams = applyOps(base, notAtStoreOps(db, base, { store: 'sams', id: 'chicken' }).ops);
   assert.equal(buildList(db, noSams, { dates }).items.find((i) => i.id === 'chicken').store, 'jewel');
   const jewelPlan = { ...base, settings: { planStore: 'jewel' } };

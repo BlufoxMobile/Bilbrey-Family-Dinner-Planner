@@ -1,8 +1,35 @@
 # Deploying `bilbrey-dinner-planner`
 
-The Worker is ONE ES-module file, `worker/src/index.js` (~49 KB, no npm runtime dependencies; its
-only import is the built-in `cloudflare:workers`). Deploy it with the Workers Script Upload API as a
-`multipart/form-data` PUT. No wrangler and no build step are needed.
+The Worker is ONE ES-module file, `worker/src/index.js` (v2.2.0, ~80 KB, no npm runtime
+dependencies; its only import is the built-in `cloudflare:workers`). Deploy it with the Workers
+Script Upload API as a `multipart/form-data` PUT. No wrangler and no build step are needed.
+
+> **Live since 2026-11-14** at `https://bilbrey-dinner-planner.jeff-bilbrey-jb.workers.dev`.
+> Migration `v1` has already run, so **every deploy from now on uses the REDEPLOY metadata** below,
+> with no `migrations` key.
+
+## 0. REDEPLOY metadata (use this now — v2.2 adds `POST /api/receipt`)
+
+```json
+{
+  "main_module": "index.js",
+  "compatibility_date": "2026-11-01",
+  "bindings": [
+    { "type": "durable_object_namespace", "name": "KITCHEN", "class_name": "Kitchen" },
+    { "type": "ai", "name": "AI" }
+  ]
+}
+```
+
+Upload it exactly as section 1 describes: the same PUT, the same two parts (`metadata` and
+`index.js` as `application/javascript+module`). The workers.dev route stays enabled, so there's no
+need to POST `/subdomain` again. After the upload, run
+`node worker/smoke.mjs https://bilbrey-dinner-planner.jeff-bilbrey-jb.workers.dev`. It should pass
+20/20, and `version=2.2.0` confirms the new code is live. The check
+"POST /api/receipt without a key → 401" fails with a 404 if the old code is still serving.
+
+The family's data isn't touched: the Durable Object and its SQLite storage persist across code
+uploads, and v2.2 adds no tables.
 
 ## 1. Upload the script
 
@@ -20,7 +47,7 @@ only import is the built-in `cloudflare:workers`). Deploy it with the Workers Sc
 Don't set the request's `Content-Type` header yourself. `fetch`/`FormData` (or `curl -F`) adds the
 multipart boundary.
 
-### `metadata` for the FIRST deploy (this creates the SQLite Durable Object namespace)
+### `metadata` for the FIRST deploy (already done on 2026-11-14 — kept here for reference)
 
 ```json
 {
@@ -41,10 +68,11 @@ multipart boundary.
 
 ### `metadata` for LATER deploys (code updates)
 
-Use the same JSON **without the `migrations` key**, because migration `v1` has already been applied.
-Sending it again is rejected: the class already exists, or the tag precondition fails. Always send
-`bindings`, because an upload replaces the whole configuration. If a class is ever renamed or added,
-send a new step `{ "old_tag": "v1", "new_tag": "v2", ... }`.
+Use the section 0 JSON. It is the first-deploy JSON **without the `migrations` key**, because
+migration `v1` has already been applied. Sending it again is rejected: the class already exists, or
+the tag precondition fails. Always send `bindings`, because an upload replaces the whole
+configuration. If a class is ever renamed or added, send a new step
+`{ "old_tag": "v1", "new_tag": "v2", ... }`.
 
 ### Browser snippet (run in a `dash.cloudflare.com` tab)
 
@@ -60,7 +88,7 @@ const metadata = {
     { type: "durable_object_namespace", name: "KITCHEN", class_name: "Kitchen" },
     { type: "ai", name: "AI" },
   ],
-  migrations: { new_tag: "v1", new_sqlite_classes: ["Kitchen"] }, // FIRST deploy only
+  // migrations: { new_tag: "v1", new_sqlite_classes: ["Kitchen"] }, // FIRST deploy only — already applied
 };
 const form = new FormData();
 form.append("metadata", JSON.stringify(metadata));
@@ -81,12 +109,12 @@ work if the dashboard's CSP allows them: `https://raw.githubusercontent.com/Bluf
 (it sends `Access-Control-Allow-Origin: *`) and the Pages copy at
 `https://blufoxmobile.github.io/Bilbrey-Family-Dinner-Planner/worker/src/index.js`.
 
-### curl equivalent (API token with "Workers Scripts Write")
+### curl equivalent (API token with "Workers Scripts Write") — redeploy form
 
 ```sh
 curl -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts/bilbrey-dinner-planner" \
   -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-  -F 'metadata={"main_module":"index.js","compatibility_date":"2026-11-01","bindings":[{"type":"durable_object_namespace","name":"KITCHEN","class_name":"Kitchen"},{"type":"ai","name":"AI"}],"migrations":{"new_tag":"v1","new_sqlite_classes":["Kitchen"]}}' \
+  -F 'metadata={"main_module":"index.js","compatibility_date":"2026-11-01","bindings":[{"type":"durable_object_namespace","name":"KITCHEN","class_name":"Kitchen"},{"type":"ai","name":"AI"}]}' \
   -F 'index.js=@worker/src/index.js;type=application/javascript+module;filename=index.js'
 ```
 
@@ -128,8 +156,8 @@ node worker/smoke.mjs https://bilbrey-dinner-planner.jeff-bilbrey-jb.workers.dev
 
 It checks `/api/health` (`ok`, `hasPasscode`, `ai: true`, `revision`), CORS preflight and actual
 responses for `https://blufoxmobile.github.io` and `http://localhost:5173`, rejection of a foreign
-origin (no `Access-Control-Allow-Origin`), and that `/api/state`, `/api/ops` and `/api/scan` return 401
-without a key. It never calls `/api/setup` and never sends a family key, so it can't trip the backoff.
+origin (no `Access-Control-Allow-Origin`), and that `/api/state`, `/api/ops`, `/api/scan` and
+`/api/receipt` return 401 without a key. That makes 20 checks, and it prints `version` at the end. It never calls `/api/setup` and never sends a family key, so it can't trip the backoff.
 It never triggers an AI call either. It exits 1 on any failure. Behind an HTTPS proxy, run it with
 `NODE_USE_ENV_PROXY=1` (and `NODE_EXTRA_CA_CERTS=<ca bundle>`).
 
@@ -144,12 +172,31 @@ does.
   fallback call to `@cf/meta/llama-4-scout-17b-16e-instruct`, with a plain prompt and tolerant
   parsing. To change either model without a code edit, add plain-text bindings
   `{ "type": "plain_text", "name": "SCAN_MODEL", "text": "@cf/..." }` and/or `SCAN_FALLBACK_MODEL`.
-- **Cost:** the scan is the only AI call. Nothing runs on a schedule. The free allocation is
+- **Cost:** the pantry scan and the receipt scan are the only AI calls. Nothing runs on a schedule. The free allocation is
   10,000 neurons/day, and Gemma 4 is billed at 9,091 neurons per million input tokens and 27,273 per
   million output tokens. A scan with ~70 known items costs very roughly 30–60 neurons, which comes to
   well over 100 scans a day. The fallback costs about 2–3× more, and only when it runs.
-- **Limits enforced:** 200 ops per request (400 if more), state 1 MB (413), image data URL 1.5 MB
-  (413), request bodies 2 MB (413).
+- **Receipts (`POST /api/receipt`, v2.2):**
+  - Each image (up to 4) gets its own call to the same model with the same fallback, run in
+    parallel. Calls use JSON-schema output with `max_completion_tokens` 6000; the fallback uses
+    `max_tokens` 6000.
+  - The Worker then merges the pages and removes the lines that overlapping screenshots both show.
+    It attaches discount lines to their item, fixes qty × unitPrice = lineTotal, expands any
+    abbreviations the model left, and validates `matchId` against `known`.
+  - It drops or scrubs card, membership/rewards and phone numbers, emails, names and addresses,
+    whatever the model returned.
+  - Cost is roughly 30–150 neurons per image, so a 4-screenshot receipt comes to about
+    150–500 neurons.
+  - The response is §9.3 plus `images` (count) and `warnings` (an array of strings, e.g.
+    "Image 2 couldn't be read …").
+  - If one image fails, the scan still returns 200 with that warning. If every image fails, it
+    returns 502 `{ error, detail }`.
+- **Limits enforced:**
+  - Ops: 200 per request; more is a 400.
+  - State: 1 MB; over is a 413.
+  - Scan image: data URL up to 1.5 MB; over is a 413.
+  - Receipt images: 1.5 MB each and 4.5 MB together; over is a 413. More than 4 images is a 400.
+  - Request bodies: 2 MB, or 5 MB for receipts; over is a 413.
 - **Backoff:** 5 wrong keys from one IP within 10 minutes locks that IP out for 10 minutes. 40 wrong
   keys from anywhere within 10 minutes locks everyone out for 10 minutes. A lockout returns 429 with
   `Retry-After`. A request with a missing key header gets 401 and doesn't count toward the lockout.

@@ -1,8 +1,9 @@
 // Bits of markup several views share.
-import { html, ic, raw, photo } from '../ui.js';
+import { html, ic, raw, photo, tf } from '../ui.js';
 import { EQUIPMENT_LABELS } from '../config.js';
 import { EQUIPMENT_ICON } from '../icons.js';
 import { dinnerById, effectiveSides, sideInfo, isFavorite } from '../planner.js';
+import { lunchVote } from '../lunch.js';
 import { listJoin, relativeDay, shortWeekday } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
@@ -31,6 +32,48 @@ export function lighterChip(app, { key, text, why = '', action, data = {}, label
       <button type="button" class="icon-btn" data-action="lighter:dismiss" data-key="${key}" aria-label="Not now">${ic('close', { size: 18 })}</button>
     </span>
   </div>`;
+}
+
+// ---------------------------------------------------------------- thumbs (SPEC §9.2)
+
+/** This phone's person's thumb on a dinner, side or lunch item: 1, -1 or 0. */
+export function myThumb(app, kind, id, person = null) {
+  if (kind === 'lunch') return lunchVote(app.state, id, person);
+  const who = app.who();
+  const v = (kind === 'side' ? app.state.sideVotes : app.state.votes)?.[id]?.[who];
+  return v === 1 || v === -1 ? v : 0;
+}
+
+/**
+ * Thumbs up / thumbs down. Up keeps it in the rotation; one thumbs-down from anyone drops it
+ * (Undo is on the message). kind: 'dinner' | 'side' | 'lunch' (lunch thumbs are for `person`).
+ */
+export function thumbs(app, { kind, id, label, person = null, compact = false }) {
+  const mine = myThumb(app, kind, id, person);
+  const whose = kind === 'lunch' && person ? `${person}’s ` : '';
+  const data = `data-id="${String(id).replace(/"/g, '&quot;')}"${person ? ` data-person="${person}"` : ''}`;
+  return html`<span class="thumbs ${compact ? 'thumbs-sm' : ''}" role="group" aria-label="${whose}thumbs for ${label}">
+    <button type="button" class="thumb thumb-up ${mine === 1 ? 'is-on' : ''}" aria-pressed="${tf(mine === 1)}" data-action="vote:${kind}" ${raw(data)} data-value="1" aria-label="Thumbs up: keep ${label}${kind === 'lunch' ? ` in ${whose}lunches` : ' in the rotation'}">${ic('up_vote', { size: compact ? 18 : 20 })}</button>
+    <button type="button" class="thumb thumb-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="vote:${kind}" ${raw(data)} data-value="-1" aria-label="Thumbs down: drop ${label}${kind === 'lunch' ? ` from ${whose}lunches` : ''}">${ic('down_vote', { size: compact ? 18 : 20 })}</button>
+  </span>`;
+}
+
+/** The dinner and each recipe side, each with thumbs for this phone's person. */
+export function rateList(app, d, sides) {
+  return html`<ul class="rate-list">
+    <li class="rate-row"><span class="rate-name"><small>Dinner</small><b>${d.title}</b></span>${thumbs(app, { kind: 'dinner', id: d.id, label: d.title })}</li>
+    ${sides.filter((s) => s.parsed.type === 'side' && app.db.sides[s.parsed.id]).map((s) => html`<li class="rate-row"><span class="rate-name"><small>Side</small><b>${s.info?.title}</b></span>${thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side' })}</li>`)}
+  </ul>`;
+}
+
+/** "In for the corn on the cob, which got a thumbs down" — when a dropped side was swapped on the fly. */
+export function replacedText(app, s) {
+  const was = s?.replaced ? app.db.sides[s.droppedId]?.title : '';
+  return was ? `In for ${was.charAt(0).toLowerCase() + was.slice(1)}, which got a thumbs down` : '';
+}
+export function replacedNote(app, s) {
+  const t = replacedText(app, s);
+  return t ? html`<small class="replaced">${t}</small>` : '';
 }
 
 export function sidesFor(app, dinnerId, entry) {

@@ -50,6 +50,11 @@
     "griddle-sloppy-joes": "img/dinners/griddle-sloppy-joes.webp",
     "crispy-chicken-fingers": "img/dinners/crispy-chicken-fingers.webp",
     "broccoli-cheddar-potatoes": "img/dinners/broccoli-cheddar-potatoes.webp",
+    "jd-pulled-pork-sandwiches": "img/dinners/jd-pulled-pork-sandwiches.webp",
+    "sausage-cajun-potatoes": "img/dinners/sausage-cajun-potatoes.webp",
+    "chicken-alfredo-night": "img/dinners/chicken-alfredo-night.webp",
+    "bbq-chicken-naan-pizzas": "img/dinners/bbq-chicken-naan-pizzas.webp",
+    "teriyaki-chicken-noodles": "img/dinners/teriyaki-chicken-noodles.webp",
     "teriyaki-chicken-bowls": "img/dinners/teriyaki-chicken-bowls.webp",
     "hibachi-chicken-noodles": "img/dinners/hibachi-chicken-noodles.webp",
     "kung-pao-chicken": "img/dinners/kung-pao-chicken.webp",
@@ -111,7 +116,7 @@
     "pork-and-beans": "img/sides/pork-and-beans.webp",
     "chips-and-salsa": "img/sides/chips-and-salsa.webp"
   },
-  "generated": "2026-11-14",
+  "generated": "2026-11-15",
   "model": "Higgsfield gpt_image_2_6 (GPT Image 2.6), quality medium, 1k; dinners 3:2 -> 1200x800 + 640x427 webp, sides 1:1 -> 640x640 webp",
   "lunch": {
     "bh-black-forest-ham-sandwich": "img/lunch/bh-black-forest-ham-sandwich.webp",

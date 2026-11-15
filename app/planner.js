@@ -69,20 +69,61 @@ export function allDinners(db, state) {
   return out;
 }
 
-export function isRetired(state, id) { return !!state?.retired?.[id]; }
+/** SPEC §9.2: one thumbs-down from anyone drops a dinner (older -1 votes count too, read lazily). */
+export function hasDownVote(state, id) {
+  const v = state?.votes?.[id];
+  return !!v && typeof v === 'object' && Object.values(v).includes(-1);
+}
+/** Dropped: retired by a parent, or any thumbs-down. */
+export function isRetired(state, id) { return !!state?.retired?.[id] || hasDownVote(state, id); }
+export const isDropped = isRetired;
 export function isPromoted(state, id) { return !!state?.promoted?.[id]; }
 
-export function inRotation(state, d) {
+/** Who gave a dinner its thumbs-down(s), in family order. */
+export function downVoters(state, id) {
+  const v = state?.votes?.[id] || {};
+  return Object.keys(v).filter((p) => v[p] === -1);
+}
+
+const implicitCache = new WeakMap();
+/**
+ * Thumbs-downs from before one vote dropped a dinner never brought a bench dinner in. Fill
+ * those gaps here, deterministically and without writing anything: each such dinner gets the
+ * bench dinner that best replaces it. → Map(benchId → droppedId)
+ */
+export function implicitPromotions(db, state) {
+  if (!db || !state || typeof state !== 'object') return new Map();
+  let byDb = implicitCache.get(state);
+  if (byDb?.db === db) return byDb.map;
+  const map = new Map();
+  const replaced = new Set(Object.values(state.promoted || {}).map((p) => p?.replaced).filter(Boolean));
+  const gaps = allDinners(db, state)
+    .filter((d) => hasDownVote(state, d.id) && !state.retired?.[d.id] && !replaced.has(d.id) && (d.rotation === 'core' || d.custom || isPromoted(state, d.id)))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  for (const d of gaps) {
+    const bench = bestBenchFor(db, state, d.id, { exclude: new Set(map.keys()) });
+    if (bench) map.set(bench.id, d.id);
+  }
+  implicitCache.set(state, { db, map });
+  return map;
+}
+
+export function inRotation(state, d, db = null) {
   if (!d || isRetired(state, d.id)) return false;
-  return d.rotation === 'core' || d.custom || isPromoted(state, d.id);
+  return d.rotation === 'core' || d.custom || isPromoted(state, d.id) || (!!db && implicitPromotions(db, state).has(d.id));
 }
 
 export function rotationList(db, state) {
-  return allDinners(db, state).filter((d) => inRotation(state, d));
+  return allDinners(db, state).filter((d) => inRotation(state, d, db));
+}
+
+function rawBench(db, state) {
+  return allDinners(db, state).filter((d) => d.rotation === 'bench' && !isPromoted(state, d.id) && !isRetired(state, d.id));
 }
 
 export function benchList(db, state) {
-  return allDinners(db, state).filter((d) => d.rotation === 'bench' && !isPromoted(state, d.id) && !isRetired(state, d.id));
+  const implicit = implicitPromotions(db, state);
+  return rawBench(db, state).filter((d) => !implicit.has(d.id));
 }
 
 export function voteInfo(state, id) {
@@ -93,9 +134,73 @@ export function voteInfo(state, id) {
   return { up, down, byPerson: v };
 }
 
+/** Two thumbs-up (or the recipe box's own tag) make a family favorite. */
+export const FAVORITE_UPS = 2;
 export function isFavorite(state, d) {
-  if (!d || isRetired(state, d.id)) return false; // a voted-out dinner isn't anyone's favorite right now
-  return voteInfo(state, d.id).up >= 3 || d.tags.includes('family favorite');
+  if (!d || isRetired(state, d.id)) return false; // a dropped dinner isn't anyone's favorite right now
+  return voteInfo(state, d.id).up >= FAVORITE_UPS || d.tags.includes('family favorite');
+}
+
+// ---------------------------------------------------------------- side votes (§9.2)
+
+export function sideVoteInfo(state, id) {
+  const v = state?.sideVotes?.[id] || {};
+  let up = 0;
+  let down = 0;
+  for (const val of Object.values(v)) { if (val === 1) up++; else if (val === -1) down++; }
+  return { up, down, byPerson: v };
+}
+
+/** A side with any thumbs-down is dropped: never a default or a suggestion. */
+export function isSideDropped(state, id) {
+  const v = state?.sideVotes?.[id];
+  return !!v && typeof v === 'object' && Object.values(v).includes(-1);
+}
+
+export function droppedSides(db, state) {
+  return db.sideList.filter((s) => isSideDropped(state, s.id));
+}
+
+/** Sides the recipe box already serves with dinners of this category (no potstickers with burgers). */
+function pairedSides(db, category) {
+  const out = new Map();
+  for (const x of db.dinnerList) if (x.category === category) for (const s of x.sides) out.set(s, (out.get(s) || 0) + 1);
+  return out;
+}
+
+/** The dinner categories a side is served with by default. */
+function sideCategories(db, sideId) {
+  const out = new Set();
+  for (const x of db.dinnerList) if (x.sides.includes(sideId)) out.add(x.category);
+  return out;
+}
+
+export const sideFits = (db, d, alt) => ['vegetable', 'salad', 'fruit'].includes(alt.kind) || pairedSides(db, d?.category).has(alt.id);
+
+/**
+ * The side that takes a dropped side's place for a dinner: same kind, not dropped, not already
+ * on the plate, one that suits the dinner; sides this kind of dinner already uses first, then
+ * thumbs-up, then alphabetical. Deterministic. null when nothing fits.
+ */
+export function bestSideFor(db, state, d, droppedId, exclude = new Set()) {
+  const was = db.sides[droppedId];
+  const paired = pairedSides(db, d?.category);
+  const ok = (s) => !isSideDropped(state, s.id) && !exclude.has(s.id) && s.id !== droppedId;
+  const sameKind = db.sideList.filter((s) => ok(s) && s.kind === was?.kind);
+  let pool = sameKind.filter((s) => sideFits(db, d, s));
+  let near = null;
+  if (!pool.length && was) {
+    // Nothing of that kind is ever served with this kind of dinner (burgers only come with fries):
+    // the same-kind side served with the most of the same kinds of dinner as the dropped one
+    // (fries → potato wedges, not zucchini).
+    const cats = sideCategories(db, droppedId);
+    near = new Map(sameKind.map((s) => [s.id, [...sideCategories(db, s.id)].filter((c) => cats.has(c)).length]));
+    pool = sameKind.filter((s) => near.get(s.id) > 0);
+  }
+  if (!pool.length) { near = null; pool = db.sideList.filter((s) => ok(s) && ['vegetable', 'salad'].includes(s.kind)); }
+  if (!pool.length) return null;
+  const score = (s) => (near ? near.get(s.id) : (paired.get(s.id) || 0)) * 2 + sideVoteInfo(state, s.id).up;
+  return [...pool].sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id))[0];
 }
 
 export const isBurger = (d) => !!d && (d.tags.includes('burger') || d.category === 'Burgers');
@@ -142,6 +247,24 @@ export function effectiveSides(db, state, dinnerId, entry) {
     const parsed = parseSideRef(ref);
     if (!parsed) continue;
     out.push({ slot: i, ref, parsed, remembered, isDefault: ref === d.sides[i], added: i >= sideSlotsFor(d) });
+  }
+  // A dropped side (any thumbs-down) is swapped for the best same-kind side, on the fly:
+  // nothing is written, so restoring the side brings it straight back everywhere.
+  if (out.some((s) => s.parsed.type === 'side' && isSideDropped(state, s.parsed.id))) {
+    const taken = new Set(out.filter((s) => !(s.parsed.type === 'side' && isSideDropped(state, s.parsed.id))).map((s) => s.parsed.id));
+    for (const s of out) {
+      if (s.parsed.type !== 'side' || !isSideDropped(state, s.parsed.id)) continue;
+      const alt = bestSideFor(db, state, d, s.parsed.id, taken);
+      if (!alt) { s.gone = true; continue; } // nothing left that fits: serve it without that side
+      taken.add(alt.id);
+      s.droppedRef = s.ref;
+      s.droppedId = s.parsed.id;
+      s.ref = alt.id;
+      s.parsed = { type: 'side', id: alt.id };
+      s.isDefault = false;
+      s.replaced = true;
+    }
+    return out.filter((s) => !s.gone);
   }
   return out;
 }
@@ -237,8 +360,10 @@ export function pantryCovers(db, state, id, qty) {
 export function canBuyAt(db, state, id, store) {
   if (state?.availability?.[`${store}/${id}`] === false) return false;
   if (state?.prices?.[`${store}/generic/${id}`] || state?.prices?.[`${store}/name/${id}`]) return true;
+  const mine = state?.myProducts?.[`${store}/${id}`];
+  if (mine && Number(mine.packSize) > 0 && typeof mine.price === 'number' && mine.price >= 0) return true;
   const packs = db.ingredients[id]?.packs?.[store];
-  return !!(packs && (packs.generic || packs.name));
+  return !!(packs && (packs.generic || packs.name)) || !!firstOption(db, store, id);
 }
 
 function itemsFeasible(db, state, items, store) {
@@ -257,15 +382,16 @@ export function feasibleSides(db, state, d, store, entry) {
   const base = effectiveSides(db, state, d.id, entry);
   if (!itemsFeasible(db, state, d.items, store)) return null;
   const refs = [];
-  for (const s of base) refs[s.slot] = s.ref;
+  // A night stores the recipe's own side even when a thumbs-down swaps it on the fly (§9.2).
+  for (const s of base) refs[s.slot] = s.droppedRef ?? s.ref;
   if (store === 'both') return refs;
   const used = new Set(base.map((s) => s.ref));
   for (const s of base) {
     if (itemsFeasible(db, state, itemsForSides(db, state, [s.ref]), store)) continue;
-    if (s.remembered) return null; // the family chose this side; don't silently change it
+    if (s.remembered && !s.replaced) return null; // the family chose this side; don't silently change it
     const want = s.parsed.type === 'side' ? db.sides[s.parsed.id]?.kind : null;
     const alts = [...db.sideList]
-      .filter((x) => !used.has(x.id) && itemsFeasible(db, state, x.items, store))
+      .filter((x) => !used.has(x.id) && !isSideDropped(state, x.id) && itemsFeasible(db, state, x.items, store))
       .sort((a, b) => (b.kind === want) - (a.kind === want) || a.id.localeCompare(b.id));
     if (!alts.length) return null;
     refs[s.slot] = alts[0].id;
@@ -336,10 +462,6 @@ export function isFillable(entry, mode) {
 
 // ---------------------------------------------------------------- pricing helpers used by the generator
 
-export function brandFor(state, id) {
-  return state?.brands?.[id] || settingsOf(state).brand;
-}
-
 export function storeFor(db, state, id, planStore = settingsOf(state).planStore) {
   if (planStore === 'sams' || planStore === 'jewel') return planStore;
   const pref = state?.storeFor?.[id] || db.ingredients[id]?.defaultStore || 'jewel';
@@ -348,26 +470,64 @@ export function storeFor(db, state, id, planStore = settingsOf(state).planStore)
   return canBuyAt(db, state, id, other) ? other : pref;
 }
 
-/** Best pack for an item at a store/brand: family correction → prices.json → catalog; falls back to the other brand. */
-export function packFor(db, state, id, store, brand) {
+/** The exact product the family buys for an ingredient at a store (SPEC §9.4), or null. */
+export function myProduct(state, store, id) {
+  const p = state?.myProducts?.[`${store}/${id}`];
+  return p && typeof p === 'object' && typeof p.name === 'string' && p.name ? p : null;
+}
+
+/** data/products.json's first option at a store that can be priced, or null. */
+export function firstOption(db, store, id) {
+  return (db?.products?.byId?.[id]?.[store] || []).find((o) => o.packSize > 0 && o.price != null && o.price >= 0) || null;
+}
+
+/**
+ * The ONE product the family buys for an item at a store, with its pack size and price
+ * (Jeff, 2026-11-15: "just use the actual products we buy" — no store-brand / name-brand tiers):
+ *   1. what they bought, picked or typed (myProducts) — its paid / typed price;
+ *   2. the catalog's `usual` (the pack they buy, read off their receipts) at its store;
+ *   3. the first researched option in data/products.json for that store;
+ *   4. the catalog / prices.json pack, as a last resort.
+ * An older family price correction (prices["store/tier/id"]) still applies when nothing in 1. has a
+ * price. state.brands and settings.brand are old data: read by nothing here.
+ * → { size, price, source, label, url, confidence, kind: 'mine'|'usual'|'option'|'catalog', product? } or null.
+ */
+export function packFor(db, state, id, store) {
   if (state?.availability?.[`${store}/${id}`] === false) return null;
-  const tryBrand = (b) => {
-    const fam = state?.prices?.[`${store}/${b}/${id}`];
-    const base = db.ingredients[id]?.packs?.[store]?.[b];
-    if (fam && Number(fam.size) > 0 && Number(fam.price) >= 0) {
-      return { ...(base || {}), size: Number(fam.size), price: Number(fam.price), source: 'family', brand: b, store, at: fam.at, by: fam.by };
+  const ing = db.ingredients[id];
+  const mine = myProduct(state, store, id);
+  const packs = ing?.packs?.[store] || {};
+  const withMine = (p) => (p && mine ? { ...p, product: mine } : p);
+  if (mine && Number(mine.packSize) > 0 && typeof mine.price === 'number' && Number.isFinite(mine.price) && mine.price >= 0) {
+    const src = mine.source === 'receipt' ? 'paid' : mine.source === 'typed' ? 'typed' : 'product';
+    const base = (ing?.usual?.store === store && packs[ing.usual.tier]) || packs.generic || packs.name;
+    return withMine({ size: Number(mine.packSize), price: Number(mine.price), source: src, store, label: mine.name, url: mine.url || base?.url, date: mine.date || null, by: mine.by, kind: 'mine' });
+  }
+  let base = null;
+  let tier = null;
+  if (ing?.usual?.store === store && packs[ing.usual.tier]) {
+    tier = ing.usual.tier;
+    base = { ...packs[tier], store, kind: 'usual' };
+  } else {
+    const o = firstOption(db, store, id);
+    if (o) {
+      tier = o.tier === 'name' ? 'name' : 'generic';
+      base = { size: o.packSize, price: o.price, source: 'option', store, label: o.size && !o.name.toLowerCase().includes(o.size.toLowerCase()) ? `${o.name}, ${o.size}` : o.name, url: o.url || null, confidence: o.confidence || 'listed', brandName: o.brand || '', kind: 'option' };
+    } else if (packs.generic || packs.name) {
+      tier = packs.generic ? 'generic' : 'name';
+      base = { ...packs[tier], store, kind: 'catalog' };
     }
-    return base ? { ...base, brand: b, store } : null;
-  };
-  const first = tryBrand(brand);
-  if (first) return first;
-  const other = tryBrand(brand === 'name' ? 'generic' : 'name');
-  return other ? { ...other, brandFallback: true } : null;
+  }
+  const fam = state?.prices?.[`${store}/${tier || 'generic'}/${id}`] || state?.prices?.[`${store}/${tier === 'name' ? 'generic' : 'name'}/${id}`];
+  if (fam && Number(fam.size) > 0 && Number(fam.price) >= 0) {
+    return withMine({ ...(base || { store, kind: 'catalog' }), size: Number(fam.size), price: Number(fam.price), source: 'family', at: fam.at, by: fam.by });
+  }
+  return withMine(base);
 }
 
 export function unitPrice(db, state, id, planStore) {
   const store = storeFor(db, state, id, planStore);
-  const p = packFor(db, state, id, store, brandFor(state, id));
+  const p = packFor(db, state, id, store);
   return p ? p.price / p.size : 0;
 }
 
@@ -404,7 +564,7 @@ class Ledger {
       if (short > 1e-9) {
         cost += short * up;
         const store = storeFor(this.db, this.state, id, this.planStore);
-        const p = packFor(this.db, this.state, id, store, brandFor(this.state, id));
+        const p = packFor(this.db, this.state, id, store);
         if (p) {
           // Frozen and shelf-stable leftovers keep for next week; fresh ones are the real waste.
           const storage = this.db.ingredients[id]?.storage || this.state?.custom?.[id]?.storage || 'pantry';
@@ -423,7 +583,7 @@ class Ledger {
       const have = this.rem[id] || 0;
       if (have >= need - 1e-9) { this.rem[id] = have - need; continue; }
       const store = storeFor(this.db, this.state, id, this.planStore);
-      const p = packFor(this.db, this.state, id, store, brandFor(this.state, id));
+      const p = packFor(this.db, this.state, id, store);
       if (!p) { this.rem[id] = 0; continue; }
       const short = need - have;
       const packs = Math.ceil(short / p.size - 1e-9);
@@ -572,9 +732,10 @@ export function openNights(state, from, { limit = 10, horizon = 42, exclude = []
 }
 
 /** Bench dinner that best replaces a retired one: same category, then protein, then votes. */
-export function bestBenchFor(db, state, retiredId) {
+export function bestBenchFor(db, state, retiredId, { exclude = null } = {}) {
   const r = dinnerById(db, state, retiredId);
-  const bench = benchList(db, state).filter((d) => d.id !== retiredId);
+  // `exclude` is only passed while working out implicit promotions (which can't call benchList).
+  const bench = (exclude ? rawBench(db, state).filter((d) => !exclude.has(d.id)) : benchList(db, state)).filter((d) => d.id !== retiredId);
   if (!bench.length) return null;
   const score = (d) => {
     let s = 0;

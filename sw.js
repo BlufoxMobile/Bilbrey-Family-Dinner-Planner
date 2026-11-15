@@ -3,7 +3,7 @@
 // GitHub Pages' 10-minute HTTP cache can't mix an old file into a new version.
 // Photos, fonts, icons: cache-first.
 // The family API (/api/*) is never cached. Bump CACHE_VERSION with app/config.js VERSION.
-const CACHE_VERSION = 'v2.1.1';
+const CACHE_VERSION = 'v2.2.2';
 const SHELL = `bfdp-shell-${CACHE_VERSION}`;
 const DATA = `bfdp-data-${CACHE_VERSION}`;
 const IMAGES = 'bfdp-images-v1';
@@ -40,6 +40,11 @@ const SHELL_FILES = [
   'app/views/cook.js',
   'app/views/onboarding.js',
   'app/views/lunch.js',
+  'app/views/receipts.js',
+  'app/views/products.js',
+  'app/receipts.js',
+  'app/products.js',
+  'app/images.js',
   'fonts/young-serif-400.woff2',
   'fonts/atkinson-next-400.woff2',
   'fonts/atkinson-next-400-italic.woff2',
@@ -51,7 +56,7 @@ const SHELL_FILES = [
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
 ];
-const DATA_FILES = ['data/catalog.json', 'data/recipes.json', 'data/prices.json', 'data/stores.json', 'data/lunches.json', 'data/nutrition.json', 'img/photos.json'];
+const DATA_FILES = ['data/catalog.json', 'data/recipes.json', 'data/prices.json', 'data/stores.json', 'data/lunches.json', 'data/nutrition.json', 'data/products.json', 'img/photos.json'];
 
 const scopeURL = new URL('./', self.location);
 const abs = (p) => new URL(p, scopeURL).href;

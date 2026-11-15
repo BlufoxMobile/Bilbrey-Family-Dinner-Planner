@@ -38,24 +38,26 @@ const STORES = ['sams', 'jewel'];
 const CATEGORIES = ['Burgers', 'Asian-inspired', 'Pasta', 'Tex-Mex', 'Grill', 'Comfort', 'Salads'];
 const PROTEINS = ['chicken', 'beef', 'pork', 'turkey', 'sausage', 'mixed'];
 const EQUIPMENT = ['stovetop', 'blackstone', 'electric grill', 'outdoor grill', 'air fryer', 'microwave'];
-const TAGS = ['burger', 'pizza', 'rice', 'family favorite', 'noodle night', 'taco night', 'grill night', 'salad', 'healthier', 'sandwiches', 'wraps'];
+const TAGS = ['burger', 'pizza', 'rice', 'family favorite', 'family usual', 'noodle night', 'taco night', 'grill night', 'salad', 'healthier', 'sandwiches', 'wraps'];
 const SIDE_KINDS = ['vegetable', 'starch', 'salad', 'fruit', 'bread', 'soup'];
 const RICE_IDS = ['jasmine', 'basmati'];
-const MAX_COST = 22, MIN_COST = 6;
+const MAX_COST = 28, MIN_COST = 6; // v2.2: recalibrated from $22 to real prices paid (93/7 beef $6.17/lb, ⅓-lb sirloin patties, pre-seasoned/cooked meats) — ≈ $5.60 a plate
+const MIN_CORE = 50, MIN_BENCH = 20;
 
 // Which catalog meat ids satisfy each "protein" value.
 const PROTEIN_IDS = {
-  chicken: ['chicken', 'chickenThighs'],
-  beef: ['beef'],
-  pork: ['pork', 'porkLoin', 'groundPork'],
+  chicken: ['chicken', 'chickenThighs', 'fajitaChicken', 'pulledChicken', 'chickenAlfredoDeli'],
+  beef: ['beef', 'beefPatties'],
+  pork: ['pork', 'porkLoin', 'groundPork', 'pulledPork'],
   turkey: ['groundTurkey'],
-  sausage: ['italianSausage'],
+  sausage: ['italianSausage', 'smokedSausage'],
 };
 // Safe-temperature rules: if a dinner uses one of these ids, its steps must state the temp.
 const TEMP_RULES = [
-  { ids: ['chicken', 'chickenThighs'], temp: '165°F', what: 'chicken' },
+  { ids: ['chicken', 'chickenThighs', 'fajitaChicken'], temp: '165°F', what: 'chicken' },
   { ids: ['groundTurkey'], temp: '165°F', what: 'ground turkey' },
-  { ids: ['beef', 'groundPork', 'italianSausage'], temp: '160°F', what: 'ground meat / sausage' },
+  { ids: ['beef', 'beefPatties', 'groundPork', 'italianSausage'], temp: '160°F', what: 'ground meat / sausage / patties' },
+  { ids: ['pulledPork', 'pulledChicken', 'smokedSausage', 'chickenAlfredoDeli'], temp: '165°F', what: 'fully cooked meat (reheat)' },
   { ids: ['pork', 'porkLoin'], temp: '145°F', what: 'pork chops / loin', rest: true },
 ];
 
@@ -156,9 +158,11 @@ const STEP_WORDS = {
   yogurt: ['yogurt', 'tzatziki'], potatoes: ['potato'], sweet: ['sweet potato'], ginger: ['ginger'], garlic: ['garlic'], limes: ['lime'],
   lemons: ['lemon'], oranges: ['orange'], spaghetti: ['spaghetti', 'noodle'], penne: ['penne'], elbows: ['macaroni'], eggNoodles: ['noodle'],
   riceVinegar: ['rice vinegar'], ciderVinegar: ['cider vinegar'], brownSugar: ['brown sugar'], redPepperFlakes: ['red pepper'],
-  garlicPowder: ['garlic powder'], italianSeasoning: ['italian seasoning'], chickenBroth: ['broth'], porkBeans: ['pork and beans'],
+  garlicPowder: ['garlic powder'], italianSeasoning: ['italian seasoning'], chickenBroth: ['broth', 'stock'], porkBeans: ['pork and beans'],
   tortillaChips: ['chips'], sourCream: ['sour cream'], mayo: ['mayo'], bbq: ['barbecue'], tikka: ['tikka'], jalapenos: ['jalapeño', 'jalapeno'],
-  eggs: ['egg'], milk: ['milk'], butter: ['butter'], salt: ['salt'], honey: ['honey'], peanut: ['peanut'], applesauce: ['applesauce'],
+  eggs: ['egg'], milk: ['milk'], beefPatties: ['patt'], cookedBacon: ['bacon'], smokedSausage: ['sausage'], fajitaChicken: ['chicken'],
+  pulledChicken: ['chicken'], pulledPork: ['pork'], chickenAlfredoDeli: ['alfredo'], fajitaSauce: ['fajita sauce'], cajunPotatoes: ['potatoes'],
+  chiliBeans: ['chili beans'], knorrTeriyaki: ['teriyaki'], streetTacoFlour: ['tortilla'], streetTacoCorn: ['tortilla'], cheeseSlices: ['cheese slice'], butter: ['butter'], salt: ['salt'], honey: ['honey'], peanut: ['peanut'], applesauce: ['applesauce'],
   potstickers: ['potsticker'], edamame: ['edamame'], cilantro: ['cilantro'], panko: ['panko', 'crumbs'], flour: ['flour'],
 };
 const stem = (w) => w.toLowerCase().replace(/(es|s)$/, '');
@@ -259,8 +263,10 @@ for (const d of dinners) {
   if (meats.length === 0) err(`${w}: no meat ingredient (every dinner needs meat)`);
   if (d.protein && d.protein !== 'mixed' && PROTEIN_IDS[d.protein] && !meats.some(m => PROTEIN_IDS[d.protein].includes(m)))
     err(`${w}: protein "${d.protein}" but no matching meat item (${meats.join(', ') || 'none'})`);
-  const lbMeat = meats.filter(id => ING[id]?.unit === 'lb').reduce((a, id) => a + d.items[id], 0);
-  if (lbMeat < 2 || lbMeat > 3.25) warn(`${w}: ${lbMeat} lb raw meat (target ~2.25–2.5 lb for five hungry adults)`);
+  // Raw meat in pounds (countables like patties convert with lbPerUnit). Fully cooked / heat-and-serve meats are exempt.
+  const rawMeats = meats.filter(id => !ING[id]?.cooked);
+  const lbMeat = rawMeats.reduce((a, id) => a + (ING[id]?.unit === 'lb' ? d.items[id] : (ING[id]?.lbPerUnit || 0) * d.items[id]), 0);
+  if (rawMeats.length && (lbMeat < 2 || lbMeat > 3.25)) warn(`${w}: ${lbMeat.toFixed(2)} lb raw meat (target ~2.25–2.5 lb for five hungry adults)`);
 
   // rice rule
   const sideRice = (d.sides || []).some(sid => SIDES[sid] && hasRice(SIDES[sid].items));
@@ -276,8 +282,8 @@ for (const d of dinners) {
     if (rule.rest && !/rest[^.]*3 minutes|3 minutes[^.]*rest/i.test(text)) err(`${w}: pork must rest at least 3 minutes after 145°F`);
   }
 }
-if (nCore !== 50) err(`expected exactly 50 core dinners, found ${nCore}`);
-if (nBench !== 20) err(`expected exactly 20 bench dinners, found ${nBench}`);
+if (nCore < MIN_CORE) err(`expected at least ${MIN_CORE} core dinners, found ${nCore}`);
+if (nBench < MIN_BENCH) err(`expected at least ${MIN_BENCH} bench dinners, found ${nBench}`);
 
 // reference ids
 if (ref) {
@@ -319,11 +325,18 @@ if (prices && prices.prices) {
     researched[id] = g && g.size > 0 && g.price > 0 ? { cost: g.price / g.size } : unitCost[id];
   }
 }
+// Family-usual cost: the pack the family actually buys ("usual": {store, tier}) where the catalog names one.
+const usualCost = {};
+for (const [id, ing] of Object.entries(ING)) {
+  const u = ing.usual && ing.packs?.[ing.usual.store]?.[ing.usual.tier];
+  usualCost[id] = u && u.size > 0 ? { cost: u.price / u.size } : unitCost[id];
+}
 const rows = dinners.map(d => {
   const entree = costOf(d.items);
   const sides = (d.sides || []).reduce((a, sid) => a + costOf(SIDES[sid]?.items), 0);
   const res = researched ? costOf(d.items, researched) + (d.sides || []).reduce((a, sid) => a + costOf(SIDES[sid]?.items, researched), 0) : null;
-  return { id: d.id, rot: d.rotation, protein: d.protein, entree, sides, total: entree + sides, res };
+  const fam = costOf(d.items, usualCost) + (d.sides || []).reduce((a, sid) => a + costOf(SIDES[sid]?.items, usualCost), 0);
+  return { id: d.id, rot: d.rotation, protein: d.protein, entree, sides, total: entree + sides, res, fam };
 });
 const avg = (list) => list.reduce((a, r) => a + r.total, 0) / (list.length || 1);
 for (const r of rows) {
@@ -346,16 +359,18 @@ function finish() {
   const line = (s = '') => console.log(s);
   if (!QUIET) {
     line('Estimated ingredient cost per dinner (entrée + default sides, Sam’s generic unit cost; Jewel generic if Sam’s has no pack)');
-    line('id'.padEnd(28) + 'rotation'.padEnd(9) + 'protein'.padEnd(9) + 'entrée'.padStart(8) + 'sides'.padStart(8) + 'total'.padStart(9) + (researched ? 'prices.json'.padStart(13) : ''));
-    line('-'.repeat(researched ? 84 : 71));
+    line('id'.padEnd(28) + 'rotation'.padEnd(9) + 'protein'.padEnd(9) + 'entrée'.padStart(8) + 'sides'.padStart(8) + 'total'.padStart(9) + 'family'.padStart(9) + (researched ? 'prices.json'.padStart(13) : ''));
+    line('-'.repeat(researched ? 93 : 80));
     for (const r of rows) {
       const flag = r.total > MAX_COST ? '  << over' : r.total < MIN_COST ? '  << under' : '';
-      line(r.id.padEnd(28) + r.rot.padEnd(9) + r.protein.padEnd(9) + `$${r.entree.toFixed(2)}`.padStart(8) + `$${r.sides.toFixed(2)}`.padStart(8) + `$${r.total.toFixed(2)}`.padStart(9) + (researched ? `$${r.res.toFixed(2)}`.padStart(13) : '') + flag);
+      line(r.id.padEnd(28) + r.rot.padEnd(9) + r.protein.padEnd(9) + `$${r.entree.toFixed(2)}`.padStart(8) + `$${r.sides.toFixed(2)}`.padStart(8) + `$${r.total.toFixed(2)}`.padStart(9) + `$${r.fam.toFixed(2)}`.padStart(9) + (researched ? `$${r.res.toFixed(2)}`.padStart(13) : '') + flag);
     }
-    line('-'.repeat(researched ? 84 : 71));
+    line('-'.repeat(researched ? 93 : 80));
+    line('"total" = cheapest catalog pack (Sam\u2019s generic, else Jewel generic) and is what the $' + MAX_COST + ' / $' + MIN_COST + ' flags use; "family" = the pack the family usually buys (catalog "usual").');
     const core = rows.filter(r => r.rot === 'core'), bench = rows.filter(r => r.rot === 'bench');
     line(`Average, all ${rows.length} dinners: $${avg(rows).toFixed(2)}   core (${core.length}): $${avg(core).toFixed(2)}   bench (${bench.length}): $${avg(bench).toFixed(2)}`);
     line(`Range: $${Math.min(...rows.map(r => r.total)).toFixed(2)} – $${Math.max(...rows.map(r => r.total)).toFixed(2)}`);
+    { const fa = (l) => l.reduce((a, r) => a + r.fam, 0) / (l.length || 1); line(`As the family usually buys ("usual" packs): all $${fa(rows).toFixed(2)}   core $${fa(core).toFixed(2)}   bench $${fa(bench).toFixed(2)}`); }
     if (researched) {
       const ra = (l) => l.reduce((a, r) => a + r.res, 0) / (l.length || 1);
       line(`With data/prices.json overrides (informational, not flagged): all $${ra(rows).toFixed(2)}   core $${ra(core).toFixed(2)}   bench $${ra(bench).toFixed(2)}`);

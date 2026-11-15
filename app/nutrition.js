@@ -3,7 +3,7 @@
 // Dinner per plate = (entrée + effective sides, after the meat scale) ÷ 5. Lunch = its items.
 
 import { FAMILY } from './config.js';
-import { itemsForNight, effectiveSides, scaleItems, dinnerById } from './planner.js';
+import { itemsForNight, effectiveSides, scaleItems, dinnerById, isSideDropped } from './planner.js';
 import { lunchFor, lunchSwapsFor } from './lunch.js';
 
 export const PLATES = 5;
@@ -103,7 +103,7 @@ export function lighterSide(db, state, dinnerId, entry, { min = 80 } = {}) {
     const curN = sideNutrition(db, state, s.parsed);
     if (!cur || !curN) continue;
     for (const alt of db.sideList) {
-      if (alt.kind !== cur.kind || used.has(alt.id) || !fits(alt)) continue;
+      if (alt.kind !== cur.kind || used.has(alt.id) || !fits(alt) || isSideDropped(state, alt.id)) continue;
       const altN = sideNutrition(db, state, { type: 'side', id: alt.id });
       if (!altN) continue;
       const saves = curN.kcal - altN.kcal;

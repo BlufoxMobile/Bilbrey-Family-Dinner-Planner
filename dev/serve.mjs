@@ -32,7 +32,7 @@ export function startStatic({ port = 8080, adapter = true, quiet = false } = {})
       const file = path.join(ROOT, p);
       if (!file.startsWith(ROOT) || /node_modules|\/\.git\//.test(file)) { res.writeHead(403); return res.end(); }
       // Until the lunch and nutrition agents land their files, serve the small test fixtures.
-      if (adapter && (p === '/data/lunches.json' || p === '/data/nutrition.json') && !existsSync(file)) {
+      if (adapter && (p === '/data/lunches.json' || p === '/data/nutrition.json' || p === '/data/products.json') && !existsSync(file)) {
         const body = await readFile(path.join(ROOT, 'tests', 'fixtures', path.basename(p)));
         res.writeHead(200, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-store', 'X-Dev-Fixture': '1' });
         return res.end(body);

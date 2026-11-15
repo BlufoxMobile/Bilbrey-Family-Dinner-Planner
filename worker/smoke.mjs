@@ -93,6 +93,8 @@ async function main() {
   check("  401 still carries ACAO (so the app can read the error)", s.headers.get("access-control-allow-origin") === PAGES);
   const sc = await req("/api/scan", { method: "POST", origin: PAGES, headers: { "Content-Type": "application/json" }, body: "{}" });
   check("POST /api/scan without a key → 401", sc.status === 401, `status ${sc.status}`);
+  const rc = await req("/api/receipt", { method: "POST", origin: PAGES, headers: { "Content-Type": "application/json" }, body: "{}" });
+  check("POST /api/receipt without a key → 401 (v2.2 endpoint is deployed)", rc.status === 401, `status ${rc.status}`);
   const op = await req("/api/ops", { method: "POST", origin: PAGES, headers: { "Content-Type": "application/json" }, body: '{"ops":[]}' });
   check("POST /api/ops without a key → 401", op.status === 401, `status ${op.status}`);
 

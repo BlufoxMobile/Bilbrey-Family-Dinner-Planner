@@ -1,12 +1,12 @@
-// PLAN: 1–3 weeks or a month, plan-from store, brand default, day cards with sides,
+// PLAN: 1–3 weeks or a month, plan-from store, day cards with sides,
 // two-tap swap, drag-and-drop on desktop, plan / re-plan.
 import { html, ic, when, segmented, toast } from '../ui.js';
 import { addDays, diffDays, money, rangeLabel, shortDate, startOfWeek, monthName, weekday, monthOnly } from '../util.js';
-import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage, defaultAnchor as defaultAnchorFor } from '../planner.js';
+import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage, isRetired, defaultAnchor as defaultAnchorFor } from '../planner.js';
 import { listJoin } from '../util.js';
 import { buildList } from '../shopping.js';
 import { generateOps, swapNightsOps, settingOps } from '../actions.js';
-import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition } from './common.js';
+import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition, thumbs } from './common.js';
 import { plateNutrition, fmtKcal } from '../nutrition.js';
 import { openNight } from './sheets.js';
 
@@ -23,7 +23,6 @@ export function currentRange(app) {
 }
 
 const STORE_OPTS = [{ id: 'both', label: 'Both stores' }, { id: 'sams', label: "Sam's only" }, { id: 'jewel', label: 'Jewel only' }];
-const BRAND_OPTS = [{ id: 'generic', label: 'Store brand' }, { id: 'name', label: 'Name brand' }];
 
 export function periodNav(app, range, { compact = false } = {}) {
   const today = app.today();
@@ -61,13 +60,15 @@ function dayCard(app, date, { compact = false } = {}) {
       ${when(away && e.away?.note, () => html`<span class="day-note">${e.away.note}</span>`)}
       ${when(!d && !away && !past, () => html`<span class="day-note">${type === 'burger' ? 'Burger night' : type === 'pizza' ? 'Pizza night' : 'Open'}</span>`)}
       ${when(cooked, () => html`<span class="day-status">${ic('checkCircle', { size: 16 })}Cooked</span>`)}
-      ${when(e?.manual && !away && !cooked && d, () => html`<span class="day-status day-status-quiet">Set by ${e.by || 'the family'}</span>`)}
+      ${when(d && !away && !cooked && !past && isRetired(app.state, d.id), () => html`<span class="day-status day-status-warn">${ic('down_vote', { size: 16 })}Thumbs down: tap to swap</span>`)}
+      ${when(e?.manual && !away && !cooked && d && !isRetired(app.state, d.id), () => html`<span class="day-status day-status-quiet">Set by ${e.by || 'the family'}</span>`)}
     </button>
     ${when(sides.length && !compact, () => html`<ul class="day-sides">
       ${sides.map((s) => html`<li><span class="day-side">${s.info?.title}${when(s.remembered, () => html`<span class="sr-only"> (remembered)</span>`)}</span>
         ${when(!cooked, () => html`<button type="button" class="sub-btn" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="${s.slot}" aria-label="Substitute ${s.info?.title}">Substitute</button>`)}</li>`)}
       ${when(!cooked && d.sideSlots === 1 && sides.length < 2, () => html`<li><button type="button" class="sub-btn sub-add" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="1">${ic('plus', { size: 16 })}Add a side</button></li>`)}
     </ul>`)}
+    ${when(d && !away && !compact, () => html`<div class="day-foot">${thumbs(app, { kind: 'dinner', id: d.id, label: d.title, compact: true })}</div>`)}
   </article>`;
 }
 
@@ -119,7 +120,6 @@ export function render(app) {
     ${periodNav(app, range)}
     <div class="plan-opts">
       <div class="opt"><span class="opt-label" id="pf-l">Plan from</span>${segmented('planStore', STORE_OPTS, s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}</div>
-      <div class="opt"><span class="opt-label">Brands</span>${segmented('brand', BRAND_OPTS, s.brand, { label: 'Brand default', action: 'plan:setting', small: true })}</div>
     </div>
     ${when(s.planStore !== 'both', () => {
       const cov = storeCoverage(app.db, app.state, s.planStore);
@@ -169,7 +169,6 @@ export const actions = {
     const res = settingOps(app.state, el.dataset.name, el.dataset.value);
     app.commit(res, { quiet: true });
     if (el.dataset.name === 'planStore') toast(el.dataset.value === 'both' ? 'Planning from both stores.' : `Planning from ${el.dataset.value === 'jewel' ? 'Jewel-Osco' : "Sam's Club"} only.`);
-    if (el.dataset.name === 'brand') toast(el.dataset.value === 'name' ? 'Name brands by default. Change any item on the list.' : 'Store brands by default. Change any item on the list.');
   },
   'plan:shift': (app, el) => {
     const r = currentRange(app);
