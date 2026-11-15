@@ -195,7 +195,11 @@ function extrasSection(app) {
 export function render(app) {
   const { range, listKey, list } = current(app);
   const checked = list.items.filter((i) => i.checked).length;
-  const pricesNote = app.db.pricesUpdated ? `Estimated prices as of ${mediumDate(app.db.pricesUpdated)}.` : 'Estimated prices from the recipe box.';
+  const paidCount = list.items.filter((i) => priceSource(i.pack).kind === 'paid').length;
+  const estNote = app.db.pricesUpdated ? `estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'estimated from the recipe box';
+  const pricesNote = paidCount
+    ? `${paidCount} of ${list.items.length} prices are what you actually paid, from your receipts; the rest are ${estNote}.`
+    : `Prices ${estNote}.`;
   const noNights = !list.nights.length;
   return html`<div class="page page-list">
     <header class="page-head">

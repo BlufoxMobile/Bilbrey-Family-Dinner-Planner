@@ -18,24 +18,33 @@ What you can do:
 - **Plan** — 1, 2 or 3 weeks or a whole month. Swap any dinner to tonight, or mark a night
   **Not eating at home** (date night, out of town, big lunch) and its groceries drop off the list.
 - **List** — everything to buy, split by Sam's Club and Jewel-Osco, minus what's already in the
-  pantry. Copy it straight into each store's app.
+  pantry. Each item names the exact product we buy (Rao's, Kerrygold, Artesano…) with a
+  **Find it** link to that store's search. Copy it straight into each store's app.
+- **Lunches** — pick your name and plan Mon–Fri lunches; they go on the same list.
 - **Pantry** — snap photos of the shelves; the app reads the labels so you don't buy what you have.
   Swap any side for something already on the shelf, and the app remembers it.
-- **Recipes** — vote 👍 or 👎. Three thumbs-down and a dinner leaves the rotation; a new one takes
-  its place.
+- **Recipes** — vote 👍 or 👎 on dinners and on sides. One 👎 from anyone and it leaves the
+  rotation; 👍 keeps it coming back.
+- **Scan a receipt** — photograph a Sam's or Jewel receipt and the app learns what we paid and
+  which product we bought, so the next list's prices are real.
 
-Prices are researched estimates — fix any price in the app and everyone's totals update.
-Neither store lets outside apps fill your cart, so checkout still happens in the store's own app.
+Prices are what we actually paid where a receipt shows it, and researched estimates otherwise —
+fix any price in the app and everyone's totals update. Receipts and purchase details stay in the
+family's private, passcode-protected data, never in this repository.
+Neither store lets outside apps fill your cart or clip coupons, so checkout (and the Jewel
+coupon "Clip" buttons) still happen in the store's own app.
 
 ## How it's built
 
 - Static site on GitHub Pages: `index.html`, `app/` (vanilla JS modules), `styles/`, `fonts/`.
   No build step, no outside CDNs.
-- Data: `data/recipes.json` (dinners + sides), `data/catalog.json` (ingredients, pack sizes),
-  `data/prices.json` (researched Sam's/Jewel prices), `data/stores.json`.
+- Data: `data/recipes.json` (dinners + sides, built around the brands we buy),
+  `data/catalog.json` (ingredients, pack sizes, our usual product), `data/products.json` (real
+  product choices per store), `data/prices.json` (Sam's/Jewel prices), `data/lunches.json`,
+  `data/nutrition.json`, `data/stores.json`.
 - Photos: `img/` — generated with Higgsfield.
 - Family sync + pantry photo recognition: a Cloudflare Worker in `worker/` (Durable Object for the
-  shared family state, Workers AI for reading pantry photos). If it's unreachable, the app keeps
+  shared family state, Workers AI for reading pantry photos and receipts). If it's unreachable, the app keeps
   working on each phone and syncs later.
 - `SPEC.md` holds the full requirements; `reference/` holds the data from the original ChatGPT
   prototype this replaced.
