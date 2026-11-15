@@ -553,7 +553,12 @@ sweet potatoes get cinnamon.
   (`receiptLog[id].pantry`).
 
 ### 12.7 Lunches
-- Jeff alternates Jewel salad bowls that come with ranch (Bonduelle Chicken BLT with buttermilk ranch,
-  Chef with turkey & ham with creamy ranch, Kickin' BBQ chicken with BBQ ranch) and a spicy chicken
-  sandwich from the Jewel hot deli, with BODYARMOR Orange Mango. Knox's snacks can be Ritz from the
+- Jeff alternates prepackaged store salads (ranch preferred: Bonduelle Chicken BLT with buttermilk
+  ranch, Chef with turkey & ham with creamy ranch, Kickin' BBQ chicken with BBQ ranch) and a Boar's
+  Head Blazing Buffalo chicken sandwich he makes himself, with dill pickle chips, Buona hot
+  giardiniera and Miss Vickie's chips, and a BODYARMOR Orange Mango every day. No hot-deli
+  sandwiches ("very poor quality food"). Never Caesar anything: the validator rejects the word in
+  recipes and lunches, and the Caesar-style side is gone.
+- Seafood stays off the menu, apart from an occasional (every few months) snow crab boil with Old Bay;
+  soups now and then. Knox's snacks can be Ritz from the
   pantry box; party-bag chips are split into snack bags once a week.

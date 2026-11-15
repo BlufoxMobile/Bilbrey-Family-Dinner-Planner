@@ -1242,12 +1242,19 @@
       "basis": "one 7 oz bowl with its dressing",
       "source": "Retailer label (ShopRite listing): 230 cal, 9 g protein, 450 mg sodium"
     },
-    "jewelDeliChickenSandwich": {
-      "kcal": 550,
-      "protein": 28,
-      "unit": "sandwiches",
-      "basis": "one breaded spicy chicken sandwich on a bun",
-      "source": "Estimate: breaded spicy chicken sandwiches run 500–700 cal and 25–30 g protein"
+    "bhBuffaloChicken": {
+      "kcal": 480,
+      "protein": 96,
+      "unit": "lb",
+      "basis": "1 lb deli-sliced roasted chicken breast",
+      "source": "Estimate from Boar's Head chicken breast labels: 2 oz ≈ 60 kcal & 12 g protein"
+    },
+    "kettleChips": {
+      "kcal": 150,
+      "protein": 2,
+      "unit": "oz",
+      "basis": "1 oz kettle-cooked potato chips",
+      "source": "Package label (typical): Miss Vickie's, 1 oz ≈ 150 kcal & 2 g protein"
     }
   }
 }

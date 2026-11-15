@@ -1,7 +1,7 @@
 {
   "version": 2,
   "updated": "2026-11-15",
-  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer and microwave only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases. 2026-11-15: dinners tagged \"from your pantry\" were built around the seasonings and sauces in the family’s pantry photos (Slap Ya Mama, Badia mango pepper, Buffalo Wild Wings mango habanero, Crystal, Buona giardiniera, apple jelly, turmeric, Old Bay, French’s crispy onions). 2026-11-15 pm: Cajun butter steak bites (eye of round), chorizo & nopalitos street tacos and smoky beef & bean chili were built from the family’s freezer and pantry photos.",
+  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer and microwave only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases. 2026-11-15: dinners tagged \"from your pantry\" were built around the seasonings and sauces in the family’s pantry photos (Slap Ya Mama, Badia mango pepper, Buffalo Wild Wings mango habanero, Crystal, Buona giardiniera, apple jelly, turmeric, Old Bay, French’s crispy onions). 2026-11-15 pm: Cajun butter steak bites (eye of round), chorizo & nopalitos street tacos and smoky beef & bean chili were built from the family’s freezer and pantry photos. 2026-11-15 (v2.5.3): the creamy Parmesan-and-crouton romaine side was removed for good (the family never eats that kind of salad).",
   "dinners": [
     {
       "id": "smashburgers",
@@ -3843,33 +3843,6 @@
         "Air-fry at 400°F in single layers, shaking halfway, until tender and browned at the edges, 10–14 minutes per batch."
       ],
       "photo": "Browned, roasted-style zucchini half-moons with red and yellow pepper and onion pieces on a platter."
-    },
-    {
-      "id": "caesar-salad",
-      "title": "Caesar-style romaine salad",
-      "kind": "salad",
-      "minutes": 15,
-      "equipment": [
-        "air fryer"
-      ],
-      "items": {
-        "lettuce": 2,
-        "parm": 1.5,
-        "bread": 2,
-        "yogurt": 3,
-        "mayo": 2,
-        "lemons": 1,
-        "garlic": 1,
-        "mustard": 1,
-        "oil": 2,
-        "pepper": 0.25
-      },
-      "steps": [
-        "Cut the bread into cubes, toss with 1 tablespoon of the oil and air-fry at 370°F, shaking once, until golden croutons, 5–7 minutes.",
-        "Whisk the yogurt, mayo, lemon juice, grated garlic, mustard, remaining oil, pepper and half the Parmesan into a creamy dressing (thin with a spoonful of water if needed).",
-        "Chop the romaine, toss with the dressing and top with the croutons and remaining Parmesan."
-      ],
-      "photo": "Crisp chopped romaine tossed in a creamy Caesar-style dressing with golden croutons and shaved Parmesan."
     },
     {
       "id": "applesauce-cups",

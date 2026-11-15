@@ -65,6 +65,19 @@ test('organic produce: the organic pack when the family buys organic, kept when 
   assert.equal(packFor(db, { settings: { organic: true } }, 'beef', 'jewel').kind === 'organic', false, 'only produce');
 });
 
+test('no Caesar anywhere, and Jeff’s sandwich days are the Boar’s Head spicy chicken with chips', () => {
+  const caesar = (t) => /caesar/i.test(String(t || ''));
+  assert.ok(!db.sideList.some((x) => caesar(x.title) || caesar(x.id)), 'no Caesar side');
+  assert.ok(!db.lunch.itemList.some((x) => caesar(x.title) || caesar(x.subtitle)), 'no Caesar lunch');
+  assert.ok(!db.lunch.items['jewel-deli-spicy-chicken-sandwich'], 'no hot-deli sandwich');
+  const main = db.lunch.defaults.Jeff.slots.main;
+  assert.deepEqual(main.filter((x, i) => i % 2 === 1), ['bh-buffalo-chicken-sandwich', 'bh-buffalo-chicken-sandwich'], 'sandwich every other day');
+  assert.ok(main.filter((x, i) => i % 2 === 0).every((x) => /^bonduelle-/.test(x)), 'store salads in between');
+  const s = db.lunch.items['bh-buffalo-chicken-sandwich'];
+  for (const id of ['bhBuffaloChicken', 'pickles', 'giardiniera', 'kettleChips', 'bread']) assert.ok(s.items[id] > 0, id);
+  assert.deepEqual(db.lunch.defaults.Jeff.slots.drink, ['bodyarmor-orange-mango']);
+});
+
 test('a trip list: one store, skips set aside, fresh-on-the-day items apart, sales and coupons in the total', () => {
   const state = {
     settings: { organic: true },
@@ -75,14 +88,17 @@ test('a trip list: one store, skips set aside, fresh-on-the-day items apart, sal
     deals: { 'jewel/bonduelleBltBowl': { label: 'Bonduelle Chicken BLT', size: 1, price: 3, was: 4.99, ends: '2026-11-18', checked: SUN } },
   };
   const dates = [MON, TUE];
-  const list = buildList(db, state, { dates, listKey: 'trip:x', store: 'jewel', today: SUN });
+  db.ingredients.bhBuffaloChicken.buyOnDay = true; // pretend Tuesday's sandwich meat is bought that morning
+  let list;
+  try { list = buildList(db, state, { dates, listKey: 'trip:x', store: 'jewel', today: SUN }); } finally { delete db.ingredients.bhBuffaloChicken.buyOnDay; }
   assert.ok(list.items.every((i) => i.store === 'jewel' || i.storeFallback), 'everything Jewel carries is bought at Jewel');
   assert.ok(!list.items.some((i) => i.id === 'chicken'), 'skipped chicken is off the cart');
   assert.equal(list.skipped[0].id, 'chicken');
   assert.equal(list.skipped[0].skip.reason, 'stretch');
-  const sandwich = list.onDay.find((i) => i.id === 'jewelDeliChickenSandwich');
-  assert.ok(sandwich, 'Tuesday’s hot-deli sandwich is bought on the day');
-  assert.ok(!list.items.some((i) => i.id === 'jewelDeliChickenSandwich'));
+  const fresh = list.onDay.find((i) => i.id === 'bhBuffaloChicken');
+  assert.ok(fresh, 'an item bought fresh is listed for the day, not the cart');
+  assert.ok(!list.items.some((i) => i.id === 'bhBuffaloChicken'));
+  assert.ok(list.items.some((i) => i.id === 'kettleChips') || list.covered.some((c) => c.id === 'kettleChips'), 'Tuesday’s sandwich comes with chips');
   const bowl = list.items.find((i) => i.id === 'bonduelleBltBowl');
   assert.equal(bowl.cost, 3);
   assert.equal(bowl.regularCost, 4.99);
@@ -114,7 +130,9 @@ test('the prep schedule: thaw the evening before, brown once for two nights, pac
     pantry: { chicken: { qty: 1.5 }, chorizo: { qty: 2.6 }, beef: { qty: 3.1 } },
     lunch: { people: { Knox: { slots: { side: ['cool-ranch-portion'] } } } },
   };
-  const sched = prepSchedule(db, state, { today: SUN, days: 7 });
+  db.ingredients.bhBuffaloChicken.buyOnDay = true;
+  let sched;
+  try { sched = prepSchedule(db, state, { today: SUN, days: 7 }); } finally { delete db.ingredients.bhBuffaloChicken.buyOnDay; }
   const sun = sched.find((d) => d.date === SUN).tasks;
   assert.ok(sun.some((t) => t.kind === 'thaw' && /1½ lb of boneless chicken/i.test(t.text) && t.when === 'evening'), 'tonight: the 1½ lb in the freezer goes to the fridge for Monday');
   assert.ok(sun.some((t) => t.kind === 'lunch' && /snack bags/i.test(t.text)), 'portion the party bag or the Ritz once for the week');
@@ -124,7 +142,7 @@ test('the prep schedule: thaw the evening before, brown once for two nights, pac
   assert.ok(tue.some((t) => t.kind === 'cook' && /ground beef/i.test(t.text) && /Thursday/.test(t.text)), 'brown Thursday’s chili beef with Tuesday’s tacos');
   assert.ok(mon.some((t) => t.kind === 'thaw' && /3\.1 lb of lean ground beef/.test(t.text) && /Thursday/.test(t.text)), 'the beef for both nights thaws together on Monday');
   assert.ok(!sched.some((d) => d.date === '2026-11-18' && d.tasks.some((t) => t.kind === 'thaw' && /ground beef/.test(t.text))), 'no second thaw for Thursday');
-  assert.ok(tue.some((t) => t.kind === 'buy' && /Jeff/.test(t.text)), 'Tuesday morning: Jeff’s hot-deli sandwich');
+  assert.ok(tue.some((t) => t.kind === 'buy' && /Jeff/.test(t.text)), 'Tuesday morning: anything bought fresh that day');
   assert.ok(sched.some((d) => d.tasks.some((t) => /Pack .* lunches/.test(t.text))), 'pack tomorrow’s lunches each evening');
 });
 

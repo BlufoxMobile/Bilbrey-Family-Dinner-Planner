@@ -70,6 +70,8 @@ const BANNED = [
   [/anchov/i, 'anchovy'], [/fish sauce/i, 'fish sauce'], [/seafood(?!-free)/i, 'seafood'], [/tofu/i, 'tofu'],
   [/worcestershire(?!-free)/i, 'Worcestershire'], [/\bclams?\b/i, 'clam'], [/mussel/i, 'mussel'], [/prawn/i, 'prawn'],
   [/\bsquid\b/i, 'squid'], [/calamari/i, 'calamari'], [/sardine/i, 'sardine'],
+  // Jeff, 2026-11-15: "I just don't like Caesar salads whatsoever, so please avoid those at all costs."
+  [/caesar/i, 'Caesar'],
 ];
 function scanText(where, text) {
   if (typeof text !== 'string') return;
@@ -130,6 +132,14 @@ const extras = Object.entries(ING).filter(([, i]) => i.extra).map(([id]) => id);
 // ---------------------------------------------------------------- recipes
 if (recipes.version !== 2) err('recipes.version must be 2');
 scanText('recipes.notes', recipes.notes);
+// lunches.json items: the same banned words (no Caesar salads, no seafood) in titles, subtitles, prep and photos.
+{
+  const lpath = new URL('../data/lunches.json', import.meta.url);
+  if (fs.existsSync(lpath)) {
+    const L = JSON.parse(fs.readFileSync(lpath, 'utf8'));
+    for (const it of L.items || []) for (const f of ['title', 'subtitle', 'prep', 'photo']) if (it[f]) scanText(`lunches.${it.id}.${f}`, it[f]);
+  }
+}
 const dinners = Array.isArray(recipes.dinners) ? recipes.dinners : (err('recipes.dinners must be an array'), []);
 const sideList = Array.isArray(recipes.sides) ? recipes.sides : (err('recipes.sides must be an array'), []);
 const SIDES = {};

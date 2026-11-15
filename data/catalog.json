@@ -1,7 +1,7 @@
 {
  "version": 2,
  "updated": "2026-11-15",
- "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos. 2026-11-15 (v2.5): Jewel salad bowls and the hot-deli chicken sandwich for Jeff’s lunches; organic produce at Jewel (prices read from jewelosco.com, Glen Ellyn, Nov 15) used when the family buys organic; frozen sirloin patties cook from frozen.",
+ "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos. 2026-11-15 (v2.5): Jewel salad bowls and the hot-deli chicken sandwich for Jeff’s lunches; organic produce at Jewel (prices read from jewelosco.com, Glen Ellyn, Nov 15) used when the family buys organic; frozen sirloin patties cook from frozen. 2026-11-15 (v2.5.3): Boar’s Head Blazing Buffalo chicken and Miss Vickie’s for Jeff’s sandwich lunches; the hot-deli sandwich is gone.",
  "units": {
   "bags": "bags",
   "bars": "bars",
@@ -31,7 +31,6 @@
   "potstickers": "potstickers",
   "pouches": "pouches",
   "rolls": "rolls",
-  "sandwiches": "sandwiches",
   "slices": "slices",
   "snack cups": "snack cups",
   "sticks": "sticks",
@@ -7191,33 +7190,67 @@
     }
    }
   },
-  "jewelDeliChickenSandwich": {
-   "name": "Spicy chicken sandwich (Jewel hot deli)",
-   "unit": "sandwiches",
+  "bhBuffaloChicken": {
+   "name": "Boar's Head Blazing Buffalo chicken (deli-sliced)",
+   "unit": "lb",
    "aisle": "Meat",
    "storage": "fridge",
    "kind": "measured",
    "defaultStore": "jewel",
    "lunch": true,
-   "buyOnDay": true,
+   "meat": true,
    "aliases": [
-    "spicy chicken sandwich",
-    "jewel chicken sandwich",
-    "jojos chicken sandwich",
-    "hot deli chicken sandwich",
-    "deli chicken sandwich"
+    "boar's head buffalo chicken",
+    "blazing buffalo chicken",
+    "boar's head spicy chicken",
+    "spicy chicken lunch meat",
+    "buffalo chicken deli"
    ],
    "packs": {
     "jewel": {
      "generic": {
-      "size": 1,
-      "price": 1,
-      "label": "Jojo's Chicken Sandwich from the Jewel hot deli, made fresh (listed at $1 on jewelosco.com, in store only: check the deli’s price)"
+      "size": 0.5,
+      "price": 6,
+      "label": "Boar's Head Blazing Buffalo Chicken Breast, sliced at the Jewel deli: ask for ½ lb ($3.00 per ¼ lb)",
+      "confidence": "listed"
      },
      "name": {
-      "size": 1,
-      "price": 1,
-      "label": "Jojo's Chicken Sandwich from the Jewel hot deli, made fresh (listed at $1 on jewelosco.com, in store only: check the deli’s price)"
+      "size": 0.5,
+      "price": 6,
+      "label": "Boar's Head Blazing Buffalo Chicken Breast, sliced at the Jewel deli: ask for ½ lb ($3.00 per ¼ lb)",
+      "confidence": "listed"
+     }
+    }
+   }
+  },
+  "kettleChips": {
+   "name": "Miss Vickie's kettle chips (Jalapeño or Spicy Dill Pickle)",
+   "unit": "oz",
+   "aisle": "Snacks & Extras",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "lunch": true,
+   "aliases": [
+    "miss vickie's",
+    "miss vickies",
+    "kettle chips",
+    "miss vickie's jalapeno",
+    "miss vickie's spicy dill pickle"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 7.5,
+      "price": 4.99,
+      "label": "Miss Vickie's Kettle Cooked Potato Chips, 7.5 oz bag (Jalapeño or Spicy Dill Pickle)",
+      "confidence": "listed"
+     },
+     "name": {
+      "size": 7.5,
+      "price": 4.99,
+      "label": "Miss Vickie's Kettle Cooked Potato Chips, 7.5 oz bag (Jalapeño or Spicy Dill Pickle)",
+      "confidence": "listed"
      }
     }
    }

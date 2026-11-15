@@ -1,7 +1,7 @@
 {
  "version": 1,
  "updated": "2026-11-15",
- "notes": "Knox's and Jeff's lunches are set up exactly as Jeff described (2026-11-14). Product picks: Knox's 'Boar's Head Italian blend with salami and cheese' = Boar's Head Uncured Genoa Salame & Picante Provolone 4 oz snack tray (the Boar's Head salami-plus-cheese product Jewel carries); his Cool Ranch Doritos come from the Sam's Doritos Mix 30-pack (most Cool Ranch of the Sam's variety packs; a party bag portioned into snack bags is the cheaper Cool Ranch-every-day option). Jeff's salad = Member's Mark Cobb Salad with Grilled Chicken & Avocado Ranch (Sam's deli; ranch-type dressing only; ~40 g protein a 10 oz portion). Quantities are per lunch in catalog units. 'healthy' is used honestly — Knox's chips, cookies and Yoo-hoo are not tagged healthy. nutritionHints give per-catalog-unit calories/protein from labels where found (source noted) for data/nutrition.json. 2026-11-15 (v2.5): Jeff alternates Jewel salad bowls (all with ranch) and a spicy chicken sandwich from the Jewel hot deli; Ritz portions from the pantry for Knox.",
+ "notes": "Knox's and Jeff's lunches are set up exactly as Jeff described (2026-11-14). Product picks: Knox's 'Boar's Head Italian blend with salami and cheese' = Boar's Head Uncured Genoa Salame & Picante Provolone 4 oz snack tray (the Boar's Head salami-plus-cheese product Jewel carries); his Cool Ranch Doritos come from the Sam's Doritos Mix 30-pack (most Cool Ranch of the Sam's variety packs; a party bag portioned into snack bags is the cheaper Cool Ranch-every-day option). Jeff's salad = Member's Mark Cobb Salad with Grilled Chicken & Avocado Ranch (Sam's deli; ranch-type dressing only; ~40 g protein a 10 oz portion). Quantities are per lunch in catalog units. 'healthy' is used honestly — Knox's chips, cookies and Yoo-hoo are not tagged healthy. nutritionHints give per-catalog-unit calories/protein from labels where found (source noted) for data/nutrition.json. 2026-11-15 (v2.5): Jeff alternates Jewel salad bowls (all with ranch) and a Boar’s Head spicy chicken sandwich he makes himself; Ritz portions from the pantry for Knox. 2026-11-15 (v2.5.3): no hot-deli sandwiches (Jeff: poor quality); Jeff’s salads are prepackaged store salads, ranch preferred, NEVER Caesar.",
  "slots": [
   {
    "id": "main",
@@ -611,21 +611,6 @@
    "photo": "A clear single-serve salad bowl with lettuce, BBQ chicken, corn and black beans, with a BBQ ranch cup."
   },
   {
-   "id": "jewel-deli-spicy-chicken-sandwich",
-   "slot": "main",
-   "title": "Spicy chicken sandwich (Jewel hot deli)",
-   "subtitle": "Jeff’s pick on the days between salads, bought fresh that morning.",
-   "items": {
-    "jewelDeliChickenSandwich": 1
-   },
-   "tags": [
-    "hot deli",
-    "buy fresh"
-   ],
-   "prep": "Pick it up at the Jewel hot deli that morning; it’s made fresh.",
-   "photo": "A crispy breaded spicy chicken sandwich on a toasted bun with pickles, in a deli clamshell."
-  },
-  {
    "id": "ritz-crackers-portion",
    "slot": "snack",
    "title": "Ritz crackers from the pantry box",
@@ -640,6 +625,25 @@
    "prep": "Count about 9 Ritz into a snack bag.",
    "batch": "Bag {n} snack bags of about 9 Ritz each",
    "photo": "About nine round buttery crackers in a small clear zip snack bag."
+  },
+  {
+   "id": "bh-buffalo-chicken-sandwich",
+   "slot": "main",
+   "title": "Boar's Head spicy chicken sandwich with pickles, hot giardiniera and chips",
+   "subtitle": "Blazing Buffalo chicken on Artesano with dill chips and Buona hot giardiniera, Miss Vickie’s on the side. About 600 cal and 35 g protein.",
+   "items": {
+    "bhBuffaloChicken": 0.25,
+    "bread": 2,
+    "pickles": 1,
+    "giardiniera": 1,
+    "kettleChips": 1.5
+   },
+   "tags": [
+    "high protein",
+    "jeff favorite"
+   ],
+   "prep": "Layer about 4 oz of the chicken on two slices of bread with dill pickle chips and a spoonful of hot giardiniera. Bag a handful (1½ oz) of Miss Vickie’s on the side.",
+   "photo": "A deli sandwich on soft white bakery bread stacked with sliced buffalo chicken breast, dill pickle chips and spicy Chicago giardiniera, with kettle chips beside it."
   }
  ],
  "defaults": {
@@ -681,9 +685,9 @@
    "slots": {
     "main": [
      "bonduelle-chicken-blt",
-     "jewel-deli-spicy-chicken-sandwich",
+     "bh-buffalo-chicken-sandwich",
      "bonduelle-chef-turkey-ham",
-     "jewel-deli-spicy-chicken-sandwich",
+     "bh-buffalo-chicken-sandwich",
      "bonduelle-bbq-chicken"
     ],
     "drink": [
@@ -961,17 +965,23 @@
    "per": "1 bowl",
    "source": "retailer label (ShopRite listing): 230 cal, 9 g protein, 450 mg sodium"
   },
-  "jewelDeliChickenSandwich": {
-   "kcal": 550,
-   "protein": 28,
-   "per": "1 sandwich",
-   "source": "estimate for a breaded spicy chicken sandwich on a bun (500–700 cal and 25–30 g protein is typical)"
-  },
   "crackers": {
    "kcal": 140,
    "protein": 2,
    "per": "1 oz",
    "source": "Ritz label: 5 crackers (16 g) = 80 cal, 1 g protein"
+  },
+  "bhBuffaloChicken": {
+   "kcal": 480,
+   "protein": 96,
+   "per": "1 lb",
+   "source": "estimate from Boar's Head chicken breast labels (2 oz ≈ 60 cal, 12 g protein)"
+  },
+  "kettleChips": {
+   "kcal": 150,
+   "protein": 2,
+   "per": "1 oz",
+   "source": "Miss Vickie's label (typical): 1 oz ≈ 150 cal, 2 g protein"
   }
  }
 }
