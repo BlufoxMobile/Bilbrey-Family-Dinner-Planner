@@ -8,6 +8,7 @@ import {
   toggleCheckOps, doneShoppingOps, setPriceOps, clearPriceOps, notAtStoreOps, addExtraOps, removeExtraOps, setPantryOps, undoFor,
 } from '../actions.js';
 import { set, del } from '../state.js';
+import { budgetPace, offList } from '../health.js';
 import { currentRange, periodNav } from './plan.js';
 import { productLabel, findItUrl, priceSource } from '../products.js';
 import { openProductPicker, productSource } from './products.js';
@@ -52,6 +53,30 @@ function tripBar(app, trip, range, list) {
       <button type="button" class="btn btn-small btn-quiet" data-action="trip:end">Back to the ${app.settings.period === 'month' ? 'month' : 'week'}</button>
     </span>
   </div>`;
+}
+
+/** This trip against the month's target (SPEC §13): receipts so far + this trip. */
+function paceLine(app, list) {
+  const p = budgetPace(app.state, app.today(), list.total + (list.onDayCost || 0));
+  if (!p.target) return '';
+  const month = new Date(`${p.month}-15T12:00:00`).toLocaleString('en-US', { month: 'long' });
+  return html`<p class="total-pace ${p.over ? 'is-over' : p.ahead > 25 ? 'is-ahead' : ''}">${ic('budget', { size: 18 })}<span>${month}: ${money(p.spent)} on receipts so far + this trip ≈ <b>${money(p.after)}</b> of your ${money(p.target)}. ${p.over ? `That’s ${money(-p.left)} over for the month.` : p.ahead > 25 ? `A little ahead of pace (a steady month is about ${money(p.pace)} by today), with ${money(p.left)} left for ${p.daysLeft} days.` : `${money(p.left)} left for the last ${p.daysLeft} days. On track.`}</span></p>`;
+}
+
+/** After the trip (SPEC §13): what the store's receipt bought that this trip's list didn't ask for. */
+function afterTrip(app, trip, list) {
+  const logs = Object.entries(app.state.receiptLog || {}).filter(([, r]) => r && r.date >= trip.start && r.date <= app.today() && (trip.store === 'both' || r.store === trip.store));
+  if (!logs.length) return '';
+  const ids = new Set([...list.items.map((i) => i.id), ...(list.skipped || []).map((i) => i.id), ...(list.onDay || []).map((i) => i.id)]);
+  const all = logs.map(([, r]) => offList(app.db, app.state, r, ids));
+  const extra = all.flatMap((x) => x.extra);
+  const extraTotal = all.reduce((t, x) => t + x.extraTotal, 0);
+  const unmatched = all.reduce((t, x) => t + x.unmatchedTotal, 0);
+  if (!extra.length && unmatched < 1) return html`<p class="after-trip is-good">${ic('check', { size: 18 })}<span>The receipt matches the list: nothing extra.</span></p>`;
+  return html`<details class="after-trip"><summary>${ic('receipt', { size: 18 })}After the trip: ${money(extraTotal + unmatched)} wasn’t on the list</summary>
+    <ul class="cost-lines">${extra.slice(0, 12).map((x) => html`<li><span>${x.name}</span><b>${money(x.price)}</b></li>`)}${when(unmatched >= 1, () => html`<li><span>Other things on the receipt</span><b>${money(unmatched)}</b></li>`)}</ul>
+    <p class="muted small">Not a scolding: some of these are fine. If one keeps showing up, add it as an everyday extra so the budget plans for it.</p>
+  </details>`;
 }
 
 /** The last day a new trip shops for: this coming Friday (payday), or Sunday if it's already the weekend. */
@@ -323,7 +348,7 @@ export function render(app) {
         <button type="button" class="icon-btn" data-action="list:print" aria-label="Print the list">${ic('print')}</button>
       </div>
     </header>
-    ${trip ? tripBar(app, trip, range, list) : html`${periodNav(app, range, { compact: true })}
+    ${trip ? html`${tripBar(app, trip, range, list)}${afterTrip(app, trip, list)}` : html`${periodNav(app, range, { compact: true })}
       <button type="button" class="btn btn-secondary btn-block trip-start" data-action="trip:new">${ic('cart', { size: 20 })}Shopping today? Make a list for just this trip</button>`}
     ${noNights && !list.lunches.length && !list.items.length ? html`<div class="empty">
         <span class="empty-ic">${ic('list', { size: 28 })}</span>
@@ -339,6 +364,7 @@ export function render(app) {
         ].filter(Boolean))}</span></p>
         ${when(list.lunches.length, () => html`<ul class="cost-lines"><li><span>Dinners</span><b>${money(list.dinnerCost)}</b></li><li><span>Lunches</span><b>${money(list.lunchCost)}</b></li>${when(list.extrasCost, () => html`<li><span>Extras</span><b>${money(list.extrasCost)}</b></li>`)}</ul>`)}
         ${when(list.savings > 0.5, () => html`<p class="total-save">${ic('check', { size: 18 })}<span>Saves ${money(list.savings)} on sales and coupons (regular prices: ${money(list.regularTotal)}).</span></p>`)}
+        ${when(trip, () => paceLine(app, list))}
         ${trip && trip.store !== 'both' ? '' : html`<div class="total-split">
           ${['sams', 'jewel'].map((s) => html`<p><span>${NAMES[s]}</span><b>${money(list.stores[s].subtotal)}</b></p>`)}
         </div>`}

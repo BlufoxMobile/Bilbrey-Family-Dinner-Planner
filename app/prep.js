@@ -2,6 +2,7 @@
 //  - Thaw: meat that's in the freezer moves to the fridge the evening before (two evenings for
 //    more than 5 lb). Too late? Thaw it sealed in cold water, about 30 minutes a pound.
 //  - Cook once: ground beef on two nights within 3 days gets browned together the first night.
+//  - Portion and freeze: 2 lb or more of fresh raw meat, the day it comes home (SPEC §13).
 //  - Lunches: once-a-week jobs (portion the party bag) on the first day, then each evening the
 //    next day's lunches, and a morning reminder for anything bought fresh that day.
 // Pure: no DOM, no clock (today is passed in).
@@ -128,10 +129,43 @@ function lunchTasks(db, state, today, end) {
 }
 
 /** → [{ date, tasks: [{ when, kind, text }] }] for today and the next days-1 days. */
+/**
+ * Portion and freeze (SPEC §13): fresh raw meat bought in bulk (2 lb or more) keeps two days in the
+ * fridge. The day it comes home: keep what the next two days need, freeze the rest in meal-size
+ * bags, so nothing turns before its night and the freezer → fridge thaw plan works.
+ */
+function portionTasks(db, state, today, end) {
+  const out = [];
+  const nights = plannedNights(db, state, datesBetween(today, addDays(today, 13))).sort((a, b) => a.date.localeCompare(b.date));
+  for (const [id, p] of Object.entries(state?.pantry || {})) {
+    const ing = db.ingredients[id];
+    const b = p?.bought;
+    if (!ing?.meat || ing.cooked || !b || !(b.qty >= 2) || !(typeof p.qty === 'number' && p.qty > 0)) continue;
+    const m = itemMeta(db, state, id);
+    if (m.storage !== 'fridge' && m.storage !== 'freezer') continue;
+    if (/deli|boar|sliced|bacon|sausage|hot dog|salami|pepperoni/i.test(m.name)) continue;
+    const on = String(b.on || '').slice(0, 10);
+    if (!on || diffDays(today, on) > 1 || on > end) continue;
+    const uses = nights.map((n) => ({ date: n.date, qty: itemsForNight(db, state, n.entry.dinner, n.entry)[id] || 0 })).filter((u) => u.qty > 0);
+    const soon = uses.filter((u) => diffDays(u.date, on) <= 2);
+    const keep = Math.min(p.qty, soon.reduce((t, u) => t + u.qty, 0));
+    const freeze = Math.round((p.qty - keep) * 100) / 100;
+    if (freeze < 0.75) continue;
+    const later = uses.filter((u) => diffDays(u.date, on) > 2).slice(0, 3);
+    const bag = later.length ? later[0].qty : 1;
+    const name = midSentence(m.name.replace(/\s*\(.*?\)\s*/g, ' ').trim());
+    out.push({
+      date: on < today ? today : on, when: 'evening', kind: 'freeze', id,
+      text: `Portion the ${name}: ${keep > 0 ? `keep ${unitText(keep, 'lb')} in the fridge for ${listJoin(soon.map((u) => dayName(u.date, today)))}, then ` : ''}freeze ${unitText(freeze, 'lb')} flat in ${unitText(bag, 'lb')} bags${later.length ? ` (one each for ${listJoin(later.map((u) => weekdayName(u.date)))})` : ''}. Write today’s date on each bag.`,
+    });
+  }
+  return out;
+}
+
 export function prepSchedule(db, state, { today, days = 7 }) {
   const end = addDays(today, days - 1);
   const pairs = cookOncePairs(db, state, today, end);
-  const all = [...thawTasks(db, state, today, end, pairs), ...cookOnceTasks(db, state, today, pairs), ...lunchTasks(db, state, today, end)];
+  const all = [...portionTasks(db, state, today, end), ...thawTasks(db, state, today, end, pairs), ...cookOnceTasks(db, state, today, pairs), ...lunchTasks(db, state, today, end)];
   const byDate = new Map();
   for (const t of all) {
     if (t.date < today || t.date > end) continue;

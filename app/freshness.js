@@ -63,6 +63,7 @@ export function keepsDays(db, state, id) {
   if (place === 'freezer') return kind === 'meat' ? 120 : 180;
   if (place === 'fridge') {
     if (kind === 'meat') {
+      if (/sausage|kielbasa|hot dog|frank/.test(n)) return 10; // sealed, fully cooked: about a week once opened
       if (/deli|boar|sliced at|lunch meat|salami|ham\b|turkey breast|roast beef/.test(n)) return 5;
       if (ing.cooked || /cooked|pulled|rotisserie|grilled chicken|bacon/.test(n)) return /bacon/.test(n) ? 30 : 4;
       return 2;

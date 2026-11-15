@@ -562,3 +562,40 @@ sweet potatoes get cinnamon.
 - Seafood stays off the menu, apart from an occasional (every few months) snow crab boil with Old Bay;
   soups now and then. Knox's snacks can be Ritz from the
   pantry box; party-bag chips are split into snack bags once a week.
+
+## 13. v2.5.4 — Pantry pictures and sections, store hand-off, five extras (Jeff, 2026-11-15)
+
+### 13.1 Pantry pictures
+- Each pantry item can have a picture: `state.itemPhotos[itemId] = { photo, at, by }`. The picture
+  itself lives in the family's passcode-protected worker storage (`POST /api/photo` raw image
+  ≤ 400 KB → `{ id }`; `GET /api/photo?id=`; Durable Object `photos` table, 2,000 pictures /
+  200 MB at most), never in the public site. Phones keep pictures they've seen in Cache Storage.
+- A pantry scan returns a box for each item (thousandths of the photo); confirming the review saves a
+  square crop of each new item (items that already have a picture keep it). A row's square opens a
+  sheet to take, replace or remove the picture.
+
+### 13.2 Pantry sections
+- Shelves are grouped by place (in the fridge, freezer, pantry, on the counter; jump chips at the
+  top) and then by kind: meat & protein, dairy & eggs, fruits & vegetables, frozen meals & sides,
+  bread, drinks, canned & jarred, pasta/rice/grains, sauces, spices & baking, snacks & sweets.
+
+### 13.3 Store hand-off
+- Jewel-Osco: "Copy & open" copies plain lines for Jewel-Osco AI's "Shop my grocery list"
+  ("2 Bonduelle Bistro Bowl, Chicken BLT", "Boar's Head Black Forest Ham, 1 lb"), split into parts
+  that fit its 2,000-character box. The full list with pack sizes is still one tap away.
+- jewelosco.com's iPhone link file only claims /home*, so web links open Safari. "Open the
+  Jewel-Osco app" uses the store's AppsFlyer OneLink; a one-step iPhone Shortcut (Open App →
+  Jewel-Osco), saved per phone, always opens the real app.
+- Coupons from a price check can be marked `clipped` (already on the family's card) and carry `q`,
+  the words that find them on Jewel's coupon page; unclipped ones get a "Clip it" link.
+
+### 13.4 Five extras (Claude's picks for "save money, eat healthier")
+1. Use it first: perishables get an estimated use-by from the day they came home (`pantry[id].since`,
+   set when stock is added by hand, scan, Done shopping or a receipt). The package date wins.
+2. Vegetable check: Plan shows dinners whose sides have no vegetable or salad, with one tap to add
+   or swap one in.
+3. Budget pace: a trip list shows this month's receipts + this trip against the monthly target.
+4. Portion and freeze: 2 lb or more of fresh raw meat (`pantry[id].bought`) gets a prep job the day
+   it comes home: keep what the next two days need, freeze the rest in meal-size bags.
+5. After the trip: once a receipt from the trip is saved, the trip list shows what it bought that the
+   list didn't ask for.

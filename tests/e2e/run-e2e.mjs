@@ -27,6 +27,7 @@ async function newPage(context, viewport = PHONE) {
   await p.clock.install({ time: NOW });
   p.on('console', (m) => { if (m.type() === 'error' && !/ERR_FAILED|ERR_INTERNET_DISCONNECTED|net::/.test(m.text())) errors.push(m.text()); });
   p.on('pageerror', (e) => errors.push(String(e)));
+  p.on('response', (r) => { if (r.status() === 404) console.log('# 404', r.url()); });
   return p;
 }
 

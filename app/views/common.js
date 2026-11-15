@@ -130,7 +130,7 @@ export { raw };
 // ---------------------------------------------------------------- v2.5: the prep schedule (SPEC §12.5)
 
 const PREP_WHEN = { morning: 'Morning', anytime: 'Today', evening: 'Evening' };
-const PREP_ICON = { thaw: 'snow', cook: 'flame', lunch: 'lunch', buy: 'store' };
+const PREP_ICON = { thaw: 'snow', freeze: 'snow', cook: 'flame', lunch: 'lunch', buy: 'store' };
 
 /** Thaw, cook-once and lunch-packing jobs for the next few days, from the plan and the pantry. */
 export function prepCard(app, { days = 7, title = 'Prep schedule', empty = true } = {}) {

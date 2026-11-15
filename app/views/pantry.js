@@ -3,7 +3,7 @@
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, switchToggle, confirmSheet } from '../ui.js';
 import { resizeImage, LIMITS } from '../images.js';
 import { STORAGE, AISLES } from '../config.js';
-import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween } from '../util.js';
+import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween, weekdayName } from '../util.js';
 import { setPantryOps, removePantryOps, customItemOps, undoFor } from '../actions.js';
 import { set } from '../state.js';
 import { kindOf } from '../planner.js';
@@ -12,6 +12,9 @@ import { pantryCoverage } from '../coverage.js';
 import { unsyncedReceipts, receiptPantryOps } from '../receipts.js';
 import { currentRange } from './plan.js';
 import { scanQtyIn } from '../scanqty.js';
+import { PLACES, KINDS, placeOf, kindOfItem, useSoon } from '../freshness.js';
+import { itemPhoto, hydratePhotos, rememberPhoto, cropItem, photoUrl } from '../photos.js';
+import { del } from '../state.js';
 
 export const title = () => 'Pantry';
 
@@ -42,12 +45,25 @@ function searchCatalog(app, q, limit = 8) {
   return rows.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)).slice(0, limit);
 }
 
+let useBy = null; // id → useSoon row, set while the page renders
+
+function useByText(app, s) {
+  if (s.daysLeft < 0) return 'Past its usual use-by. Check it';
+  if (s.daysLeft === 0) return 'Use today';
+  if (s.daysLeft === 1) return 'Use by tomorrow';
+  return `Use by ${weekdayName(s.useBy)}`;
+}
+
 function pantryRow(app, id, p) {
   const m = meta(app, id);
   if (!m) return '';
   const staple = m.kind === 'staple';
-  return html`<li class="pan-row ${p.low ? 'is-low' : ''}">
+  const ph = itemPhoto(app.state, id);
+  const soon = useBy?.get(id);
+  return html`<li class="pan-row ${p.low ? 'is-low' : ''}" id="pan-${id}">
+    <button type="button" class="pan-thumb ${ph ? 'has-photo' : ''}" data-action="pan:photo" data-id="${id}" aria-label="${ph ? `Picture of ${m.name}` : `Add a picture of ${m.name}`}">${ph ? html`<img data-photo="${ph}" alt="" loading="lazy" decoding="async">` : ic('camera', { size: 20 })}</button>
     <span class="pan-name"><b>${m.name}</b>
+      ${when(soon, () => html`<small class="pan-soon ${soon.daysLeft <= 0 ? 'is-now' : ''}">${useByText(app, soon)}</small>`)}
       ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
       <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? `${unitText(p.qty, m.unit)} on hand` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}${p.by ? `, updated by ${p.by}` : ''}</small></span>
     <span class="pan-ctrl">
@@ -108,19 +124,43 @@ function syncCard(app) {
   </section>`;
 }
 
+function useFirstCard(app, soon) {
+  if (!soon.length) return '';
+  const place = (id) => PLACES.find((p) => p.id === id)?.label.replace(/^(In|On) the /, '') || '';
+  return html`<section class="use-first" aria-labelledby="use-h">
+    <h2 id="use-h" class="section-title">${ic('clock', { size: 22 })}Use these first</h2>
+    <ul class="use-list">${soon.slice(0, 8).map((s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${s.name.replace(/\s*\(.*?\)\s*/g, ' ').trim()}</b><small>${useByText(app, s)}, ${place(s.place)}</small></button></li>`)}</ul>
+    <p class="muted small">Estimated from the day each came home. The date on the package wins. Plan a dinner that uses them, or freeze meat before its day.</p>
+  </section>`;
+}
+
+/** Shelves by place (fridge, freezer, pantry, counter), then by kind (meat, drinks, canned…). */
+function shelves(app, entries) {
+  const name = (id) => meta(app, id).name;
+  return PLACES.map((pl) => {
+    const rows = entries.filter(([id]) => placeOf(app.db, app.state, id) === pl.id);
+    const kinds = KINDS.map((k) => ({ ...k, rows: rows.filter(([id]) => kindOfItem(app.db, app.state, id) === k.id).sort((a, b) => name(a[0]).localeCompare(name(b[0]))) })).filter((k) => k.rows.length);
+    return { ...pl, count: rows.length, kinds };
+  }).filter((pl) => pl.count);
+}
+
 export function render(app) {
   const pantry = app.state.pantry || {};
   const entries = Object.entries(pantry).filter(([id, p]) => p && meta(app, id));
   const low = entries.filter(([, p]) => p.low);
-  const groups = STORAGE.map((s) => ({ ...s, rows: entries.filter(([id, p]) => !p.low && meta(app, id).storage === s.id).sort((a, b) => meta(app, a[0]).name.localeCompare(meta(app, b[0]).name)) }));
+  const soon = useSoon(app.db, app.state, app.today());
+  useBy = new Map(soon.map((s) => [s.id, s]));
+  const places = shelves(app, entries.filter(([, p]) => !p.low));
+  const photos = entries.filter(([id]) => itemPhoto(app.state, id)).length;
   const canScan = app.store.device.key && !app.store.device.localOnly && app.store.health?.ai !== false;
   return html`<div class="page page-pantry">
     <header class="page-head"><h1 class="page-title">Pantry</h1></header>
+    ${useFirstCard(app, soon)}
     ${coverageCard(app)}
     <section class="scan-card">
       <div class="scan-text">
         <h2 class="scan-title">Scan the pantry before you shop</h2>
-        <p class="small">Take photos of the shelves, fridge and freezer. The app suggests what it sees and you confirm each item, so the list only buys what’s missing.</p>
+        <p class="small">Take photos of the shelves, fridge and freezer. The app suggests what it sees, keeps a picture of each item, and you confirm each one, so the list only buys what’s missing.</p>
       </div>
       <label class="btn btn-primary btn-block scan-btn">
         ${ic('camera', { size: 22 })}Take or choose photos
@@ -135,9 +175,53 @@ export function render(app) {
     </section>
     ${syncCard(app)}
     ${when(low.length, () => html`<section class="pan-group"><h2 class="section-title">Running low</h2><ul class="pan-list">${low.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)}
-    ${entries.length ? groups.filter((g) => g.rows.length).map((g) => html`<section class="pan-group"><h2 class="section-title">${g.label}</h2><ul class="pan-list">${g.rows.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)
+    ${entries.length ? html`
+      <nav class="pan-jump" aria-label="Pantry sections">${places.map((pl) => html`<button type="button" class="chip" data-action="pan:jump" data-target="place-${pl.id}">${pl.label.replace(/^(In|On) the /, '').replace(/^./, (c) => c.toUpperCase())} <span class="chip-count">${pl.count}</span></button>`)}</nav>
+      ${when(photos < entries.length, () => html`<p class="muted small pan-photo-hint">${ic('camera', { size: 16 })}Tap a square to add a picture, so everyone knows exactly which one is on the shelf. ${photos ? `${photos} of ${entries.length} have one.` : ''}</p>`)}
+      ${places.map((pl) => html`<section class="pan-place" id="place-${pl.id}" aria-labelledby="ph-${pl.id}">
+        <h2 id="ph-${pl.id}" class="section-title">${pl.label}<span class="count">${pl.count}</span></h2>
+        ${pl.kinds.map((k) => html`<h3 class="pan-kind">${k.label}<span class="count">${k.rows.length}</span></h3><ul class="pan-list">${k.rows.map(([id, p]) => pantryRow(app, id, p))}</ul>`)}
+      </section>`)}`
       : html`<div class="empty"><span class="empty-ic">${ic('pantry', { size: 28 })}</span><h3 class="empty-title">The pantry is empty</h3><p class="empty-body">Scan your shelves or add what you have. Staples like salt and spices stay off the list until you mark them running low.</p></div>`}
   </div>`;
+}
+
+export function mount(app, root) {
+  hydratePhotos(root, app.store);
+}
+
+// ---------------------------------------------------------------- item pictures
+
+async function savePhoto(app, itemId, blob) {
+  const id = await app.store.putPhoto(blob);
+  await rememberPhoto(id, blob);
+  const ops = [set(['itemPhotos', itemId], { photo: id, at: new Date().toISOString(), by: app.who() || 'Family' })];
+  return { id, ops };
+}
+
+function photoSheet(app, itemId) {
+  const m = meta(app, itemId);
+  if (!m) return;
+  const st = { busy: false };
+  openSheet({
+    id: `photo:${itemId}`,
+    title: m.name,
+    subtitle: 'The picture the family sees for this item.',
+    render: () => {
+      const ph = itemPhoto(app.state, itemId);
+      const canSave = app.store.device.key && !app.store.device.localOnly;
+      return html`
+        ${ph ? html`<img class="photo-big" data-photo="${ph}" alt="${m.name}">` : html`<div class="photo-big photo-empty">${ic('camera', { size: 36 })}<span>No picture yet</span></div>`}
+        ${when(st.busy, () => html`<div class="scan-progress" role="status"><span class="spinner" aria-hidden="true"></span><p>Saving the picture…</p></div>`)}
+        ${canSave ? html`<label class="btn btn-primary btn-block">${ic('camera', { size: 20 })}${ph ? 'Take a new picture' : 'Take or choose a picture'}
+            <input type="file" accept="image/*" class="sr-only" data-change="pan:photo-file" data-id="${itemId}" aria-label="Picture of ${m.name}"></label>
+          <p class="muted small">Fill the square with the package so the label shows. Pictures stay in the family’s private storage.</p>`
+          : html`<p class="sheet-text">Pictures are kept on the family server. Connect this phone with the family passcode in Family & settings to add one.</p>`}
+        ${when(ph, () => html`<button type="button" class="btn btn-quiet btn-block" data-action="pan:photo-off" data-id="${itemId}">Remove the picture</button>`)}`;
+    },
+  });
+  setTimeout(() => hydratePhotos(document.getElementById('sheet'), app.store), 0);
+  photoSheet.state = st;
 }
 
 function results(app) {
@@ -186,7 +270,7 @@ async function runScan(app, files) {
     openSheet({ title: 'You’re offline', render: () => html`<p class="sheet-text">Pantry scan needs an internet connection. Everything else works offline, and you can add items by hand right now.</p><div class="sheet-actions"><button type="button" class="btn btn-primary btn-block" data-action="pan:manual">Add by hand</button></div>` });
     return;
   }
-  const st = { done: 0, total: files.length, items: [], errors: [] };
+  const st = { done: 0, total: files.length, items: [], errors: [], images: [] };
   openSheet({
     id: 'scan',
     title: 'Reading your photos',
@@ -196,7 +280,9 @@ async function runScan(app, files) {
     try {
       const image = await resize(f);
       const r = await app.store.api('POST', '/api/scan', { image, known: knownList(app) }, { timeoutMs: 90000 });
-      for (const it of r?.items || []) st.items.push(it);
+      st.images.push(image);
+      const img = st.images.length - 1;
+      for (const it of r?.items || []) st.items.push({ ...it, img });
     } catch (e) {
       st.errors.push(e.status !== undefined ? scanErrorText(e) : 'One photo couldn’t be opened.');
       if (e.status === 0 || e.status === 401 || e.status === 503) break;
@@ -227,8 +313,10 @@ export function mergeDetections(app, items) {
     const conv = ing ? scanQtyIn(ing, it.qty, it.unit) : { qty: Number(it.qty) > 0 ? Number(it.qty) : null, per: null, from: null };
     const label = scanLabel(it);
     if (!prev) {
-      by.set(key, { name: it.name || meta(app, matchId)?.name || 'Item', label, matchId, qty: conv.qty, seen: conv.per ? conv.from : null, unit: it.unit || null, confidence: Number(it.confidence) || 0, include: (Number(it.confidence) || 0) >= 0.35 });
+      by.set(key, { name: it.name || meta(app, matchId)?.name || 'Item', label, matchId, qty: conv.qty, seen: conv.per ? conv.from : null, unit: it.unit || null, confidence: Number(it.confidence) || 0, include: (Number(it.confidence) || 0) >= 0.35, box: Array.isArray(it.box) ? it.box : null, img: Number.isInteger(it.img) ? it.img : null });
     } else {
+      // The clearest sighting (highest confidence, with a box) is the one pictured.
+      if (Array.isArray(it.box) && Number.isInteger(it.img) && (!prev.box || (Number(it.confidence) || 0) > prev.confidence)) { prev.box = it.box; prev.img = it.img; }
       // The same product on two photos (or two shelves): keep the larger count, never double it.
       if (conv.qty !== null && conv.qty > (prev.qty || 0)) { prev.qty = conv.qty; prev.seen = conv.per ? conv.from : null; }
       if (!prev.label && label) prev.label = label;
@@ -271,6 +359,7 @@ function review(app, st) {
             const cands = searchCatalog(app, r.name, 5).filter((c) => c.id !== r.matchId);
             return html`<li class="review-row">
               <label class="review-inc"><input type="checkbox" name="inc-${k}" ${r.include ? 'checked' : ''}><span class="sr-only">Add ${r.name}</span></label>
+              ${when(r.thumb, () => html`<img class="review-thumb" src="${r.thumb}" alt="">`)}
               <div class="review-main">
                 <input class="input" name="name-${k}" value="${m ? m.name : (r.label || r.name).slice(0, 60)}" aria-label="Name" maxlength="60">
                 ${when(m && r.label, () => html`<p class="muted small">Label: ${r.label}</p>`)}
@@ -293,9 +382,48 @@ function review(app, st) {
       </form>`,
   });
   review.rows = rows;
+  review.images = st.images;
+  // A picture of each item from its photo, shown as soon as it's cut out (kept when the item is added).
+  (async () => {
+    for (const r of rows) {
+      if (r.img == null || !st.images[r.img]) continue;
+      try { r.blob = await cropItem(st.images[r.img], r.box, { size: 360 }); r.thumb = URL.createObjectURL(r.blob); renderSheet(); } catch { /* no picture for this one */ }
+    }
+  })();
 }
 
 export const actions = {
+  'pan:jump': (app, el) => {
+    const t = document.getElementById(el.dataset.target);
+    if (!t) return;
+    t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (t.classList.contains('pan-row')) { t.classList.add('is-flash'); setTimeout(() => t.classList.remove('is-flash'), 1600); }
+  },
+  'pan:photo': (app, el) => photoSheet(app, el.dataset.id),
+  'pan:photo-file': async (app, el) => {
+    const file = el.files?.[0];
+    const itemId = el.dataset.id;
+    el.value = '';
+    if (!file) return;
+    const st = photoSheet.state || {};
+    st.busy = true; renderSheet();
+    try {
+      const src = URL.createObjectURL(file);
+      const blob = await cropItem(src, null, { size: 480 });
+      URL.revokeObjectURL(src);
+      const { ops } = await savePhoto(app, itemId, blob);
+      app.commit({ ops, undo: undoFor(app.state, ops), message: 'Picture saved for the family.' });
+    } catch (e) {
+      toast(e?.status === 0 ? 'Saving a picture needs an internet connection.' : 'That picture couldn’t be saved. Try again.');
+    }
+    st.busy = false; renderSheet();
+    setTimeout(() => hydratePhotos(document.getElementById('sheet'), app.store), 0);
+  },
+  'pan:photo-off': (app, el) => {
+    const ops = [del(['itemPhotos', el.dataset.id])];
+    app.commit({ ops, undo: undoFor(app.state, ops), message: 'Picture removed.' });
+    closeSheet();
+  },
   'pan:sync': (app, el) => {
     const ops = receiptPantryOps(app.db, app.state, el.dataset.id, { who: app.who() || 'Family' });
     const n = ops.filter((o) => o.path[0] === 'pantry').length;
@@ -390,6 +518,7 @@ export const actions = {
     const ops = [];
     let n = 0;
     let state = app.state;
+    const picked = [];
     rows.forEach((r, k) => {
       if (!f.get(`inc-${k}`)) return;
       const name = String(f.get(`name-${k}`) || r.name).trim() || r.name;
@@ -407,13 +536,27 @@ export const actions = {
       const staple = m?.kind === 'staple';
       // Keep what the label said (brand and product) so the family can see which product is on the shelf.
       const label = match && r.label ? { label: r.label.slice(0, 120) } : {};
-      ops.push(set(['pantry', id], staple ? { qty: null, stocked: true, ...label, by: app.who(), at: new Date().toISOString() }
-        : { qty: Number.isFinite(qty) && qty >= 0 ? round2(qty) : (app.state.pantry?.[id]?.qty ?? 1), stocked: false, ...label, by: app.who(), at: new Date().toISOString() }));
+      const now = new Date().toISOString();
+      const prev = app.state.pantry?.[id];
+      const had = prev && !prev.low && (prev.stocked || prev.qty > 0);
+      const since = had && prev.since ? { since: prev.since } : had ? {} : { since: now.slice(0, 10) };
+      ops.push(set(['pantry', id], staple ? { qty: null, stocked: true, ...label, ...since, by: app.who(), at: now }
+        : { qty: Number.isFinite(qty) && qty >= 0 ? round2(qty) : (app.state.pantry?.[id]?.qty ?? 1), stocked: false, ...label, ...since, by: app.who(), at: now }));
+      picked.push({ id, r });
       n++;
     });
     if (!n) { toast('Nothing checked to add.'); return; }
     app.commit({ ops, undo: undoFor(app.state, ops), message: `Added ${n} ${n === 1 ? 'item' : 'items'} to the pantry. The list is updated.` });
     closeSheet();
+    // Then each new item's picture, in the background (items that already have one keep it).
+    const pics = picked.filter(({ id, r }) => r.blob && !itemPhoto(app.state, id));
+    (async () => {
+      const photoOps = [];
+      for (const { id, r } of pics) {
+        try { photoOps.push(...(await savePhoto(app, id, r.blob)).ops); } catch { break; } // offline: skip the rest
+      }
+      if (photoOps.length) app.commit({ ops: photoOps, message: `Saved ${photoOps.length} ${photoOps.length === 1 ? 'picture' : 'pictures'} of what’s on the shelves.` });
+    })();
   },
 };
 

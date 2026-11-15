@@ -49,6 +49,7 @@ const SHELL_FILES = [
   'app/coverage.js',
   'app/prep.js',
   'app/photos.js',
+  'app/health.js',
   'app/freshness.js',
   'app/images.js',
   'fonts/young-serif-400.woff2',

@@ -9,6 +9,7 @@ import { generateOps, swapNightsOps, settingOps } from '../actions.js';
 import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition, thumbs, prepCard } from './common.js';
 import { plateNutrition, fmtKcal } from '../nutrition.js';
 import { openNight } from './sheets.js';
+import { veggieCheck } from '../health.js';
 
 export const title = () => 'Plan';
 
@@ -133,6 +134,7 @@ export function render(app) {
     </div>
     ${when(app.ui.swapMode, () => html`<p class="swap-banner" role="status">${app.ui.swapPick ? html`Now tap the night to trade with <b>${shortDate(app.ui.swapPick)}</b>.` : 'Tap the first night, then the night to trade with.'}</p>`)}
     <p class="plan-summary">${planned} ${planned === 1 ? 'dinner' : 'dinners'} planned${away ? `, ${away} ${away === 1 ? 'night' : 'nights'} away` : ''}. About <a href="#/list">${money(list.total)} in groceries</a>${list.nights.length ? `, ${money(list.perDinner)} a dinner` : ''}.</p>
+    ${veggieCard(app, range)}
     ${grid(app, range)}
     ${when(auto, () => html`<p class="muted small center">Re-planning keeps cooked and away nights and anything the family set by hand.</p>`)}
     ${prepCard(app, { days: 7 })}
@@ -204,3 +206,21 @@ export const actions = {
 };
 
 export { addDays, startOfWeek, monthOnly };
+
+/** Eating healthier (SPEC §13): every dinner gets a vegetable or salad; one tap to add one. */
+function veggieCard(app, range) {
+  const today = app.today();
+  const dates = range.dates.filter((d) => d >= today);
+  const v = veggieCheck(app.db, app.state, dates);
+  if (!v.total || !v.gaps.length) return v.total >= 3 ? html`<p class="veg-ok">${ic('leaf', { size: 18 })}<span>Every planned dinner ${range.end >= today ? 'from here on' : ''} has a vegetable or salad.</span></p>` : '';
+  return html`<section class="veg-card" aria-labelledby="veg-h">
+    <h2 id="veg-h" class="section-title">${ic('leaf', { size: 22 })}${v.withVeg} of ${v.total} dinners have a vegetable</h2>
+    <ul class="veg-list">${v.gaps.slice(0, 6).map((g) => html`<li>
+      <span><b>${g.date === today ? 'Tonight' : `${weekdayShort(g.date)} ${shortDate(g.date)}`}: ${g.dinner.title}</b><small>${g.sides.length ? `With ${listJoin(g.sides.map((t) => t.toLowerCase()))}` : 'No sides yet'}</small></span>
+      <button type="button" class="btn btn-small btn-secondary" data-action="side:sub" data-date="${g.date}" data-dinner="${g.dinner.id}" data-slot="${g.slot}">${g.add ? 'Add a vegetable' : 'Swap in a vegetable'}</button>
+    </li>`)}</ul>
+    <p class="muted small">Frozen or canned vegetables count and keep for months, so they never go to waste.</p>
+  </section>`;
+}
+
+const weekdayShort = (iso) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][weekday(iso)];

@@ -414,9 +414,12 @@ export function promoteOps(db, state, { dinnerId, at }) {
 
 export function setPantryOps(db, state, { id, qty, stocked, low, who, at }) {
   const prev = state?.pantry?.[id] || {};
-  const next = { qty: prev.qty ?? null, stocked: !!prev.stocked, ...(prev.label ? { label: prev.label } : {}), ...stamp(who, at) };
+  const next = { qty: prev.qty ?? null, stocked: !!prev.stocked, ...(prev.label ? { label: prev.label } : {}), ...(prev.since ? { since: prev.since } : {}), ...stamp(who, at) };
   if (qty !== undefined) next.qty = qty === null ? null : Math.max(0, round2(Number(qty) || 0));
   if (stocked !== undefined) next.stocked = !!stocked;
+  // "Came home" date for use-it-first (SPEC §13): new stock, more of it, or a staple back on the shelf.
+  const more = typeof next.qty === 'number' && next.qty > (typeof prev.qty === 'number' && !prev.low ? prev.qty : 0);
+  if (more || (next.stocked && !prev.stocked) || !prev.at) next.since = next.at.slice(0, 10);
   // Changing the amount or the stocked toggle counts as restocking, which clears "running low".
   const isLow = low !== undefined ? !!low : !!prev.low && qty === undefined && stocked === undefined;
   if (isLow) next.low = true;
@@ -452,8 +455,9 @@ export function doneShoppingOps(db, state, { list, who, at }) {
   const s = stamp(who, at);
   for (const a of adds) {
     const prev = state?.pantry?.[a.id] || {};
-    if (a.staple) ops.push(set(['pantry', a.id], { qty: null, stocked: true, ...s }));
-    else ops.push(set(['pantry', a.id], { qty: round2((typeof prev.qty === 'number' && !prev.low ? prev.qty : 0) + a.add), stocked: false, ...s }));
+    const since = s.at.slice(0, 10);
+    if (a.staple) ops.push(set(['pantry', a.id], { qty: null, stocked: true, since, ...s }));
+    else ops.push(set(['pantry', a.id], { ...(prev.label ? { label: prev.label } : {}), qty: round2((typeof prev.qty === 'number' && !prev.low ? prev.qty : 0) + a.add), stocked: false, since, bought: { qty: a.add, on: since }, ...s }));
   }
   if (state?.checked?.[list.listKey]) ops.push(del(['checked', list.listKey]));
   return result(state, ops, adds.length ? `Put ${adds.length} ${adds.length === 1 ? 'item' : 'items'} in the pantry. The list now shows only what's still needed.` : 'Check off what you bought first.', { count: adds.length });

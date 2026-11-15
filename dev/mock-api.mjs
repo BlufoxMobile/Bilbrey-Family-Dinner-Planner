@@ -38,6 +38,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
       'Access-Control-Max-Age': '600',
     } : {};
   };
+  const photos = new Map();
   const send = (res, req, code, body) => {
     res.writeHead(code, { 'Content-Type': 'application/json', ...cors(req) });
     res.end(JSON.stringify(body));
@@ -101,6 +102,21 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
       if (bk) db.batches.set(bk, db.revision + 1);
       db.revision++; db.updatedAt = new Date().toISOString();
       return send(res, req, 200, { revision: db.revision, updatedAt: db.updatedAt, state: db.state });
+    }
+    // Pantry item pictures (SPEC §13), kept in memory like the worker's photos table.
+    if (p === '/api/photo' && req.method === 'POST') {
+      const chunks = []; for await (const c of req) chunks.push(c);
+      const data = Buffer.concat(chunks);
+      if (!data.length || data.length > 400 * 1024) return send(res, req, data.length ? 413 : 400, { error: 'A picture is 1 byte to 400 KB' });
+      const id = randomBytes(16).toString('hex');
+      photos.set(id, { mime: req.headers['content-type'] || 'image/jpeg', data });
+      return send(res, req, 201, { ok: true, id });
+    }
+    if (p === '/api/photo' && req.method === 'GET') {
+      const ph = photos.get(url.searchParams.get('id') || '');
+      if (!ph) return send(res, req, 404, { error: 'No such picture' });
+      res.writeHead(200, { 'Content-Type': ph.mime, 'Cache-Control': 'private, max-age=31536000, immutable', ...cors(req) });
+      return res.end(ph.data);
     }
     if (p === '/api/scan' && req.method === 'POST') {
       const b = await readBody(req);
