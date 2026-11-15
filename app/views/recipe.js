@@ -1,6 +1,6 @@
 // RECIPE: one dinner — photo, ingredients for five, sides, steps, family votes,
 // make tonight / add to plan / start cooking, and retire/restore for Jeff and Candi.
-import { html, ic, when, openSheet, avatar, tf } from '../ui.js';
+import { html, ic, when, openSheet, avatar, personStyle, tf } from '../ui.js';
 import { FAMILY, PARENTS } from '../config.js';
 import { fmtQty, addDays, datesBetween, relativeDay, shortDate, dayWord, dayAndDate, listJoin } from '../util.js';
 import { dinnerById, isRetired, isPromoted, isFavorite, voteInfo, findInPlan, inRotation, scaleItems, downVoters, implicitPromotions } from '../planner.js';
@@ -35,7 +35,7 @@ function votes(app, d) {
     <h2 id="votes-h" class="section-title">What the family thinks</h2>
     <ul class="vote-row">${FAMILY.map((n) => {
       const val = v.byPerson[n];
-      return html`<li class="vote-person ${val === 1 ? 'is-up' : val === -1 ? 'is-down' : ''}">
+      return html`<li class="vote-person ${val === 1 ? 'is-up' : val === -1 ? 'is-down' : ''}" style="${personStyle(n)}">
         ${avatar(n, { size: 'md' })}<span class="vote-name">${n}</span>
         <span class="vote-state">${val === 1 ? html`${ic('up_vote', { size: 16 })}<span class="sr-only">likes it</span>` : val === -1 ? html`${ic('down_vote', { size: 16 })}<span class="sr-only">would skip it</span>` : html`<span class="sr-only">no vote</span>`}</span>
       </li>`;

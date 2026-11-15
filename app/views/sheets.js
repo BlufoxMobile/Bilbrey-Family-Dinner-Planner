@@ -1,6 +1,6 @@
 // Sheets shared by Tonight, Plan and Recipes: a night's actions, picking a dinner,
 // moving/swapping, not eating at home, substituting sides, who's on this phone, sync.
-import { html, ic, when, openSheet, closeSheet, toast, avatar, renderSheet, confirmSheet, stepper, sheetId, tf } from '../ui.js';
+import { html, ic, when, openSheet, closeSheet, toast, avatar, personStyle, renderSheet, confirmSheet, stepper, sheetId, tf } from '../ui.js';
 import { AWAY_REASONS, FAMILY } from '../config.js';
 import {
   addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate,
@@ -382,7 +382,7 @@ export function openWho(app, { onDone } = {}) {
     id: 'who',
     title: 'Who’s using this phone?',
     subtitle: 'Votes and changes show your name.',
-    render: () => html`<div class="who-grid">${FAMILY.map((n) => html`<button type="button" class="who-pick ${app.who() === n ? 'is-on' : ''}" data-action="who:set" data-who="${n}" aria-pressed="${tf(app.who() === n)}">${avatar(n, { size: 'lg' })}<span>${n}</span></button>`)}</div>`,
+    render: () => html`<div class="who-grid">${FAMILY.map((n) => html`<button type="button" class="who-pick ${app.who() === n ? 'is-on' : ''}" style="${personStyle(n)}" data-action="who:set" data-who="${n}" aria-pressed="${tf(app.who() === n)}">${avatar(n, { size: 'lg' })}<span>${n}</span></button>`)}</div>`,
   });
   openWho.onDone = onDone;
 }

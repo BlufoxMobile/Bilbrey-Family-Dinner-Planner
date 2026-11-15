@@ -1,6 +1,6 @@
 // LUNCH (SPEC §8): packed lunches per person — rotations per slot, weekdays by default,
 // per-day swaps and skips, an editor for each person, lighter ideas for the grown-ups.
-import { html, ic, when, openSheet, closeSheet, renderSheet, avatar, photo, switchToggle, tf } from '../ui.js';
+import { html, ic, when, openSheet, closeSheet, renderSheet, avatar, personStyle, photo, switchToggle, tf } from '../ui.js';
 import { FAMILY, PARENTS } from '../config.js';
 import { addDays, dateRange, money, rangeLabel, shortDate, startOfWeek, weekday, weekdayName, diffDays, dayWord } from '../util.js';
 import {
@@ -112,7 +112,7 @@ export function render(app) {
   return html`<div class="page page-lunch">
     <header class="page-head"><h1 class="page-title">Lunch</h1></header>
     <div class="people" role="tablist" aria-label="Whose lunches">
-      ${enabled.map((p) => html`<button type="button" role="tab" class="person ${p.name === name ? 'is-on' : ''}" aria-selected="${tf(p.name === name)}" data-action="lunch:who" data-who="${p.name}">${avatar(p.name, { size: 'sm' })}<span>${p.name}</span></button>`)}
+      ${enabled.map((p) => html`<button type="button" role="tab" class="person ${p.name === name ? 'is-on' : ''}" style="${personStyle(p.name)}" aria-selected="${tf(p.name === name)}" data-action="lunch:who" data-who="${p.name}">${avatar(p.name, { size: 'sm' })}<span>${p.name}</span></button>`)}
       ${when(off.length, () => html`<button type="button" class="person person-add" data-action="lunch:add">${ic('plus', { size: 18 })}<span>Add a person</span></button>`)}
     </div>
     ${!name ? html`<div class="empty"><span class="empty-ic">${ic('lunch', { size: 28 })}</span><h3 class="empty-title">No one’s lunches are planned</h3>
@@ -230,7 +230,7 @@ function openAdd(app) {
     subtitle: 'Lunches are optional. Each person picks their own.',
     render: () => {
       const off = lunchPeople(app.db, app.state, app.who()).filter((p) => !p.cfg.enabled);
-      return off.length ? html`<div class="who-grid">${off.map((p) => html`<button type="button" class="who-pick" data-action="lunch:enable-new" data-who="${p.name}">${avatar(p.name, { size: 'lg' })}<span>${p.name}</span></button>`)}</div>`
+      return off.length ? html`<div class="who-grid">${off.map((p) => html`<button type="button" class="who-pick" style="${personStyle(p.name)}" data-action="lunch:enable-new" data-who="${p.name}">${avatar(p.name, { size: 'lg' })}<span>${p.name}</span></button>`)}</div>`
         : html`<p class="sheet-text">Everyone already packs lunch.</p>`;
     },
   });
