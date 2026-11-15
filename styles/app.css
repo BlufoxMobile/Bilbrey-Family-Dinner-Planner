@@ -1063,8 +1063,15 @@ small.replaced { display: block; color: var(--ink-3); font-size: var(--t-xs); fo
 .clip-first { padding: 16px 18px; margin-bottom: var(--s4); border-radius: var(--r-card); background: color-mix(in srgb, var(--butter-tint) 75%, var(--card)); }
 .clip-first .section-title .ic { color: var(--ink-2); }
 .clip-list { display: grid; gap: 8px; margin: var(--s2) 0; }
-.clip-list li { display: grid; }
+.clip-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.clip-list li > span { display: grid; min-width: 0; }
 .clip-list small { color: var(--ink-2); }
+.clip-list li.is-clipped b { color: var(--ink-2); font-weight: 600; }
+.clip-first.all-clipped { background: color-mix(in srgb, var(--sage-tint, #e3eedf) 70%, var(--card)); }
+.tag-clipped { display: inline-flex; align-items: center; gap: 4px; flex: none; background: var(--card); color: var(--ink); }
+.handoff-ai { display: grid; gap: 8px; padding: 12px 14px; margin: 4px 0 8px; border-radius: 14px; background: color-mix(in srgb, var(--butter-tint) 55%, var(--card)); }
+.handoff-ai .sheet-h { margin: 0; }
+.app-shortcut .form { margin-top: 8px; }
 .skipped, .on-day { padding: 16px 18px; margin-bottom: var(--s6); border-radius: var(--r-card); border: 1px dashed var(--line-2); }
 .skip-list { display: grid; gap: 4px; margin-top: var(--s2); }
 .skip-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }

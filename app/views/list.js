@@ -3,7 +3,7 @@
 import { html, ic, when, openSheet, closeSheet, toast, copyText, confirmSheet, segmented, renderSheet } from '../ui.js';
 import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate, round2, datesBetween, addDays, weekday, isISODate, weekdayName } from '../util.js';
 import { listKeyFor, dinnerById } from '../planner.js';
-import { buildList, formatPackQty, formatStoreList, formatFullList, unitText, OTHER, productName } from '../shopping.js';
+import { buildList, formatPackQty, formatStoreList, formatAssistantList, formatFullList, unitText, OTHER, productName } from '../shopping.js';
 import {
   toggleCheckOps, doneShoppingOps, setPriceOps, clearPriceOps, notAtStoreOps, addExtraOps, removeExtraOps, setPantryOps, undoFor,
 } from '../actions.js';
@@ -105,12 +105,30 @@ function onDaySection(app, list) {
   </section>`;
 }
 
+const COUPON_PAGE = { jewel: 'https://www.jewelosco.com/loyalty/coupons-deals.html?q={q}' };
+
+/** The store's coupon page, searched for this coupon (or the product's first words). */
+function couponFindUrl(c) {
+  const tpl = COUPON_PAGE[c.store];
+  if (!tpl) return '';
+  const q = c.q || String(c.name).replace(/\(.*?\)/g, ' ').replace(/[^A-Za-z0-9' ]+/g, ' ').trim().split(/\s+/).slice(0, 2).join(' ');
+  return tpl.replace('{q}', encodeURIComponent(q));
+}
+
 function couponsToClip(app, list) {
   if (!list.coupons.length) return '';
-  return html`<section class="clip-first" aria-labelledby="clip-h">
-    <h2 id="clip-h" class="section-title">${ic('receipt', { size: 22 })}Clip ${list.coupons.length === 1 ? 'this coupon' : `these ${list.coupons.length} coupons`} first</h2>
-    <ul class="clip-list">${list.coupons.map((c) => html`<li><b>${c.name}</b><small>${c.text}${c.expires ? `, ends ${weekdayName(c.expires)} ${shortDate(c.expires)}` : ''}</small></li>`)}</ul>
-    <p class="muted small">Coupons only count once they’re clipped in your ${NAMES[list.coupons[0].store] || 'store'} account. The total above assumes you clip them.</p>
+  const left = list.coupons.filter((c) => !c.clipped);
+  const title = left.length
+    ? `Clip ${left.length === 1 ? 'this coupon' : `these ${left.length} coupons`} first`
+    : `${list.coupons.length === 1 ? 'Coupon' : `All ${list.coupons.length} coupons`} clipped`;
+  return html`<section class="clip-first ${left.length ? '' : 'all-clipped'}" aria-labelledby="clip-h">
+    <h2 id="clip-h" class="section-title">${ic(left.length ? 'receipt' : 'check', { size: 22 })}${title}</h2>
+    <ul class="clip-list">${[...left, ...list.coupons.filter((c) => c.clipped)].map((c) => html`<li class="${c.clipped ? 'is-clipped' : ''}">
+      <span><b>${c.name}</b><small>${c.text}${c.expires ? `, ends ${weekdayName(c.expires)} ${shortDate(c.expires)}` : ''}</small></span>
+      ${c.clipped ? html`<span class="tag tag-clipped">${ic('check', { size: 14 })}Clipped</span>`
+        : when(couponFindUrl(c), () => html`<a class="btn btn-small btn-secondary" href="${couponFindUrl(c)}" target="_blank" rel="noopener">Clip it</a>`)}
+    </li>`)}</ul>
+    <p class="muted small">${left.length ? `“Clip it” opens that coupon on ${NAMES[left[0].store] || 'the store'}’s page; sign in and tap Clip Coupon. ` : ''}Coupons only count once they’re clipped in your ${NAMES[list.coupons[0].store] || 'store'} account. The total above assumes they are.</p>
   </section>`;
 }
 
@@ -244,7 +262,7 @@ function openCoupons(app, focus) {
   openSheet({
     id: 'coupons',
     title: 'Coupons and savings',
-    subtitle: 'The planner can’t clip coupons for you: there’s no store API, and it never holds a store password. This opens the right page.',
+    subtitle: 'Stores don’t let apps clip coupons, and the planner never holds a store password. This opens the right page; coupons on your list show Clip it or Clipped.',
     render: () => html`
       <section class="coupon-store ${focus === 'jewel' ? 'is-focus' : ''}">
         <h3 class="sheet-h">${j.name}: clip before you shop</h3>
@@ -430,10 +448,47 @@ function searchWords(name, store) {
   return store === 'sams' ? words.map(encodeURIComponent).join('+') : encodeURIComponent(words.join(' '));
 }
 
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const SHORTCUT_DEFAULT = { jewel: 'Open Jewel', sams: 'Open Sams' };
+const shortcutKey = (store) => `bfdp.v2.shortcut.${store}`;
+/** This phone's Shortcut that opens the store's app (set up once; links alone only reach Safari). */
+function shortcutName(store) {
+  try { return localStorage.getItem(shortcutKey(store)) || ''; } catch { return ''; }
+}
+
+function openAppSection(app, store, info) {
+  const sc = shortcutName(store);
+  const ios = isIOS();
+  const host = String(info.orderUrl || info.website || '').replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '');
+  return html`
+    ${sc && ios
+      ? html`<a class="btn btn-primary btn-block" href="shortcuts://run-shortcut?name=${encodeURIComponent(sc)}">${ic('store', { size: 20 })}Open the ${info.name} app</a>`
+      : when(ios && info.appOpenUrl, () => html`<a class="btn btn-primary btn-block" href="${info.appOpenUrl}" target="_blank" rel="noopener">${ic('store', { size: 20 })}Open the ${info.name} app</a>`)}
+    <a class="btn ${ios && (sc || info.appOpenUrl) ? 'btn-quiet' : 'btn-primary'} btn-block" href="${info.orderUrl || info.website}" target="_blank" rel="noopener">${ic('store', { size: 20 })}Open ${host}</a>
+    ${when(ios, () => html`<details class="more app-shortcut">
+      <summary>${sc ? `Opens with the “${sc}” Shortcut` : `App button opens Safari or the App Store?`}</summary>
+      <p class="muted small">${info.name}’s website links don’t open its iPhone app, so they land in Safari. A one-step iPhone Shortcut always opens the real app. Make it once (about 30 seconds):</p>
+      <ol class="steps-small">
+        <li>Open the Shortcuts app and tap <b>+</b>.</li>
+        <li>Tap <b>Add Action</b>, search <b>Open App</b>, and pick <b>${info.name}</b>.</li>
+        <li>Tap the name at the top, rename it <b>${sc || SHORTCUT_DEFAULT[store]}</b>, then tap <b>Done</b>.</li>
+        <li>Come back here and tap <b>I made it</b>. The first time, iPhone asks to allow it.</li>
+      </ol>
+      <form class="form form-inline-card" data-submit="list:shortcut" data-store="${store}">
+        <label class="field"><span class="field-label">Shortcut name</span><input class="input" name="name" value="${sc || SHORTCUT_DEFAULT[store]}" maxlength="40" autocomplete="off"></label>
+        <button type="submit" class="btn btn-secondary">I made it</button>
+      </form>
+      ${when(sc, () => html`<button type="button" class="btn btn-quiet btn-block" data-action="list:shortcut-off" data-store="${store}">Stop using the Shortcut</button>`)}
+    </details>`)}`;
+}
+
 function handoff(app, store) {
   const { list } = current(app);
-  const text = formatStoreList(app.db, list, store);
+  const ai = store === 'jewel' ? formatAssistantList(app.db, list, store) : [];
+  const text = ai.length ? ai[0] : formatStoreList(app.db, list, store);
   const info = app.db.stores[store];
+  const coupons = list.coupons.filter((c) => c.store === store);
+  const left = coupons.filter((c) => !c.clipped).length;
   copyText(text).then((ok) => {
     openSheet({
       id: `handoff:${store}`,
@@ -441,18 +496,33 @@ function handoff(app, store) {
       subtitle: `${list.stores[store].items.filter((i) => !i.checked).length || list.stores[store].items.length} items, about ${money(list.stores[store].subtotal)}`,
       render: () => html`
         ${store === 'jewel'
-          ? html`<p class="hint">${ic('receipt', { size: 18 })}<span>Clip coupons first: sign in to Jewel-Osco and tap Clip on each one you’ll use (there’s no Clip All). <a href="${info.coupons.url}" target="_blank" rel="noopener">Clip Jewel coupons</a></span></p>`
+          ? html`<p class="hint">${ic('receipt', { size: 18 })}<span>${coupons.length && !left ? `All ${coupons.length} coupons on this list are clipped. ` : left ? `${left} ${left === 1 ? 'coupon' : 'coupons'} on this list to clip first (see “Clip these coupons first”). ` : ''}<a href="${info.coupons.url}" target="_blank" rel="noopener">Jewel coupons</a></span></p>`
           : html`<p class="hint">${ic('receipt', { size: 18 })}<span>Sam’s Instant Savings come off automatically at checkout for members. <a href="${info.coupons.url}" target="_blank" rel="noopener">See Instant Savings</a></span></p>`}
-        <ol class="steps-small">${info.handoff.filter((s, k) => !(k === 0 && /^tap copy/i.test(s))).map((s) => html`<li>${s}</li>`)}</ol>
+        ${when(ai.length, () => html`<section class="handoff-ai">
+          <h3 class="sheet-h">Paste it into Jewel-Osco AI</h3>
+          <ol class="steps-small">
+            <li>${ok ? 'The list is copied' : 'Copy the list below'}${ai.length > 1 ? ` (part 1 of ${ai.length}; it only takes 2,000 letters at a time)` : ''}.</li>
+            <li>Open the Jewel-Osco app (or the website) and tap <b>Jewel-Osco AI</b>.</li>
+            <li>Tap <b>Shop my grocery list</b>, paste, and send. It matches each line to a product; check them, then add to your cart.</li>
+          </ol>
+          ${ai.map((t, k) => html`<button type="button" class="btn btn-secondary btn-block" data-action="list:copy-ai" data-store="${store}" data-part="${k}">${ic('copy', { size: 20 })}${ai.length > 1 ? `Copy part ${k + 1} of ${ai.length}` : 'Copy for Jewel-Osco AI'}</button>`)}
+          <a class="btn btn-quiet btn-block" href="${info.assistantUrl || 'https://www.jewelosco.com/assistant/chat'}" target="_blank" rel="noopener">Open Jewel-Osco AI on the website</a>
+        </section>`)}
+        ${when(!ai.length, () => html`<ol class="steps-small">${info.handoff.filter((s, k) => !(k === 0 && /^tap copy/i.test(s))).map((s) => html`<li>${s}</li>`)}</ol>`)}
         ${when(info.handoffMethod, () => html`<p class="muted small">${info.handoffMethod}</p>`)}
-        <a class="btn btn-primary btn-block" href="${info.orderUrl || info.website}" target="_blank" rel="noopener">${ic('store', { size: 20 })}Open ${info.name}</a>
+        ${openAppSection(app, store, info)}
         ${when(info.appUrl, () => html`<a class="btn btn-quiet btn-block" href="${info.appUrl}" target="_blank" rel="noopener">Get the ${info.name} app</a>`)}
         ${when(info.searchTemplate, () => {
           const items = list.stores[store].items.filter((i) => !i.checked);
           return items.length ? html`<details class="more"><summary>Find each item on ${info.name}</summary><ul class="handoff-items">${items.map((i) => html`<li><span>${productName(i)}</span><a class="btn btn-small btn-quiet" href="${i.freeText ? info.searchTemplate.replace(/\{q\}|\{query\}/, searchWords(i.name, store)) : findItUrl(app.db, store, i.product?.chosen ? i.product : null, i.product?.chosen ? i.product.name : productName(i))}" target="_blank" rel="noopener">Find it</a></li>`)}</ul></details>` : '';
         })}
-        <label class="field"><span class="field-label">${ok ? 'What was copied' : 'Select and copy this'}</span><textarea class="input copy-box" readonly rows="8">${text}</textarea></label>
-        <button type="button" class="btn btn-quiet btn-block" data-action="list:copy-again" data-store="${store}">${ic('copy', { size: 20 })}Copy again</button>
+        ${ai.length
+          ? html`<details class="more"><summary>${ok ? 'What was copied' : 'Select and copy this'}</summary>
+            <textarea class="input copy-box" readonly rows="8">${text}</textarea>
+            <button type="button" class="btn btn-quiet btn-block" data-action="list:copy-again" data-store="${store}">${ic('copy', { size: 20 })}Copy the full list (with pack sizes)</button>
+          </details>`
+          : html`<label class="field"><span class="field-label">${ok ? 'What was copied' : 'Select and copy this'}</span><textarea class="input copy-box" readonly rows="8">${text}</textarea></label>
+            <button type="button" class="btn btn-quiet btn-block" data-action="list:copy-again" data-store="${store}">${ic('copy', { size: 20 })}Copy again</button>`}
         ${when(info.address || info.phone, () => html`<p class="muted small">${[info.address, info.phone, info.hours].filter(Boolean).join('. ')}</p>`)}`,
     });
   });
@@ -494,6 +564,24 @@ export const actions = {
   'list:handoff': (app, el) => handoff(app, el.dataset.store),
   'list:coupons': (app, el) => openCoupons(app, el.dataset.store),
   'list:filter': (app, el) => { app.ui.listFilter = el.dataset.value; app.render(); },
+  'list:copy-ai': async (app, el) => {
+    const { list } = current(app);
+    const parts = formatAssistantList(app.db, list, el.dataset.store);
+    const k = Math.min(parts.length - 1, Number(el.dataset.part) || 0);
+    const ok = await copyText(parts[k] || '');
+    toast(ok ? (parts.length > 1 ? `Part ${k + 1} of ${parts.length} copied. Paste it into Jewel-Osco AI.` : 'Copied. Paste it into Jewel-Osco AI.') : 'Select the text and copy it.');
+  },
+  'list:shortcut': (app, form) => {
+    const name = String(new FormData(form).get('name') || '').trim().slice(0, 40);
+    if (!name) { toast('Type the Shortcut’s name.'); return; }
+    try { localStorage.setItem(shortcutKey(form.dataset.store), name); } catch { toast('This phone won’t save it (private browsing?).'); return; }
+    toast(`“Open the app” now runs your “${name}” Shortcut.`);
+    renderSheet();
+  },
+  'list:shortcut-off': (app, el) => {
+    try { localStorage.removeItem(shortcutKey(el.dataset.store)); } catch { /* nothing saved */ }
+    renderSheet();
+  },
   'list:copy-again': async (app, el) => {
     const { list } = current(app);
     const ok = await copyText(formatStoreList(app.db, list, el.dataset.store));

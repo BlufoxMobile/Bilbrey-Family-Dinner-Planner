@@ -288,7 +288,7 @@ export function buildList(db, state, { dates, listKey = '', store: tripStore = n
   const lunchCost = round2(items.reduce((t, i) => t + (i.costLunch || 0), 0));
   // Sales and coupons from a price check (SPEC §12.3): what the regular prices would have been.
   const regularTotal = round2(items.reduce((t, i) => t + (i.regularCost ?? i.cost ?? 0), 0));
-  const coupons = items.filter((i) => i.coupon).map((i) => ({ id: i.id, name: i.product?.label || i.name, store: i.store, text: i.coupon.text, expires: i.coupon.expires, packs: i.packs }));
+  const coupons = items.filter((i) => i.coupon).map((i) => ({ id: i.id, name: i.product?.label || i.name, store: i.store, text: i.coupon.text, expires: i.coupon.expires, packs: i.packs, clipped: !!i.coupon.clipped, q: i.coupon.q || '' }));
   const checkedDates = items.map((i) => (i.pack?.kind === 'deal' ? i.pack.date : null)).filter(Boolean).sort();
   return {
     listKey, dates, nights, lunches, items, covered, stores, leftovers, freezer, total,
@@ -334,6 +334,55 @@ export function formatStoreList(db, list, store, { includeChecked = false, title
     lines.push(label);
   }
   return lines.join('\n');
+}
+
+/** A product name trimmed for a store's AI search: no sizes after " - ", no notes in brackets. */
+export function shortProductName(name) {
+  return String(name || '').replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/\s*\(.*?\)/g, '')
+    .replace(/\s+-\s+[\d.]+.*$/, '').replace(/,\s*\d+(\.\d+)?\s*(ct|count|oz|lb|fl oz|pk|pack)\b.*$/i, '').replace(/\s+/g, ' ').trim();
+}
+
+const FRACTIONS = { '½': '1/2', '¼': '1/4', '¾': '3/4', '⅓': '1/3', '⅔': '2/3', '⅛': '1/8' };
+const plainNum = (n) => String(fmtQty(n)).replace(/(\d)([½¼¾⅓⅔⅛])/g, '$1 $2').replace(/[½¼¾⅓⅔⅛]/g, (f) => FRACTIONS[f]);
+
+/** One list item as a plain line a store's AI understands: "2 Bonduelle Chicken BLT Bowl", "Ham, 1 lb". */
+function plainLine(item) {
+  const name = shortProductName(productName(item)).replace(/,\s*per (lb|pound)\b/i, '').replace(/,\s*$/, '');
+  const { unit } = item;
+  if (!item.pack) {
+    const q = item.shortfall || item.qty;
+    return q ? `${name}, ${unitText(q, unit || 'each').replace(/[½¼¾⅓⅔⅛]/g, (f) => ` ${FRACTIONS[f]}`).replace(/\s+/g, ' ').trim()}` : name;
+  }
+  const n = item.packs || 1;
+  const size = item.pack.size;
+  if (unit === 'lb') return `${name}, ${plainNum(Math.round(n * size * 100) / 100)} lb`;
+  const bare = name.replace(/,\s*[\d½¼¾.\s]+(oz|fl oz|ct|count)\b.*$/i, '');
+  if (WEIGHT_UNITS.has(unit) || /^(fl oz|ml|l|qt|gal)$/.test(unit)) return `${n} ${bare} (${plainNum(size)} ${unit})`;
+  return `${n} ${bare}`;
+}
+
+/**
+ * The list for a store's AI shopping assistant (Jewel-Osco AI: "Paste or type your grocery list").
+ * Plain lines ("2 Bonduelle Chicken BLT Salad Bowl", "1 lb Boar's Head Black Forest Ham"), split
+ * into parts that fit the assistant's 2,000-character box. → [string]
+ */
+export function formatAssistantList(db, list, store, { limit = 1900 } = {}) {
+  const s = list.stores[store];
+  const its = s.items.filter((i) => !i.checked);
+  const use = its.length ? its : s.items;
+  const lines = use.map((i) => (i.freeText
+    ? `${shortProductName(i.name)}${i.qty ? `, ${unitText(i.qty, i.unit || 'each')}` : ''}`
+    : plainLine(i)));
+  const parts = [];
+  let cur = [];
+  const head = (k, n) => (n > 1 ? `Shop my grocery list (part ${k} of ${n}):` : 'Shop my grocery list:');
+  const room = limit - 40;
+  for (const l of lines) {
+    if (cur.length && [...cur, l].join('\n').length > room) { parts.push(cur); cur = []; }
+    cur.push(l);
+  }
+  if (cur.length) parts.push(cur);
+  return parts.map((p, k) => `${head(k + 1, parts.length)}\n${p.join('\n')}`);
 }
 
 /** Whole-trip text for Share/Print: both stores. */

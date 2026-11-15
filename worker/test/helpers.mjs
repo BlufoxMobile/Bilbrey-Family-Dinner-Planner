@@ -59,7 +59,7 @@ export async function startWorker({ ai = true } = {}) {
     if (ip) h["CF-Connecting-IP"] = ip;
     let payload;
     if (body !== undefined) {
-      payload = typeof body === "string" ? body : JSON.stringify(body);
+      payload = typeof body === "string" || body instanceof Uint8Array ? body : JSON.stringify(body);
       h["Content-Type"] = h["Content-Type"] || "application/json";
     }
     const res = await mf.dispatchFetch(BASE + path, { method, headers: h, body: payload });

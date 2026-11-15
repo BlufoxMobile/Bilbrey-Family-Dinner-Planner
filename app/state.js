@@ -236,6 +236,29 @@ export class Store {
     return data;
   }
 
+  /** v2.5.4: saves one picture (a Blob) in the family's storage → its photo id. */
+  async putPhoto(blob) {
+    if (!this.fetchFn || !this.apiBase || !this.device.key) throw new ApiError(0, 'No connection');
+    let res;
+    try {
+      res = await this.fetchFn(`${this.apiBase}/api/photo`, { method: 'POST', headers: { 'Content-Type': blob.type || 'image/jpeg', 'X-Family-Key': this.device.key }, body: blob, cache: 'no-store' });
+    } catch {
+      throw new ApiError(0, 'No connection');
+    }
+    let data = null;
+    try { data = await res.json(); } catch { data = null; }
+    if (!res.ok || !data?.id) throw new ApiError(res.status, data?.error || `Upload failed (${res.status})`, data);
+    return data.id;
+  }
+
+  /** v2.5.4: one family picture as a Blob (the key goes in a header, never the URL). */
+  async getPhoto(id) {
+    if (!this.fetchFn || !this.apiBase || !this.device.key) throw new ApiError(0, 'No connection');
+    const res = await this.fetchFn(`${this.apiBase}/api/photo?id=${encodeURIComponent(id)}`, { headers: { 'X-Family-Key': this.device.key } });
+    if (!res.ok) throw new ApiError(res.status, `Photo unavailable (${res.status})`);
+    return res.blob();
+  }
+
   /** Checks the Worker. Returns health or null when unreachable. */
   async checkHealth() {
     try {

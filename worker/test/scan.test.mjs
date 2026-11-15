@@ -261,5 +261,21 @@ test("brand and label pass through; a form tag keeps canned items off fresh or f
   assert.equal(chicken.label, undefined);
   const text = w.calls[0].inputs.messages[1].content.find((p) => p.type === "text").text;
   assert.ok(text.includes('"brand"') && text.includes('"label"'), "the prompt asks for brand and label");
-  assert.deepEqual(w.calls[0].inputs.response_format.json_schema.schema.properties.items.items.required, ["name", "brand", "label", "matchId", "qty", "unit", "confidence"]);
+  assert.deepEqual(w.calls[0].inputs.response_format.json_schema.schema.properties.items.items.required, ["name", "brand", "label", "matchId", "qty", "unit", "confidence", "box"]);
+});
+
+test("a scanned product's box comes back in thousandths, and nonsense boxes are dropped", async () => {
+  w.setAI(() => ({ response: { items: [
+    { name: "Cut green beans, canned", matchId: "greenBeans", qty: 2, unit: "can", confidence: 0.9, box: [120, 340, 410, 620] },
+    { name: "Spaghetti, dry pasta", matchId: "spaghetti", qty: 1, unit: "box", confidence: 0.9, box: [0.1, 0.2, 0.5, 0.9] },
+    { name: "Jasmine rice", matchId: "jasmine-rice", qty: 1, unit: "bag", confidence: 0.9, box: [400, 300, 410, 900] },
+    { name: "Kosher salt", matchId: "salt", qty: 1, unit: "box", confidence: 0.9, box: [500, 300, 100, 900] },
+  ] } }));
+  const r = await scan({ image: PNG_DATA_URL, known: KNOWN });
+  assert.equal(r.status, 200);
+  const by = Object.fromEntries(r.json.items.map((i) => [i.matchId, i.box ?? null]));
+  assert.deepEqual(by.greenBeans, [120, 340, 410, 620]);
+  assert.deepEqual(by.spaghetti, [100, 200, 500, 900], "fractions scale up");
+  assert.equal(by["jasmine-rice"], null, "too thin");
+  assert.equal(by.salt, null, "out of order");
 });

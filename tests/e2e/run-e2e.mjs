@@ -269,7 +269,9 @@ test('shopping: fix a price, copy & open a store, check off, done shopping fills
   const href = await page.getAttribute('dialog[open] a.btn-primary', 'href');
   assert.match(href, /jewelosco\.com/);
   const copied = await page.evaluate(() => navigator.clipboard.readText());
-  assert.match(copied, /^Jewel-Osco list for /);
+  assert.match(copied, /^Shop my grocery list/, 'copied in the format Jewel-Osco AI reads');
+  assert.ok(copied.length <= 2000, 'fits Jewel-Osco AI’s box');
+  assert.ok(await page.$('dialog[open] [data-action="list:copy-ai"]'), 'Copy for Jewel-Osco AI');
   assert.ok(!/undefined|NaN/.test(copied));
   await page.waitForTimeout(400);
   await shot(page, 'e2e-17-handoff-jewel');

@@ -136,7 +136,8 @@
         "shop": "https://www.jewelosco.com/",
         "searchTemplate": "https://www.jewelosco.com/shop/search-results.html?q={query}",
         "searchTemplateNote": "Replace {query} with URL-encoded item words.",
-        "appsPage": "https://www.jewelosco.com/about-us/mobile-apps.html"
+        "appsPage": "https://www.jewelosco.com/about-us/mobile-apps.html",
+        "assistant": "https://www.jewelosco.com/assistant/chat"
       },
       "apps": {
         "ios": {
@@ -155,17 +156,19 @@
       },
       "handoff": {
         "method": "paste-into-ai-assistant",
-        "listFormat": "Plain list, one item per line with an amount, e.g. 'Signature Select spaghetti, 16 oz — 2'. The assistant matches each line to a product.",
+        "listFormat": "Plain lines, one item each, under 2,000 characters per paste (the assistant's box limit, checked 2026-11-15): '2 Bonduelle Chicken BLT Salad Bowl', 'Boar's Head Black Forest Ham, 1 lb'. The planner's 'Copy for Jewel-Osco AI' makes this format and splits long lists.",
         "steps": [
-          "Tap Copy & open Jewel-Osco — your list is copied.",
-          "In the Jewel-Osco app, tap Ask AI (on jewelosco.com it's the AI Shopping Assistant in Meals Hub), paste the list, and ask it to add everything to your cart.",
-          "Check each match (brand and size) in the cart and make sure the store is Roosevelt & Park, Glen Ellyn.",
-          "Choose DriveUp & Go pickup or delivery and check out. If Ask AI isn't there, search each item and tap Add."
+          "Tap Copy & open Jewel-Osco — the list is copied in the format Jewel-Osco AI reads.",
+          "Open the Jewel-Osco app (or jewelosco.com) and tap Jewel-Osco AI, then Shop my grocery list.",
+          "Paste and send. It matches each line to a product; check brand and size, then add them to your cart.",
+          "Make sure the store is Roosevelt Rd, Glen Ellyn, then choose DriveUp & Go or delivery and check out."
         ],
         "confirmed": [
           "Albertsons' AI Shopping Assistant (announced Dec 3, 2025) lets you type a list or upload a picture of a written grocery list and finds products for each item; it is on all banner websites, including Jewel-Osco, in Meals Hub.",
           "At launch it was website-only, with the mobile apps planned for early 2026.",
-          "The Jewel-Osco app listing (updated Nov 11, 2026) advertises 'Ask AI' and building repeatable shopping lists and grocery lists from recipes."
+          "The Jewel-Osco app listing (updated Nov 11, 2026) advertises 'Ask AI' and building repeatable shopping lists and grocery lists from recipes.",
+          "On jewelosco.com (checked 2026-11-15, signed in), Jewel-Osco AI is at /assistant/chat; its 'Shop my grocery list' prompt says 'Paste or type your grocery list; we'll match products live', and the message box takes at most 2,000 characters.",
+          "jewelosco.com's iPhone link file (checked 2026-11-15) only claims /home* pages, so ordinary jewelosco.com links open Safari, not the app. The AppsFlyer OneLink (apps.ios.storeLink) or an iPhone Shortcut opens the app."
         ],
         "unconfirmed": [
           "The exact button path to Ask AI inside the Jewel-Osco app.",
@@ -180,7 +183,7 @@
       },
       "coupons": {
         "label": "Clip Jewel coupons",
-        "url": "https://www.jewelosco.com/foru/coupons-deals.html",
+        "url": "https://www.jewelosco.com/loyalty/coupons-deals.html",
         "pageTitle": "Deals+ | Jewel-Osco (for U digital coupons; sign-in required)",
         "clipAll": false,
         "clipAllNote": "We could not find a 'Clip All' button on Jewel-Osco's site or in its for U help pages — plan on tapping Clip on each deal (use Categories to find what's on your list).",

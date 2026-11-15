@@ -7,7 +7,8 @@
 // state.deals["jewel/bodyArmorOM"] = {
 //   label, size (catalog units), price (shelf price for that pack today, sale included),
 //   was (regular price, optional), ends (YYYY-MM-DD the sale ends, optional),
-//   coupon: { price (pack price once clipped), text, expires } (optional),
+//   coupon: { price (pack price once clipped), text, expires, clipped (already clipped in the
+//             family's account), q (words that find it on the store's coupon page) } (optional),
 //   checked (YYYY-MM-DD), by, url (optional)
 // }
 
@@ -35,7 +36,10 @@ export function activeDeal(state, store, id, today = null) {
   let coupon = null;
   const cp = num(d.coupon?.price);
   if (d.coupon && cp != null && cp >= 0 && (!d.coupon.expires || !today || d.coupon.expires >= today)) {
-    coupon = { price: cp, text: String(d.coupon.text || 'Clip the store coupon'), expires: ISO.test(String(d.coupon.expires || '')) ? d.coupon.expires : null };
+    coupon = {
+      price: cp, text: String(d.coupon.text || 'Clip the store coupon'), expires: ISO.test(String(d.coupon.expires || '')) ? d.coupon.expires : null,
+      clipped: d.coupon.clipped === true, q: typeof d.coupon.q === 'string' ? d.coupon.q.slice(0, 60) : '',
+    };
   }
   return {
     key: dealKey(store, id), store, id, size, shelf,

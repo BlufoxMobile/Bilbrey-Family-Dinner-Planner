@@ -19,7 +19,7 @@
 import { DurableObject } from "cloudflare:workers";
 
 const SERVICE = "bilbrey-dinner-planner";
-const VERSION = "2.3.0";
+const VERSION = "2.4.0";
 const KITCHEN_NAME = "bilbrey";
 
 // ── CORS (SPEC §5) ────────────────────────────────────────────────────────────────────────────
@@ -47,6 +47,9 @@ const LIMITS = {
   maxReceiptImagesChars: Math.floor(4.5 * MB), // all receipt image data URLs together
   maxReceiptBody: 5 * MB,
   maxReceiptLines: 200,
+  maxPhotoBytes: 400 * 1024, // one pantry photo (a resized item picture)
+  maxPhotos: 2000, // photos kept for the family
+  maxPhotoTotalBytes: 200 * MB,
 };
 
 // ── Family-key backoff ────────────────────────────────────────────────────────────────────────
@@ -113,6 +116,8 @@ const ROUTES = {
   "/api/ops": { POST: handleOps },
   "/api/scan": { POST: handleScan },
   "/api/receipt": { POST: handleReceipt },
+  "/api/photo": { GET: handleGetPhoto, POST: handlePutPhoto },
+  "/api/photo/delete": { POST: handleDeletePhoto },
 };
 
 async function route(request, env, origin) {
@@ -201,6 +206,47 @@ async function handleScan(request, env, url, origin) {
   return json(200, result, origin);
 }
 
+// ── Pantry photos (v2.5.4): the family's own pictures of what's on the shelf. They live here, in the
+// family's passcode-protected storage, never in the public GitHub repo. ────────────────────────────
+const PHOTO_TYPES = new Set(["image/webp", "image/jpeg", "image/png"]);
+const PHOTO_ID_RE = /^[a-f0-9]{32}$/;
+
+async function handlePutPhoto(request, env, url, origin) {
+  const type = String(request.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase();
+  if (!PHOTO_TYPES.has(type)) throw new HttpError(415, "Send the photo as image/webp, image/jpeg or image/png.");
+  const declared = Number(request.headers.get("Content-Length"));
+  if (Number.isFinite(declared) && declared > LIMITS.maxPhotoBytes) {
+    throw new HttpError(413, `That photo is too large (limit ${formatBytes(LIMITS.maxPhotoBytes)}). Resize it first.`);
+  }
+  const buf = await request.arrayBuffer();
+  if (buf.byteLength === 0) throw new HttpError(400, "The photo is empty.");
+  if (buf.byteLength > LIMITS.maxPhotoBytes) throw new HttpError(413, `That photo is too large (limit ${formatBytes(LIMITS.maxPhotoBytes)}). Resize it first.`);
+  return fromResult(await kitchen(env).putPhoto(familyKey(request), clientOf(request), type, buf), origin);
+}
+
+async function handleGetPhoto(request, env, url, origin) {
+  const id = String(url.searchParams.get("id") || "").trim().toLowerCase();
+  if (!PHOTO_ID_RE.test(id)) throw new HttpError(400, "id must be a photo id.");
+  const res = await kitchen(env).getPhoto(familyKey(request), clientOf(request), id);
+  if (res.status !== 200) return fromResult(res, origin);
+  return new Response(res.data, {
+    status: 200,
+    headers: {
+      "Content-Type": res.mime,
+      "Cache-Control": "private, max-age=31536000, immutable",
+      "X-Content-Type-Options": "nosniff",
+      ...corsHeaders(origin),
+    },
+  });
+}
+
+async function handleDeletePhoto(request, env, url, origin) {
+  const body = parseJson(await readBodyText(request, LIMITS.maxSmallBody));
+  const id = String(isPlainObject(body) ? body.id || "" : "").trim().toLowerCase();
+  if (!PHOTO_ID_RE.test(id)) throw new HttpError(400, "id must be a photo id.");
+  return fromResult(await kitchen(env).deletePhoto(familyKey(request), clientOf(request), id), origin);
+}
+
 async function handleReceipt(request, env, url, origin) {
   const auth = await kitchen(env).authorize(familyKey(request), clientOf(request));
   if (auth.status !== 200) return fromResult(auth, origin);
@@ -274,6 +320,13 @@ export class Kitchen extends DurableObject {
       revision INTEGER NOT NULL,
       at INTEGER NOT NULL
     )`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS photos (
+      id TEXT PRIMARY KEY,
+      mime TEXT NOT NULL,
+      data BLOB NOT NULL,
+      bytes INTEGER NOT NULL,
+      at TEXT NOT NULL
+    )`);
     this.doc = null; // in-memory cache of the doc row (this object is the only writer)
     this.authRow = undefined; // undefined = not loaded, null = no passcode yet
   }
@@ -318,6 +371,33 @@ export class Kitchen extends DurableObject {
     );
     this.authRow = undefined;
     this.sql.exec("DELETE FROM auth_failures");
+    return { status: 200, body: { ok: true } };
+  }
+
+  async putPhoto(key, client, mime, data) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    const totals = this.sql.exec("SELECT COUNT(*) AS n, COALESCE(SUM(bytes), 0) AS b FROM photos").toArray()[0];
+    if (totals.n >= LIMITS.maxPhotos || totals.b + data.byteLength > LIMITS.maxPhotoTotalBytes) {
+      return failure(507, "The family photo storage is full. Remove some pantry photos first.");
+    }
+    const id = crypto.randomUUID().replace(/-/g, "");
+    this.sql.exec("INSERT INTO photos (id, mime, data, bytes, at) VALUES (?, ?, ?, ?, ?)", id, mime, data, data.byteLength, new Date().toISOString());
+    return { status: 201, body: { ok: true, id, bytes: data.byteLength } };
+  }
+
+  async getPhoto(key, client, id) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    const row = this.sql.exec("SELECT mime, data FROM photos WHERE id = ?", id).toArray()[0];
+    if (!row) return failure(404, "That photo isn't here any more.");
+    return { status: 200, mime: row.mime, data: row.data };
+  }
+
+  async deletePhoto(key, client, id) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    this.sql.exec("DELETE FROM photos WHERE id = ?", id);
     return { status: 200, body: { ok: true } };
   }
 
@@ -767,6 +847,7 @@ function scanUserPrompt(known) {
     '- "qty": how many you can see (cans, boxes, bags, jars, bottles, packages); if there is a single large package whose label shows its weight, you may give that weight instead. null if you can\'t tell.',
     '- "unit": the unit for qty, e.g. "can", "box", "bag", "jar", "bottle", "package", "lb", "oz". null when qty is null.',
     '- "confidence": a number from 0 to 1 for how sure you are of what the product is.',
+    '- "box": where that product is in the photo, as [left, top, right, bottom] in thousandths of the photo\'s width and height (0 to 1000), around all of its packages; null if you can\'t tell.',
     "",
     "Rules:",
     "- One entry per distinct product: 4 identical cans are ONE entry with qty 4.",
@@ -774,7 +855,7 @@ function scanUserPrompt(known) {
     "- Skip things that are not food or drink (cleaning supplies, dishes, appliances, containers).",
     "- Don't guess at items you can't actually see. If there is no food in the photo, return {\"items\": []}.",
     "",
-    'Answer with exactly one JSON object: {"items":[{"name":"Cut green beans, canned","brand":"Del Monte","label":"Cut Green Beans","matchId":null,"qty":3,"unit":"can","confidence":0.9}]}',
+    'Answer with exactly one JSON object: {"items":[{"name":"Cut green beans, canned","brand":"Del Monte","label":"Cut Green Beans","matchId":null,"qty":3,"unit":"can","confidence":0.9,"box":[120,340,410,620]}]}',
     "",
     "KNOWN ITEMS (id = name):",
     lines.length ? lines.join("\n") : "(none)",
@@ -796,8 +877,9 @@ const SCAN_SCHEMA = {
           qty: { type: ["number", "null"] },
           unit: { type: ["string", "null"] },
           confidence: { type: "number" },
+          box: { type: ["array", "null"], items: { type: "number" } },
         },
-        required: ["name", "brand", "label", "matchId", "qty", "unit", "confidence"],
+        required: ["name", "brand", "label", "matchId", "qty", "unit", "confidence", "box"],
         additionalProperties: false,
       },
     },
@@ -1145,11 +1227,29 @@ function normalizeScanItems(rawItems, known) {
     }
     const brand = cleanLabelText(raw.brand, 60);
     const label = cleanLabelText(raw.label ?? raw.productName ?? raw.product_name, 120);
-    const item = { name, matchId, qty, unit, confidence, ...(brand ? { brand } : {}), ...(label ? { label } : {}) };
+    const box = cleanBox(raw.box ?? raw.bbox ?? raw.bounds);
+    const item = { name, matchId, qty, unit, confidence, ...(brand ? { brand } : {}), ...(label ? { label } : {}), ...(box ? { box } : {}) };
     index.set(key, item);
     out.push(item);
   }
   return out;
+}
+
+/**
+ * Where a scanned product sits in the photo: [left, top, right, bottom] in thousandths (0–1000).
+ * Fractions (0–1) are scaled up. Boxes too small (under 3% a side) or out of order are dropped:
+ * the app then shows the whole photo instead.
+ */
+export function cleanBox(v) {
+  if (!Array.isArray(v) || v.length !== 4) return null;
+  let n = v.map((x) => toNumber(x));
+  if (n.some((x) => x === null || x < 0)) return null;
+  if (n.every((x) => x <= 1)) n = n.map((x) => x * 1000);
+  if (n.some((x) => x > 1000.5)) return null;
+  n = n.map((x) => Math.round(Math.min(1000, Math.max(0, x))));
+  const [l, t, r, b] = n;
+  if (r - l < 30 || b - t < 30) return null;
+  return n;
 }
 
 function toNumber(v) {
