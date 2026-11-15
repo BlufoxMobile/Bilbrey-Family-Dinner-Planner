@@ -1,0 +1,2522 @@
+{
+ "source": "ChatGPT-built Bilbrey Family Dinner Planner (Kitchen chunk), extracted 2026-11-14",
+ "family": [
+  "Jeff",
+  "Candi",
+  "Knox",
+  "Jordan",
+  "Jackson"
+ ],
+ "monthlyTarget": 650,
+ "ingredients": {
+  "chicken": {
+   "name": "Boneless chicken breast",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 10,
+   "price": 29.9
+  },
+  "beef": {
+   "name": "Lean ground beef",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 10,
+   "price": 44.9
+  },
+  "pork": {
+   "name": "Boneless pork chops",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 4,
+   "price": 12
+  },
+  "eggs": {
+   "name": "Large eggs",
+   "unit": "eggs",
+   "store": "sams",
+   "pack": 24,
+   "price": 6
+  },
+  "cheese": {
+   "name": "Cheddar cheese",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 32,
+   "price": 8.5
+  },
+  "parm": {
+   "name": "Grated Parmesan",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 16,
+   "price": 7
+  },
+  "yogurt": {
+   "name": "Plain Greek yogurt",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 40,
+   "price": 5.5
+  },
+  "butter": {
+   "name": "Unsalted butter",
+   "unit": "tbsp",
+   "store": "sams",
+   "pack": 64,
+   "price": 10.5
+  },
+  "milk": {
+   "name": "Milk",
+   "unit": "cups",
+   "store": "jewel",
+   "pack": 8,
+   "price": 2.29
+  },
+  "buns": {
+   "name": "Hamburger buns",
+   "unit": "buns",
+   "store": "sams",
+   "pack": 12,
+   "price": 4.49
+  },
+  "bread": {
+   "name": "Whole-grain sandwich bread",
+   "unit": "slices",
+   "store": "sams",
+   "pack": 40,
+   "price": 5.5
+  },
+  "tortillas": {
+   "name": "Medium flour tortillas",
+   "unit": "tortillas",
+   "store": "sams",
+   "pack": 40,
+   "price": 6.5
+  },
+  "cornwrap": {
+   "name": "Corn tortillas",
+   "unit": "tortillas",
+   "store": "jewel",
+   "pack": 30,
+   "price": 2.79
+  },
+  "naan": {
+   "name": "Naan flatbreads",
+   "unit": "pieces",
+   "store": "sams",
+   "pack": 10,
+   "price": 6.5
+  },
+  "spaghetti": {
+   "name": "Dry spaghetti",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 96,
+   "price": 7
+  },
+  "penne": {
+   "name": "Dry penne",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 96,
+   "price": 7
+  },
+  "jasmine": {
+   "name": "Dry jasmine rice",
+   "unit": "cups",
+   "store": "sams",
+   "pack": 24,
+   "price": 15
+  },
+  "basmati": {
+   "name": "Dry basmati rice",
+   "unit": "cups",
+   "store": "jewel",
+   "pack": 5,
+   "price": 4.5
+  },
+  "potatoes": {
+   "name": "Gold potatoes",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 10,
+   "price": 7.5
+  },
+  "sweet": {
+   "name": "Sweet potatoes",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 5,
+   "price": 5.5
+  },
+  "broccoli": {
+   "name": "Frozen broccoli florets",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 4,
+   "price": 6.5
+  },
+  "peas": {
+   "name": "Frozen peas",
+   "unit": "oz",
+   "store": "jewel",
+   "pack": 16,
+   "price": 1.89
+  },
+  "vegetables": {
+   "name": "Frozen mixed vegetables",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 4,
+   "price": 6.5
+  },
+  "corn": {
+   "name": "Frozen corn",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 4,
+   "price": 6
+  },
+  "beans": {
+   "name": "Black beans, 15 oz cans",
+   "unit": "cans",
+   "store": "sams",
+   "pack": 8,
+   "price": 8
+  },
+  "chickpeas": {
+   "name": "Chickpeas, 15 oz cans",
+   "unit": "cans",
+   "store": "jewel",
+   "pack": 1,
+   "price": 1.09
+  },
+  "tomatoes": {
+   "name": "Diced tomatoes, 14.5 oz cans",
+   "unit": "cans",
+   "store": "sams",
+   "pack": 8,
+   "price": 9
+  },
+  "marinara": {
+   "name": "Marinara sauce",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 72,
+   "price": 8.5
+  },
+  "carrots": {
+   "name": "Carrots",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 3,
+   "price": 3
+  },
+  "onions": {
+   "name": "Yellow onions",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 5,
+   "price": 5.5
+  },
+  "peppers": {
+   "name": "Bell peppers",
+   "unit": "peppers",
+   "store": "sams",
+   "pack": 6,
+   "price": 6.49
+  },
+  "slaw": {
+   "name": "Shredded cabbage slaw",
+   "unit": "oz",
+   "store": "jewel",
+   "pack": 14,
+   "price": 2.49
+  },
+  "lettuce": {
+   "name": "Romaine hearts",
+   "unit": "hearts",
+   "store": "sams",
+   "pack": 6,
+   "price": 5.49
+  },
+  "tomato": {
+   "name": "Fresh tomatoes",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 2,
+   "price": 4.5
+  },
+  "cucumber": {
+   "name": "English cucumbers",
+   "unit": "cucumbers",
+   "store": "sams",
+   "pack": 3,
+   "price": 3.99
+  },
+  "spinach": {
+   "name": "Baby spinach",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 16,
+   "price": 4.29
+  },
+  "mushrooms": {
+   "name": "Sliced mushrooms",
+   "unit": "oz",
+   "store": "jewel",
+   "pack": 8,
+   "price": 2.49
+  },
+  "apples": {
+   "name": "Apples",
+   "unit": "lb",
+   "store": "sams",
+   "pack": 5,
+   "price": 7
+  },
+  "oranges": {
+   "name": "Oranges",
+   "unit": "oranges",
+   "store": "sams",
+   "pack": 10,
+   "price": 7
+  },
+  "lemons": {
+   "name": "Lemons",
+   "unit": "lemons",
+   "store": "jewel",
+   "pack": 1,
+   "price": 0.79
+  },
+  "limes": {
+   "name": "Limes",
+   "unit": "limes",
+   "store": "jewel",
+   "pack": 1,
+   "price": 0.49
+  },
+  "garlic": {
+   "name": "Garlic",
+   "unit": "cloves",
+   "store": "jewel",
+   "pack": 10,
+   "price": 0.75
+  },
+  "ginger": {
+   "name": "Fresh ginger",
+   "unit": "oz",
+   "store": "jewel",
+   "pack": 3,
+   "price": 1
+  },
+  "oil": {
+   "name": "Neutral cooking oil",
+   "unit": "tbsp",
+   "store": "sams",
+   "pack": 192,
+   "price": 10
+  },
+  "soy": {
+   "name": "Reduced-sodium soy sauce",
+   "unit": "tbsp",
+   "store": "sams",
+   "pack": 64,
+   "price": 5.5
+  },
+  "honey": {
+   "name": "Honey",
+   "unit": "tbsp",
+   "store": "sams",
+   "pack": 48,
+   "price": 10
+  },
+  "starch": {
+   "name": "Cornstarch",
+   "unit": "tbsp",
+   "store": "jewel",
+   "pack": 54,
+   "price": 2
+  },
+  "peanut": {
+   "name": "Creamy peanut butter",
+   "unit": "tbsp",
+   "store": "sams",
+   "pack": 80,
+   "price": 7
+  },
+  "sesame": {
+   "name": "Toasted sesame oil",
+   "unit": "tsp",
+   "store": "jewel",
+   "pack": 30,
+   "price": 4.29
+  },
+  "bbq": {
+   "name": "Seafood-free barbecue sauce",
+   "unit": "tbsp",
+   "store": "jewel",
+   "pack": 28,
+   "price": 2.99
+  },
+  "mustard": {
+   "name": "Yellow mustard",
+   "unit": "tbsp",
+   "store": "sams",
+   "pack": 56,
+   "price": 3.49
+  },
+  "ketchup": {
+   "name": "Ketchup",
+   "unit": "tbsp",
+   "store": "sams",
+   "pack": 64,
+   "price": 4.49
+  },
+  "pickles": {
+   "name": "Sliced dill pickles",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 32,
+   "price": 3.99
+  },
+  "salsa": {
+   "name": "Tomato salsa",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 48,
+   "price": 6.49
+  },
+  "tikka": {
+   "name": "Tikka masala simmer sauce",
+   "unit": "oz",
+   "store": "jewel",
+   "pack": 15,
+   "price": 3.99
+  },
+  "taco": {
+   "name": "Salt-free taco seasoning",
+   "unit": "tbsp",
+   "store": "jewel",
+   "pack": 10,
+   "price": 3.49
+  },
+  "paprika": {
+   "name": "Smoked paprika",
+   "unit": "tsp",
+   "store": "jewel",
+   "pack": 30,
+   "price": 2.99
+  },
+  "oregano": {
+   "name": "Dried oregano",
+   "unit": "tsp",
+   "store": "jewel",
+   "pack": 24,
+   "price": 2.29
+  },
+  "pepper": {
+   "name": "Ground black pepper",
+   "unit": "tsp",
+   "store": "jewel",
+   "pack": 30,
+   "price": 3.29
+  },
+  "salt": {
+   "name": "Table salt",
+   "unit": "tsp",
+   "store": "jewel",
+   "pack": 120,
+   "price": 1.29
+  },
+  "jalapenos": {
+   "name": "Pickled jalapeños",
+   "unit": "oz",
+   "store": "jewel",
+   "pack": 12,
+   "price": 2.49
+  },
+  "hummus": {
+   "name": "Classic hummus",
+   "unit": "oz",
+   "store": "sams",
+   "pack": 32,
+   "price": 5.99
+  },
+  "minis": {
+   "name": "Frozen personal cheese pizzas (air-fryer labeled)",
+   "unit": "pizzas",
+   "store": "jewel",
+   "pack": 2,
+   "price": 5.99
+  },
+  "fries": {
+   "name": "Frozen French fries",
+   "unit": "oz",
+   "store": "jewel",
+   "pack": 32,
+   "price": 3.99
+  },
+  "greenBeans": {
+   "name": "Cut green beans, 14.5 oz cans",
+   "unit": "cans",
+   "store": "sams",
+   "pack": 8,
+   "price": 8.49
+  },
+  "cannedCorn": {
+   "name": "Sweet corn, 15 oz cans",
+   "unit": "cans",
+   "store": "sams",
+   "pack": 8,
+   "price": 8.49
+  },
+  "cannedCarrots": {
+   "name": "Sliced carrots, 14.5 oz cans",
+   "unit": "cans",
+   "store": "jewel",
+   "pack": 1,
+   "price": 1.29
+  }
+ },
+ "jewelOrAltPacks": {
+  "chicken": [
+   3,
+   11.97
+  ],
+  "beef": [
+   3,
+   17.97
+  ],
+  "pork": [
+   2,
+   7.98
+  ],
+  "eggs": [
+   12,
+   3.49
+  ],
+  "cheese": [
+   8,
+   2.99
+  ],
+  "parm": [
+   8,
+   3.99
+  ],
+  "yogurt": [
+   32,
+   4.99
+  ],
+  "butter": [
+   32,
+   4.99
+  ],
+  "milk": [
+   16,
+   3.69
+  ],
+  "buns": [
+   8,
+   2.29
+  ],
+  "bread": [
+   20,
+   2.99
+  ],
+  "tortillas": [
+   10,
+   2.49
+  ],
+  "cornwrap": [
+   80,
+   5.48
+  ],
+  "naan": [
+   4,
+   3.99
+  ],
+  "spaghetti": [
+   16,
+   1.49
+  ],
+  "penne": [
+   16,
+   1.49
+  ],
+  "jasmine": [
+   5,
+   4.49
+  ],
+  "basmati": [
+   24,
+   17.98
+  ],
+  "potatoes": [
+   5,
+   4.99
+  ],
+  "sweet": [
+   1,
+   1.49
+  ],
+  "broccoli": [
+   1,
+   2.29
+  ],
+  "peas": [
+   64,
+   6.49
+  ],
+  "vegetables": [
+   1,
+   1.99
+  ],
+  "corn": [
+   1,
+   1.89
+  ],
+  "greenBeans": [
+   1,
+   1.09
+  ],
+  "cannedCorn": [
+   1,
+   1.09
+  ],
+  "cannedCarrots": [
+   8,
+   8.49
+  ],
+  "beans": [
+   1,
+   1.09
+  ],
+  "chickpeas": [
+   8,
+   7.98
+  ],
+  "tomatoes": [
+   1,
+   1.29
+  ],
+  "marinara": [
+   24,
+   2.69
+  ],
+  "carrots": [
+   1,
+   1.29
+  ],
+  "onions": [
+   3,
+   3.49
+  ],
+  "peppers": [
+   1,
+   1.49
+  ],
+  "slaw": [
+   32,
+   3.98
+  ],
+  "lettuce": [
+   3,
+   3.99
+  ],
+  "tomato": [
+   1,
+   2.49
+  ],
+  "cucumber": [
+   1,
+   1.79
+  ],
+  "spinach": [
+   8,
+   2.79
+  ],
+  "mushrooms": [
+   24,
+   4.49
+  ],
+  "apples": [
+   3,
+   5.49
+  ],
+  "oranges": [
+   1,
+   0.99
+  ],
+  "lemons": [
+   8,
+   4.99
+  ],
+  "limes": [
+   12,
+   4.99
+  ],
+  "garlic": [
+   45,
+   3.98
+  ],
+  "ginger": [
+   16,
+   4.98
+  ],
+  "oil": [
+   96,
+   6.49
+  ],
+  "soy": [
+   20,
+   2.49
+  ],
+  "honey": [
+   21,
+   5.49
+  ],
+  "starch": [
+   105,
+   4.98
+  ],
+  "peanut": [
+   28,
+   2.99
+  ],
+  "sesame": [
+   100,
+   8.49
+  ],
+  "bbq": [
+   72,
+   5.98
+  ],
+  "mustard": [
+   35,
+   1.99
+  ],
+  "ketchup": [
+   33,
+   2.99
+  ],
+  "pickles": [
+   16,
+   2.99
+  ],
+  "salsa": [
+   16,
+   2.49
+  ],
+  "tikka": [
+   30,
+   7.98
+  ],
+  "taco": [
+   36,
+   7.98
+  ],
+  "paprika": [
+   90,
+   5.98
+  ],
+  "oregano": [
+   75,
+   4.98
+  ],
+  "pepper": [
+   100,
+   6.49
+  ],
+  "salt": [
+   245,
+   2.98
+  ],
+  "jalapenos": [
+   32,
+   4.49
+  ],
+  "hummus": [
+   10,
+   3.49
+  ],
+  "minis": [
+   8,
+   12.98
+  ]
+ },
+ "nameBrandMultiplier": {
+  "cheese": 1.3,
+  "parm": 1.35,
+  "yogurt": 1.3,
+  "butter": 1.3,
+  "milk": 1.18,
+  "buns": 1.3,
+  "bread": 1.35,
+  "tortillas": 1.25,
+  "cornwrap": 1.2,
+  "naan": 1.15,
+  "spaghetti": 1.35,
+  "penne": 1.35,
+  "jasmine": 1.2,
+  "basmati": 1.2,
+  "broccoli": 1.22,
+  "peas": 1.25,
+  "vegetables": 1.25,
+  "corn": 1.25,
+  "greenBeans": 1.35,
+  "cannedCorn": 1.35,
+  "cannedCarrots": 1.35,
+  "beans": 1.35,
+  "chickpeas": 1.35,
+  "tomatoes": 1.3,
+  "marinara": 1.5,
+  "oil": 1.2,
+  "soy": 1.35,
+  "honey": 1.2,
+  "starch": 1.35,
+  "peanut": 1.4,
+  "sesame": 1.2,
+  "bbq": 1.25,
+  "mustard": 1.45,
+  "ketchup": 1.4,
+  "pickles": 1.3,
+  "salsa": 1.25,
+  "tikka": 1.3,
+  "taco": 1.3,
+  "paprika": 1.45,
+  "oregano": 1.45,
+  "pepper": 1.4,
+  "salt": 1.25,
+  "jalapenos": 1.25,
+  "hummus": 1.25,
+  "minis": 1.2
+ },
+ "friesBrandPacks": {
+  "jewel": {
+   "generic": {
+    "pack": 32,
+    "price": 3.99
+   },
+   "name": {
+    "pack": 32,
+    "price": 5.99
+   }
+  },
+  "sams": {
+   "generic": {
+    "pack": 64,
+    "price": 5.97
+   },
+   "name": {
+    "pack": 128,
+    "price": 8.58
+   }
+  }
+ },
+ "sides": {
+  "jewel-fries": {
+   "title": "Air-fryer French fries",
+   "items": {
+    "fries": 32
+   },
+   "steps": [
+    "Use one 32 oz bag of frozen fries for five. Select fries whose package includes air-fryer instructions.",
+    "Cook from frozen at the package temperature in single-layer batches, shaking as directed, until crisp."
+   ]
+  },
+  "steamed-broccoli": {
+   "title": "Steamed broccoli",
+   "items": {
+    "broccoli": 1.25
+   },
+   "steps": [
+    "Microwave the frozen florets according to the package directions. Drain and divide among five plates."
+   ]
+  },
+  "lime-slaw": {
+   "title": "Creamy lime slaw",
+   "items": {
+    "slaw": 14,
+    "limes": 1,
+    "yogurt": 4
+   },
+   "steps": [
+    "Whisk the lime juice with the yogurt and a spoonful of water. Toss with the shredded cabbage and chill until serving."
+   ]
+  },
+  "tomato-cucumber": {
+   "title": "Tomato & cucumber salad",
+   "items": {
+    "cucumber": 2,
+    "tomato": 0.75,
+    "lemons": 1,
+    "oil": 1
+   },
+   "steps": [
+    "Dice the cucumbers and tomatoes. Whisk lemon juice with the oil, toss with the vegetables and let stand for five minutes."
+   ]
+  },
+  "romaine-salad": {
+   "title": "Chopped romaine salad",
+   "items": {
+    "lettuce": 2,
+    "cucumber": 1,
+    "lemons": 1,
+    "oil": 1
+   },
+   "steps": [
+    "Chop the romaine and cucumber. Toss with oil and a squeeze of lemon just before serving."
+   ]
+  },
+  "cucumber-spears": {
+   "title": "Crunchy cucumber spears",
+   "items": {
+    "cucumber": 2
+   },
+   "steps": [
+    "Wash the cucumbers, trim the ends and slice lengthwise into spears. Divide among five plates."
+   ]
+  },
+  "sesame-cucumber": {
+   "title": "Sesame cucumber salad",
+   "items": {
+    "cucumber": 2,
+    "sesame": 2,
+    "soy": 1,
+    "limes": 1
+   },
+   "steps": [
+    "Thinly slice the cucumbers. Toss with sesame oil, soy sauce and lime juice, then chill while the entrée cooks."
+   ]
+  },
+  "buttered-peas": {
+   "title": "Buttered peas",
+   "items": {
+    "peas": 16,
+    "butter": 1
+   },
+   "steps": [
+    "Microwave the peas according to the package. Drain, stir in the butter and serve warm."
+   ]
+  },
+  "canned-green-beans": {
+   "title": "Buttered canned green beans",
+   "items": {
+    "greenBeans": 2,
+    "butter": 1,
+    "pepper": 0.25
+   },
+   "steps": [
+    "Drain the green beans and transfer to a covered, vented microwave-safe dish. Add a spoonful of water, heat until steaming and drain. Toss with butter and black pepper."
+   ]
+  },
+  "canned-corn": {
+   "title": "Sweet corn",
+   "items": {
+    "cannedCorn": 2,
+    "butter": 1
+   },
+   "steps": [
+    "Drain the canned corn into a colander. Place the kernels in a vented microwave-safe dish with butter. Heat, stirring halfway, until hot."
+   ]
+  },
+  "canned-carrots": {
+   "title": "Honey-glazed sliced carrots",
+   "items": {
+    "cannedCarrots": 2,
+    "honey": 1,
+    "butter": 1
+   },
+   "steps": [
+    "Drain the canned carrots and put them in a vented microwave-safe dish with butter and honey. Heat until hot, then gently toss to glaze."
+   ]
+  },
+  "black-beans": {
+   "title": "Warm black beans",
+   "items": {
+    "beans": 2,
+    "taco": 0.5,
+    "limes": 1
+   },
+   "steps": [
+    "Rinse and drain the black beans. Mix with taco seasoning and a splash of water in a vented microwave-safe dish. Heat until steaming and squeeze lime juice over the top."
+   ]
+  },
+  "pepper-onions": {
+   "title": "Grilled peppers & onions",
+   "items": {
+    "peppers": 3,
+    "onions": 0.75,
+    "oil": 1
+   },
+   "steps": [
+    "Quarter the peppers and cut the onions into thick rounds. Brush with oil. Grill on a clean, preheated electric grill until tender and charred at the edges, then slice."
+   ]
+  },
+  "carrot-sticks": {
+   "title": "Fresh carrot sticks",
+   "items": {
+    "carrots": 1
+   },
+   "steps": [
+    "Scrub the carrots, trim the tops and cut into sticks. Divide into five portions."
+   ]
+  },
+  "apple-slices": {
+   "title": "Crisp apple slices",
+   "items": {
+    "apples": 1.5
+   },
+   "steps": [
+    "Wash and core the apples. Slice just before serving and divide among five plates."
+   ]
+  },
+  "orange-wedges": {
+   "title": "Fresh orange wedges",
+   "items": {
+    "oranges": 3
+   },
+   "steps": [
+    "Scrub the oranges under running water, then cut into wedges and divide among five plates."
+   ]
+  },
+  "potato-wedges": {
+   "title": "Air-fryer potato wedges",
+   "items": {
+    "potatoes": 2,
+    "oil": 1,
+    "salt": 0.5
+   },
+   "steps": [
+    "Scrub the potatoes, cut into slim wedges and toss with oil and salt. Air-fry at 390°F in single-layer batches for about 18–24 minutes per batch, shaking halfway, until tender and browned."
+   ]
+  },
+  "sweet-potatoes": {
+   "title": "Buttered sweet potatoes",
+   "items": {
+    "sweet": 2.5,
+    "butter": 2
+   },
+   "steps": [
+    "Scrub and pierce the sweet potatoes. Microwave in batches, turning halfway, until a knife slides into the center, about 8–15 minutes per batch depending on size. Split and top with butter."
+   ]
+  },
+  "warm-naan": {
+   "title": "Warm naan",
+   "items": {
+    "naan": 5
+   },
+   "steps": [
+    "Wrap the flatbreads in a damp paper towel and microwave in short bursts until warm and pliable. Cut each into wedges."
+   ]
+  },
+  "garlic-toast": {
+   "title": "Garlic toast",
+   "items": {
+    "bread": 5,
+    "butter": 2,
+    "garlic": 2
+   },
+   "steps": [
+    "Soften the butter and stir in minced garlic. Spread over the bread and toast buttered-side down on a clean outdoor griddle over medium-low heat until golden. Cut each slice in half."
+   ]
+  },
+  "grilled-apples": {
+   "title": "Grilled apple wedges",
+   "items": {
+    "apples": 1.5,
+    "oil": 0.5
+   },
+   "steps": [
+    "Core the apples and cut into thick wedges. Brush lightly with oil and grill on a clean electric grill until marked and just tender."
+   ]
+  },
+  "tomato-soup": {
+   "title": "Creamy tomato soup",
+   "items": {
+    "marinara": 24,
+    "milk": 2,
+    "chickpeas": 1,
+    "oregano": 1
+   },
+   "steps": [
+    "Drain and mash the chickpeas finely. In a deep microwave-safe bowl, mix with the marinara, milk, oregano and enough water to thin to soup consistency.",
+    "Heat loosely covered, stirring every minute, until steaming throughout. Ladle into five small bowls."
+   ]
+  },
+  "smashed-potatoes": {
+   "title": "Buttery smashed potatoes",
+   "items": {
+    "potatoes": 2,
+    "butter": 2,
+    "milk": 0.25
+   },
+   "steps": [
+    "Scrub and dice the potatoes. Microwave in a vented microwave-safe dish with a splash of water, stirring every few minutes, until fork-tender. Drain. Mash with butter and milk."
+   ]
+  },
+  "lemon-chickpeas": {
+   "title": "Lemon chickpeas",
+   "items": {
+    "chickpeas": 2,
+    "lemons": 1,
+    "oil": 1,
+    "oregano": 0.5
+   },
+   "steps": [
+    "Drain and rinse the chickpeas and warm in a vented microwave-safe bowl with a splash of water. Drain, then toss with oil, oregano and lemon juice."
+   ]
+  }
+ },
+ "sharedSteps": {
+  "j": "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+  "M": "Flatten the chicken breasts to an even thickness. Grill on a preheated indoor electric grill until the center reaches 165°F. Transfer to a clean plate, rest briefly and slice.",
+  "N": "Brown the ground beef on the outdoor griddle, breaking it into small pieces. When it reaches 160°F, move it to a clean dish.",
+  "P": "Cut the chicken into bite-size pieces. Heat the oil on the outdoor griddle over medium-high heat. Sear in a single layer, turning until a thermometer reads 165°F in the thickest pieces. Transfer to a clean plate.",
+  "F": "Divide the beef into ten loose balls. On the preheated outdoor griddle, space them apart, press once into thin patties and season with the salt. Sear until the edges brown, scrape and flip. Check the centers reach 160°F, inserting the thermometer sideways.",
+  "I": "Wrap the tortillas in a damp paper towel and microwave in short bursts until soft.",
+  "L": "Microwave the frozen broccoli according to the package directions and drain.",
+  "R": "Cut chicken into bite-size pieces, coat with the oil and two tablespoons of cornstarch, and air-fry at 390°F in single-layer batches, turning halfway, until the thickest pieces reach 165°F.",
+  "z": "Scrub and pierce the potatoes. Microwave in batches, turning halfway, until a knife slides easily into the centers, about 8–15 minutes per batch. Split them open.",
+  "ye": "Cook the basmati rice with water using the package’s microwave directions in a large vented microwave-safe bowl. Rest covered, then fluff with a fork."
+ },
+ "recipes": [
+  {
+   "id": "smashburgers",
+   "title": "Blackstone smashburgers",
+   "subtitle": "Two seared patties, melted cheddar and dill pickles on a toasted bun.",
+   "category": "Burgers",
+   "minutes": 30,
+   "method": "Blackstone",
+   "tags": [
+    "burger",
+    "family favorite"
+   ],
+   "items": {
+    "beef": 2,
+    "buns": 5,
+    "cheese": 5,
+    "pickles": 5,
+    "mustard": 3,
+    "salt": 0.5
+   },
+   "steps": [
+    "Divide the beef into ten loose balls. On the preheated outdoor griddle, space them apart, press once into thin patties and season with the salt. Sear until the edges brown, scrape and flip. Check the centers reach 160°F, inserting the thermometer sideways.",
+    "Lay cheddar on five patties and let it melt. Toast the cut buns on a clean part of the griddle. Spread with mustard, then stack two patties and pickles on each bun."
+   ],
+   "sides": [
+    "jewel-fries"
+   ]
+  },
+  {
+   "id": "orange-chicken",
+   "title": "Sticky orange chicken",
+   "subtitle": "Bite-size chicken glazed with fresh orange, garlic and honey.",
+   "category": "Asian-inspired",
+   "minutes": 35,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "family favorite",
+    "citrus"
+   ],
+   "items": {
+    "chicken": 2,
+    "oranges": 3,
+    "soy": 3,
+    "honey": 2,
+    "starch": 1.5,
+    "garlic": 3,
+    "oil": 1
+   },
+   "steps": [
+    "Finely grate the zest of one orange and juice all three. In a microwave-safe bowl, whisk the juice and zest with soy sauce, honey, minced garlic and cornstarch. Microwave in 30-second bursts, stirring until bubbling and glossy.",
+    "Cut the chicken into bite-size pieces. Heat the oil on the outdoor griddle over medium-high heat. Sear in a single layer, turning until a thermometer reads 165°F in the thickest pieces. Transfer to a clean plate.",
+    "Toss the warm pieces in the thickened orange glaze and divide among five plates."
+   ],
+   "sides": [
+    "steamed-broccoli",
+    "warm-naan"
+   ]
+  },
+  {
+   "id": "brown-butter-spaghetti",
+   "title": "Brown butter spaghetti with grilled chicken",
+   "subtitle": "Spaghetti, golden brown butter and Parmesan topped with sliced chicken.",
+   "category": "Pasta",
+   "minutes": 50,
+   "method": "Electric grill + microwave",
+   "tags": [
+    "family favorite"
+   ],
+   "items": {
+    "chicken": 2,
+    "spaghetti": 16,
+    "butter": 6,
+    "parm": 4,
+    "pepper": 0.5
+   },
+   "steps": [
+    "Flatten the chicken breasts to an even thickness. Grill on a preheated indoor electric grill until the center reaches 165°F. Transfer to a clean plate, rest briefly and slice.",
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Slice the butter into a deep microwave-safe glass bowl. Cover with a microwave-safe plate, leaving a small steam vent. Heat until melted, then in 20–30-second bursts, watching closely. Stop when the milk solids are golden brown and smell nutty. Use mitts to handle the bowl.",
+    "Toss the hot pasta with all the brown butter and toasted milk solids, Parmesan and pepper. Loosen with reserved pasta water, then divide among five plates and add the sliced chicken."
+   ],
+   "sides": [
+    "buttered-peas",
+    "romaine-salad"
+   ]
+  },
+  {
+   "id": "tikka-masala",
+   "title": "Chicken tikka masala",
+   "subtitle": "Seared chicken in a creamy spiced tomato sauce with wilted spinach.",
+   "category": "Asian-inspired",
+   "minutes": 35,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "family favorite"
+   ],
+   "items": {
+    "chicken": 2,
+    "tikka": 25,
+    "spinach": 8,
+    "yogurt": 4,
+    "oil": 1
+   },
+   "steps": [
+    "Cut the chicken into bite-size pieces. Heat the oil on the outdoor griddle over medium-high heat. Sear in a single layer, turning until a thermometer reads 165°F in the thickest pieces. Transfer to a clean plate.",
+    "In a deep microwave-safe dish, mix the sauce with the spinach and a splash of water. Cover loosely and microwave, stirring every minute, until bubbling and the spinach wilts.",
+    "Fold the chicken into the bubbling sauce and heat through. Stir in yogurt off heat."
+   ],
+   "sides": [
+    "warm-naan",
+    "cucumber-spears"
+   ]
+  },
+  {
+   "id": "onion-burgers",
+   "title": "Griddled onion burgers",
+   "subtitle": "Thin onions caramelize beneath double beef patties and cheddar.",
+   "category": "Burgers",
+   "minutes": 30,
+   "method": "Blackstone",
+   "tags": [
+    "burger"
+   ],
+   "items": {
+    "beef": 2,
+    "buns": 5,
+    "onions": 0.75,
+    "mustard": 3,
+    "cheese": 5,
+    "salt": 0.5
+   },
+   "steps": [
+    "Slice the onions paper-thin. Portion the beef into ten balls on a hot outdoor griddle. Top each with onions, smash thin and salt lightly. Flip once browned, letting the onions caramelize underneath. Check each patty reaches 160°F.",
+    "Melt cheese over five patties. Toast the cut buns on a clean part of the griddle. Spread with mustard and stack two onion patties on each bun."
+   ],
+   "sides": [
+    "jewel-fries"
+   ]
+  },
+  {
+   "id": "beef-tacos",
+   "title": "Griddle beef tacos",
+   "subtitle": "Seasoned beef, black beans and fresh toppings for three tacos each.",
+   "category": "Tex-Mex",
+   "minutes": 30,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "taco night"
+   ],
+   "items": {
+    "beef": 2,
+    "cornwrap": 15,
+    "beans": 1,
+    "taco": 2,
+    "salsa": 8,
+    "lettuce": 1,
+    "cheese": 4,
+    "limes": 1
+   },
+   "steps": [
+    "Brown the beef on the outdoor griddle, breaking it up and checking that it reaches 160°F. Stir in the taco seasoning, drained beans and a splash of water. Let the liquid cook off.",
+    "Wrap the tortillas in a damp paper towel and microwave in short bursts until soft.",
+    "Shred the lettuce and cheese. Fill three tortillas per person with beef and beans, then pass the lettuce, cheese, salsa and lime wedges."
+   ],
+   "sides": [
+    "canned-corn",
+    "lime-slaw"
+   ]
+  },
+  {
+   "id": "chicken-lo-mein",
+   "title": "Chicken lo mein",
+   "subtitle": "A griddle full of garlicky noodles, cabbage ribbons and chicken.",
+   "category": "Asian-inspired",
+   "minutes": 45,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "noodle night"
+   ],
+   "items": {
+    "chicken": 2,
+    "spaghetti": 16,
+    "slaw": 14,
+    "carrots": 0.5,
+    "soy": 4,
+    "sesame": 2,
+    "garlic": 4,
+    "oil": 1
+   },
+   "steps": [
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Cut the chicken into bite-size pieces. Heat the oil on the outdoor griddle over medium-high heat. Sear in a single layer, turning until a thermometer reads 165°F in the thickest pieces. Transfer to a clean plate.",
+    "Julienne the carrots. Sizzle the carrots, slaw and minced garlic on the same griddle with a spoonful of pasta water until just tender. Fold in chicken, noodles, soy sauce and sesame oil. Toss until glossy."
+   ],
+   "sides": [
+    "sesame-cucumber",
+    "orange-wedges"
+   ]
+  },
+  {
+   "id": "green-chile-burgers",
+   "title": "Green chile cheeseburgers",
+   "subtitle": "Pickled jalapeños, cheddar and a cool yogurt spread on a double patty.",
+   "category": "Burgers",
+   "minutes": 30,
+   "method": "Blackstone",
+   "tags": [
+    "burger"
+   ],
+   "items": {
+    "beef": 2,
+    "buns": 5,
+    "cheese": 5,
+    "jalapenos": 3,
+    "yogurt": 3,
+    "salt": 0.5
+   },
+   "steps": [
+    "Divide the beef into ten loose balls. On the preheated outdoor griddle, space them apart, press once into thin patties and season with the salt. Sear until the edges brown, scrape and flip. Check the centers reach 160°F, inserting the thermometer sideways.",
+    "Melt cheddar over five patties. Toast the cut buns on a clean part of the griddle. Spread with yogurt and stack two patties on each bun. Finish with sliced jalapeños to taste."
+   ],
+   "sides": [
+    "jewel-fries"
+   ]
+  },
+  {
+   "id": "mushroom-burgers",
+   "title": "Mushroom melt burgers",
+   "subtitle": "Browned mushrooms and melted cheddar layered over griddled beef.",
+   "category": "Burgers",
+   "minutes": 35,
+   "method": "Blackstone",
+   "tags": [
+    "burger"
+   ],
+   "items": {
+    "beef": 2,
+    "buns": 5,
+    "mushrooms": 12,
+    "cheese": 5,
+    "oil": 1,
+    "mustard": 3,
+    "salt": 0.5
+   },
+   "steps": [
+    "Sauté sliced mushrooms with oil on the outdoor griddle until browned and move them to a clean dish.",
+    "Divide the beef into ten loose balls. On the preheated outdoor griddle, space them apart, press once into thin patties and season with the salt. Sear until the edges brown, scrape and flip. Check the centers reach 160°F, inserting the thermometer sideways.",
+    "Top five patties with mushrooms and cheddar. Let the cheese melt. Toast the cut buns on a clean part of the griddle. Spread the buns with mustard and stack two patties on each."
+   ],
+   "sides": [
+    "jewel-fries"
+   ]
+  },
+  {
+   "id": "bbq-slaw-burgers",
+   "title": "BBQ slaw burgers",
+   "subtitle": "Double patties lacquered with barbecue sauce and topped with crunchy slaw.",
+   "category": "Burgers",
+   "minutes": 30,
+   "method": "Blackstone",
+   "tags": [
+    "burger"
+   ],
+   "items": {
+    "beef": 2,
+    "buns": 5,
+    "slaw": 6,
+    "yogurt": 2,
+    "bbq": 5,
+    "salt": 0.5
+   },
+   "steps": [
+    "Mix the slaw and yogurt with one tablespoon of the barbecue sauce.",
+    "Divide the beef into ten loose balls. On the preheated outdoor griddle, space them apart, press once into thin patties and season with the salt. Sear until the edges brown, scrape and flip. Check the centers reach 160°F, inserting the thermometer sideways.",
+    "Brush the cooked patties with the remaining barbecue sauce. Toast the cut buns on a clean part of the griddle. Fill each bun with two patties and a spoonful of slaw."
+   ],
+   "sides": [
+    "jewel-fries"
+   ]
+  },
+  {
+   "id": "mustard-pickle-burgers",
+   "title": "Dill pickle burgers",
+   "subtitle": "Chopped dill pickles and mustard-yogurt sauce in every bite.",
+   "category": "Burgers",
+   "minutes": 30,
+   "method": "Blackstone",
+   "tags": [
+    "burger"
+   ],
+   "items": {
+    "beef": 2,
+    "buns": 5,
+    "pickles": 6,
+    "mustard": 3,
+    "yogurt": 4,
+    "salt": 0.5
+   },
+   "steps": [
+    "Mince half the pickles and mix with mustard and yogurt.",
+    "Divide the beef into ten loose balls. On the preheated outdoor griddle, space them apart, press once into thin patties and season with the salt. Sear until the edges brown, scrape and flip. Check the centers reach 160°F, inserting the thermometer sideways.",
+    "Toast the cut buns on a clean part of the griddle. Spread the buns with the pickle sauce and fill each with two patties and the remaining pickle slices."
+   ],
+   "sides": [
+    "jewel-fries"
+   ]
+  },
+  {
+   "id": "chicken-fried-rice",
+   "title": "Chicken fried rice",
+   "subtitle": "Jasmine rice with egg, chicken and colorful vegetables.",
+   "category": "Asian-inspired",
+   "minutes": 45,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "rice",
+    "family favorite"
+   ],
+   "items": {
+    "chicken": 2,
+    "jasmine": 1.75,
+    "eggs": 4,
+    "vegetables": 1,
+    "soy": 4,
+    "sesame": 2,
+    "oil": 2
+   },
+   "steps": [
+    "Cook the jasmine rice with water using the package’s microwave directions in a large vented microwave-safe bowl. Rest covered, then fluff with a fork. While the chicken cooks, spread the fresh cooked rice on a clean platter to release steam.",
+    "Cut the chicken into bite-size pieces. Heat the oil on the outdoor griddle over medium-high heat. Sear in a single layer, turning until a thermometer reads 165°F in the thickest pieces. Transfer to a clean plate.",
+    "Heat frozen vegetables on the griddle until steaming. Push aside, add the beaten eggs and scramble until firm. Fold in the rice, hot chicken, soy sauce and sesame oil and stir-fry until hot throughout."
+   ],
+   "sides": [
+    "sesame-cucumber",
+    "orange-wedges"
+   ]
+  },
+  {
+   "id": "beef-broccoli-noodles",
+   "title": "Beef & broccoli noodles",
+   "subtitle": "Soy-glazed beef crumbles and broccoli tangled through spaghetti.",
+   "category": "Asian-inspired",
+   "minutes": 40,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "noodle night"
+   ],
+   "items": {
+    "beef": 1.5,
+    "spaghetti": 16,
+    "broccoli": 1.5,
+    "soy": 4,
+    "honey": 1,
+    "garlic": 4,
+    "ginger": 0.5
+   },
+   "steps": [
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Microwave the frozen broccoli according to the package directions and drain.",
+    "Brown the ground beef on the outdoor griddle, breaking it up until it reaches 160°F. Add minced garlic and grated ginger. Toss with the broccoli, noodles, soy sauce, honey and a splash of pasta water."
+   ],
+   "sides": [
+    "carrot-sticks",
+    "sesame-cucumber"
+   ]
+  },
+  {
+   "id": "peanut-lime-wraps",
+   "title": "Peanut-lime chicken wraps",
+   "subtitle": "Crunchy cabbage, warm chicken and tangy peanut dressing.",
+   "category": "Asian-inspired",
+   "minutes": 30,
+   "method": "Electric grill + microwave",
+   "tags": [
+    "wraps"
+   ],
+   "items": {
+    "chicken": 2,
+    "tortillas": 10,
+    "slaw": 14,
+    "peanut": 5,
+    "soy": 2,
+    "limes": 2,
+    "garlic": 2,
+    "oil": 1
+   },
+   "steps": [
+    "Flatten the chicken to an even thickness. Brush with the oil and rub with one minced garlic clove. On a preheated indoor electric or outdoor grill over medium-high heat, cook until the center reaches 165°F. Rest on a clean plate, then slice.",
+    "Whisk peanut butter with lime juice, soy sauce, the remaining minced garlic and enough warm water to drizzle.",
+    "Wrap the tortillas in a damp paper towel and microwave in short bursts until soft.",
+    "Divide the slaw and chicken among ten tortillas, spoon over the sauce and roll."
+   ],
+   "sides": [
+    "steamed-broccoli",
+    "orange-wedges"
+   ]
+  },
+  {
+   "id": "ginger-beef-cabbage",
+   "title": "Ginger beef cabbage cups",
+   "subtitle": "Romaine cups filled with ginger beef, cabbage and shredded carrots.",
+   "category": "Asian-inspired",
+   "minutes": 30,
+   "method": "Blackstone",
+   "tags": [
+    "lettuce cups"
+   ],
+   "items": {
+    "beef": 1.5,
+    "slaw": 14,
+    "lettuce": 2,
+    "carrots": 0.5,
+    "ginger": 0.6,
+    "garlic": 3,
+    "soy": 3
+   },
+   "steps": [
+    "Separate and wash the romaine leaves. Shred the carrots.",
+    "Brown the ground beef on the griddle, breaking it apart until it reaches 160°F. Add grated ginger, minced garlic, slaw, carrots and soy sauce. Toss until the vegetables soften.",
+    "Spoon the warm ginger beef filling into whole romaine leaves."
+   ],
+   "sides": [
+    "warm-naan",
+    "canned-carrots"
+   ]
+  },
+  {
+   "id": "honey-ginger-noodles",
+   "title": "Honey-ginger chicken noodles",
+   "subtitle": "Sweet ginger glaze, chicken and bell pepper strips.",
+   "category": "Asian-inspired",
+   "minutes": 45,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "noodle night"
+   ],
+   "items": {
+    "chicken": 2,
+    "spaghetti": 16,
+    "peppers": 3,
+    "ginger": 0.7,
+    "honey": 2,
+    "soy": 3,
+    "garlic": 3,
+    "oil": 1
+   },
+   "steps": [
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Cut the chicken into bite-size pieces. Heat the oil on the outdoor griddle over medium-high heat. Sear in a single layer, turning until a thermometer reads 165°F in the thickest pieces. Transfer to a clean plate.",
+    "Slice the peppers into thin strips. Stir-fry on the griddle with grated ginger, minced garlic and a splash of pasta water. Add the honey and soy, then return chicken and noodles to the griddle and toss."
+   ],
+   "sides": [
+    "canned-green-beans",
+    "sesame-cucumber"
+   ]
+  },
+  {
+   "id": "egg-fried-rice",
+   "title": "Beef & egg fried rice",
+   "subtitle": "Jasmine rice, beef, eggs and vegetables tossed on the griddle.",
+   "category": "Asian-inspired",
+   "minutes": 45,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "rice"
+   ],
+   "items": {
+    "beef": 1.5,
+    "jasmine": 2,
+    "eggs": 10,
+    "vegetables": 1.5,
+    "soy": 3,
+    "ginger": 0.5,
+    "oil": 2,
+    "sesame": 2
+   },
+   "steps": [
+    "Brown the ground beef on the outdoor griddle, breaking it into small pieces. When it reaches 160°F, move it to a clean dish.",
+    "Cook the jasmine rice with water using the package’s microwave directions in a large vented microwave-safe bowl. Rest covered, then fluff with a fork. Spread the fresh cooked rice on a clean tray while preparing the vegetables.",
+    "Heat half the oil on the outdoor griddle. Stir-fry the vegetables with grated ginger until steaming. Push aside, add the remaining oil, then scramble the beaten eggs until firm.",
+    "Fold the rice into the eggs and vegetables and toss with soy sauce and sesame oil until steaming throughout.",
+    "Fold the cooked beef into the rice before serving."
+   ],
+   "sides": [
+    "sesame-cucumber",
+    "steamed-broccoli"
+   ]
+  },
+  {
+   "id": "sesame-tofu-noodles",
+   "title": "Crispy sesame chicken noodles",
+   "subtitle": "Crispy-edged chicken, sesame noodles and shredded carrots.",
+   "category": "Asian-inspired",
+   "minutes": 45,
+   "method": "Air fryer + microwave",
+   "tags": [
+    "noodle night"
+   ],
+   "items": {
+    "chicken": 2,
+    "spaghetti": 18,
+    "carrots": 0.75,
+    "slaw": 10,
+    "soy": 4,
+    "sesame": 3,
+    "starch": 2,
+    "oil": 1.5
+   },
+   "steps": [
+    "Cut chicken into bite-size pieces, coat with the oil and two tablespoons of cornstarch, and air-fry at 390°F in single-layer batches, turning halfway, until the thickest pieces reach 165°F.",
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Shred the carrots. Microwave with the slaw and a splash of water, covered loosely, until just tender. Toss the noodles with soy sauce, sesame oil, a little pasta water and the hot vegetables. Add chicken just before serving."
+   ],
+   "sides": [
+    "cucumber-spears",
+    "orange-wedges"
+   ]
+  },
+  {
+   "id": "pepper-chicken-potatoes",
+   "title": "Black pepper chicken",
+   "subtitle": "Grilled chicken tossed with black pepper and a splash of soy.",
+   "category": "Asian-inspired",
+   "minutes": 30,
+   "method": "Electric grill",
+   "tags": [
+    "grill night"
+   ],
+   "items": {
+    "chicken": 2,
+    "pepper": 1.5,
+    "soy": 3,
+    "oil": 1
+   },
+   "steps": [
+    "Flatten the chicken to an even thickness, brush with oil and sprinkle with black pepper.",
+    "Grill over medium-high heat until the center of each piece reaches 165°F. Rest on a clean plate, slice across the grain and toss with soy sauce."
+   ],
+   "sides": [
+    "potato-wedges",
+    "pepper-onions"
+   ]
+  },
+  {
+   "id": "veggie-chow-mein",
+   "title": "Beef & mushroom chow mein",
+   "subtitle": "Beef, mushrooms and ribbons of egg with soy-sesame noodles.",
+   "category": "Asian-inspired",
+   "minutes": 50,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "noodle night"
+   ],
+   "items": {
+    "beef": 1.5,
+    "spaghetti": 20,
+    "slaw": 14,
+    "mushrooms": 8,
+    "eggs": 8,
+    "soy": 4,
+    "sesame": 2,
+    "garlic": 3,
+    "oil": 1.5
+   },
+   "steps": [
+    "Brown the ground beef on the outdoor griddle, breaking it into small pieces. When it reaches 160°F, move it to a clean dish.",
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Heat the oil on the outdoor griddle. Brown the mushrooms, add the slaw and minced garlic and stir-fry until the cabbage softens. Push aside, add the beaten eggs and scramble until firm.",
+    "Toss the noodles through the hot vegetables and eggs. Season with the soy sauce and sesame oil, adding a splash of pasta water to loosen.",
+    "Toss the cooked beef through the noodles."
+   ],
+   "sides": [
+    "cucumber-spears",
+    "canned-carrots"
+   ]
+  },
+  {
+   "id": "peanut-sweet-potatoes",
+   "title": "Peanut chicken sweet potatoes",
+   "subtitle": "Split sweet potatoes filled with chicken, slaw and peanut sauce.",
+   "category": "Asian-inspired",
+   "minutes": 40,
+   "method": "Electric grill + microwave",
+   "tags": [
+    "stuffed potatoes"
+   ],
+   "items": {
+    "chicken": 2,
+    "sweet": 3,
+    "slaw": 14,
+    "peanut": 5,
+    "limes": 2,
+    "soy": 2,
+    "oil": 1
+   },
+   "steps": [
+    "Scrub and pierce the sweet potatoes. Microwave in batches, turning halfway, until a knife slides easily into the centers, about 8–15 minutes per batch. Split them open.",
+    "Flatten the chicken to an even thickness. Brush with the oil and season with half the soy sauce. On a preheated indoor electric or outdoor grill over medium-high heat, cook until the center reaches 165°F. Rest on a clean plate, then slice.",
+    "Whisk the peanut butter, lime juice, remaining soy sauce and warm water into a pourable sauce. Fill the split sweet potatoes with slaw and warm sliced chicken and drizzle with the sauce."
+   ],
+   "sides": [
+    "canned-green-beans",
+    "orange-wedges"
+   ]
+  },
+  {
+   "id": "orange-tofu-bowls",
+   "title": "Orange chicken basmati bowls",
+   "subtitle": "Air-fried chicken, citrus sauce and broccoli over fragrant rice.",
+   "category": "Asian-inspired",
+   "minutes": 45,
+   "method": "Air fryer + microwave",
+   "tags": [
+    "rice"
+   ],
+   "items": {
+    "chicken": 2,
+    "basmati": 1.75,
+    "oranges": 3,
+    "broccoli": 1.25,
+    "starch": 3,
+    "soy": 3,
+    "ginger": 0.5,
+    "oil": 1
+   },
+   "steps": [
+    "Cut chicken into bite-size pieces, coat with the oil and two tablespoons of cornstarch, and air-fry at 390°F in single-layer batches, turning halfway, until the thickest pieces reach 165°F.",
+    "Cook the basmati rice with water using the package’s microwave directions in a large vented microwave-safe bowl. Rest covered, then fluff with a fork.",
+    "Microwave the frozen broccoli according to the package directions and drain.",
+    "Whisk orange juice, grated ginger, soy and the remaining cornstarch together. Microwave in 30-second bursts, stirring, until bubbling and thick. Spoon the chicken and broccoli over the rice and drizzle with sauce."
+   ],
+   "sides": [
+    "sesame-cucumber",
+    "carrot-sticks"
+   ]
+  },
+  {
+   "id": "classic-spaghetti",
+   "title": "Classic spaghetti with meat sauce",
+   "subtitle": "Spaghetti with tomato-rich beef sauce and grated Parmesan.",
+   "category": "Pasta",
+   "minutes": 45,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "family favorite"
+   ],
+   "items": {
+    "beef": 1.5,
+    "spaghetti": 18,
+    "marinara": 32,
+    "onions": 0.5,
+    "parm": 2
+   },
+   "steps": [
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Brown the beef with chopped onion on the outdoor griddle, breaking it up until the beef reaches 160°F. In a deep microwave-safe dish, combine the beef with marinara and microwave loosely covered, stirring until bubbling.",
+    "Toss the pasta with the hot meat sauce, adding a splash of reserved pasta water if needed. Sprinkle each serving with Parmesan."
+   ],
+   "sides": [
+    "romaine-salad",
+    "garlic-toast"
+   ]
+  },
+  {
+   "id": "lemon-chicken-penne",
+   "title": "Lemon chicken & broccoli penne",
+   "subtitle": "Grilled chicken and bright lemon-Parmesan sauce.",
+   "category": "Pasta",
+   "minutes": 45,
+   "method": "Electric grill + microwave",
+   "tags": [
+    "citrus"
+   ],
+   "items": {
+    "chicken": 2,
+    "penne": 16,
+    "broccoli": 1.25,
+    "lemons": 2,
+    "parm": 3,
+    "oil": 2,
+    "pepper": 0.5
+   },
+   "steps": [
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Flatten the chicken to an even thickness. Brush with the oil and season with the pepper. On a preheated indoor electric or outdoor grill over medium-high heat, cook until the center reaches 165°F. Rest on a clean plate, then slice.",
+    "Microwave the frozen broccoli according to the package directions and drain.",
+    "Toss hot penne with lemon zest, lemon juice, Parmesan and a splash of reserved cooking water. Add the broccoli and sliced chicken."
+   ],
+   "sides": [
+    "canned-green-beans",
+    "apple-slices"
+   ]
+  },
+  {
+   "id": "tomato-spinach-penne",
+   "title": "Creamy chicken & spinach penne",
+   "subtitle": "Grilled chicken and wilted spinach in a creamy tomato sauce.",
+   "category": "Pasta",
+   "minutes": 45,
+   "method": "Electric grill + microwave",
+   "tags": [],
+   "items": {
+    "chicken": 2,
+    "penne": 16,
+    "spinach": 8,
+    "marinara": 28,
+    "yogurt": 5,
+    "parm": 2
+   },
+   "steps": [
+    "Flatten the chicken breasts to an even thickness. Grill on a preheated indoor electric grill until the center reaches 165°F. Transfer to a clean plate, rest briefly and slice.",
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Combine the marinara and spinach in a deep microwave-safe dish. Cover loosely and heat, stirring every minute, until bubbling and wilted.",
+    "Stir the yogurt into the sauce off heat. Toss with pasta and sliced chicken and sprinkle with Parmesan."
+   ],
+   "sides": [
+    "garlic-toast",
+    "romaine-salad"
+   ]
+  },
+  {
+   "id": "chickpea-pepper-pasta",
+   "title": "Charred pepper & beef penne",
+   "subtitle": "Beef and charred bell peppers in a garlicky tomato sauce.",
+   "category": "Pasta",
+   "minutes": 50,
+   "method": "Blackstone + microwave",
+   "tags": [],
+   "items": {
+    "beef": 1.5,
+    "penne": 16,
+    "peppers": 3,
+    "marinara": 24,
+    "garlic": 4,
+    "oil": 1,
+    "oregano": 1
+   },
+   "steps": [
+    "Brown the ground beef on the outdoor griddle, breaking it into small pieces. When it reaches 160°F, move it to a clean dish.",
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Slice the peppers and cook in oil on the outdoor griddle until they start to char. Stir in the minced garlic and oregano during the final minute.",
+    "Heat marinara in a vented microwave-safe bowl until bubbling. Fold in the beef, peppers and penne."
+   ],
+   "sides": [
+    "romaine-salad",
+    "lemon-chickpeas"
+   ]
+  },
+  {
+   "id": "cheeseburger-penne",
+   "title": "Cheeseburger penne",
+   "subtitle": "A velvety cheddar-tomato sauce with crumbled beef and penne.",
+   "category": "Pasta",
+   "minutes": 40,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "comfort food"
+   ],
+   "items": {
+    "beef": 1.5,
+    "penne": 16,
+    "cheese": 6,
+    "marinara": 20,
+    "mustard": 1
+   },
+   "steps": [
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Brown the ground beef on the outdoor griddle, breaking it into small pieces. When it reaches 160°F, move it to a clean dish.",
+    "In a large microwave-safe bowl, heat marinara until bubbling. Stir in the mustard, finely shredded cheddar and a splash of pasta water. Fold in the beef and penne while hot."
+   ],
+   "sides": [
+    "buttered-peas",
+    "apple-slices"
+   ]
+  },
+  {
+   "id": "lemon-pea-spaghetti",
+   "title": "Lemon chicken spaghetti",
+   "subtitle": "Sliced chicken and peppery lemon-Parmesan spaghetti.",
+   "category": "Pasta",
+   "minutes": 45,
+   "method": "Electric grill + microwave",
+   "tags": [],
+   "items": {
+    "chicken": 2,
+    "spaghetti": 16,
+    "lemons": 2,
+    "parm": 4,
+    "butter": 3,
+    "pepper": 0.5
+   },
+   "steps": [
+    "Flatten the chicken breasts to an even thickness. Grill on a preheated indoor electric grill until the center reaches 165°F. Transfer to a clean plate, rest briefly and slice.",
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Toss the hot spaghetti with butter, lemon zest and juice, Parmesan and pepper. Loosen with reserved water and top with sliced chicken."
+   ],
+   "sides": [
+    "buttered-peas",
+    "tomato-cucumber"
+   ]
+  },
+  {
+   "id": "chicken-parm-penne",
+   "title": "Chicken Parmesan penne",
+   "subtitle": "Grilled chicken, marinara and Parmesan over penne and spinach.",
+   "category": "Pasta",
+   "minutes": 45,
+   "method": "Electric grill + microwave",
+   "tags": [
+    "comfort food"
+   ],
+   "items": {
+    "chicken": 2,
+    "penne": 16,
+    "spinach": 8,
+    "marinara": 28,
+    "parm": 4,
+    "oregano": 1,
+    "oil": 1
+   },
+   "steps": [
+    "In a deep, large microwave-safe dish, cover the dry pasta by an inch with water. Break long noodles to fit. Microwave uncovered on high, stirring every 3 minutes and adding hot water if needed, until tender. Work in batches if the dish would be over half full. Save a cup of cooking water and drain.",
+    "Flatten the chicken to an even thickness. Brush with the oil and season with the oregano. On a preheated indoor electric or outdoor grill over medium-high heat, cook until the center reaches 165°F. Rest on a clean plate, then slice.",
+    "Heat the marinara and spinach in a large, vented microwave-safe bowl, stirring occasionally, until bubbling and wilted. Stir in the pasta. Divide among five bowls and top with the chicken and Parmesan."
+   ],
+   "sides": [
+    "canned-green-beans",
+    "garlic-toast"
+   ]
+  },
+  {
+   "id": "greek-chicken-pitas",
+   "title": "Lemon-oregano chicken flatbreads",
+   "subtitle": "Grilled chicken, crunchy cucumber and a quick yogurt sauce.",
+   "category": "Grill",
+   "minutes": 35,
+   "method": "Electric grill",
+   "tags": [
+    "flatbreads"
+   ],
+   "items": {
+    "chicken": 2,
+    "naan": 5,
+    "cucumber": 2,
+    "tomato": 1,
+    "yogurt": 8,
+    "lemons": 1,
+    "oregano": 1.5,
+    "garlic": 2,
+    "oil": 1
+   },
+   "steps": [
+    "Flatten the chicken to an even thickness. Brush with the oil and season with the oregano and grated lemon zest. On a preheated indoor electric or outdoor grill over medium-high heat, cook until the center reaches 165°F. Rest on a clean plate, then slice.",
+    "Dice the cucumbers and tomatoes. Stir half the cucumber into the yogurt with lemon juice and minced garlic.",
+    "Warm the naan on a clean grill surface. Top each with the sliced chicken, tomato, remaining cucumber and yogurt sauce. Fold to eat."
+   ],
+   "sides": [
+    "lemon-chickpeas",
+    "canned-carrots"
+   ]
+  },
+  {
+   "id": "paprika-chicken-wedges",
+   "title": "Smoky paprika chicken",
+   "subtitle": "Paprika-rubbed grilled chicken with garlic yogurt for dipping.",
+   "category": "Grill",
+   "minutes": 30,
+   "method": "Electric grill",
+   "tags": [
+    "grill night"
+   ],
+   "items": {
+    "chicken": 2,
+    "paprika": 2,
+    "garlic": 3,
+    "yogurt": 5,
+    "oil": 1,
+    "salt": 0.5
+   },
+   "steps": [
+    "Flatten the chicken evenly, rub with oil, paprika and salt, and grill over medium-high heat until the center of each piece reaches 165°F. Rest on a clean plate.",
+    "Mix crushed garlic into the yogurt with a little water. Slice chicken and drizzle with the garlic yogurt or serve the sauce for dipping."
+   ],
+   "sides": [
+    "potato-wedges",
+    "steamed-broccoli"
+   ]
+  },
+  {
+   "id": "bbq-chicken-sandwiches",
+   "title": "BBQ chicken sandwiches",
+   "subtitle": "Barbecue-glazed chicken finished with tangy apple slaw.",
+   "category": "Grill",
+   "minutes": 30,
+   "method": "Electric grill",
+   "tags": [
+    "sandwiches"
+   ],
+   "items": {
+    "chicken": 2,
+    "buns": 5,
+    "bbq": 6,
+    "slaw": 6,
+    "apples": 0.4,
+    "yogurt": 2,
+    "mustard": 1,
+    "oil": 1
+   },
+   "steps": [
+    "Flatten the chicken to an even thickness. Brush with the oil and brush with one tablespoon of barbecue sauce. On a preheated indoor electric or outdoor grill over medium-high heat, cook until the center reaches 165°F. Rest on a clean plate, then slice.",
+    "Core and grate the apple. Fold into the slaw with yogurt and mustard.",
+    "Toss the sliced chicken with the remaining barbecue sauce. Toast the buns on a clean grill surface, then fill with chicken and apple slaw."
+   ],
+   "sides": [
+    "canned-corn",
+    "canned-green-beans"
+   ]
+  },
+  {
+   "id": "chicken-pepper-plates",
+   "title": "Garlic yogurt chicken",
+   "subtitle": "Paprika-grilled chicken finished with a garlicky lemon-yogurt sauce.",
+   "category": "Grill",
+   "minutes": 35,
+   "method": "Electric grill",
+   "tags": [
+    "grill night"
+   ],
+   "items": {
+    "chicken": 2,
+    "yogurt": 6,
+    "lemons": 1,
+    "garlic": 2,
+    "oil": 1,
+    "paprika": 1
+   },
+   "steps": [
+    "Flatten the chicken to an even thickness, brush with oil and season with paprika. Grill over medium-high heat until a thermometer reads 165°F in the thickest part. Rest on a clean plate, then slice.",
+    "Whisk the yogurt with minced garlic and lemon juice. Drizzle over the sliced chicken."
+   ],
+   "sides": [
+    "pepper-onions",
+    "warm-naan"
+   ]
+  },
+  {
+   "id": "mustard-pork-apples",
+   "title": "Honey mustard pork chops",
+   "subtitle": "Grilled boneless chops brushed with a sweet mustard glaze.",
+   "category": "Grill",
+   "minutes": 30,
+   "method": "Electric grill",
+   "tags": [
+    "grill night"
+   ],
+   "items": {
+    "pork": 2,
+    "mustard": 3,
+    "honey": 1,
+    "oil": 0.5
+   },
+   "steps": [
+    "Stir together mustard and honey. Set half aside in a clean bowl. Brush the chops with oil and the other half of the glaze.",
+    "Grill over medium heat to 145°F at the center, then rest at least 3 minutes on a clean plate. Spoon the reserved glaze over the chops and slice for five."
+   ],
+   "sides": [
+    "sweet-potatoes",
+    "grilled-apples"
+   ]
+  },
+  {
+   "id": "griddle-beef-pitas",
+   "title": "Spiced beef flatbreads",
+   "subtitle": "Warm naan layered with hummus and seasoned ground beef.",
+   "category": "Grill",
+   "minutes": 30,
+   "method": "Blackstone",
+   "tags": [
+    "flatbreads"
+   ],
+   "items": {
+    "beef": 1.5,
+    "naan": 5,
+    "hummus": 10,
+    "onions": 0.5,
+    "taco": 1.5
+   },
+   "steps": [
+    "Warm the naan on the outdoor griddle and set aside. Finely chop the onion and brown with the beef, breaking it up until the beef reaches 160°F. Stir in the taco seasoning and a splash of water.",
+    "Spread hummus over each piece of naan. Add the hot spiced beef and fold to eat."
+   ],
+   "sides": [
+    "tomato-cucumber",
+    "lemon-chickpeas"
+   ]
+  },
+  {
+   "id": "hummus-grill-plates",
+   "title": "Lemon chicken chopped salad",
+   "subtitle": "Lemon-dressed romaine with grilled chicken, cucumber and creamy hummus.",
+   "category": "Grill",
+   "minutes": 30,
+   "method": "Electric grill",
+   "tags": [],
+   "items": {
+    "chicken": 2,
+    "lettuce": 3,
+    "hummus": 10,
+    "cucumber": 1,
+    "oil": 1,
+    "lemons": 1,
+    "paprika": 1
+   },
+   "steps": [
+    "Flatten the chicken breasts to an even thickness. Grill on a preheated indoor electric grill until the center reaches 165°F. Transfer to a clean plate, rest briefly and slice.",
+    "Chop the romaine and cucumber. Whisk the oil, lemon juice and paprika together, then toss with the vegetables.",
+    "Divide the salad among five bowls and top with sliced chicken and hummus."
+   ],
+   "sides": [
+    "warm-naan",
+    "pepper-onions"
+   ]
+  },
+  {
+   "id": "chicken-fajitas",
+   "title": "Griddle chicken fajitas",
+   "subtitle": "Sizzling strips of chicken, charred peppers and lime.",
+   "category": "Tex-Mex",
+   "minutes": 35,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "wraps"
+   ],
+   "items": {
+    "chicken": 2,
+    "peppers": 3,
+    "onions": 0.75,
+    "tortillas": 10,
+    "taco": 2,
+    "limes": 2,
+    "yogurt": 4,
+    "oil": 1
+   },
+   "steps": [
+    "Slice chicken thinly and coat with oil and taco seasoning. Sear on the outdoor griddle over medium-high heat, turning until the thickest pieces reach 165°F. Set aside on a clean plate.",
+    "Slice onions and peppers and cook on the griddle until tender and browned at the edges. Fold in the chicken and squeeze over lime juice.",
+    "Wrap the tortillas in a damp paper towel and microwave in short bursts until soft.",
+    "Serve two tortillas per person with the fajita filling and yogurt."
+   ],
+   "sides": [
+    "black-beans",
+    "canned-corn"
+   ]
+  },
+  {
+   "id": "bean-cheddar-quesadillas",
+   "title": "Beef & black bean quesadillas",
+   "subtitle": "Crisp folded tortillas stuffed with beef, black beans and cheddar.",
+   "category": "Tex-Mex",
+   "minutes": 40,
+   "method": "Blackstone",
+   "tags": [],
+   "items": {
+    "beef": 1.5,
+    "beans": 1,
+    "tortillas": 10,
+    "cheese": 8,
+    "salsa": 6,
+    "oil": 1.5,
+    "taco": 1
+   },
+   "steps": [
+    "Brown the ground beef on the outdoor griddle, breaking it into small pieces. When it reaches 160°F, move it to a clean dish.",
+    "Drain the beans and mash with taco seasoning and enough salsa to spread. Add the beef.",
+    "Spread filling and shredded cheddar over half of each tortilla and fold shut. Brush with oil, then toast on the outdoor griddle over medium heat until golden on both sides and hot inside. Cut into wedges and spoon remaining salsa over the top."
+   ],
+   "sides": [
+    "canned-corn",
+    "lime-slaw"
+   ]
+  },
+  {
+   "id": "burrito-basmati-bowls",
+   "title": "Beef burrito bowls",
+   "subtitle": "Basmati rice, taco beef, black beans and spoonfuls of salsa.",
+   "category": "Tex-Mex",
+   "minutes": 40,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "rice"
+   ],
+   "items": {
+    "beef": 1.5,
+    "basmati": 1.75,
+    "beans": 1,
+    "corn": 0.75,
+    "salsa": 10,
+    "taco": 1.5,
+    "lettuce": 1,
+    "limes": 1
+   },
+   "steps": [
+    "Cook the basmati rice with water using the package’s microwave directions in a large vented microwave-safe bowl. Rest covered, then fluff with a fork.",
+    "Brown the beef on the outdoor griddle, crumbling until it reaches 160°F. Add rinsed beans, taco seasoning and a splash of water. Microwave the corn according to its package.",
+    "Shred the lettuce. Build bowls with the rice, beef and beans, lettuce and corn and finish with salsa and lime."
+   ],
+   "sides": [
+    "lime-slaw",
+    "orange-wedges"
+   ]
+  },
+  {
+   "id": "sweet-potato-tacos",
+   "title": "Beef & sweet potato tacos",
+   "subtitle": "Griddled beef, smoky sweet potato cubes and salsa in corn tortillas.",
+   "category": "Tex-Mex",
+   "minutes": 55,
+   "method": "Blackstone + air fryer + microwave",
+   "tags": [
+    "taco night"
+   ],
+   "items": {
+    "beef": 1.5,
+    "sweet": 1.5,
+    "cornwrap": 15,
+    "taco": 1.5,
+    "oil": 1.5,
+    "salsa": 6
+   },
+   "steps": [
+    "Brown the ground beef on the outdoor griddle, breaking it into small pieces. When it reaches 160°F, move it to a clean dish.",
+    "Dice sweet potatoes into half-inch cubes and toss with oil and taco seasoning. Air-fry in batches at 390°F, shaking midway, until tender and golden, about 15–20 minutes per batch.",
+    "Wrap the tortillas in a damp paper towel and microwave in short bursts until soft.",
+    "Fill three tortillas per person with the hot beef, sweet potatoes and salsa."
+   ],
+   "sides": [
+    "black-beans",
+    "lime-slaw"
+   ]
+  },
+  {
+   "id": "chicken-tostadas",
+   "title": "Crispy chicken tostadas",
+   "subtitle": "Air-crisped tortillas layered with beans, chicken and lettuce.",
+   "category": "Tex-Mex",
+   "minutes": 45,
+   "method": "Electric grill + air fryer + microwave",
+   "tags": [
+    "taco night"
+   ],
+   "items": {
+    "chicken": 2,
+    "cornwrap": 15,
+    "beans": 1,
+    "lettuce": 1,
+    "salsa": 10,
+    "cheese": 4,
+    "taco": 1.5,
+    "oil": 2
+   },
+   "steps": [
+    "Flatten the chicken to an even thickness. Brush with half the oil and season with taco seasoning. On a preheated indoor electric or outdoor grill over medium-high heat, cook until the center reaches 165°F. Rest on a clean plate, then slice.",
+    "Lightly brush both sides of the tortillas with the remaining oil. Air-fry at 370°F in small batches. Secure lightweight tortillas with a manufacturer-approved rack and turn halfway until crisp, about 4–7 minutes.",
+    "Mash drained beans with a few spoonfuls of salsa and microwave until hot. Spread over each tostada and top with chicken, shredded lettuce, cheese and remaining salsa."
+   ],
+   "sides": [
+    "canned-corn",
+    "cucumber-spears"
+   ]
+  },
+  {
+   "id": "potato-beef-burritos",
+   "title": "Beef & potato burritos",
+   "subtitle": "Golden potato cubes, seasoned beef and a crisp griddled tortilla.",
+   "category": "Tex-Mex",
+   "minutes": 40,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "wraps"
+   ],
+   "items": {
+    "beef": 1.5,
+    "potatoes": 1.5,
+    "tortillas": 10,
+    "peppers": 2,
+    "cheese": 5,
+    "salsa": 8,
+    "taco": 1.5,
+    "oil": 1
+   },
+   "steps": [
+    "Cube the potatoes and microwave loosely covered with a splash of water until tender, stirring halfway. Drain. Dice the peppers and brown with the potatoes and oil on one side of the outdoor griddle.",
+    "On a separate griddle zone, crumble and brown the beef to 160°F. Mix with the vegetables, taco seasoning and a splash of water.",
+    "Wrap the tortillas in a damp paper towel and microwave in short bursts until soft.",
+    "Fill the tortillas with beef mixture, shredded cheese and salsa. Fold the ends inward, roll snugly and toast seam-side down on a clean griddle spot."
+   ],
+   "sides": [
+    "black-beans",
+    "tomato-cucumber"
+   ]
+  },
+  {
+   "id": "corn-black-bean-flatbreads",
+   "title": "Chicken & street corn flatbreads",
+   "subtitle": "Grilled chicken and creamy lime corn layered over black bean flatbreads.",
+   "category": "Tex-Mex",
+   "minutes": 40,
+   "method": "Electric grill + Blackstone + microwave",
+   "tags": [],
+   "items": {
+    "chicken": 2,
+    "naan": 5,
+    "corn": 1,
+    "beans": 1,
+    "yogurt": 4,
+    "cheese": 4,
+    "paprika": 1,
+    "limes": 1,
+    "salsa": 4,
+    "oil": 1
+   },
+   "steps": [
+    "Flatten the chicken breasts to an even thickness. Grill on a preheated indoor electric grill until the center reaches 165°F. Transfer to a clean plate, rest briefly and slice.",
+    "Drain the beans and mash with salsa. Microwave in a covered, vented bowl, stirring occasionally, until steaming.",
+    "Cook the corn with oil on the outdoor griddle until piping hot and charred in spots. In a bowl, toss it with yogurt, paprika, lime juice and grated cheddar.",
+    "Toast the naan on the griddle. Spread with beans, then spoon the creamy corn over the top. Slice into wedges.",
+    "Top the flatbreads with sliced chicken."
+   ],
+   "sides": [
+    "lime-slaw",
+    "orange-wedges"
+   ]
+  },
+  {
+   "id": "freezer-pizza",
+   "title": "Grilled chicken personal pizzas",
+   "subtitle": "Crisp personal cheese pizzas topped with sliced grilled chicken.",
+   "category": "Comfort",
+   "minutes": 45,
+   "method": "Air fryer + indoor grill",
+   "tags": [
+    "pizza",
+    "family favorite"
+   ],
+   "items": {
+    "minis": 5,
+    "chicken": 2
+   },
+   "steps": [
+    "Flatten the chicken breasts to an even thickness. Grill on a preheated indoor electric grill until the center reaches 165°F. Transfer to a clean plate, rest briefly and slice.",
+    "Choose personal cheese pizzas that fit flat in your fryer and give air-fryer directions on their package. Keep frozen until ready.",
+    "Follow the package temperature, cooking time, doneness and standing instructions. Cook in single-layer batches. Divide the grilled chicken among the five pizzas and serve."
+   ],
+   "sides": [
+    "romaine-salad",
+    "apple-slices"
+   ]
+  },
+  {
+   "id": "chili-jacket-potatoes",
+   "title": "Chili-stuffed potatoes",
+   "subtitle": "Split potatoes piled with beef, bean chili and cheddar.",
+   "category": "Comfort",
+   "minutes": 45,
+   "method": "Blackstone + microwave",
+   "tags": [
+    "stuffed potatoes"
+   ],
+   "items": {
+    "potatoes": 3,
+    "beef": 1.5,
+    "beans": 1,
+    "tomatoes": 1,
+    "taco": 1.5,
+    "onions": 0.5,
+    "cheese": 4
+   },
+   "steps": [
+    "Scrub and pierce the potatoes. Microwave in batches, turning halfway, until a knife slides easily into the centers, about 8–15 minutes per batch. Split them open.",
+    "Chop the onion and brown it on the outdoor griddle with the beef. Break up the meat and verify it reaches 160°F.",
+    "Combine the beef mixture, taco seasoning, drained beans and tomatoes with their juice in a large microwave-safe bowl. Heat loosely covered, stirring every 2 minutes, until bubbling and slightly thickened. Spoon over the potatoes and finish with grated cheddar."
+   ],
+   "sides": [
+    "canned-green-beans",
+    "carrot-sticks"
+   ]
+  },
+  {
+   "id": "breakfast-tacos",
+   "title": "Beef & egg breakfast tacos",
+   "subtitle": "Soft scrambled eggs, potatoes, peppers and melty cheddar.",
+   "category": "Comfort",
+   "minutes": 45,
+   "method": "Blackstone + microwave",
+   "tags": [],
+   "items": {
+    "beef": 1.5,
+    "eggs": 10,
+    "potatoes": 1.5,
+    "peppers": 2,
+    "tortillas": 10,
+    "cheese": 5,
+    "salsa": 6,
+    "oil": 1.5
+   },
+   "steps": [
+    "Brown the ground beef on the outdoor griddle, breaking it into small pieces. When it reaches 160°F, move it to a clean dish.",
+    "Cube the potatoes and microwave in a vented dish with a splash of water, stirring halfway, until tender. Drain and brown them on the oiled outdoor griddle with diced peppers.",
+    "Beat the eggs, pour onto a clear section of the griddle and gently scramble until firm. Fold in the vegetables and shredded cheese.",
+    "Wrap the tortillas in a damp paper towel and microwave in short bursts until soft.",
+    "Fill two tortillas per person with the hot eggs and potatoes and spoon salsa over the top.",
+    "Divide the cooked beef among the tortillas with the eggs."
+   ],
+   "sides": [
+    "canned-corn",
+    "orange-wedges"
+   ]
+  },
+  {
+   "id": "tomato-soup-melts",
+   "title": "Chicken cheddar melts",
+   "subtitle": "Golden whole-grain sandwiches filled with sliced chicken and melted cheddar.",
+   "category": "Comfort",
+   "minutes": 40,
+   "method": "Electric grill + Blackstone",
+   "tags": [],
+   "items": {
+    "chicken": 2,
+    "bread": 10,
+    "cheese": 8,
+    "butter": 3
+   },
+   "steps": [
+    "Flatten the chicken breasts to an even thickness. Grill on a preheated indoor electric grill until the center reaches 165°F. Transfer to a clean plate, rest briefly and slice.",
+    "Butter one side of each bread slice. Layer the thinly sliced chicken and cheddar into five sandwiches with the buttered faces outside. Cook on the outdoor griddle over medium-low heat, turning when golden, until the cheese melts."
+   ],
+   "sides": [
+    "tomato-soup",
+    "carrot-sticks"
+   ]
+  },
+  {
+   "id": "griddle-sloppy-joes",
+   "title": "Griddle sloppy joes",
+   "subtitle": "Sweet-tangy beef, peppers and onions on a toasted bun.",
+   "category": "Comfort",
+   "minutes": 30,
+   "method": "Blackstone",
+   "tags": [
+    "sandwiches"
+   ],
+   "items": {
+    "beef": 1.5,
+    "buns": 5,
+    "onions": 0.5,
+    "peppers": 1,
+    "marinara": 10,
+    "ketchup": 3,
+    "mustard": 2
+   },
+   "steps": [
+    "Dice onion and pepper finely. Brown on the outdoor griddle with ground beef, breaking up the meat until it reaches 160°F. Add marinara a spoonful at a time, then ketchup and mustard. Fold until thick and saucy.",
+    "Toast the buns on a clean area of the outdoor griddle and pile with the saucy beef."
+   ],
+   "sides": [
+    "lime-slaw",
+    "smashed-potatoes"
+   ]
+  },
+  {
+   "id": "crispy-chicken-fingers",
+   "title": "Crispy chicken fingers",
+   "subtitle": "Parmesan-crusted chicken strips with a honey mustard dip.",
+   "category": "Comfort",
+   "minutes": 50,
+   "method": "Air fryer",
+   "tags": [
+    "family style"
+   ],
+   "items": {
+    "chicken": 2,
+    "bread": 4,
+    "eggs": 2,
+    "parm": 2,
+    "yogurt": 5,
+    "mustard": 2,
+    "honey": 1,
+    "oil": 1
+   },
+   "steps": [
+    "Air-fry whole bread slices under a manufacturer-approved rack until dry and golden, then crush finely and combine with Parmesan. Cut the chicken into strips. Dip into beaten egg, then coat with crumbs. Discard coating and egg left from raw chicken.",
+    "Lightly oil the fryer basket and the tops of the strips. Air-fry at 380°F in single-layer batches, turning halfway, about 10–16 minutes per batch. Check the thickest strip in each batch reaches 165°F.",
+    "Mix the yogurt, mustard and honey. Divide the chicken strips among five plates with the dip."
+   ],
+   "sides": [
+    "carrot-sticks",
+    "sweet-potatoes"
+   ]
+  },
+  {
+   "id": "broccoli-cheddar-potatoes",
+   "title": "Chicken, broccoli & cheddar potatoes",
+   "subtitle": "Split potatoes piled with grilled chicken, broccoli and melted cheddar.",
+   "category": "Comfort",
+   "minutes": 50,
+   "method": "Electric grill + microwave",
+   "tags": [
+    "stuffed potatoes"
+   ],
+   "items": {
+    "chicken": 2,
+    "potatoes": 3,
+    "broccoli": 1.25,
+    "cheese": 6,
+    "yogurt": 5,
+    "pepper": 0.5
+   },
+   "steps": [
+    "Flatten the chicken breasts to an even thickness. Grill on a preheated indoor electric grill until the center reaches 165°F. Transfer to a clean plate, rest briefly and slice.",
+    "Scrub and pierce the potatoes. Microwave in batches, turning halfway, until a knife slides easily into the centers, about 8–15 minutes per batch. Split them open.",
+    "Microwave the frozen broccoli according to the package directions and drain.",
+    "Fluff each potato with yogurt and pepper. Top with broccoli, chicken and grated cheddar. Microwave briefly to melt the cheese."
+   ],
+   "sides": [
+    "romaine-salad",
+    "orange-wedges"
+   ]
+  }
+ ],
+ "openingWeek": [
+  "smashburgers",
+  "orange-chicken",
+  "brown-butter-spaghetti",
+  "tikka-masala",
+  "onion-burgers",
+  "beef-tacos",
+  "chicken-lo-mein"
+ ]
+}
