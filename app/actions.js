@@ -237,14 +237,16 @@ function retireBundle(db, state, { dinnerId, by, at, today, manual }) {
   const bench = bestBenchFor(db, state, dinnerId);
   const d = dinnerById(db, state, dinnerId);
   let message;
+  const name = d?.title || 'That dinner';
+  const lead = manual ? `${name} is out of the rotation.` : `Three thumbs down, so ${name} is taking a break.`;
   if (bench) {
     ops.push(set(['promoted', bench.id], { replaced: dinnerId, at }));
     const future = Object.entries(state?.plan || {}).filter(([date, e]) => e?.dinner === dinnerId && e.status === 'planned' && (!today || date >= today));
     for (const [date, e] of future) ops.push(set(['plan', date], { ...clone(e), dinner: bench.id, sides: [...bench.sides] }));
-    message = `${bench.title} joins the rotation, replacing ${d?.title || 'that dinner'}.`;
-    if (future.length) message += ` Swapped in on ${future.length} planned ${future.length === 1 ? 'night' : 'nights'}.`;
+    message = `${lead} Something new to try: ${bench.title} joins the rotation in its place`;
+    message += future.length ? `, and takes over ${future.length === 1 ? 'its planned night' : `its ${future.length} planned nights`}.` : '.';
   } else {
-    message = `${d?.title || 'That dinner'} is out of the rotation. No bench dinners are left to replace it.`;
+    message = `${lead} Every bench dinner is already in the rotation, so nothing new comes in.`;
   }
   return { ops, message, promoted: bench?.id || null };
 }
@@ -268,7 +270,7 @@ export function voteOps(db, state, { dinnerId, who, value, at, today }) {
     const t = at || new Date().toISOString();
     const b = retireBundle(db, state, { dinnerId, by: 'votes', at: t, today });
     ops.push(...b.ops);
-    message = `Voted out. ${b.message}`;
+    message = b.message;
     extra = { retired: true, promoted: b.promoted };
   } else if (!clearing && value === 1 && up >= 3 && wasUp < 3) {
     message = `${d.title} is now a family favorite.`;

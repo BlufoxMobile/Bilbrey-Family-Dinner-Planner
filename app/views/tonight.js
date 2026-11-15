@@ -1,6 +1,6 @@
 // TONIGHT: tonight's dinner on its index card, quick actions, then the week ahead.
 import { html, ic, when, emptyState } from '../ui.js';
-import { addDays, dateRange, longDay, money, relativeDay, shortDate, fmtQty, listJoin } from '../util.js';
+import { addDays, dateRange, longDay, money, relativeDay, rangeLabel, fmtQty, listJoin } from '../util.js';
 import { dinnerById, periodRange } from '../planner.js';
 import { buildList } from '../shopping.js';
 import { generateOps, markCookedOps } from '../actions.js';
@@ -101,11 +101,25 @@ function glance(app) {
   return html`<section class="glance" aria-label="Groceries">
     <a class="glance-card" href="#/list">
       <span class="glance-ic">${ic('cart', { size: 24 })}</span>
-      <span class="glance-main"><b>${money(list.total)}</b><small>estimated groceries for ${list.nights.length} ${list.nights.length === 1 ? 'dinner' : 'dinners'}, ${shortDate(range.start)} – ${shortDate(range.end)}</small></span>
+      <span class="glance-main"><b>${money(list.total)}</b><small>estimated groceries for ${list.nights.length} ${list.nights.length === 1 ? 'dinner' : 'dinners'}, ${rangeLabel(range.start, range.end)}</small></span>
       ${ic('right', { size: 20 })}
     </a>
-    ${big.map((f) => html`<p class="glance-note">${ic('snow', { size: 18 })}<span>${f.packs ? `${f.packs === 1 ? 'One' : f.packs} ${f.packSize ? `${fmtQty(f.packSize)} ${f.unit}` : ''} ${f.packs === 1 ? 'pack' : 'packs'} of ${f.name.toLowerCase()}` : `${fmtQty(f.have)} ${f.unit} of ${f.name.toLowerCase()} in the freezer`} ${f.covers === f.dinners ? `covers all ${f.dinners} dinners` : `covers ${f.covers} of ${f.dinners} dinners`}${f.leftover > 0 ? `, with ${fmtQty(f.leftover)} ${f.unit} left over` : ''}.</span></p>`)}
+    ${big.map((f) => html`<p class="glance-note">${ic('snow', { size: 18 })}<span>${freezerNote(f)}</span></p>`)}
   </section>`;
+}
+
+const COUNT_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+
+/** "Lean ground beef: one 10¾ lb pack covers all 5 dinners, with 0.24 lb left over." */
+export function freezerNote(f) {
+  const n = f.packs > 0 ? (COUNT_WORDS[f.packs] || String(f.packs)) : '';
+  const pack = f.packs > 0 ? `${n} ${f.packSize ? `${fmtQty(f.packSize)} ${f.unit} ` : ''}${f.packs === 1 ? 'pack' : 'packs'}` : '';
+  const stash = f.have > 0 ? `${fmtQty(f.have)} ${f.unit} in the freezer` : '';
+  if (!pack && !stash) return `${f.name} goes into ${f.dinners} dinners.`;
+  const what = pack && stash ? `${pack} plus the ${stash}` : pack || `the ${stash}`;
+  const verb = f.packs > 1 || (pack && stash) ? 'cover' : 'covers';
+  const which = f.covers === f.dinners ? (f.dinners === 2 ? 'both dinners' : `all ${f.dinners} dinners`) : `${f.covers} of ${f.dinners} dinners`;
+  return `${f.name}: ${what} ${verb} ${which}${f.leftover > 0 ? `, with ${fmtQty(f.leftover)} ${f.unit} left over` : ''}.`;
 }
 
 export function render(app) {

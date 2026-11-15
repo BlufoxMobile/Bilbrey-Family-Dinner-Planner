@@ -72,7 +72,11 @@ export function unitText(n, unit) {
   return `${fmtQty(n)} ${Math.abs(n - 1) < 1e-9 ? singular(unit) : unit}`.trim();
 }
 
-function containerWord(aisle) {
+function containerWord({ aisle, name = '' }) {
+  if (/\b(oil|vinegar|sauce|dressing|ketchup|mustard|honey|syrup)\b/i.test(name)) return 'bottle';
+  if (/\b(broth|stock|milk|cream|creamer|juice)\b/i.test(name)) return 'carton';
+  if (/\b(flour|sugar|rice|oats)\b/i.test(name)) return 'bag';
+  if (/starch/i.test(name)) return 'box';
   if (aisle === 'Spices & Baking') return 'jar';
   if (aisle === 'Condiments & Sauces') return 'bottle';
   if (aisle === 'Dairy & Eggs') return 'carton';
@@ -93,7 +97,7 @@ export function formatPackQty(item) {
     if (unit === 'cans') return `${n} × ${fmtQty(size)}-can pack`;
     return `${n} × ${fmtQty(size)}-count pack`;
   }
-  return `${n} × ${containerWord(item.aisle)} (about ${fmtQty(size)} ${unit})`;
+  return `${n} × ${containerWord(item)} (about ${fmtQty(size)} ${unit})`;
 }
 
 const aisleIndex = (a) => { const i = AISLES.indexOf(a); return i < 0 ? AISLES.length : i; };
@@ -347,7 +351,10 @@ export function monthBudget(db, state, today, { baseline = 1000 } = {}) {
   return {
     month, start, end, target, receipts, spent, stillToBuy, plannedRemaining, unplanned, away, cooked,
     perDinner: list.perDinner, average, typical, projected, ifPlanned, extras, dinnersToBuy: round2(stillToBuy - extras), meatScale: st.meatScale,
-    left: round2(target - projected), baseline, savings: round2(baseline - projected),
+    left: round2(target - projected), leftIfPlanned: round2(target - ifPlanned), baseline,
+    // Compared with a whole $1,000 month, so it counts the not-yet-planned nights at the rotation's
+    // average; comparing a half-planned month against a full one would overstate the savings.
+    savings: round2(baseline - ifPlanned),
     byStore: { sams: list.stores.sams.subtotal, jewel: list.stores.jewel.subtotal },
     pricesUpdated: db.pricesUpdated,
     label: `${shortDate(today)} – ${shortDate(end)}`,

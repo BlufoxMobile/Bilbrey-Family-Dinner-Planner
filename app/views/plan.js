@@ -2,7 +2,7 @@
 // two-tap swap, drag-and-drop on desktop, plan / re-plan.
 import { html, ic, when, segmented, toast } from '../ui.js';
 import { addDays, diffDays, money, rangeLabel, shortDate, startOfWeek, monthName, weekday, monthOnly } from '../util.js';
-import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage } from '../planner.js';
+import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage, defaultAnchor as defaultAnchorFor } from '../planner.js';
 import { listJoin } from '../util.js';
 import { buildList } from '../shopping.js';
 import { generateOps, swapNightsOps, settingOps } from '../actions.js';
@@ -13,12 +13,7 @@ export const title = () => 'Plan';
 
 /** The period to show by default: this one, or the next if only a couple of nights are left. */
 export function defaultAnchor(app) {
-  const today = app.today();
-  const { period, weekStartsOn } = app.settings;
-  const r = periodRange(today, period, weekStartsOn);
-  const left = diffDays(r.end, today) + 1;
-  if ((period === 'month' && left < 5) || (period !== 'month' && left < 3)) return shiftPeriod(r.start, period, 1);
-  return today;
+  return defaultAnchorFor(app.today(), app.settings.period, app.settings.weekStartsOn);
 }
 
 export function currentRange(app) {
@@ -96,8 +91,8 @@ function grid(app, range) {
   const heads = Array.from({ length: 7 }, (_, i) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(i + app.settings.weekStartsOn) % 7]);
   return html`<div class="month" style="--lead:${lead}">
     <div class="month-heads" aria-hidden="true">${heads.map((h) => html`<span>${h}</span>`)}</div>
-    ${weeks.map((w) => html`<section class="week week-month" aria-label="Week of ${shortDate(w[0])}">
-      <h2 class="week-h">${shortDate(w[0])} – ${shortDate(w[w.length - 1])}</h2>
+    ${weeks.map((w) => html`<section class="week week-month" aria-label="${w.length === 1 ? shortDate(w[0]) : `Week of ${shortDate(w[0])}`}">
+      <h2 class="week-h">${w.length === 1 ? shortDate(w[0]) : rangeLabel(w[0], w[w.length - 1])}</h2>
       <div class="days days-month">${w.map((d) => dayCard(app, d, { compact: true }))}</div>
     </section>`)}
   </div>`;
@@ -165,7 +160,9 @@ function seedFor(app, range) {
 }
 
 export const actions = {
-  'plan:period': (app, el) => { app.commit(settingOps(app.state, 'period', el.dataset.value), { quiet: true }); app.ui.anchor = app.ui.anchor || app.today(); },
+  // Keep the family's place if they've paged to another period; otherwise the new length
+  // starts where it should (next week on a Sunday night), not pinned to today.
+  'plan:period': (app, el) => { app.commit(settingOps(app.state, 'period', el.dataset.value), { quiet: true }); app.ui.swapPick = null; },
   'plan:setting': (app, el) => {
     const res = settingOps(app.state, el.dataset.name, el.dataset.value);
     app.commit(res, { quiet: true });

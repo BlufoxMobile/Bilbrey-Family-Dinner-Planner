@@ -111,6 +111,13 @@ test('store list text is clean and in packs', () => {
   assert.ok(!/undefined|NaN/.test(text));
   const jewel = formatStoreList(db, list, 'jewel');
   assert.match(jewel, /Frozen fries — 1 × 32 oz pack/);
+  // Volume items name a sensible container (cooking oil comes in a bottle, not a jar).
+  const vol = (name, aisle, unit = 'tbsp') => formatPackQty({ name, aisle, unit, pack: { size: 48 }, packs: 1 });
+  assert.equal(vol('Neutral cooking oil', 'Spices & Baking'), '1 × bottle (about 48 tbsp)');
+  assert.equal(vol('Chicken broth', 'Canned & Jarred', 'cups'), '1 × carton (about 48 cups)');
+  assert.equal(vol('Light brown sugar', 'Spices & Baking'), '1 × bag (about 48 tbsp)');
+  assert.equal(vol('Smoked paprika', 'Spices & Baking', 'tsp'), '1 × jar (about 48 tsp)');
+  assert.equal(vol('Creamy peanut butter', 'Canned & Jarred'), '1 × jar (about 48 tbsp)');
 });
 
 test('budget: receipts + still to buy, savings vs $1,000', () => {
@@ -121,9 +128,22 @@ test('budget: receipts + still to buy, savings vs $1,000', () => {
   assert.equal(b.spent, 112.4);
   assert.equal(b.plannedRemaining, 2);
   assert.equal(b.projected, Math.round((112.4 + b.stillToBuy) * 100) / 100);
-  assert.equal(b.savings, Math.round((1000 - b.projected) * 100) / 100);
   assert.equal(b.unplanned, 13);
-  assert.ok(b.ifPlanned >= b.projected);
+  assert.ok(b.ifPlanned > b.projected);
+  // 13 nights aren't planned yet: savings vs the old $1,000 month must count them (at the
+  // rotation average), never compare a half-planned month with a whole one.
+  assert.equal(b.ifPlanned, Math.round((b.projected + b.average * 13) * 100) / 100);
+  assert.equal(b.savings, Math.round((1000 - b.ifPlanned) * 100) / 100);
+  assert.equal(b.leftIfPlanned, Math.round((600 - b.ifPlanned) * 100) / 100);
+});
+
+test('budget: a fully planned month compares its projection with $1,000 as is', () => {
+  const dates = Array.from({ length: 15 }, (_, i) => `2026-11-${String(16 + i).padStart(2, '0')}`);
+  const s = nights(...dates.map((d, i) => [d, i % 2 ? 'chix-grill' : 'chix-pasta']));
+  const b = monthBudget(db, s, '2026-11-16');
+  assert.equal(b.unplanned, 0);
+  assert.equal(b.ifPlanned, b.projected);
+  assert.equal(b.savings, Math.round((1000 - b.projected) * 100) / 100);
 });
 
 test('prices.json overrides catalog packs; missing optional files are fine', () => {

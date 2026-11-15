@@ -25,6 +25,7 @@ export const when = (cond, fn) => (cond ? fn() : '');
 
 export function setHTML(el, safe) {
   el.innerHTML = safe instanceof Safe ? safe.s : esc(safe);
+  settlePhotos(el);
 }
 
 // ---------------------------------------------------------------- avatars
@@ -57,18 +58,47 @@ export function photo(db, kind, id, { category = 'Comfort', size = 'card', alt =
   return raw(`<span class="photo photo-${size} ${tone}">${`<span class="photo-ph">${glyph(cat, { size: glyphSize })}</span>`}${img}</span>`);
 }
 
+function photoFailed(img) {
+  if (img.hasAttribute('srcset')) { img.removeAttribute('srcset'); img.removeAttribute('sizes'); img.src = img.getAttribute('src'); return; }
+  img.remove();
+}
+
+/**
+ * Makes sure every photo in `root` ends up visible. A photo can finish loading while its
+ * markup is still detached (built in a fragment, or straight from the memory / service-worker
+ * cache), and then the document-level load listener never hears about it. So: already-decoded
+ * images are revealed now, and the rest get a listener of their own.
+ */
+export function settlePhotos(root = document) {
+  if (!root?.querySelectorAll) return;
+  const imgs = root.matches?.('img[data-photo]') ? [root] : root.querySelectorAll('img[data-photo]:not(.is-loaded)');
+  for (const img of imgs) {
+    if (img.classList.contains('is-loaded')) continue;
+    if (img.complete && img.naturalWidth > 0) { img.classList.add('is-loaded'); continue; }
+    if (img.dataset.watch) continue;
+    img.dataset.watch = '1';
+    img.addEventListener('load', () => img.classList.add('is-loaded'));
+    img.addEventListener('error', () => { if (!img.isConnected) photoFailed(img); });
+  }
+}
+
 /** Installed once: broken images fall back to their srcset-less src, then to the placeholder. */
 export function installPhotoFallback(root = document) {
   root.addEventListener('error', (ev) => {
     const img = ev.target;
     if (!(img instanceof HTMLImageElement) || !img.hasAttribute('data-photo')) return;
-    if (img.hasAttribute('srcset')) { img.removeAttribute('srcset'); img.removeAttribute('sizes'); img.src = img.getAttribute('src'); return; }
-    img.remove();
+    photoFailed(img);
   }, true);
   root.addEventListener('load', (ev) => {
     const img = ev.target;
     if (img instanceof HTMLImageElement && img.hasAttribute('data-photo')) img.classList.add('is-loaded');
   }, true);
+  // Every way markup reaches the page (renders, sheets, search results) passes through here.
+  if (typeof MutationObserver !== 'undefined') {
+    new MutationObserver((records) => {
+      for (const r of records) for (const n of r.addedNodes) if (n.nodeType === 1) settlePhotos(n);
+    }).observe(root.documentElement || root, { childList: true, subtree: true });
+  }
 }
 
 // ---------------------------------------------------------------- sheets
@@ -99,7 +129,7 @@ export function openSheet(opts) {
   if (current?.onClose) { try { current.onClose(); } catch { /* ignore */ } }
   current = { ...opts, prevFocus };
   d.className = `sheet sheet-${opts.size || 'auto'}`;
-  renderSheet();
+  renderSheet({ fresh: true });
   if (!d.open) {
     try { d.showModal(); } catch { d.setAttribute('open', ''); }
     document.documentElement.classList.add('has-sheet');
@@ -108,14 +138,24 @@ export function openSheet(opts) {
   first?.focus({ preventScroll: true });
 }
 
-export function renderSheet() {
+const FOCUSABLE = 'button, a[href], input:not([type=hidden]), select, textarea, summary';
+
+/**
+ * Draws the open sheet. `fresh` is a new sheet (slides up, starts at the top); anything else
+ * is the same sheet updating in place (a stepper, a tab, the family's changes arriving), which
+ * keeps its scroll position and keyboard focus and doesn't replay the slide-up.
+ */
+export function renderSheet({ fresh = false } = {}) {
   if (!current) return;
   const d = dialogEl();
   const body = current.render();
   const scroller = d.querySelector('.sheet-body');
-  const top = scroller ? scroller.scrollTop : 0;
+  const top = !fresh && scroller ? scroller.scrollTop : 0;
+  const act = document.activeElement;
+  const focusAt = !fresh && act && d.contains(act) ? [...d.querySelectorAll(FOCUSABLE)].indexOf(act) : -1;
+  const t = document.getElementById('toast');
   setHTML(d, html`
-    <div class="sheet-panel">
+    <div class="sheet-panel ${fresh ? '' : 'is-shown'}">
       <div class="sheet-grip" aria-hidden="true"></div>
       <header class="sheet-head">
         <div class="sheet-titles">
@@ -129,6 +169,8 @@ export function renderSheet() {
   const sc = d.querySelector('.sheet-body');
   if (sc && top) sc.scrollTop = top;
   current.onMount?.(d.querySelector('.sheet-body'));
+  if (t) d.appendChild(t); // a message (and its Undo) stays on top of the sheet
+  if (focusAt >= 0) (d.querySelectorAll(FOCUSABLE)[focusAt] || d.querySelector('.sheet-close'))?.focus({ preventScroll: true });
 }
 
 export function refreshLiveSheet() {
@@ -141,6 +183,8 @@ export function closeSheet() {
   current = null;
   if (d?.open) { try { d.close(); } catch { d.removeAttribute('open'); } }
   document.documentElement.classList.remove('has-sheet');
+  const t = document.getElementById('toast');
+  if (t && d?.contains(t)) document.body.appendChild(t);
   c?.onClose?.();
   if (c?.prevFocus && document.contains(c.prevFocus)) c.prevFocus.focus?.({ preventScroll: true });
 }
@@ -183,8 +227,11 @@ export function toast(message, { undo = null, action = null, duration = 6500 } =
     root.className = 'toast-root';
     root.setAttribute('role', 'status');
     root.setAttribute('aria-live', 'polite');
-    document.body.appendChild(root);
   }
+  // An open sheet is a modal <dialog> in the top layer: the toast must live inside it to be seen and tapped.
+  const sheet = document.getElementById('sheet');
+  const host = sheet?.open ? sheet : document.body;
+  if (root.parentNode !== host) host.appendChild(root);
   clearTimeout(toastTimer);
   const btn = undo ? { label: 'Undo', fn: undo } : action;
   setHTML(root, html`<div class="toast">

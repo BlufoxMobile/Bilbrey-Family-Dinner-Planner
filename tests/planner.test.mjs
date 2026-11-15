@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { realDb, tinyDb } from './helpers.mjs';
 import {
   generatePlan, periodRange, pizzaDates, dinnerById, isBurger, isPizza, isRice, isAsian, effectiveSides, rotationList,
-  dinnerFeasibleAt, shiftPeriod, nightType,
+  dinnerFeasibleAt, shiftPeriod, nightType, defaultAnchor,
 } from '../app/planner.js';
 import { settingsOf } from '../app/state.js';
 import { monIndex, startOfWeek, diffDays, weekday, dateRange } from '../app/util.js';
@@ -27,6 +27,25 @@ test('periods: week starts Monday, month is the calendar month', () => {
   assert.equal(m.end, '2026-11-30');
   assert.equal(shiftPeriod('2026-11-01', 'month', 1), '2026-12-01');
   assert.equal(shiftPeriod('2026-11-16', 'two', -1), '2026-11-02');
+});
+
+test('default period: Sunday-night planning starts with next week for 1, 2 and 3 weeks', () => {
+  const sunday = '2026-11-15';
+  for (const [period, days] of [['week', 7], ['two', 14], ['three', 21]]) {
+    const r = periodRange(defaultAnchor(sunday, period, 1), period, 1);
+    assert.equal(r.start, '2026-11-16', `${period} starts Monday Nov 16, not last Monday`);
+    assert.equal(r.dates.length, days);
+  }
+  // Midweek: this week (and the weeks after it).
+  assert.equal(periodRange(defaultAnchor('2026-11-18', 'two', 1), 'two', 1).start, '2026-11-16');
+  // Friday (three nights left) still shows this week for a Monday start …
+  assert.equal(periodRange(defaultAnchor('2026-11-13', 'week', 1), 'week', 1).start, '2026-11-09');
+  // … but with Sunday-start weeks, Friday + Saturday left means next week.
+  assert.equal(periodRange(defaultAnchor('2026-11-20', 'two', 0), 'two', 0).start, '2026-11-22');
+  // Month: this month, or next month in the last four days.
+  assert.equal(periodRange(defaultAnchor('2026-11-15', 'month'), 'month').start, '2026-11-01');
+  assert.equal(periodRange(defaultAnchor('2026-11-28', 'month'), 'month').start, '2026-12-01');
+  assert.equal(periodRange(defaultAnchor('2026-12-29', 'month'), 'month').start, '2027-01-01');
 });
 
 test('month plan follows every house rule', () => {

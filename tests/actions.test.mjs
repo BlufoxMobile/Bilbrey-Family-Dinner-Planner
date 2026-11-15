@@ -7,7 +7,7 @@ import {
   unmarkCookedOps, moveDisplacedOps, retireOps, restoreOps, generateOps,
 } from '../app/actions.js';
 import { buildList } from '../app/shopping.js';
-import { effectiveSides, rotationList, isRetired, benchList, periodRange } from '../app/planner.js';
+import { effectiveSides, rotationList, isRetired, isFavorite, benchList, periodRange, sideInfo, parseSideRef } from '../app/planner.js';
 
 const db = tinyDb();
 const TODAY = '2026-11-16';
@@ -108,6 +108,11 @@ test('substituting a side is remembered for that dinner on every future night, a
   for (const d of ['2026-11-17', '2026-11-24']) {
     assert.equal(effectiveSides(db, s, 'chix-grill', s.plan[d])[0].ref, 'item:greenBeans@2');
   }
+  // On the plate it reads as the food, not the shopping label ("Green beans, 15 oz cans").
+  const shelf = sideInfo(db, s, parseSideRef('item:greenBeans@2'));
+  assert.equal(shelf.title, 'Green beans');
+  assert.equal(shelf.steps[0], 'Warm or plate the green beans (2 cans) and divide among five plates.');
+  assert.match(r.message, /Green beans instead of Steamed broccoli\.$/);
   const list = buildList(db, s, { dates: ['2026-11-17', '2026-11-24'] });
   const gb = list.items.find((i) => i.id === 'greenBeans');
   assert.equal(gb.need, 8, '2 cans substitute + 2 cans default beans, × 2 nights');
@@ -125,9 +130,10 @@ test('three thumbs-down retire a dinner and promote the best bench dinner', () =
   const r = voteOps(db, s, { ...ctx, dinnerId: 'beef-bowl', who: 'Jackson', value: -1 });
   assert.equal(r.retired, true);
   assert.equal(r.promoted, 'bench-beef', 'same category + protein wins');
-  assert.match(r.message, /bench-beef joins the rotation, replacing beef-bowl/);
+  assert.match(r.message, /^Three thumbs down, so beef-bowl is taking a break\. Something new to try: bench-beef joins the rotation in its place, and takes over its 2 planned nights\.$/);
   s = run(s, r);
   assert.ok(isRetired(s, 'beef-bowl'));
+  assert.equal(isFavorite(s, { ...db.dinners['beef-bowl'], tags: ['family favorite'] }), false, 'a voted-out dinner is nobody’s favorite');
   assert.ok(rotationList(db, s).some((d) => d.id === 'bench-beef'));
   assert.equal(s.plan['2026-11-18'].dinner, 'bench-beef', 'future planned nights get the new dinner');
   assert.equal(s.plan['2026-11-25'].dinner, 'bench-beef');

@@ -106,7 +106,10 @@ test('every tab renders cleanly at 390×844 and 1280×800', async () => {
       await go(p, hash, sel);
       assert.ok(await noOverflow(p), `${hash} at ${vp.width}px has no horizontal scroll`);
       const text = await p.textContent('#view');
-      assert.ok(!/\bNaN\b|undefined|\[object Object\]/.test(text), `${hash} shows no NaN/undefined`);
+      assert.ok(!/\bNaN\b|undefined|\[object Object\]|Invalid Date|\bnull\b/.test(text), `${hash} shows no NaN/undefined/null`);
+      await p.waitForTimeout(250);
+      const hidden = await p.$$eval('img[data-photo]', (imgs) => imgs.filter((i) => i.complete && i.naturalWidth > 0 && !i.classList.contains('is-loaded')).map((i) => i.getAttribute('src')));
+      assert.deepEqual(hidden, [], `${hash}: every loaded photo is shown, not left invisible over its placeholder`);
     }
     await go(p, '#/plan', '.page-plan');
     await shot(p, `e2e-04-plan-${vp.width}`);
@@ -129,6 +132,24 @@ test('every tab renders cleanly at 390×844 and 1280×800', async () => {
   await desk.click('[data-action="plan:period"][data-value="week"]');
   await desk.close();
   assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('a photo that finishes loading before its markup is on the page still shows', async () => {
+  await go(page, '#/tonight', '.page-tonight');
+  const r = await page.evaluate(async () => {
+    const src = document.querySelector('img[data-photo]').getAttribute('src');
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<span class="photo"><img src="${src}" data-photo alt=""></span>`;
+    const img = wrap.querySelector('img');
+    await new Promise((res) => { if (img.complete) res(); else img.addEventListener('load', res, { once: true }); });
+    await new Promise((res) => setTimeout(res, 30)); // its load event has come and gone while detached
+    document.body.append(wrap);
+    await new Promise((res) => setTimeout(res, 30));
+    const shown = img.classList.contains('is-loaded');
+    wrap.remove();
+    return shown;
+  });
+  assert.ok(r, 'the photo is revealed once it is inserted');
 });
 
 test('“Make this tonight” on a dinner later in the week swaps the two nights', async () => {
@@ -259,6 +280,28 @@ test('shopping: fix a price, copy & open a store, check off, done shopping fills
     const keysNow = await page.$$eval('.item .item-main', (els) => els.map((e) => e.dataset.key));
     return doneKeys.every((k) => !keysNow.includes(k));
   });
+});
+
+test('messages show on top of an open sheet, Undo works there, and a dismissed message never blocks taps', async () => {
+  await go(page, '#/list', '.page-list');
+  await page.click('.store-sams .item .item-main');
+  await page.waitForSelector('dialog[open] [data-action="item:brand"]');
+  const id = await page.evaluate(() => document.querySelector('dialog[open] form[data-submit="item:price"]').dataset.id);
+  await page.click('dialog[open] [data-action="item:brand"][data-value="name"]');
+  await toastMatch(page, /Name brand for this item/);
+  assert.equal((await familyState(page)).state.brands?.[id], 'name');
+  await page.click('dialog[open] .toast-root .toast-btn'); // a modal sheet sits in the top layer: the toast must be inside it
+  await toastMatch(page, /Undone/);
+  assert.equal((await familyState(page)).state.brands?.[id], undefined, 'Undo from inside the sheet reverted the brand');
+  assert.equal(await page.getAttribute('dialog[open] [data-action="item:brand"][data-value="generic"]', 'aria-checked'), 'true', 'the sheet shows the undone choice');
+  await page.keyboard.press('Escape');
+  await page.click('.toast-root .toast-x');
+  await page.waitForTimeout(400);
+  const blocked = await page.evaluate(() => {
+    const r = document.querySelector('.toast-root .toast').getBoundingClientRect();
+    return !!document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('.toast-root');
+  });
+  assert.equal(blocked, false, 'a hidden toast lets taps through to the list under it');
 });
 
 test('budget: log a receipt, switch meat to lighter, the projection follows', async () => {

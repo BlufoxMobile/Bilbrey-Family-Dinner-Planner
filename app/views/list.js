@@ -108,7 +108,7 @@ function extrasSection(app) {
       <input class="input" name="name" placeholder="Paper towels" required maxlength="60" aria-label="Item">
       <div class="field-row">
         <input class="input" name="qty" type="number" inputmode="decimal" min="1" step="1" value="1" aria-label="How many">
-        <input class="input" name="price" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Price each (optional)" aria-label="Price each, optional">
+        <input class="input" name="price" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Price each" aria-label="Price each, optional">
       </div>
       <div class="field-row">
         <select class="input" name="store" aria-label="Store"><option value="jewel">Jewel-Osco</option><option value="sams">Sam's Club</option></select>
@@ -156,7 +156,8 @@ export function render(app) {
         const top = list.leftovers.filter((l) => l.storage === 'freezer' || l.storage === 'fridge').slice(0, 6);
         const rest = list.leftovers.length - top.length;
         return html`<section class="leftovers"><h2 class="section-title">Left over for next week</h2>
-          <p class="small">${top.length ? listJoin(top.map((l) => `${unitText(l.qty, l.unit)} ${l.name.toLowerCase()}`)) : ''}${rest > 0 ? `${top.length ? ', plus ' : ''}${rest} pantry ${rest === 1 ? 'item' : 'items'} with some to spare` : ''}.</p>
+          ${when(top.length, () => html`<ul class="leftover-list">${top.map((l) => html`<li><span>${l.name}</span><b>${unitText(l.qty, l.unit)}</b></li>`)}</ul>`)}
+          ${when(rest > 0, () => html`<p class="small">${top.length ? 'Plus ' : ''}${rest} pantry ${rest === 1 ? 'item' : 'items'} with some to spare.</p>`)}
           <p class="muted small">Tap “Done shopping” after the trip and these carry into the pantry, so next week’s list is smaller.</p></section>`;
       })}
       ${when(list.covered.length, () => html`<details class="covered"><summary>Already in the pantry (${list.covered.length})</summary>

@@ -35,8 +35,9 @@ export function render(app) {
         ${when(b.extras, () => html`<li><span class="key key-plan"></span>Everyday extras for the rest of the month<b>${money(b.extras)}</b></li>`)}
         ${when(b.unplanned, () => html`<li><span class="key key-maybe"></span>${b.unplanned} ${b.unplanned === 1 ? 'night' : 'nights'} not planned yet, at ${money(b.average)} a dinner (your rotation’s average)<b>+${money(round2(b.ifPlanned - b.projected))}</b></li>`)}
       </ul>
-      <p class="budget-verdict ${over ? 'is-over' : 'is-under'}">${over ? `${money(b.projected - b.target)} over the target so far.` : `${money(b.left)} left under the target.`}</p>
-      ${when(b.savings > 0, () => html`<p class="budget-save">${ic('leaf', { size: 20 })}<span>${money(b.savings)} less than the old ${money(b.baseline, { whole: true })} month.</span></p>`)}
+      <p class="budget-verdict ${over || b.leftIfPlanned < 0 ? 'is-over' : 'is-under'}">${over ? `${money(b.projected - b.target)} over the target so far.` : `${money(b.left)} left under the target.`}${
+        !over && b.unplanned ? ` Planning the other ${b.unplanned} ${b.unplanned === 1 ? 'night' : 'nights'} at about ${money(b.average)} each ${b.leftIfPlanned >= 0 ? `still leaves about ${money(b.leftIfPlanned)}` : `would go about ${money(-b.leftIfPlanned)} over`}.` : ''}</p>
+      ${when(b.savings > 0, () => html`<p class="budget-save">${ic('leaf', { size: 20 })}<span>${b.unplanned ? `On pace for about ${money(b.savings)}` : money(b.savings)} less than the old ${money(b.baseline, { whole: true })} month.</span></p>`)}
       <p class="muted small">Projected = receipts logged this month + the shopping list for the rest of ${month} (today through ${shortDate(b.end)}), at ${app.db.pricesUpdated ? `prices estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'estimated prices'}. ${b.receipts.length ? '' : 'Log receipts after each trip so “spent so far” is real.'}</p>
     </section>
 

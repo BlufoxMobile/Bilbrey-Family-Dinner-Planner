@@ -31,6 +31,7 @@
   --dusk: #343E5A;
   --dusk-2: #46527A;
   --dusk-ink: #F3EEE3;
+  --dusk-text: #46527A; /* away-night labels on paper/card */
   --rule-blue: rgba(79, 115, 160, 0.13);
   --focus: #2E6BD6;
   --scrim: rgba(36, 28, 14, 0.42);
@@ -76,7 +77,7 @@
     --ink: #EFE7D6; --ink-2: #C3BCAA; --ink-3: #A39D8B; --line: #2B3931; --line-2: #3C4C42;
     --pine: #A9D0B3; --pine-2: #BEDEC6; --pine-ink: #12201A; --sage: #93B49E; --sage-tint: #233629;
     --red: #E5695D; --red-tint: #3E2420; --butter: #E2C176; --butter-tint: #3A3220;
-    --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
+    --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --dusk-text: #C9D0EA; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
     --p-jeff: #7DB394; --p-candi: #D19AB6; --p-knox: #D9AE5E; --p-jordan: #8EB0D3; --p-jackson: #D39C76; --av-ink: #16201A;
     --sh-1: 0 1px 0 rgba(0, 0, 0, 0.25), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
     --sh-2: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -14px rgba(0, 0, 0, 0.7);
@@ -89,7 +90,7 @@
   --ink: #EFE7D6; --ink-2: #C3BCAA; --ink-3: #A39D8B; --line: #2B3931; --line-2: #3C4C42;
   --pine: #A9D0B3; --pine-2: #BEDEC6; --pine-ink: #12201A; --sage: #93B49E; --sage-tint: #233629;
   --red: #E5695D; --red-tint: #3E2420; --butter: #E2C176; --butter-tint: #3A3220;
-  --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
+  --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --dusk-text: #C9D0EA; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
   --p-jeff: #7DB394; --p-candi: #D19AB6; --p-knox: #D9AE5E; --p-jordan: #8EB0D3; --p-jackson: #D39C76; --av-ink: #16201A;
   --sh-1: 0 1px 0 rgba(0, 0, 0, 0.25), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
   --sh-2: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -14px rgba(0, 0, 0, 0.7);

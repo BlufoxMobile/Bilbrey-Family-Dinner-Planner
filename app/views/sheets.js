@@ -1,6 +1,6 @@
 // Sheets shared by Tonight, Plan and Recipes: a night's actions, picking a dinner,
 // moving/swapping, not eating at home, substituting sides, who's on this phone, sync.
-import { html, ic, when, openSheet, closeSheet, toast, avatar, renderSheet, confirmSheet, stepper } from '../ui.js';
+import { html, ic, when, openSheet, closeSheet, toast, avatar, renderSheet, confirmSheet, stepper, sheetId } from '../ui.js';
 import { AWAY_REASONS, FAMILY } from '../config.js';
 import {
   addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate,
@@ -11,7 +11,7 @@ import {
 } from '../planner.js';
 import {
   placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps,
-  resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps,
+  resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName,
 } from '../actions.js';
 import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason } from './common.js';
 import { waitText } from '../state.js';
@@ -151,7 +151,8 @@ export async function place(app, { dinnerId, date, fromDate }) {
     if (!ok) return;
   }
   const res = placeDinnerOps(app.db, app.state, { dinnerId, date, fromDate, who: app.who(), today });
-  if (!app.commit(res)) return;
+  // Undo puts the bumped dinner back, so "What about …?" no longer applies.
+  if (!app.commit(res, { onUndo: () => { if (sheetId() === 'displaced') closeSheet(); } })) return;
   if (res.displaced) openDisplaced(app, res.displaced, date);
   else closeSheet();
 }
@@ -163,7 +164,7 @@ function openDisplaced(app, displaced, fromDate) {
   openSheet({
     id: 'displaced',
     title: `What about ${d?.title || 'the other dinner'}?`,
-    subtitle: 'It was planned for that night.',
+    subtitle: `It was on the plan for ${nightName(fromDate, today)}.`,
     render: () => html`
       <h3 class="sheet-h">Move it to an open night</h3>
       ${open.length ? html`<div class="chip-grid">${open.map((x) => html`<button type="button" class="chip chip-lg" data-action="displaced:move" data-to="${x}" data-dinner="${displaced.dinner}">${dayWord(x, today)}<small>${shortDate(x)}</small></button>`)}</div>`

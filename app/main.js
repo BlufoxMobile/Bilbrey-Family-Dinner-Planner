@@ -4,7 +4,7 @@ import { loadDb } from './data.js';
 import { Store, settingsOf } from './state.js';
 import { todayISO } from './util.js';
 import {
-  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, installPhotoFallback, avatar, sheetOpen,
+  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, avatar, sheetOpen,
 } from './ui.js';
 import * as tonight from './views/tonight.js';
 import * as planView from './views/plan.js';
@@ -55,7 +55,7 @@ export const app = {
     }
     this.store.commit(res.ops);
     if (!quiet && res.message) {
-      toast(res.message, undoable && res.undo?.length ? { undo: () => { this.store.commit(res.undo); onUndo?.(); toast('Undone.'); } } : {});
+      toast(res.message, undoable && res.undo?.length ? { undo: () => { this.store.commit(res.undo); onUndo?.(); renderSheet(); toast('Undone.'); } } : {});
     }
     return true;
   },

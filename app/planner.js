@@ -2,7 +2,7 @@
 // deterministic dinner generator. No DOM, no clock (callers pass dates in).
 
 import {
-  addDays, addMonths, dateRange, datesBetween, diffDays, endOfMonth, monIndex, seeded, startOfMonth, startOfWeek, weekday,
+  addDays, addMonths, dateRange, datesBetween, diffDays, endOfMonth, fmtQty, monIndex, seeded, startOfMonth, startOfWeek, weekday,
 } from './util.js';
 import { settingsOf } from './state.js';
 import { normalizeDinner } from './data.js';
@@ -25,6 +25,21 @@ export function periodRange(anchor, period = 'week', weekStartsOn = 1) {
   const start = startOfWeek(anchor, weekStartsOn);
   const dates = dateRange(start, n);
   return { start, end: dates[dates.length - 1], dates, period };
+}
+
+/**
+ * The date whose period the planner shows by default. Weeks: this week, or next week once
+ * only a couple of nights are left (Sunday-night planning), for 1, 2 and 3 weeks alike, so
+ * "2 weeks" on a Sunday means the next two weeks, not last week plus this one.
+ * Month: this month, or next month in its last few days.
+ */
+export function defaultAnchor(today, period = 'week', weekStartsOn = 1) {
+  if (period === 'month') {
+    const r = periodRange(today, 'month', weekStartsOn);
+    return diffDays(r.end, today) + 1 < 5 ? shiftPeriod(r.start, 'month', 1) : today;
+  }
+  const wk = periodRange(today, 'week', weekStartsOn);
+  return diffDays(wk.end, today) + 1 < 3 ? addDays(wk.start, 7) : today;
 }
 
 export function shiftPeriod(start, period, dir) {
@@ -79,7 +94,7 @@ export function voteInfo(state, id) {
 }
 
 export function isFavorite(state, d) {
-  if (!d) return false;
+  if (!d || isRetired(state, d.id)) return false; // a voted-out dinner isn't anyone's favorite right now
   return voteInfo(state, d.id).up >= 3 || d.tags.includes('family favorite');
 }
 
@@ -131,20 +146,28 @@ export function effectiveSides(db, state, dinnerId, entry) {
   return out;
 }
 
+/** A shelf item's name as a side: drops pack details ("Cut green beans, 14.5 oz cans" → "Cut green beans"). */
+export function shelfTitle(name) {
+  const t = String(name || '').replace(/\s*\([^)]*\)\s*/g, ' ').replace(/,.*$/, '').trim();
+  return t || String(name || '').trim() || 'Something from the shelf';
+}
+
 /** Display info for a side ref. */
 export function sideInfo(db, state, parsed) {
   if (!parsed) return null;
   if (parsed.type === 'side') {
     const s = db.sides[parsed.id];
     return s ? { title: s.title, kind: s.kind, minutes: s.minutes, steps: s.steps, items: s.items, equipment: s.equipment, recipe: s }
-      : { title: parsed.id, kind: 'vegetable', minutes: 0, steps: [], items: {}, equipment: [] };
+      : { title: 'A side from the recipe box', kind: 'vegetable', minutes: 0, steps: [], items: {}, equipment: [] };
   }
   const ing = parsed.type === 'item' ? db.ingredients[parsed.id] : state?.custom?.[parsed.id];
-  const name = ing?.name || parsed.id;
+  const name = ing?.name || 'Something from the shelf';
   const unit = ing?.unit || '';
+  // "Cut green beans, 14.5 oz cans" reads as a shopping label; on a plate it's "Cut green beans".
+  const title = shelfTitle(name);
   return {
-    title: name, kind: 'shelf', minutes: 5, equipment: ['microwave'], shelf: true, qty: parsed.qty, unit,
-    steps: [`Warm or plate ${name.toLowerCase()} (${parsed.qty} ${unit}) and divide among five plates.`],
+    title, kind: 'shelf', minutes: 5, equipment: ['microwave'], shelf: true, qty: parsed.qty, unit,
+    steps: [`Warm or plate the ${title.toLowerCase()} (${fmtQty(parsed.qty)} ${unit}) and divide among five plates.`.replace(/ \)/, ')')],
     items: { [parsed.id]: parsed.qty },
   };
 }
@@ -272,7 +295,7 @@ export function storeCoverage(db, state, store) {
       if (!pantryCovers(db, state, id, q) && !canBuyAt(db, state, id, store)) missing[id] = (missing[id] || 0) + 1;
     }
   }
-  const top = Object.entries(missing).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([id]) => db.ingredients[id]?.name || state?.custom?.[id]?.name || id);
+  const top = Object.entries(missing).sort((a, b) => b[1] - a[1]).map(([id]) => db.ingredients[id]?.name || state?.custom?.[id]?.name).filter(Boolean).slice(0, 4);
   return { ok, total: rot.length, missing: top };
 }
 
