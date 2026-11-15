@@ -200,6 +200,19 @@ export function plural(n, one, many = one + 's') {
   return `${fmtQty(n)} ${Math.abs(n - 1) < 1e-9 ? one : many}`;
 }
 
+/**
+ * A title as it reads mid-sentence: "Mixed vegetables" → "mixed vegetables", but brands and names keep
+ * their capitals ("Idahoan Au Gratin…", "Trader Joe's…", "Old Bay fries", "BBQ beans").
+ */
+export function midSentence(title) {
+  const t = String(title || '');
+  const words = t.split(/\s+/);
+  const first = words[0] || '';
+  if (!/^[A-Z][a-z]/.test(first)) return t; // "BBQ", "7-layer", already lowercase
+  if (words.length > 1 && !/^[a-z&(]/.test(words[1])) return t; // a brand or proper name
+  return first[0].toLowerCase() + t.slice(1);
+}
+
 export function listJoin(items) {
   const a = items.filter(Boolean);
   if (a.length <= 1) return a.join('');

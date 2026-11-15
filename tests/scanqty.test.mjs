@@ -77,3 +77,15 @@ test('new shelf items get a sensible aisle', () => {
   assert.equal(guessAisle('Thin rice noodles, Thai Kitchen'), 'Pasta & Grains');
   assert.equal(guessAisle('Progresso soup, canned'), 'Canned & Jarred');
 });
+
+test('side titles read naturally mid-sentence, brands keep their capitals', async () => {
+  const { midSentence } = await import('../app/util.js');
+  assert.equal(midSentence('Mixed vegetables'), 'mixed vegetables');
+  assert.equal(midSentence('Crispy potstickers'), 'crispy potstickers');
+  assert.equal(midSentence('Air-fryer fries'), 'air-fryer fries');
+  assert.equal(midSentence('Edamame'), 'edamame');
+  assert.equal(midSentence('Idahoan Au Gratin sliced potatoes'), 'Idahoan Au Gratin sliced potatoes');
+  assert.equal(midSentence("Trader Joe's Spanish style rice"), "Trader Joe's Spanish style rice");
+  assert.equal(midSentence('Old Bay air-fryer fries'), 'Old Bay air-fryer fries');
+  assert.equal(midSentence('BBQ beans'), 'BBQ beans');
+});

@@ -478,3 +478,24 @@ ranch wraps, apple-jelly glazed pork chops) and five sides (Cajun skillet potato
 rice, Old Bay fries, Cajun fries, green beans with crispy onions); tikka masala now comes with
 turmeric rice, the sausage skillet gets Slap Ya Mama, the sausage hoagies get giardiniera, and the
 sweet potatoes get cinnamon.
+
+## 11. v2.4 — The week from the freezer (Jeff, 2026-11-15 afternoon)
+
+> "Here are the rest of our groceries. Can you add these in and then help me get a menu together for
+> this week? … I will be getting paid on Friday, which is when I plan on using this app full time …
+> Also, can you color code each person's profile? Jeff and Candi are the current green, Jackson is
+> red, Jordan is blue and Knox is yellow."
+
+- Freezer photos → pantry: Member's Mark 93/7 ground beef (3 × 1 lb), ⅓ lb sirloin patties, two large
+  chicken breasts, eye of round steaks, a 42 oz pork chorizo pack, a bag of BBQ pork, jarred
+  nopalitos, 4 ears of sweet corn; shelf items for Trader Joe's frozen rice, Philly Gourmet smashed
+  patties, El Monterey burritos and other freezer snacks. The 2024 tilapia is ignored (seafood-free).
+- New core dinners tagged "from your pantry": Cajun butter steak bites (eye of round), chorizo &
+  nopalitos street tacos, smoky beef & bean chili; new side: La Preferida charro beans.
+- Week of Nov 15–20 (Sunday through payday Friday) planned from what's on hand, using shelf-item
+  sides where the pantry has them (canned sweet peas, Idahoan au gratin, Trader Joe's Spanish rice,
+  Cracker Barrel mac, canned mixed vegetables). The regular plan resumes Saturday Nov 21.
+- Side titles read naturally mid-sentence ("buttered sweet corn and mixed vegetables"); brand names
+  keep their capitals.
+- Profile colors: Jeff and Candi green, Jackson red, Jordan blue, Knox yellow, carried on avatars and
+  on selected person chips.

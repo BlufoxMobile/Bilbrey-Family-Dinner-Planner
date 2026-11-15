@@ -1,7 +1,7 @@
 // COOK MODE: big readable steps for the dinner and both sides, tap to check off,
 // screen stays awake while it's open.
 import { html, ic, when, tf } from '../ui.js';
-import { fmtQty, isISODate, relativeDay } from '../util.js';
+import { fmtQty, isISODate, midSentence, relativeDay } from '../util.js';
 import { dinnerById, scaleItems } from '../planner.js';
 import { markCookedOps } from '../actions.js';
 import { itemMeta, singular } from '../shopping.js';
@@ -80,7 +80,7 @@ export function render(app) {
     <div class="cook-body">
       <div class="cook-card">
         <h1 class="cook-dish">${t.d.title}</h1>
-        <p class="cook-with">${sides.length ? `with ${sides.map((s) => s.info?.title).join(' and ')}` : ''}</p>
+        <p class="cook-with">${sides.length ? `with ${sides.map((s) => midSentence(s.info?.title || '')).join(' and ')}` : ''}</p>
         ${equipment(t.d)}
         <p class="muted small">${'wakeLock' in navigator ? 'The screen stays on while cook mode is open.' : 'Tip: turn up auto-lock while you cook.'}</p>
       </div>

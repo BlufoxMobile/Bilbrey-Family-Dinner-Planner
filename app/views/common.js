@@ -4,7 +4,7 @@ import { EQUIPMENT_LABELS } from '../config.js';
 import { EQUIPMENT_ICON } from '../icons.js';
 import { dinnerById, effectiveSides, sideInfo, isFavorite } from '../planner.js';
 import { lunchVote } from '../lunch.js';
-import { listJoin, relativeDay, shortWeekday } from '../util.js';
+import { listJoin, midSentence, relativeDay, shortWeekday } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
 
@@ -81,7 +81,7 @@ export function sidesFor(app, dinnerId, entry) {
 }
 
 export function sidesText(app, dinnerId, entry) {
-  return listJoin(sidesFor(app, dinnerId, entry).map((s) => s.info?.title).filter(Boolean));
+  return listJoin(sidesFor(app, dinnerId, entry).map((s) => s.info?.title).filter(Boolean).map((t, i) => (i ? midSentence(t) : t)));
 }
 
 export function dinnerPhoto(app, d, opts = {}) {
