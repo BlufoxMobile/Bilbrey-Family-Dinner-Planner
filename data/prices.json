@@ -1,6 +1,6 @@
 {
   "updated": "2026-11-14",
-  "notes": "Researched 2026-11-14 by the pricing agent. SAM'S CLUB: 'listed' prices were read that day from samsclub.com listing/product pages (the url on each entry is the exact page). They are Sam's ONLINE prices for its default club; samsclub.com says 'prices may vary in club and online' (a spot check on the Addison #6487 club page showed one egg item ~3% higher than the default online price). Where a temporary 'Instant Savings' price was shown, the regular price is used and the sale is noted in the label. Per-pound meat (chicken trays, ground beef rolls, pork) uses Sam's average package price and average weight (price ÷ $/lb). Sam's bakery brands differ by region (e.g., buns), so Addison may stock a different budget brand. Some Sam's tiers have no national brand online (fresh meat, eggs, produce, spices); those 'name' entries repeat the store-brand item or a premium Member's Mark item and say so. JEWEL-OSCO: jewelosco.com blocks automated reading and needs a chosen store, and Instacart pages for Jewel are closed to automated reads, so every Jewel number is 'estimated'. Anchors: Jewel-Osco listings on DoorDash (Nov 2026; sizes usually not shown, and delivery-app prices can run above in-store, so these lean slightly high on purpose), a GroceryChop scrape of a Jewel regular price, and typical late-2026 Chicago-area Albertsons/Jewel shelf prices for Signature Select/Signature Farms/Lucerne/O Organics vs national brands. Treat Jewel estimates as about ±15%, and expect weekly-ad sales (e.g., chicken breast $1.99-2.49/lb) to beat them. Produce is unbranded, so both tiers match. Items in 'notSeenAt.sams' were not found on samsclub.com and have no Sam's entry here; Sam's entries whose label says 'NOT seen on samsclub.com' are planning estimates for products Sam's commonly carries. The family can correct any price in-app.",
+  "notes": "Researched 2026-11-14 by the pricing agent. SAM'S CLUB: 'listed' prices were read that day from samsclub.com listing/product pages (the url on each entry is the exact page). They are Sam's ONLINE prices for its default club; samsclub.com says 'prices may vary in club and online' (a spot check on the Addison #6487 club page showed one egg item ~3% higher than the default online price). Where a temporary 'Instant Savings' price was shown, the regular price is used and the sale is noted in the label. Per-pound meat (chicken trays, ground beef rolls, pork) uses Sam's average package price and average weight (price ÷ $/lb). Sam's bakery brands differ by region (e.g., buns), so Addison may stock a different budget brand. Some Sam's tiers have no national brand online (fresh meat, eggs, produce, spices); those 'name' entries repeat the store-brand item or a premium Member's Mark item and say so. JEWEL-OSCO: jewelosco.com blocks automated reading and needs a chosen store, and Instacart pages for Jewel are closed to automated reads, so every Jewel number is 'estimated'. Anchors: Jewel-Osco listings on DoorDash (Nov 2026; sizes usually not shown, and delivery-app prices can run above in-store, so these lean slightly high on purpose), a GroceryChop scrape of a Jewel regular price, and typical late-2026 Chicago-area Albertsons/Jewel shelf prices for Signature Select/Signature Farms/Lucerne/O Organics vs national brands. Treat Jewel estimates as about ±15%, and expect weekly-ad sales (e.g., chicken breast $1.99-2.49/lb) to beat them. Produce is unbranded, so both tiers match. Items in 'notSeenAt.sams' were not found on samsclub.com and have no Sam's entry here; Sam's entries whose label says 'NOT seen on samsclub.com' are planning estimates for products Sam's commonly carries. v2.1 lunch products (catalog ids with \"lunch\": true) were researched the same way on 2026-11-14 evening; their Jewel prices are estimates too, and Boar's Head items are Boar's Head in both tiers because that is what Knox asked for. The family can correct any price in-app.",
   "conversions": {
     "rice": "dry long-grain rice ≈ 2.3 cups per lb (≈ 197 g per cup)",
     "butter": "1 stick = 4 oz = 8 tbsp",
@@ -22,6 +22,9 @@
   },
   "notSeenAt": {
     "sams": [
+      "bhBlackForestHam",
+      "bhGenoaProvolone",
+      "bodyArmorOM",
       "brownSugar",
       "cannedCarrots",
       "ciderVinegar",
@@ -35,13 +38,16 @@
       "panko",
       "paprika",
       "peas",
+      "ranchCups",
       "riceVinegar",
       "sesame",
       "slaw",
       "starch",
+      "tfBltChickenBowl",
+      "tfRanchChickenBowl",
       "tikka"
     ],
-    "note": "Not found on samsclub.com on 2026-11-14 (frozen corn/peas, coleslaw mix, tikka sauce, cornstarch, sesame oil, smoked paprika, canned carrots, ground pork, rice & cider vinegar, flour, panko, brown sugar, hoagie rolls, frozen mini corn cobs, edamame, cilantro). Plan these at Jewel-Osco unless the family confirms the Addison club stocks them."
+    "note": "Not found on samsclub.com on 2026-11-14 (frozen corn/peas, coleslaw mix, tikka sauce, cornstarch, sesame oil, smoked paprika, canned carrots, ground pork, rice & cider vinegar, flour, panko, brown sugar, hoagie rolls, frozen mini corn cobs, edamame, cilantro). Lunch items: Sam's has no Boar's Head deli counter or Boar's Head snack trays online, no Orange Mango-only BODYARMOR pack (only variety packs), no Taylor Farms single-serve bowls and no ranch dip cups. Plan these at Jewel-Osco unless the family confirms the Addison club stocks them."
   },
   "prices": {
     "chicken": {
@@ -515,9 +521,10 @@
       "sams": {
         "generic": {
           "size": 16.0,
-          "price": 3.28,
-          "label": "Member's Mark 2% Milk, 1 gallon (16 cups) — dairy price not captured online; estimate",
-          "confidence": "estimated"
+          "price": 3.58,
+          "label": "Member's Mark 2% Reduced Fat Milk, 1 gallon (16 cups)",
+          "url": "https://www.samsclub.com/browse/milk-cream/1509",
+          "confidence": "listed"
         },
         "name": {
           "size": 13.0,
@@ -3481,6 +3488,861 @@
           "size": 6.0,
           "price": 5.29,
           "label": "Orville Redenbacher's Butter, 6 bags (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "bhBlackForestHam": {
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 13.99,
+          "label": "Boar's Head SmokeMaster Beechwood Smoked Black Forest Uncured Ham, sliced at the Jewel deli, per lb (est. regular; deli sales often ~$9.99/lb) (Boar's Head both tiers — Knox's pick)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 13.99,
+          "label": "Boar's Head SmokeMaster Beechwood Smoked Black Forest Uncured Ham, sliced at the Jewel deli, per lb (est. regular; deli sales often ~$9.99/lb)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "bhGenoaProvolone": {
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 5.99,
+          "label": "Boar's Head Uncured Genoa Salame & Picante Provolone Cheese snack ('Take Along' / To Go), 4 oz tray — 360 cal, 28 g protein (est. price; $5.99 at a Kroger-family store) (same product both tiers)",
+          "url": "https://shop.jewelosco.com/product-details.960138612.html",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 5.99,
+          "label": "Boar's Head Uncured Genoa Salame & Picante Provolone Cheese snack ('Take Along' / To Go), 4 oz tray — 360 cal, 28 g protein (est. price; $5.99 at a Kroger-family store)",
+          "url": "https://shop.jewelosco.com/product-details.960138612.html",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "doritosMix": {
+      "sams": {
+        "generic": {
+          "size": 30.0,
+          "price": 18.48,
+          "label": "Doritos Mix Variety Pack, 30 snack bags (regular $18.48; $16.48 instant savings seen 11/14). Sam's page doesn't list counts; this pack elsewhere holds ~8 Cool Ranch + Nacho, Spicy Nacho, Flamin' Hot, Spicy Sweet Chili",
+          "url": "https://www.samsclub.com/c/kp/tortilla-chips",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 30.0,
+          "price": 18.48,
+          "label": "Frito-Lay Premiere Mix Variety Pack, 30 bags (6 Doritos Cool Ranch, 8 Ruffles Cheddar & Sour Cream, 6 Cheetos Puffs, 5 Funyuns, 5 Fritos Twists)",
+          "url": "https://www.samsclub.com/ip/13593817447",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 5.99,
+          "label": "Doritos Cool Ranch snack-size multipack, ~1 oz bags (est.; count varies by pack)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 5.99,
+          "label": "Doritos Cool Ranch snack-size multipack, ~1 oz bags (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "doritosCoolRanchBag": {
+      "sams": {
+        "generic": {
+          "size": 18.38,
+          "price": 4.48,
+          "label": "Doritos Cool Ranch Tortilla Chips, 18.38 oz party bag (portion ~1.5 oz into a snack bag ≈ $0.37 a lunch) (same product both tiers)",
+          "url": "https://www.samsclub.com/ip/13577316692",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 18.38,
+          "price": 4.48,
+          "label": "Doritos Cool Ranch Tortilla Chips, 18.38 oz party bag (portion ~1.5 oz into a snack bag ≈ $0.37 a lunch)",
+          "url": "https://www.samsclub.com/ip/13577316692",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 9.25,
+          "price": 5.79,
+          "label": "Doritos Cool Ranch, 9.25 oz bag (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 9.25,
+          "price": 5.79,
+          "label": "Doritos Cool Ranch, 9.25 oz bag (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "bakedChipsMix": {
+      "sams": {
+        "generic": {
+          "size": 30.0,
+          "price": 18.48,
+          "label": "Frito-Lay Baked Mix Variety Pack, 30 bags (9 Baked Lay's, 9 Baked Cheetos, 7 Baked Lay's BBQ, 5 Baked Ruffles; 37.1 oz total) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/ip/15013823706",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 30.0,
+          "price": 18.48,
+          "label": "Frito-Lay Baked Mix Variety Pack, 30 bags (9 Baked Lay's, 9 Baked Cheetos, 7 Baked Lay's BBQ, 5 Baked Ruffles; 37.1 oz total)",
+          "url": "https://www.samsclub.com/ip/15013823706",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 5.99,
+          "label": "Baked Lay's Original snack bags, ~1 oz × 8 (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 5.99,
+          "label": "Baked Lay's Original snack bags, ~1 oz × 8 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "nabiscoMix": {
+      "sams": {
+        "generic": {
+          "size": 40.0,
+          "price": 12.98,
+          "label": "Nabisco Classic Mix Cookie & Cracker Variety Pack, 1 oz × 40 (10 Oreo Mini, 10 Chips Ahoy! mini, 10 Ritz Bits Cheese, 6 Teddy Grahams Honey, 4 Nutter Butter Bites) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/ip/13879917726",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 40.0,
+          "price": 12.98,
+          "label": "Nabisco Classic Mix Cookie & Cracker Variety Pack, 1 oz × 40 (10 Oreo Mini, 10 Chips Ahoy! mini, 10 Ritz Bits Cheese, 6 Teddy Grahams Honey, 4 Nutter Butter Bites)",
+          "url": "https://www.samsclub.com/ip/13879917726",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 12.0,
+          "price": 6.99,
+          "label": "Nabisco snack-pack variety (Oreo Mini / Chips Ahoy! / Ritz Bits), 12 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 6.99,
+          "label": "Nabisco snack-pack variety, 12 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "yoohoo": {
+      "sams": {
+        "generic": {
+          "size": 40.0,
+          "price": 12.98,
+          "label": "Yoo-hoo Chocolate Drink, 6.5 fl oz × 40 (product on samsclub.com shows a members-only price; estimate)",
+          "url": "https://www.samsclub.com/ip/Yoo-hoo-Chocolate-Drink-6-5-fl-oz-40-pk/13585924237",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 40.0,
+          "price": 12.98,
+          "label": "Yoo-hoo Chocolate Drink, 6.5 fl oz × 40 (product on samsclub.com shows a members-only price; estimate)",
+          "url": "https://www.samsclub.com/ip/Yoo-hoo-Chocolate-Drink-6-5-fl-oz-40-pk/13585924237",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 10.0,
+          "price": 4.99,
+          "label": "Yoo-hoo Chocolate Drink, 6.5 fl oz × 10 (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 4.99,
+          "label": "Yoo-hoo Chocolate Drink, 6.5 fl oz × 10 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "capriSun": {
+      "sams": {
+        "generic": {
+          "size": 40.0,
+          "price": 10.48,
+          "label": "Capri Sun Variety Pack, 6 fl oz × 40 — 20 Fruit Punch + 10 Strawberry Kiwi + 10 Pacific Cooler (no Fruit Punch-only pack seen at Sam's) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/ip/Capri-Sun-Variety-Pack-6-fl-oz-pouches-40-pk/8768400444",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 40.0,
+          "price": 10.48,
+          "label": "Capri Sun Variety Pack, 6 fl oz × 40 — 20 Fruit Punch + 10 Strawberry Kiwi + 10 Pacific Cooler (no Fruit Punch-only pack seen at Sam's)",
+          "url": "https://www.samsclub.com/ip/Capri-Sun-Variety-Pack-6-fl-oz-pouches-40-pk/8768400444",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 10.0,
+          "price": 3.99,
+          "label": "Capri Sun Fruit Punch, 6 fl oz × 10 (all Fruit Punch) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 3.99,
+          "label": "Capri Sun Fruit Punch, 6 fl oz × 10 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "bodyArmorOM": {
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 8.99,
+          "label": "BODYARMOR Orange Mango sports drink, 16 fl oz × 6 (est.; singles ≈ $2.49). 110 cal, 25 g sugar a bottle (same product both tiers)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 8.99,
+          "label": "BODYARMOR Orange Mango sports drink, 16 fl oz × 6 (est.; singles ≈ $2.49). 110 cal, 25 g sugar a bottle",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "bodyArmorLyte": {
+      "sams": {
+        "generic": {
+          "size": 24.0,
+          "price": 16.48,
+          "label": "BODYARMOR LYTE Variety Pack, 12 fl oz × 24 (6 each Peach Mango, Strawberry Banana, Blueberry Pomegranate, Dragonfruit Berry — no orange flavor)",
+          "url": "https://www.samsclub.com/ip/BODYARMOR-LYTE-Sports-Drink-Variety-Pack-Bottles-12-fl-oz-24-pk/13599921233",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 24.0,
+          "price": 16.48,
+          "label": "BODYARMOR LYTE Variety Pack, 12 fl oz × 24 (same product both tiers)",
+          "url": "https://www.samsclub.com/ip/BODYARMOR-LYTE-Sports-Drink-Variety-Pack-Bottles-12-fl-oz-24-pk/13599921233",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 2.29,
+          "label": "BODYARMOR LYTE Orange Clementine, 16 fl oz — closest LYTE to Orange Mango (no Orange Mango LYTE exists); 20 cal (est. price)",
+          "url": "https://business.jewelosco.com/shop/product-details.960322114.html",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 2.29,
+          "label": "BODYARMOR LYTE Orange Clementine, 16 fl oz (est. price)",
+          "url": "https://business.jewelosco.com/shop/product-details.960322114.html",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "mmCobbSalad": {
+      "sams": {
+        "generic": {
+          "size": 33.0,
+          "price": 10.88,
+          "label": "Member's Mark Cobb Salad with Grilled Chicken and Avocado Ranch, deli case, priced per lb ($5.28/lb; avg tray ~2.06 lb ≈ 33 oz) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/packaged-salads/1541",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 33.0,
+          "price": 10.88,
+          "label": "Member's Mark Cobb Salad with Grilled Chicken and Avocado Ranch, deli case, priced per lb ($5.28/lb; avg tray ~2.06 lb ≈ 33 oz)",
+          "url": "https://www.samsclub.com/browse/packaged-salads/1541",
+          "confidence": "listed"
+        }
+      }
+    },
+    "tfRanchChickenBowl": {
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 4.99,
+          "label": "Taylor Farms Ranch Salad with Chicken & Bacon, single-serve bowl, 5.8 oz (360 cal, 14 g protein) (est. price) (same product both tiers)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 4.99,
+          "label": "Taylor Farms Ranch Salad with Chicken & Bacon, single-serve bowl, 5.8 oz (360 cal, 14 g protein) (est. price)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "tfBltChickenBowl": {
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 4.99,
+          "label": "Taylor Farms BLT Salad with Chicken, single-serve bowl with avocado ranch, 6.8 oz (310 cal, 13 g protein) (est. price) (same product both tiers)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 4.99,
+          "label": "Taylor Farms BLT Salad with Chicken, single-serve bowl with avocado ranch, 6.8 oz (310 cal, 13 g protein) (est. price)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "gardenSalad": {
+      "sams": {
+        "generic": {
+          "size": 32.0,
+          "price": 2.97,
+          "label": "Garden Salad, 2 lb bag",
+          "url": "https://www.samsclub.com/browse/packaged-salads/1541",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 2.97,
+          "label": "Garden Salad, 2 lb bag (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/packaged-salads/1541",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 12.0,
+          "price": 2.49,
+          "label": "Signature Farms garden/American salad blend, 12 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 2.99,
+          "label": "Fresh Express Garden salad, 12 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "grilledChicken": {
+      "sams": {
+        "generic": {
+          "size": 24.0,
+          "price": 14.98,
+          "label": "Member's Mark Fire Grilled Chicken Breasts, fresh, 6 ct (~1.5 lb at $9.99/lb)",
+          "url": "https://www.samsclub.com/c/kp/chicken-breast",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 48.0,
+          "price": 16.98,
+          "label": "Member's Mark Grilled Chicken Bites, frozen, 3 lb (no national-brand plain grilled chicken seen)",
+          "url": "https://www.samsclub.com/c/kp/chicken-breast",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 9.0,
+          "price": 5.99,
+          "label": "Signature Select fully cooked grilled chicken breast strips, ~9 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 22.0,
+          "price": 12.99,
+          "label": "Tyson Grilled & Ready Chicken Breast Strips, frozen, 22 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "lightRanch": {
+      "sams": {
+        "generic": {
+          "size": 160.0,
+          "price": 12.48,
+          "label": "Hidden Valley Light Ranch, 40 fl oz × 2 (= 160 tbsp) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 160.0,
+          "price": 12.48,
+          "label": "Hidden Valley Light Ranch, 40 fl oz × 2 (= 160 tbsp)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 32.0,
+          "price": 2.89,
+          "label": "Signature Select Light Ranch, 16 fl oz (= 32 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 4.49,
+          "label": "Hidden Valley Light Ranch, 16 fl oz (= 32 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "ranchCups": {
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 3.99,
+          "label": "Hidden Valley Original Ranch To Go cups, 1.5 fl oz × 8 (est.) (same product both tiers)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 3.99,
+          "label": "Hidden Valley Original Ranch To Go cups, 1.5 fl oz × 8 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "clementines": {
+      "sams": {
+        "generic": {
+          "size": 5.0,
+          "price": 7.52,
+          "label": "Clementine Mandarins, 5 lb bag (~30 fruit)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 5.0,
+          "price": 7.52,
+          "label": "Clementine Mandarins, 5 lb bag (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 3.0,
+          "price": 5.99,
+          "label": "Clementines, 3 lb bag (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 5.99,
+          "label": "Clementines, 3 lb bag (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "babyCarrots": {
+      "sams": {
+        "generic": {
+          "size": 3.0,
+          "price": 4.62,
+          "label": "Organic Sweet Petite Baby Carrots, 3 lb",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 4.62,
+          "label": "Organic Sweet Petite Baby Carrots, 3 lb (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 2.49,
+          "label": "Signature Select Peeled Baby-Cut Carrots, 1 lb (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en/convenience/store/1740960/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 2.49,
+          "label": "Signature Select Peeled Baby-Cut Carrots, 1 lb (unbranded produce: same item both tiers)",
+          "url": "https://www.doordash.com/en/convenience/store/1740960/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "greekYogurtCups": {
+      "sams": {
+        "generic": {
+          "size": 16.0,
+          "price": 12.87,
+          "label": "Chobani Nonfat Greek Yogurt Fruit on the Bottom Variety, 5.3 oz × 16",
+          "url": "https://www.samsclub.com/c/kp/yogurt",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 18.0,
+          "price": 14.76,
+          "label": "Oikos Triple Zero Nonfat Greek Yogurt Variety, 5.3 oz × 18 (no added sugar)",
+          "url": "https://www.samsclub.com/c/kp/yogurt",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 4.0,
+          "price": 3.99,
+          "label": "Lucerne Nonfat Greek Yogurt cups, 5.3 oz × 4 (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 5.49,
+          "label": "Chobani Nonfat Greek Yogurt, 5.3 oz × 4 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "fruitCups": {
+      "sams": {
+        "generic": {
+          "size": 20.0,
+          "price": 11.98,
+          "label": "Dole No Sugar Added Fruit Bowls in Water, 4 oz × 20 (peaches, cherry mixed fruit, mandarins; regular $11.98, $9.48 on sale) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/ip/Dole-No-Sugar-Added-Fruit-Bowls-in-Water-Variety-Pack-4-oz-20-pk/19815766414",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 20.0,
+          "price": 11.98,
+          "label": "Dole No Sugar Added Fruit Bowls in Water, 4 oz × 20 (peaches, cherry mixed fruit, mandarins; regular $11.98, $9.48 on sale)",
+          "url": "https://www.samsclub.com/ip/Dole-No-Sugar-Added-Fruit-Bowls-in-Water-Variety-Pack-4-oz-20-pk/19815766414",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 4.0,
+          "price": 2.49,
+          "label": "Signature Select fruit cups in 100% juice, 4 oz × 4 (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 3.99,
+          "label": "Dole Fruit Bowls No Sugar Added, 4 oz × 4 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "hummusSingles": {
+      "sams": {
+        "generic": {
+          "size": 16.0,
+          "price": 5.58,
+          "label": "Member's Mark Classic Hummus Singles, 2.5 oz × 16",
+          "url": "https://www.samsclub.com/ip/members-mark-classic-hummus-singles-16pk/13585600072",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 5.58,
+          "label": "Member's Mark Classic Hummus Singles, 2.5 oz × 16 (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/ip/members-mark-classic-hummus-singles-16pk/13585600072",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 5.49,
+          "label": "Sabra Classic Hummus Singles, 2 oz × 6 (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 5.49,
+          "label": "Sabra Classic Hummus Singles, 2 oz × 6 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "hardBoiledEggs": {
+      "sams": {
+        "generic": {
+          "size": 12.0,
+          "price": 5.98,
+          "label": "Great Day Farms Cage-Free Hard Boiled Eggs, 12 pk (product seen on samsclub.com; price not captured — estimate)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 5.98,
+          "label": "Great Day Farms Cage-Free Hard Boiled Eggs, 12 pk (estimate)",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 3.99,
+          "label": "Eggland's Best Hard-Cooked Peeled Eggs, 6 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 3.99,
+          "label": "Eggland's Best Hard-Cooked Peeled Eggs, 6 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "proteinBars": {
+      "sams": {
+        "generic": {
+          "size": 30.0,
+          "price": 14.98,
+          "label": "Nature Valley Peanut Butter Dark Chocolate Protein Chewy Bars, 30 ct",
+          "url": "https://www.samsclub.com/c/kp/granola-bars",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 14.0,
+          "price": 18.48,
+          "label": "KIND Protein Dark Chocolate Nut & Crunchy Peanut Butter, 14 ct",
+          "url": "https://www.samsclub.com/c/kp/granola-bars",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 5.0,
+          "price": 4.99,
+          "label": "Nature Valley Protein Chewy Bars, 5 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 6.49,
+          "label": "KIND Protein bars, 4 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "wholeGrainCrackers": {
+      "sams": {
+        "generic": {
+          "size": 34.0,
+          "price": 8.98,
+          "label": "Triscuit Original Whole Grain Crackers, 8.5 oz × 4 (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/crackers",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 34.0,
+          "price": 8.98,
+          "label": "Triscuit Original Whole Grain Crackers, 8.5 oz × 4",
+          "url": "https://www.samsclub.com/c/kp/crackers",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 9.0,
+          "price": 2.49,
+          "label": "Signature Select Woven Wheat crackers, ~9 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.5,
+          "price": 4.49,
+          "label": "Triscuit Original, 8.5 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cannedChicken": {
+      "sams": {
+        "generic": {
+          "size": 6.0,
+          "price": 12.56,
+          "label": "Member's Mark Premium Chunk Chicken Breast, 12.5 oz × 6 cans (regular $12.56; $11.98 instant savings seen)",
+          "url": "https://www.samsclub.com/c/kp/chicken-breast",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 12.56,
+          "label": "Member's Mark Premium Chunk Chicken Breast, 12.5 oz × 6 cans (regular $12.56; $11.98 instant savings seen) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/c/kp/chicken-breast",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 3.99,
+          "label": "Signature Select Chunk Chicken Breast in Water, 12.5 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 4.99,
+          "label": "Swanson Premium White Chunk Chicken, 12.5 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "skinnyPop": {
+      "sams": {
+        "generic": {
+          "size": 28.0,
+          "price": 13.98,
+          "label": "SkinnyPop Original Popcorn snack bags, 0.65 oz × 28 (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/microwave-popcorn",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 28.0,
+          "price": 13.98,
+          "label": "SkinnyPop Original Popcorn snack bags, 0.65 oz × 28",
+          "url": "https://www.samsclub.com/c/kp/microwave-popcorn",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 4.99,
+          "label": "SkinnyPop Original, 0.65 oz × 6 (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 4.99,
+          "label": "SkinnyPop Original, 0.65 oz × 6 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "sparklingWater": {
+      "sams": {
+        "generic": {
+          "size": 24.0,
+          "price": 10.48,
+          "label": "LaCroix Sparkling Water Variety (12 lime, 6 lemon, 6 grapefruit), 12 fl oz × 24 (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/ip/1299381237",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 24.0,
+          "price": 10.48,
+          "label": "LaCroix Sparkling Water Variety (12 lime, 6 lemon, 6 grapefruit), 12 fl oz × 24",
+          "url": "https://www.samsclub.com/ip/1299381237",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 12.0,
+          "price": 3.49,
+          "label": "Signature Select Refreshe sparkling water, 12 fl oz × 12 (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 4.99,
+          "label": "LaCroix, 12 fl oz × 8 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "milkBoxes": {
+      "sams": {
+        "generic": {
+          "size": 18.0,
+          "price": 19.98,
+          "label": "Horizon Organic Whole Milk boxes, shelf-stable, 8 fl oz × 18 (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/browse/milk-cream/1509",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 18.0,
+          "price": 19.98,
+          "label": "Horizon Organic Whole Milk boxes, shelf-stable, 8 fl oz × 18",
+          "url": "https://www.samsclub.com/browse/milk-cream/1509",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 7.99,
+          "label": "Horizon Organic 1% Lowfat Milk boxes, 8 fl oz × 6 (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 7.99,
+          "label": "Horizon Organic 1% Lowfat Milk boxes, 8 fl oz × 6 (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "waterBottles": {
+      "sams": {
+        "generic": {
+          "size": 40.0,
+          "price": 4.28,
+          "label": "Member's Mark Purified Water, 16.9 fl oz × 40 (Addison club grocery page)",
+          "url": "https://www.samsclub.com/club/6487/grocery",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 40.0,
+          "price": 5.48,
+          "label": "Pure Life Purified Water, 16.9 fl oz × 40 (Addison club grocery page)",
+          "url": "https://www.samsclub.com/club/6487/grocery",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 24.0,
+          "price": 4.99,
+          "label": "Signature Select Refreshe Purified Water, 16.9 fl oz × 24 (est.; $5.79 on DoorDash)",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 24.0,
+          "price": 5.99,
+          "label": "Pure Life Purified Water, 16.9 fl oz × 24 (est.)",
           "confidence": "estimated"
         }
       }

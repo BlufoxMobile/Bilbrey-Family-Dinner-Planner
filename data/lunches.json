@@ -1,0 +1,863 @@
+{
+ "version": 1,
+ "updated": "2026-11-14",
+ "notes": "Knox's and Jeff's lunches are set up exactly as Jeff described (2026-11-14). Product picks: Knox's 'Boar's Head Italian blend with salami and cheese' = Boar's Head Uncured Genoa Salame & Picante Provolone 4 oz snack tray (the Boar's Head salami-plus-cheese product Jewel carries); his Cool Ranch Doritos come from the Sam's Doritos Mix 30-pack (most Cool Ranch of the Sam's variety packs; a party bag portioned into snack bags is the cheaper Cool Ranch-every-day option). Jeff's salad = Member's Mark Cobb Salad with Grilled Chicken & Avocado Ranch (Sam's deli; ranch-type dressing only; ~40 g protein a 10 oz portion). Quantities are per lunch in catalog units. 'healthy' is used honestly — Knox's chips, cookies and Yoo-hoo are not tagged healthy. nutritionHints give per-catalog-unit calories/protein from labels where found (source noted) for data/nutrition.json.",
+ "slots": [
+  {
+   "id": "main",
+   "label": "Main"
+  },
+  {
+   "id": "side",
+   "label": "Side"
+  },
+  {
+   "id": "snack",
+   "label": "Snack"
+  },
+  {
+   "id": "drink",
+   "label": "Drink"
+  }
+ ],
+ "items": [
+  {
+   "id": "bh-black-forest-ham-sandwich",
+   "slot": "main",
+   "title": "Boar's Head Black Forest ham sandwich",
+   "subtitle": "Smoky deli ham piled on whole-grain bread — Knox's go-to.",
+   "items": {
+    "bhBlackForestHam": 0.19,
+    "bread": 2
+   },
+   "tags": [
+    "kid favorite",
+    "high protein"
+   ],
+   "prep": "Layer about 3 oz of ham on two slices of bread, cut in half and wrap tightly.",
+   "photo": "A ham sandwich on whole-grain bread cut in half, thin folds of smoked ham visible, on a lunch napkin."
+  },
+  {
+   "id": "bh-genoa-provolone-snack",
+   "slot": "main",
+   "title": "Boar's Head Italian salami & provolone",
+   "subtitle": "Genoa salame and sharp provolone slices, ready to snack or stack.",
+   "items": {
+    "bhGenoaProvolone": 1
+   },
+   "tags": [
+    "kid favorite",
+    "high protein",
+    "no-prep"
+   ],
+   "prep": "Pack the 4 oz tray as is and keep it cold with an ice pack.",
+   "photo": "Rounds of Genoa salami fanned beside slices of provolone cheese in a small snack tray."
+  },
+  {
+   "id": "mm-cobb-salad-avocado-ranch",
+   "slot": "main",
+   "title": "Chicken Cobb salad with avocado ranch",
+   "subtitle": "Grilled chicken, egg, bacon and greens with creamy avocado ranch — about 40 g protein.",
+   "items": {
+    "mmCobbSalad": 10
+   },
+   "tags": [
+    "healthy",
+    "high protein",
+    "salad"
+   ],
+   "prep": "Spoon about 10 oz (a third of the Sam's deli tray) into a lidded bowl; keep the dressing cup separate and use the tray within 3–4 days.",
+   "photo": "A chopped Cobb salad in a clear bowl: romaine, grilled chicken strips, egg, bacon bits, tomato, with a cup of pale green ranch on the side."
+  },
+  {
+   "id": "tf-ranch-chicken-bowl",
+   "slot": "main",
+   "title": "Ranch chicken salad bowl",
+   "subtitle": "Single-serve romaine bowl with chicken, cheddar, bacon bits and homestyle ranch.",
+   "items": {
+    "tfRanchChickenBowl": 1
+   },
+   "tags": [
+    "healthy",
+    "salad",
+    "no-prep"
+   ],
+   "prep": "Grab one sealed bowl from the fridge — fork and dressing are inside.",
+   "photo": "A single-serve salad bowl with romaine, chicken pieces, shredded carrot, cheddar and a ranch cup."
+  },
+  {
+   "id": "tf-ranch-chicken-bowl-plus-chicken",
+   "slot": "main",
+   "title": "Ranch chicken salad bowl + extra grilled chicken",
+   "subtitle": "The ranch bowl with 3 oz more grilled chicken so it actually keeps you full.",
+   "items": {
+    "tfRanchChickenBowl": 1,
+    "grilledChicken": 3
+   },
+   "tags": [
+    "healthy",
+    "high protein",
+    "salad"
+   ],
+   "prep": "Slice 3 oz of grilled chicken onto the bowl before you go.",
+   "photo": "A single-serve romaine salad bowl topped with extra sliced grilled chicken breast and a ranch cup."
+  },
+  {
+   "id": "tf-blt-chicken-bowl",
+   "slot": "main",
+   "title": "BLT chicken salad bowl with avocado ranch",
+   "subtitle": "Romaine, grape tomatoes, bacon, cheddar and grilled chicken with avocado ranch.",
+   "items": {
+    "tfBltChickenBowl": 1
+   },
+   "tags": [
+    "healthy",
+    "salad",
+    "no-prep"
+   ],
+   "prep": "Grab one sealed bowl from the fridge.",
+   "photo": "A salad bowl of romaine, halved grape tomatoes, bacon bits, cheddar and grilled chicken with a green ranch cup."
+  },
+  {
+   "id": "garden-salad-chicken-light-ranch",
+   "slot": "main",
+   "title": "Grilled chicken garden salad, light ranch",
+   "subtitle": "A big bowl of greens with 4 oz grilled chicken and light ranch — the lightest high-protein lunch.",
+   "items": {
+    "gardenSalad": 4,
+    "grilledChicken": 4,
+    "lightRanch": 2
+   },
+   "tags": [
+    "healthy",
+    "high protein",
+    "salad"
+   ],
+   "prep": "Fill a bowl with 4 oz salad mix, top with 4 oz sliced grilled chicken, and pack 2 tbsp light ranch in a small cup.",
+   "photo": "A large bowl of mixed greens with shredded carrot and cabbage, topped with sliced grilled chicken, a small cup of white dressing."
+  },
+  {
+   "id": "turkey-cheese-wrap",
+   "slot": "main",
+   "title": "Turkey & cheese wrap",
+   "subtitle": "Sliced turkey, cheese and crisp romaine rolled in a soft tortilla.",
+   "items": {
+    "tortillas": 1,
+    "deliTurkey": 3,
+    "cheeseSlices": 1,
+    "lettuce": 0.25
+   },
+   "tags": [
+    "healthy",
+    "high protein"
+   ],
+   "prep": "Layer turkey, cheese and a few romaine leaves on a tortilla, roll tightly and cut in half.",
+   "photo": "A rolled turkey and cheese tortilla wrap cut on the diagonal showing turkey, cheese and green lettuce."
+  },
+  {
+   "id": "ham-cheese-wrap",
+   "slot": "main",
+   "title": "Ham & cheese spinach wrap",
+   "subtitle": "Black Forest ham and cheese with baby spinach in a tortilla.",
+   "items": {
+    "tortillas": 1,
+    "bhBlackForestHam": 0.19,
+    "cheeseSlices": 1,
+    "spinach": 0.5
+   },
+   "tags": [
+    "high protein",
+    "kid favorite"
+   ],
+   "prep": "Layer ham, cheese and a handful of spinach on a tortilla, roll tightly and cut in half.",
+   "photo": "A ham and cheese wrap with baby spinach, cut in half to show the layers."
+  },
+  {
+   "id": "chicken-salad-crackers",
+   "slot": "main",
+   "title": "Greek-yogurt chicken salad with whole-grain crackers",
+   "subtitle": "Creamy chicken salad made with Greek yogurt instead of mayo, scooped onto crackers.",
+   "items": {
+    "cannedChicken": 0.5,
+    "yogurt": 2,
+    "wholeGrainCrackers": 1.5
+   },
+   "tags": [
+    "healthy",
+    "high protein"
+   ],
+   "prep": "Mix half a drained can of chicken with 2 oz plain Greek yogurt, salt and pepper; pack with 1.5 oz crackers on the side.",
+   "photo": "A small container of creamy chicken salad beside a stack of woven whole-grain crackers."
+  },
+  {
+   "id": "pb-banana-sandwich",
+   "slot": "main",
+   "title": "Peanut butter & banana sandwich",
+   "subtitle": "Creamy peanut butter and sliced banana on whole-grain bread.",
+   "items": {
+    "bread": 2,
+    "peanut": 2,
+    "bananas": 0.33
+   },
+   "tags": [
+    "kid favorite"
+   ],
+   "prep": "Spread 2 tbsp peanut butter, add one sliced banana, close and cut in half.",
+   "photo": "A peanut butter and banana sandwich on whole-grain bread, cut in half showing banana slices."
+  },
+  {
+   "id": "doritos-snack-bag",
+   "slot": "side",
+   "title": "Doritos snack bag (Cool Ranch from the 30-pack)",
+   "subtitle": "One single-serve bag from the Sam's Doritos variety 30-pack — save the Cool Ranch for Knox.",
+   "items": {
+    "doritosMix": 1
+   },
+   "tags": [
+    "kid favorite",
+    "no-prep"
+   ],
+   "prep": "Grab one bag; Cool Ranch first while they last.",
+   "photo": "A small single-serve bag of ranch-dusted tortilla chips spilling a few triangle chips."
+  },
+  {
+   "id": "cool-ranch-portion",
+   "slot": "side",
+   "title": "Cool Ranch Doritos, portioned from a party bag",
+   "subtitle": "Same Cool Ranch every day for about $0.37 a lunch.",
+   "items": {
+    "doritosCoolRanchBag": 1.5
+   },
+   "tags": [
+    "kid favorite",
+    "best value"
+   ],
+   "prep": "Scoop about 1.5 oz (a big handful) into a resealable snack bag.",
+   "photo": "A handful of ranch-seasoned triangle tortilla chips in a clear zip snack bag."
+  },
+  {
+   "id": "baked-chips-bag",
+   "slot": "side",
+   "title": "Baked chips snack bag",
+   "subtitle": "Baked Lay's, Cheetos or Ruffles — the crunch with less fat.",
+   "items": {
+    "bakedChipsMix": 1
+   },
+   "tags": [
+    "lighter",
+    "no-prep"
+   ],
+   "prep": "Grab one bag from the baked variety pack.",
+   "photo": "A single-serve bag of baked potato crisps with a few crisps beside it."
+  },
+  {
+   "id": "baby-carrots-ranch-cup",
+   "slot": "side",
+   "title": "Baby carrots with a ranch cup",
+   "subtitle": "Sweet crunchy carrots and a cup of ranch for dipping.",
+   "items": {
+    "babyCarrots": 0.19,
+    "ranchCups": 1
+   },
+   "tags": [
+    "healthy"
+   ],
+   "prep": "Pack about 3 oz baby carrots with one ranch to-go cup.",
+   "photo": "Baby carrots in a small container next to a little cup of white ranch dip."
+  },
+  {
+   "id": "baby-carrots-light-ranch",
+   "slot": "side",
+   "title": "Baby carrots with light ranch",
+   "subtitle": "Same carrot-and-ranch crunch with light ranch.",
+   "items": {
+    "babyCarrots": 0.19,
+    "lightRanch": 2
+   },
+   "tags": [
+    "healthy"
+   ],
+   "prep": "Pack about 3 oz baby carrots and 2 tbsp light ranch in a small lidded cup.",
+   "photo": "Baby carrots beside a small lidded cup of white dressing."
+  },
+  {
+   "id": "carrots-hummus",
+   "slot": "side",
+   "title": "Baby carrots & hummus",
+   "subtitle": "Carrots with a single-serve cup of classic hummus.",
+   "items": {
+    "babyCarrots": 0.19,
+    "hummusSingles": 1
+   },
+   "tags": [
+    "healthy"
+   ],
+   "prep": "Pack about 3 oz baby carrots with one hummus cup.",
+   "photo": "Baby carrots next to a small round cup of smooth hummus."
+  },
+  {
+   "id": "apple-slices",
+   "slot": "side",
+   "title": "Apple",
+   "subtitle": "A crisp whole apple (or slices).",
+   "items": {
+    "apples": 0.4
+   },
+   "tags": [
+    "healthy",
+    "no-prep"
+   ],
+   "prep": "Pack one whole apple, or slice it and add a squeeze of lemon so it stays white.",
+   "photo": "A red apple and a few fresh apple slices on a napkin."
+  },
+  {
+   "id": "clementines-two",
+   "slot": "side",
+   "title": "Two clementines",
+   "subtitle": "Easy-peel, sweet and school-friendly.",
+   "items": {
+    "clementines": 0.33
+   },
+   "tags": [
+    "healthy",
+    "no-prep"
+   ],
+   "prep": "Pack two clementines.",
+   "photo": "Two bright orange clementines, one partly peeled."
+  },
+  {
+   "id": "fruit-cup",
+   "slot": "side",
+   "title": "Fruit cup (no sugar added)",
+   "subtitle": "Peaches, mandarins or mixed fruit packed in water.",
+   "items": {
+    "fruitCups": 1
+   },
+   "tags": [
+    "healthy",
+    "no-prep"
+   ],
+   "prep": "Pack one cup and a spoon.",
+   "photo": "A small clear cup of diced peaches in water with a spoon."
+  },
+  {
+   "id": "nabisco-snack-pack",
+   "slot": "snack",
+   "title": "Cookie & cracker snack pack (Oreo Mini and friends)",
+   "subtitle": "One 1 oz pack from the Nabisco 40-pack: Oreo Mini, Chips Ahoy!, Ritz Bits and more.",
+   "items": {
+    "nabiscoMix": 1
+   },
+   "tags": [
+    "kid favorite",
+    "no-prep"
+   ],
+   "prep": "Grab one pack — Oreos first if that's the favorite.",
+   "photo": "A small snack bag of mini chocolate sandwich cookies with a few cookies spilled out."
+  },
+  {
+   "id": "greek-yogurt-cup",
+   "slot": "snack",
+   "title": "Greek yogurt cup",
+   "subtitle": "High-protein Greek yogurt in a single cup.",
+   "items": {
+    "greekYogurtCups": 1
+   },
+   "tags": [
+    "healthy",
+    "high protein",
+    "no-prep"
+   ],
+   "prep": "Pack one cup with a spoon and an ice pack.",
+   "photo": "A single cup of Greek yogurt with fruit at the bottom and a spoon."
+  },
+  {
+   "id": "string-cheese",
+   "slot": "snack",
+   "title": "String cheese",
+   "subtitle": "One mozzarella stick — protein in a peel-able package.",
+   "items": {
+    "stringCheese": 1
+   },
+   "tags": [
+    "healthy",
+    "no-prep"
+   ],
+   "prep": "Pack one stick with an ice pack.",
+   "photo": "A mozzarella string cheese stick partly peeled into strands."
+  },
+  {
+   "id": "hard-boiled-eggs",
+   "slot": "snack",
+   "title": "Two hard-boiled eggs",
+   "subtitle": "Peeled and ready — 12 g protein.",
+   "items": {
+    "hardBoiledEggs": 2
+   },
+   "tags": [
+    "healthy",
+    "high protein",
+    "no-prep"
+   ],
+   "prep": "Pack two peeled eggs in a small container with a pinch of salt and pepper.",
+   "photo": "Two peeled hard-boiled eggs, one halved showing the yolk, with a sprinkle of pepper."
+  },
+  {
+   "id": "protein-bar",
+   "slot": "snack",
+   "title": "Protein bar",
+   "subtitle": "Chewy peanut butter–chocolate protein bar.",
+   "items": {
+    "proteinBars": 1
+   },
+   "tags": [
+    "high protein",
+    "no-prep"
+   ],
+   "prep": "Toss one bar in the bag.",
+   "photo": "A chewy peanut butter and chocolate protein bar, unwrapped, cut in half."
+  },
+  {
+   "id": "cheese-and-crackers",
+   "slot": "snack",
+   "title": "Cheese & whole-grain crackers",
+   "subtitle": "A string cheese with an ounce of whole-grain crackers.",
+   "items": {
+    "stringCheese": 1,
+    "wholeGrainCrackers": 1
+   },
+   "tags": [
+    "healthy"
+   ],
+   "prep": "Pack one string cheese with about 6 crackers.",
+   "photo": "A string cheese stick beside a small stack of woven whole-grain crackers."
+  },
+  {
+   "id": "apple-peanut-butter",
+   "slot": "snack",
+   "title": "Apple & peanut butter",
+   "subtitle": "Apple slices with a tablespoon of peanut butter for dipping.",
+   "items": {
+    "apples": 0.4,
+    "peanut": 1
+   },
+   "tags": [
+    "healthy"
+   ],
+   "prep": "Slice one apple and pack 1 tbsp peanut butter in a small cup.",
+   "photo": "Apple slices fanned around a small cup of creamy peanut butter."
+  },
+  {
+   "id": "skinnypop-bag",
+   "slot": "snack",
+   "title": "Popcorn snack bag",
+   "subtitle": "A light, salty 0.65 oz bag of ready-to-eat popcorn.",
+   "items": {
+    "skinnyPop": 1
+   },
+   "tags": [
+    "lighter",
+    "no-prep"
+   ],
+   "prep": "Grab one bag.",
+   "photo": "A small bag of white popcorn with a few fluffy kernels spilled out."
+  },
+  {
+   "id": "yoohoo-box",
+   "slot": "drink",
+   "title": "Yoo-hoo chocolate drink",
+   "subtitle": "A 6.5 oz box of chocolate drink.",
+   "items": {
+    "yoohoo": 1
+   },
+   "tags": [
+    "kid favorite"
+   ],
+   "prep": "Pack one box (chill overnight if you like it cold).",
+   "photo": "A small chocolate drink box with a straw, beside a lunch bag."
+  },
+  {
+   "id": "capri-sun-fruit-punch",
+   "slot": "drink",
+   "title": "Capri Sun Fruit Punch",
+   "subtitle": "A 6 oz fruit punch pouch.",
+   "items": {
+    "capriSun": 1
+   },
+   "tags": [
+    "kid favorite"
+   ],
+   "prep": "Pack one Fruit Punch pouch (the Sam's pack also has other flavors).",
+   "photo": "A silver juice pouch with a straw and a few drops of red fruit punch."
+  },
+  {
+   "id": "bodyarmor-orange-mango",
+   "slot": "drink",
+   "title": "BODYARMOR Orange Mango",
+   "subtitle": "A 16 oz Orange Mango sports drink — Jeff's daily pick.",
+   "items": {
+    "bodyArmorOM": 1
+   },
+   "tags": [],
+   "prep": "Chill one bottle overnight.",
+   "photo": "A chilled 16 oz bottle of orange sports drink with condensation, plain label."
+  },
+  {
+   "id": "bodyarmor-lyte",
+   "slot": "drink",
+   "title": "BODYARMOR LYTE (Orange Clementine)",
+   "subtitle": "The low-calorie version — 20 calories. No Orange Mango LYTE exists, so this is the closest orange flavor.",
+   "items": {
+    "bodyArmorLyte": 1
+   },
+   "tags": [
+    "lighter"
+   ],
+   "prep": "Chill one bottle overnight.",
+   "photo": "A chilled 16 oz bottle of light orange sports drink with condensation, plain label."
+  },
+  {
+   "id": "water-bottle",
+   "slot": "drink",
+   "title": "Bottle of water",
+   "subtitle": "16.9 oz purified water.",
+   "items": {
+    "waterBottles": 1
+   },
+   "tags": [
+    "healthy",
+    "no-prep"
+   ],
+   "prep": "Pack one bottle (freeze it the night before to double as an ice pack).",
+   "photo": "A clear bottle of water with condensation on a counter."
+  },
+  {
+   "id": "sparkling-water",
+   "slot": "drink",
+   "title": "Sparkling water",
+   "subtitle": "Unsweetened sparkling water — lime, lemon or grapefruit.",
+   "items": {
+    "sparklingWater": 1
+   },
+   "tags": [
+    "healthy",
+    "no-prep"
+   ],
+   "prep": "Pack one cold can.",
+   "photo": "A cold can of sparkling water beside a glass with ice and a lime wedge."
+  },
+  {
+   "id": "milk-box",
+   "slot": "drink",
+   "title": "Milk box",
+   "subtitle": "Shelf-stable 8 oz organic milk — 8 g protein.",
+   "items": {
+    "milkBoxes": 1
+   },
+   "tags": [
+    "healthy",
+    "no-prep"
+   ],
+   "prep": "Pack one box; it doesn't need the fridge until opened.",
+   "photo": "A small white milk carton box with a straw."
+  }
+ ],
+ "defaults": {
+  "Knox": {
+   "enabled": true,
+   "days": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "slots": {
+    "main": [
+     "bh-black-forest-ham-sandwich",
+     "bh-genoa-provolone-snack"
+    ],
+    "side": [
+     "doritos-snack-bag"
+    ],
+    "snack": [
+     "nabisco-snack-pack"
+    ],
+    "drink": [
+     "yoohoo-box",
+     "capri-sun-fruit-punch"
+    ]
+   }
+  },
+  "Jeff": {
+   "enabled": true,
+   "days": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "slots": {
+    "main": [
+     "tf-ranch-chicken-bowl"
+    ],
+    "drink": [
+     "bodyarmor-orange-mango"
+    ]
+   }
+  },
+  "Candi": {
+   "enabled": false,
+   "days": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "slots": {}
+  },
+  "Jordan": {
+   "enabled": false,
+   "days": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "slots": {}
+  },
+  "Jackson": {
+   "enabled": false,
+   "days": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "slots": {}
+  }
+ },
+ "swaps": [
+  {
+   "from": "bodyarmor-orange-mango",
+   "to": "bodyarmor-lyte",
+   "why": "There's no Orange Mango LYTE, but LYTE Orange Clementine is close — 20 calories instead of 110, and no added sugar (vs 23 g)."
+  },
+  {
+   "from": "mm-cobb-salad-avocado-ranch",
+   "to": "garden-salad-chicken-light-ranch",
+   "why": "Same ranch-and-chicken salad with light ranch and no bacon or egg — roughly 200 fewer calories with about the same protein."
+  },
+  {
+   "from": "tf-ranch-chicken-bowl",
+   "to": "tf-ranch-chicken-bowl-plus-chicken",
+   "why": "The bowl has only 14 g protein; 3 oz of grilled chicken adds about 24 g so it holds you until dinner."
+  },
+  {
+   "from": "tf-blt-chicken-bowl",
+   "to": "garden-salad-chicken-light-ranch",
+   "why": "Light ranch and plain grilled chicken: about the same calories with nearly three times the protein."
+  },
+  {
+   "from": "baby-carrots-ranch-cup",
+   "to": "baby-carrots-light-ranch",
+   "why": "Light ranch instead of a full ranch cup — about 125 fewer calories."
+  },
+  {
+   "from": "doritos-snack-bag",
+   "to": "baked-chips-bag",
+   "why": "Baked chips keep the crunch with about 100 fewer calories and much less fat a bag."
+  },
+  {
+   "from": "cool-ranch-portion",
+   "to": "baked-chips-bag",
+   "why": "Baked chips keep the crunch with less fat."
+  }
+ ],
+ "nutritionHints": {
+  "bhBlackForestHam": {
+   "kcal": 480,
+   "protein": 80,
+   "per": "1 lb",
+   "source": "boarshead.com label: 2 oz = 60 cal, 10 g protein"
+  },
+  "bhGenoaProvolone": {
+   "kcal": 360,
+   "protein": 28,
+   "per": "1 pack (4 oz)",
+   "source": "retailer label (Fred Meyer listing): 1 package = 360 cal, 28 g protein"
+  },
+  "doritosMix": {
+   "kcal": 250,
+   "protein": 3,
+   "per": "1 bag (~1.75 oz)",
+   "source": "estimate from Doritos labels (~140–150 cal/oz); bags in the mix vary"
+  },
+  "doritosCoolRanchBag": {
+   "kcal": 150,
+   "protein": 2,
+   "per": "1 oz",
+   "source": "estimate from Doritos Cool Ranch label (~150 cal per 1 oz)"
+  },
+  "bakedChipsMix": {
+   "kcal": 140,
+   "protein": 2,
+   "per": "1 bag (~1.2 oz avg)",
+   "source": "estimate (baked chips ~120 cal/oz)"
+  },
+  "nabiscoMix": {
+   "kcal": 140,
+   "protein": 1.5,
+   "per": "1 pack (1 oz)",
+   "source": "estimate from Oreo Mini / Chips Ahoy mini 1 oz labels (~130–150 cal)"
+  },
+  "yoohoo": {
+   "kcal": 90,
+   "protein": 1,
+   "per": "1 box (6.5 fl oz)",
+   "source": "retailer label (Kroger): 90 cal, 20 g sugar, 1 g protein"
+  },
+  "capriSun": {
+   "kcal": 50,
+   "protein": 0,
+   "per": "1 pouch (6 fl oz)",
+   "source": "retailer label (Giant/ShopRite) for Fruit Punch: 50 cal, 11 g sugar"
+  },
+  "bodyArmorOM": {
+   "kcal": 110,
+   "protein": 0,
+   "per": "1 bottle (16 fl oz)",
+   "source": "retailer label (Food Lion): 110 cal, 25 g sugar"
+  },
+  "bodyArmorLyte": {
+   "kcal": 20,
+   "protein": 0,
+   "per": "1 bottle (16 fl oz)",
+   "source": "Jewel/Mariano's listing for LYTE Orange Clementine: 20 cal, 2 g sugar (the Sam's 12 oz LYTE ≈ 15 cal)"
+  },
+  "mmCobbSalad": {
+   "kcal": 48,
+   "protein": 4.0,
+   "per": "1 oz (incl. dressing)",
+   "source": "third-party nutrition database (Eat This Much): 170 cal, 14 g protein per 100 g — estimate"
+  },
+  "tfRanchChickenBowl": {
+   "kcal": 360,
+   "protein": 14,
+   "per": "1 bowl",
+   "source": "taylorfarms.com label"
+  },
+  "tfBltChickenBowl": {
+   "kcal": 310,
+   "protein": 13,
+   "per": "1 bowl",
+   "source": "taylorfarms.com label"
+  },
+  "gardenSalad": {
+   "kcal": 5,
+   "protein": 0.3,
+   "per": "1 oz",
+   "source": "estimate from USDA iceberg/romaine/carrot values"
+  },
+  "grilledChicken": {
+   "kcal": 45,
+   "protein": 8,
+   "per": "1 oz",
+   "source": "estimate from USDA cooked chicken breast (165 cal, 31 g protein per 100 g), seasoned products run a little lower"
+  },
+  "lightRanch": {
+   "kcal": 37,
+   "protein": 0,
+   "per": "1 tbsp",
+   "source": "estimate (light ranch ≈ 70–80 cal per 2 tbsp)"
+  },
+  "ranchCups": {
+   "kcal": 200,
+   "protein": 1,
+   "per": "1 cup (1.5 fl oz)",
+   "source": "estimate (regular ranch ≈ 65 cal per tbsp, 3 tbsp per cup)"
+  },
+  "clementines": {
+   "kcal": 213,
+   "protein": 3.9,
+   "per": "1 lb",
+   "source": "USDA clementines: 47 cal, 0.85 g protein per 100 g"
+  },
+  "babyCarrots": {
+   "kcal": 159,
+   "protein": 2.9,
+   "per": "1 lb",
+   "source": "USDA baby carrots: 35 cal, 0.64 g protein per 100 g"
+  },
+  "greekYogurtCups": {
+   "kcal": 110,
+   "protein": 13,
+   "per": "1 cup (5.3 oz)",
+   "source": "estimate between Chobani Fruit on the Bottom (~120 cal, 11–12 g) and Oikos Triple Zero (~90 cal, 15 g)"
+  },
+  "fruitCups": {
+   "kcal": 40,
+   "protein": 0,
+   "per": "1 cup (4 oz, in water)",
+   "source": "estimate for no-sugar-added fruit cups"
+  },
+  "hummusSingles": {
+   "kcal": 175,
+   "protein": 5,
+   "per": "1 cup (2.5 oz)",
+   "source": "estimate (classic hummus ≈ 70 cal, 2 g protein per oz)"
+  },
+  "hardBoiledEggs": {
+   "kcal": 70,
+   "protein": 6,
+   "per": "1 egg",
+   "source": "USDA large egg"
+  },
+  "proteinBars": {
+   "kcal": 190,
+   "protein": 10,
+   "per": "1 bar",
+   "source": "estimate from Nature Valley Protein Chewy label range"
+  },
+  "wholeGrainCrackers": {
+   "kcal": 120,
+   "protein": 3,
+   "per": "1 oz",
+   "source": "Triscuit Original label (6 crackers, 28 g)"
+  },
+  "cannedChicken": {
+   "kcal": 270,
+   "protein": 50,
+   "per": "1 can (12.5 oz, drained)",
+   "source": "estimate from chunk chicken labels (2 oz ≈ 60 cal, 11–12 g protein; ~4.5 servings a can)"
+  },
+  "skinnyPop": {
+   "kcal": 100,
+   "protein": 1,
+   "per": "1 bag (0.65 oz)",
+   "source": "SkinnyPop snack-bag label (~100 cal)"
+  },
+  "sparklingWater": {
+   "kcal": 0,
+   "protein": 0,
+   "per": "1 can",
+   "source": "LaCroix label"
+  },
+  "milkBoxes": {
+   "kcal": 150,
+   "protein": 8,
+   "per": "1 box (8 fl oz whole milk)",
+   "source": "USDA whole milk"
+  },
+  "waterBottles": {
+   "kcal": 0,
+   "protein": 0,
+   "per": "1 bottle",
+   "source": "water"
+  }
+ }
+}

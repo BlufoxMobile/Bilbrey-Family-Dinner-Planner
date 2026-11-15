@@ -67,6 +67,25 @@
           "https://apps.apple.com/us/app/sams-club/id382497397",
           "https://corporate.walmart.com/news/2025/10/14/walmart-partners-with-openai-to-create-ai-first-shopping-experiences"
         ]
+      },
+      "coupons": {
+        "label": "Sam's Instant Savings",
+        "url": "https://www.samsclub.com/browse/instant-savings/15660127",
+        "pageTitle": "Sam's Club November 2026 Instant Savings & Deals (event Oct 28 – Nov 29, 2026)",
+        "clipAll": null,
+        "clipAllNote": "Nothing to clip — Sam's Club doesn't use digital coupons.",
+        "appSteps": [
+          "Nothing to clip: Instant Savings come off automatically for members — the price you see already includes them.",
+          "Shopping in the club or with Scan & Go? Just scan your membership (or use the app) and the savings apply.",
+          "Ordering Curbside Pickup or delivery? Savings show in your cart while the event runs.",
+          "Tap the Instant Savings link to see this month's deals before you go."
+        ],
+        "note": "Sam's describes Instant Savings as 'automatic member discounts … online and in-club', valid in U.S. clubs with a U.S. membership during each event (current: Oct 28 – Nov 29, 2026). That they apply inside Scan & Go comes from consumer guides, not a Sam's page — unconfirmed but expected.",
+        "sources": [
+          "https://www.samsclub.com/browse/instant-savings/15660127",
+          "https://www.consumeraffairs.com/news/how-to-coupon-at-sams-club-the-smart-shoppers-playbook-042226.html",
+          "https://www.tastingtable.com/2045686/sams-club-coupon-info-instant-savings"
+        ]
       }
     },
     "jewel": {
@@ -139,6 +158,24 @@
           "https://appgoblin.info/apps/680797126",
           "https://apps.apple.com/us/app/albertsons-grocery-deals/id542751329",
           "https://local.jewelosco.com/il/glen-ellyn/599-e-roosevelt-rd.html"
+        ]
+      },
+      "coupons": {
+        "label": "Clip Jewel coupons",
+        "url": "https://www.jewelosco.com/foru/coupons-deals.html",
+        "pageTitle": "Deals+ | Jewel-Osco (for U digital coupons; sign-in required)",
+        "clipAll": false,
+        "clipAllNote": "We could not find a 'Clip All' button on Jewel-Osco's site or in its for U help pages — plan on tapping Clip on each deal (use Categories to find what's on your list).",
+        "appSteps": [
+          "Open the Jewel-Osco app and sign in to your for U account.",
+          "Tap for U Deals at the top (or Deals+ in the bottom bar).",
+          "Tap Clip on each deal you'll use — use Categories to jump to things on this week's list.",
+          "Check Clipped Deals; clipped offers come off automatically at checkout when you enter your phone number or scan the app (online orders: account linked to for U)."
+        ],
+        "note": "The planner can't clip coupons for you — Jewel-Osco has no public API and the app never stores your Jewel password. Clip before you shop; deals clipped after checkout don't count.",
+        "sources": [
+          "https://business.jewelosco.com/faq/foru.html",
+          "https://www.jewelosco.com/foru/coupons-deals.html"
         ]
       }
     }
