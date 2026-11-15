@@ -204,11 +204,14 @@ export function plural(n, one, many = one + 's') {
  * A title as it reads mid-sentence: "Mixed vegetables" → "mixed vegetables", but brands and names keep
  * their capitals ("Idahoan Au Gratin…", "Trader Joe's…", "Old Bay fries", "BBQ beans").
  */
+/** Brand names that start a title and keep their capital mid-sentence. */
+const BRAND_START = /^(Ritz|Oreo|Doritos|Capri|Cheetos|Tillamook|Jewel|Kerrygold|Rao's|Trader|Boar's|Bonduelle|Taylor|Idahoan|Cracker|Del|Mission|Stonefire|Lucerne|Chobani|Perdue|Artesano|Hidden|Signature|Member's|Philly|Progresso|National|Knorr|Kikkoman|Buona|French's|Crystal|Badia|McCormick|Cholula|Stubb's|Whataburger|Sabra|Nabisco|Yoo-hoo|Jojo's|Old)$/;
+
 export function midSentence(title) {
   const t = String(title || '');
   const words = t.split(/\s+/);
   const first = words[0] || '';
-  if (!/^[A-Z][a-z]/.test(first)) return t; // "BBQ", "7-layer", already lowercase
+  if (!/^[A-Z][a-z]/.test(first) || BRAND_START.test(first)) return t; // "BBQ", "7-layer", already lowercase
   if (words.length > 1 && !/^[a-z&(]/.test(words[1])) return t; // a brand or proper name
   return first[0].toLowerCase() + t.slice(1);
 }

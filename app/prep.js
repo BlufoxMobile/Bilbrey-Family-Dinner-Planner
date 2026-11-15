@@ -80,7 +80,7 @@ function thawTasks(db, state, today, end, pairs) {
       if (on >= today) {
         if (on <= end) out.push({ date: on, when: 'evening', kind: 'thaw', id, text: `Move ${amount} of ${what} from the freezer to the fridge for ${forWhat}.` });
       } else if (date >= today && date <= end) {
-        out.push({ date: today, when: 'morning', kind: 'thaw', id, text: `Is the ${what} for ${forWhat} thawed? If not, seal it in a zip bag and thaw it in cold water, about 30 minutes a pound, changing the water every 30 minutes.` });
+        out.push({ date: today, when: 'morning', kind: 'thaw', id, text: `Still frozen? Thaw the ${what} for ${forWhat} sealed in a zip bag in cold water, about 30 minutes a pound, changing the water every 30 minutes.` });
       }
     }
   }
@@ -113,13 +113,14 @@ function lunchTasks(db, state, today, end) {
     byDate.get(l.date).push(l);
   }
   for (const [date, ls] of byDate) {
-    const parts = ls.map((l) => `${l.name}: ${listJoin(l.slots.filter((s) => s.item).map((s) => midSentence(s.item.title.replace(/\s*\(.*?\)\s*/g, ' ').trim())))}`);
+    const short = (title) => midSentence(title.replace(/\s*\(.*?\)\s*/g, ' ').split(',')[0].trim());
+    const parts = ls.map((l) => `${l.name}: ${listJoin(l.slots.filter((s) => s.item).map((s) => short(s.item.title)))}`);
     const eve = addDays(date, -1);
     if (eve >= today) out.push({ date: eve, when: 'evening', kind: 'lunch', text: `Pack ${possessive(date, today)} lunches. ${parts.join('. ')}.` });
     for (const l of ls) {
       for (const s of l.slots) {
         const fresh = s.item && Object.keys(s.item.items).some((id) => db.ingredients[id]?.buyOnDay);
-        if (fresh) out.push({ date, when: 'morning', kind: 'buy', text: `Pick up ${l.name}’s ${midSentence(s.item.title)} on the way.` });
+        if (fresh) out.push({ date, when: 'morning', kind: 'buy', text: `Pick up ${l.name}’s ${midSentence(s.item.title.replace(/\s*\((.*?)\)\s*/g, ' from the $1 ').trim())} on the way.` });
       }
     }
   }
