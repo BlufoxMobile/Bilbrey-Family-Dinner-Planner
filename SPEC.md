@@ -257,3 +257,110 @@ Wrong key → 401. Repeated wrong keys → simple backoff (429). Errors: `{ erro
 - No dead buttons, no lorem ipsum, no "coming soon".
 - Every number on screen must be traceable to data + math (no invented figures).
 - Accessible: ≥44px tap targets, good contrast, works with large text, keyboard friendly.
+
+---------------------------------------------------------------------------------------
+## 8. v2.1 — Lunches, coupons, calories (Jeff's asks, 2026-11-14 evening)
+
+### 8.1 What Jeff asked for (his words, paraphrased closely)
+- "Add a lunch option. Select a person's name and plan lunches for the week." Lunches are
+  **optional for every family member** (Jeff, Candi, Knox, Jordan, Jackson); **each person
+  customizes their own**. Jeff will add the others' options later — so ship Knox's and Jeff's
+  pre-set, and the others OFF by default with an easy, healthy library to pick from.
+- **Weekdays only (Mon–Fri)** by default (per-person day toggles in the app).
+- "For lunches we should do healthy options."
+- **Knox:** Boar's Head **Black Forest ham** from Jewel (deli) and the Boar's Head **Italian
+  blend with salami and cheese**; a bag of **Cool Ranch Doritos** from the Sam's ~30-count pack
+  ("in whatever fashion we can get the best deal, even a mixed/variety pack"); a snack like
+  **Oreos in the individual packs** from Sam's "with whatever other snacks come in the multipack";
+  drinks **alternate daily between a Yoo-hoo pack and Capri Sun Fruit Punch**.
+- **Jeff:** a **healthy prepackaged salad** from Sam's or Jewel — **ranch dressing only, nothing
+  else**; and an **Orange Mango BodyArmor every day**.
+- "Help me lose weight and get in better shape — I want to be healthier." Jeff chose:
+  **calories & protein shown** (every lunch and dinner, plus a daily estimate for each person) and
+  **lighter-swap suggestions** (e.g. BodyArmor Lyte, light ranch, adding chicken to a salad). He did
+  NOT want weight tracking or movement goals.
+- **Coupons:** "automatically clip all coupons." Not possible from the app (no store API, and the
+  app must never hold a store password). Jeff chose **a Coupons button**: open Jewel-Osco's
+  digital-coupon page (for U) so someone taps Clip All / clips before shopping, and explain that
+  Sam's Club Instant Savings apply automatically at checkout for members (link to the current
+  Instant Savings page).
+
+### 8.2 `data/lunches.json` (new)
+```json
+{
+  "version": 1,
+  "updated": "2026-11-14",
+  "slots": [
+    { "id": "main",  "label": "Main" },
+    { "id": "side",  "label": "Side" },
+    { "id": "snack", "label": "Snack" },
+    { "id": "drink", "label": "Drink" }
+  ],
+  "items": [{
+    "id": "bh-black-forest-ham-sandwich",
+    "slot": "main",
+    "title": "Boar's Head Black Forest ham sandwich",
+    "subtitle": "Short appetizing line.",
+    "items": { "bhBlackForestHam": 0.19, "bread": 2 },   // catalog ids, quantity PER LUNCH, catalog units
+    "tags": ["kid favorite"],                            // e.g. healthy, kid favorite, high protein, no-prep
+    "prep": "One plain sentence: how to pack it.",
+    "photo": "Food-photo prompt hint (no brands/logos/text)."
+  }],
+  "defaults": {                                          // what each person starts with
+    "Knox":  { "enabled": true,  "days": [1,2,3,4,5],
+               "slots": { "main": ["bh-black-forest-ham-sandwich", "bh-italian-…"], "side": ["…doritos…"],
+                          "snack": ["…cookie-multipack…"], "drink": ["yoohoo…", "capri-sun-fruit-punch…"] } },
+    "Jeff":  { "enabled": true,  "days": [1,2,3,4,5], "slots": { "main": ["…salad-ranch…"], "drink": ["…bodyarmor-orange-mango…"] } },
+    "Candi": { "enabled": false, "days": [1,2,3,4,5], "slots": {} },
+    "Jordan":{ "enabled": false, "days": [1,2,3,4,5], "slots": {} },
+    "Jackson":{"enabled": false, "days": [1,2,3,4,5], "slots": {} }
+  },
+  "swaps": [                                             // lighter swaps the app can suggest
+    { "from": "<lunch item id>", "to": "<lunch item id>", "why": "Same flavor, ~70 fewer calories a day." }
+  ]
+}
+```
+- A slot's list is a **rotation**: day N of the person's lunches uses `list[N % list.length]`
+  (so Yoo-hoo / Capri Sun alternate daily). Empty/missing slot = not packed.
+- Lunch products are ordinary catalog ingredients (new ids appended to `data/catalog.json`, with
+  Sam's/Jewel packs and `"lunch": true`) so the shopping list's pack math, store/brand toggles,
+  pantry and prices all just work (e.g. one 30-ct chip variety pack covers 30 lunches; leftovers
+  carry forward).
+- The library should include ~25–35 lunch items: Knox's and Jeff's picks, plus healthy choices for
+  the rest of the family (turkey/ham wraps, chicken salad kits, Greek yogurt, fruit cups, apples,
+  baby carrots + ranch cups, string cheese, hummus snack packs, protein bars, sparkling water,
+  milk boxes, etc.) — real products the two stores sell, priced.
+
+### 8.3 `data/nutrition.json` (new)
+```json
+{ "updated": "2026-11-14", "notes": "Sources and method.",
+  "per": { "chicken": { "kcal": 545, "protein": 102, "unit": "lb", "basis": "raw, per 1 lb", "source": "USDA FDC #…" } } }
+```
+`kcal`/`protein` (grams) are per ONE catalog unit of that ingredient (the catalog's `unit`).
+Dinner per plate = (entrée items + effective sides) ÷ 5, after the meat scale; lunch = sum of its items.
+
+### 8.4 State additions (§4)
+```
+lunch: {
+  people: { "Knox": { enabled, days: [1..5], slots: { main: [ids], side: [ids], snack: [ids], drink: [ids] } } },
+  days:   { "YYYY-MM-DD": { "Knox": { skip?: true, reason?: "Buying lunch"|"No school"|"Other", picks?: { slot: id|null } } } },
+  custom: { "<id>": <lunch item object> }            // family-added lunch items
+}
+health: { showNutrition: true }                        // per-device preferences go in localStorage, not here
+```
+
+### 8.5 UI expectations
+- A **Lunch** section reachable from the main nav (phone: replace or join the tab bar sensibly —
+  keep ≤5 bottom tabs; e.g. Tonight / Plan / Lunch / List / Pantry with Recipes moved into Plan or a menu).
+- Person chips at the top (only enabled people + "Add a person"); the phone's own person first.
+- Week view Mon–Fri: each day's packed lunch (main/side/snack/drink) with photos, calories and
+  protein; tap to swap an item for that day, or skip the day (reason). "Edit Knox's lunches" sheet:
+  choose items per slot (multi-select = rotation order), days, enable/disable.
+- Lunch groceries join the shopping list and budget (with a "Lunches" tag/filter), respecting the
+  planner period. Calories/protein on recipe pages, Tonight, plan cards and lunch cards ("≈ 720 cal ·
+  48 g protein per plate"), and a "Today for Jeff ≈ 1,350 cal (lunch + dinner)" line on Tonight.
+- Lighter swaps: a small, kind "Lighter idea" chip where a swap exists (lunch swaps from
+  lunches.json; dinner sides: a lower-calorie side of the same kind), one tap to apply, remembered.
+  Never preachy; never on Knox/kids' items unless their parent opens the editor.
+- Coupons: a "Clip Jewel coupons" button (and Sam's Instant Savings link) in the List screen and in
+  the store handoff sheet, using URLs in data/stores.json (`coupons` field per store).
