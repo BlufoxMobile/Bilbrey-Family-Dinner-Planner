@@ -1,5 +1,5 @@
 // App-wide constants. Keep VERSION in step with CACHE_VERSION in sw.js.
-export const VERSION = '2.5.4';
+export const VERSION = '2.5.5';
 
 /** The family's Cloudflare Worker (SPEC §5). */
 export const API_BASE = 'https://bilbrey-dinner-planner.jeff-bilbrey-jb.workers.dev';
