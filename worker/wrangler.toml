@@ -1,0 +1,20 @@
+# Local dev / test config for the Bilbrey Family Dinner Planner Worker.
+# Production is deployed by uploading src/index.js through the Cloudflare API with the
+# equivalent metadata documented in DEPLOY.md (keep the two in sync).
+name = "bilbrey-dinner-planner"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[[durable_objects.bindings]]
+name = "KITCHEN"
+class_name = "Kitchen"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Kitchen"]
+
+# Workers AI always runs remotely, even under `wrangler dev` (needs `wrangler login`).
+# The automated tests replace this binding with a mock (see test/fixtures/entry.mjs).
+[ai]
+binding = "AI"
