@@ -41,13 +41,12 @@
       "ranchCups",
       "riceVinegar",
       "sesame",
-      "slaw",
       "starch",
       "tfBltChickenBowl",
       "tfRanchChickenBowl",
       "tikka"
     ],
-    "note": "Not found on samsclub.com on 2026-11-14 (frozen corn/peas, coleslaw mix, tikka sauce, cornstarch, sesame oil, smoked paprika, canned carrots, ground pork, rice & cider vinegar, flour, panko, brown sugar, hoagie rolls, frozen mini corn cobs, edamame, cilantro). Lunch items: Sam's has no Boar's Head deli counter or Boar's Head snack trays online, no Orange Mango-only BODYARMOR pack (only variety packs), no Taylor Farms single-serve bowls and no ranch dip cups. Plan these at Jewel-Osco unless the family confirms the Addison club stocks them."
+    "note": "Not found on samsclub.com on 2026-11-14 (frozen corn/peas, tikka sauce, cornstarch, sesame oil, smoked paprika, canned carrots, ground pork, rice & cider vinegar, flour, panko, brown sugar, hoagie rolls, frozen mini corn cobs, edamame, cilantro). Lunch items: Sam's has no Boar's Head deli counter or Boar's Head snack trays online, no Orange Mango-only BODYARMOR pack (only variety packs), no Taylor Farms single-serve bowls and no ranch dip cups. Plan these at Jewel-Osco unless the family confirms the Addison club stocks them."
   },
   "prices": {
     "chicken": {
@@ -1904,6 +1903,22 @@
       }
     },
     "slaw": {
+      "sams": {
+        "generic": {
+          "size": 32.0,
+          "price": 2.34,
+          "label": "Tri-Color Coleslaw (shredded cabbage & carrot mix), 2 lb bag",
+          "url": "https://www.samsclub.com/browse/packaged-salads/1541",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 2.34,
+          "label": "Tri-Color Coleslaw, 2 lb bag (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/packaged-salads/1541",
+          "confidence": "listed"
+        }
+      },
       "jewel": {
         "generic": {
           "size": 14.0,

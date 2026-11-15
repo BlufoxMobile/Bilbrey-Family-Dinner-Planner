@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-14",
+  "updated": "2026-11-15",
   "notes": "Researched 2026-11-14. Neither retailer offers a public API to fill a cart, so 'ordering' means copying a store-formatted list and opening the store's app or site; the family reviews and checks out. Anything marked unconfirmed could not be verified from a retailer page and should be shown with that caveat.",
   "stores": {
     "sams": {
@@ -59,8 +59,8 @@
         ],
         "unconfirmed": [
           "No 'paste a whole list' import was found for Sam's Club; the app's App Store notes (through v26.11.21, Nov 2026) mention no shopping-list import or AI assistant.",
-          "Walmart's 'Sparky' AI assistant: not confirmed inside the Sam's Club app as of Nov 2026. Walmart's Oct 2025 OpenAI announcement says customers and Sam's Club members will be able to plan meals and restock through ChatGPT, but no Sam's list-to-cart feature was confirmed.",
-          "Sam's Club has saved shopping lists and a reorder/past-purchases view on the website and app, but the exact menu path was not confirmed (the help article could not be read)."
+          "Sam's Club has saved shopping lists and a reorder/past-purchases view on the website and app, but the exact menu path was not confirmed (the help article could not be read).",
+          "Walmart's 'Sparky' AI assistant: the Sam's Club app's universal-link file (fetched 2026-11-15) includes /sparkyAssistant and /sparkyEssentials paths, so a Sparky assistant appears to exist in the Sam's app — but whether it can take a pasted shopping list and fill the cart is not confirmed."
         ],
         "sources": [
           "https://www.samsclub.com/club/6487-addison-il",
@@ -86,6 +86,24 @@
           "https://www.consumeraffairs.com/news/how-to-coupon-at-sams-club-the-smart-shoppers-playbook-042226.html",
           "https://www.tastingtable.com/2045686/sams-club-coupon-info-instant-savings"
         ]
+      },
+      "search": {
+        "web": "https://www.samsclub.com/s/{q}",
+        "encode": "encodeURIComponent (spaces as %20; '+' also works)",
+        "verified": "Yes — samsclub.com/s/tomatoes, /s/mustard and /s/canned+beans returned product results on 2026-11-14.",
+        "app": {
+          "universalLink": "https://www.samsclub.com/search/{q}",
+          "status": "unconfirmed",
+          "note": "The Sam's Club app's apple-app-site-association file (fetched 2026-11-15) opens /search/*, /ip/*, /p/*, /b/*, /c/*, /browse/*, /lists/*, /orders/*, /savings and /instantsavings* in the iPhone app, but NOT /s/* — so /s/{q} opens Safari. Whether /search/{q} shows results in the app wasn't tested; product pages (/ip/…, /p/…) do open in the app."
+        },
+        "productUrlsOpenInApp": true
+      },
+      "purchaseHistory": {
+        "web": "Sign in at samsclub.com → Account → Purchase History (in-club and online purchases are both tied to the membership; open a trip to see its receipt).",
+        "url": "https://www.samsclub.com/orders",
+        "urlStatus": "unconfirmed — /orders/* is in the app's universal-link list; the exact Purchase History URL wasn't loaded",
+        "app": "Sam's Club app → Account → Purchase History → pick a trip.",
+        "source": "https://www.shoeboxed.com/blog/sams-club-receipt (updated 2026-10-27)"
       }
     },
     "jewel": {
@@ -177,6 +195,25 @@
           "https://business.jewelosco.com/faq/foru.html",
           "https://www.jewelosco.com/foru/coupons-deals.html"
         ]
+      },
+      "search": {
+        "web": "https://www.jewelosco.com/shop/search-results.html?q={q}",
+        "encode": "encodeURIComponent",
+        "verified": "Partly — the URL loads a 'Search Results | Jewel-Osco' page (2026-11-15); results render with JavaScript in a real browser and depend on the selected store (set Roosevelt & Park, Glen Ellyn).",
+        "app": {
+          "universalLink": null,
+          "status": "not available",
+          "note": "Jewel-Osco's apple-app-site-association file lists only /home* for the iPhone app (fetched 2026-11-15), so search and product links open in Safari, not the app. In the app, tap the search bar and paste the product name."
+        },
+        "productUrlsOpenInApp": false
+      },
+      "purchaseHistory": {
+        "web": "Sign in at jewelosco.com → your name → Orders (online orders), and Buy It Again (items you've purchased, for reordering).",
+        "ordersUrl": "https://www.jewelosco.com/order-account/orders",
+        "buyItAgainUrl": "https://www.jewelosco.com/shop/purchases/buy-it-again.html",
+        "urlStatus": "paths seen on business.jewelosco.com's FAQ (business.jewelosco.com/order-account/orders and /shop/purchases/buy-it-again.html); the www paths are assumed to match",
+        "inStore": "Jewel's FAQ mentions 'online or in-store past purchase history' but doesn't say where in-store purchases appear; Buy It Again is the likeliest place (purchases tied to the for U phone number) — unconfirmed. Customer Service: (877) 505-4040.",
+        "source": "https://business.jewelosco.com/faq/online-shopping.html"
       }
     }
   }
