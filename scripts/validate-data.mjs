@@ -161,11 +161,17 @@ const STEP_WORDS = {
   eggs: ['egg'], milk: ['milk'], butter: ['butter'], salt: ['salt'], honey: ['honey'], peanut: ['peanut'], applesauce: ['applesauce'],
   potstickers: ['potsticker'], edamame: ['edamame'], cilantro: ['cilantro'], panko: ['panko', 'crumbs'], flour: ['flour'],
 };
+const stem = (w) => w.toLowerCase().replace(/(es|s)$/, '');
 function checkStepsMention(where, items, steps) {
   const text = steps.join(' ').toLowerCase();
   for (const id of Object.keys(items || {})) {
-    const words = STEP_WORDS[id] || [String(ING[id]?.name || id).toLowerCase().split(/[ ,(]/)[0]];
-    if (!words.some(w => text.includes(w.toLowerCase()))) warn(`${where}: item "${id}" is never mentioned in the steps`);
+    // Explicit keywords win; otherwise accept the id, any alias, or any 4+ letter word of the name (singular or plural).
+    const ing = ING[id] || {};
+    const words = STEP_WORDS[id] || [
+      stem(id), ...(ing.aliases || []).map(a => a.toLowerCase()),
+      ...String(ing.name || '').toLowerCase().split(/[^a-zñé]+/).filter(w => w.length >= 4 && !['with', 'fresh', 'frozen', 'dried', 'ground', 'sliced', 'shredded', 'yellow', 'english', 'smoked', 'classic', 'plain'].includes(w)).map(stem),
+    ];
+    if (!words.some(w => w && text.includes(w))) warn(`${where}: item "${id}" is never mentioned in the steps`);
   }
 }
 const EQUIP_HINTS = [
@@ -244,6 +250,10 @@ for (const d of dinners) {
     }
   }
 
+  // the air fryer can only do one thing at a time: warn if the entrée and a default side both need it
+  if ((d.equipment || []).includes('air fryer'))
+    for (const sid of d.sides || []) if ((SIDES[sid]?.equipment || []).includes('air fryer')) warn(`${w}: entrée and default side "${sid}" both need the air fryer`);
+
   // meat in every dinner + protein consistency
   const meats = Object.keys(d.items || {}).filter(id => MEAT_IDS.has(id));
   if (meats.length === 0) err(`${w}: no meat ingredient (every dinner needs meat)`);
@@ -283,11 +293,23 @@ if (ref) {
 for (const id of Object.keys(ING)) if (!usedIngredients.has(id) && !ING[id].extra) warn(`catalog.${id}: not used by any dinner or side (and not marked extra)`);
 
 // ---------------------------------------------------------------- cost table
-const costOf = (items) => Object.entries(items || {}).reduce((a, [id, q]) => a + (unitCost[id]?.cost || 0) * q, 0);
+const costOf = (items, uc = unitCost) => Object.entries(items || {}).reduce((a, [id, q]) => a + (uc[id]?.cost || 0) * q, 0);
+// Optional second opinion: data/prices.json (pricing agent) overrides catalog packs where it lists them.
+const prices = load('data/prices.json', false);
+let researched = null;
+if (prices && prices.prices) {
+  researched = {};
+  for (const id of Object.keys(ING)) {
+    const p = prices.prices[id] || {};
+    const g = p.sams?.generic || (ING[id].packs?.sams ? null : p.jewel?.generic);
+    researched[id] = g && g.size > 0 && g.price > 0 ? { cost: g.price / g.size } : unitCost[id];
+  }
+}
 const rows = dinners.map(d => {
   const entree = costOf(d.items);
   const sides = (d.sides || []).reduce((a, sid) => a + costOf(SIDES[sid]?.items), 0);
-  return { id: d.id, rot: d.rotation, protein: d.protein, entree, sides, total: entree + sides };
+  const res = researched ? costOf(d.items, researched) + (d.sides || []).reduce((a, sid) => a + costOf(SIDES[sid]?.items, researched), 0) : null;
+  return { id: d.id, rot: d.rotation, protein: d.protein, entree, sides, total: entree + sides, res };
 });
 const avg = (list) => list.reduce((a, r) => a + r.total, 0) / (list.length || 1);
 for (const r of rows) {
@@ -295,12 +317,14 @@ for (const r of rows) {
   if (r.total < MIN_COST) err(`dinner ${r.id}: estimated cost $${r.total.toFixed(2)} is under $${MIN_COST}`);
 }
 
-// Sam's-only / Jewel-only availability (informational)
-const onlyAt = (st) => Object.entries(ING).filter(([, i]) => !i.packs?.[st]).map(([id]) => id);
+// Sam's-only / Jewel-only availability (informational). Staples (stocked-until-low) are assumed to be in the pantry.
+const onlyAt = (st) => Object.entries(ING).filter(([, i]) => !i.packs?.[st] && i.kind === 'measured').map(([id]) => id);
 const notAtSams = new Set(onlyAt('sams'));
 const notAtJewel = new Set(onlyAt('jewel'));
-const needsJewel = dinners.filter(d => [...Object.keys(d.items), ...(d.sides || []).flatMap(s => Object.keys(SIDES[s]?.items || {}))].some(id => notAtSams.has(id))).map(d => d.id);
-const needsSams = dinners.filter(d => [...Object.keys(d.items), ...(d.sides || []).flatMap(s => Object.keys(SIDES[s]?.items || {}))].some(id => notAtJewel.has(id))).map(d => d.id);
+const allIds = (d) => [...Object.keys(d.items || {}), ...(d.sides || []).flatMap(s => Object.keys(SIDES[s]?.items || {}))];
+const blockers = (d, set) => [...new Set(allIds(d).filter(id => set.has(id)))];
+const needsJewel = dinners.map(d => [d.id, blockers(d, notAtSams)]).filter(([, b]) => b.length);
+const needsSams = dinners.map(d => [d.id, blockers(d, notAtJewel)]).filter(([, b]) => b.length);
 
 finish();
 
@@ -308,20 +332,24 @@ function finish() {
   const line = (s = '') => console.log(s);
   if (!QUIET) {
     line('Estimated ingredient cost per dinner (entrée + default sides, Sam’s generic unit cost; Jewel generic if Sam’s has no pack)');
-    line('id'.padEnd(28) + 'rotation'.padEnd(9) + 'protein'.padEnd(9) + 'entrée'.padStart(8) + 'sides'.padStart(8) + 'total'.padStart(9));
-    line('-'.repeat(71));
+    line('id'.padEnd(28) + 'rotation'.padEnd(9) + 'protein'.padEnd(9) + 'entrée'.padStart(8) + 'sides'.padStart(8) + 'total'.padStart(9) + (researched ? 'prices.json'.padStart(13) : ''));
+    line('-'.repeat(researched ? 84 : 71));
     for (const r of rows) {
       const flag = r.total > MAX_COST ? '  << over' : r.total < MIN_COST ? '  << under' : '';
-      line(r.id.padEnd(28) + r.rot.padEnd(9) + r.protein.padEnd(9) + `$${r.entree.toFixed(2)}`.padStart(8) + `$${r.sides.toFixed(2)}`.padStart(8) + `$${r.total.toFixed(2)}`.padStart(9) + flag);
+      line(r.id.padEnd(28) + r.rot.padEnd(9) + r.protein.padEnd(9) + `$${r.entree.toFixed(2)}`.padStart(8) + `$${r.sides.toFixed(2)}`.padStart(8) + `$${r.total.toFixed(2)}`.padStart(9) + (researched ? `$${r.res.toFixed(2)}`.padStart(13) : '') + flag);
     }
-    line('-'.repeat(71));
+    line('-'.repeat(researched ? 84 : 71));
     const core = rows.filter(r => r.rot === 'core'), bench = rows.filter(r => r.rot === 'bench');
     line(`Average, all ${rows.length} dinners: $${avg(rows).toFixed(2)}   core (${core.length}): $${avg(core).toFixed(2)}   bench (${bench.length}): $${avg(bench).toFixed(2)}`);
     line(`Range: $${Math.min(...rows.map(r => r.total)).toFixed(2)} – $${Math.max(...rows.map(r => r.total)).toFixed(2)}`);
+    if (researched) {
+      const ra = (l) => l.reduce((a, r) => a + r.res, 0) / (l.length || 1);
+      line(`With data/prices.json overrides (informational, not flagged): all $${ra(rows).toFixed(2)}   core $${ra(core).toFixed(2)}   bench $${ra(bench).toFixed(2)}`);
+    }
     line();
     line(`Catalog: ${Object.keys(ING).length} ingredients (${MEAT_IDS.size} meat, ${extras.length} marked extra). Sides: ${sideList.length}. Dinners: ${nCore} core + ${nBench} bench.`);
-    if (needsJewel.length) line(`Not plannable as Sam’s-only (an item has no Sam’s pack): ${needsJewel.join(', ')}`);
-    if (needsSams.length) line(`Not plannable as Jewel-only (an item has no Jewel pack): ${needsSams.join(', ')}`);
+    if (needsJewel.length) line(`Need a Jewel-only measured item (not plannable as Sam’s-only; staples assumed stocked) — ${needsJewel.length}:\n  ` + needsJewel.map(([id, b]) => `${id} [${b.join(', ')}]`).join('\n  '));
+    if (needsSams.length) line(`Need a Sam’s-only measured item — ${needsSams.length}:\n  ` + needsSams.map(([id, b]) => `${id} [${b.join(', ')}]`).join('\n  '));
     line();
   }
   for (const w of warnings) console.log('WARN  ' + w);

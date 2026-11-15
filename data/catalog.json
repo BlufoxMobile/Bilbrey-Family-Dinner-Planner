@@ -919,18 +919,6 @@
         "petite peas"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 64,
-            "price": 6.49,
-            "label": "Member's Mark frozen sweet peas, 4 lb bag"
-          },
-          "name": {
-            "size": 64,
-            "price": 7.98,
-            "label": "Birds Eye frozen sweet peas, 4 lb bag"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 16,
@@ -992,7 +980,7 @@
       "aisle": "Frozen",
       "storage": "freezer",
       "kind": "measured",
-      "defaultStore": "sams",
+      "defaultStore": "jewel",
       "aliases": [
         "frozen corn",
         "sweet corn kernels",
@@ -1000,18 +988,6 @@
         "super sweet corn"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 4,
-            "price": 6,
-            "label": "Member's Mark frozen sweet corn, 4 lb bag"
-          },
-          "name": {
-            "size": 4,
-            "price": 7.48,
-            "label": "Birds Eye frozen sweet corn, 4 lb bag"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 1,
@@ -1324,18 +1300,6 @@
         "angel hair cabbage"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 32,
-            "price": 3.98,
-            "label": "Member's Mark shredded cabbage coleslaw mix, 2 × 16 oz bags"
-          },
-          "name": {
-            "size": 32,
-            "price": 4.98,
-            "label": "Dole shredded cabbage coleslaw mix, 2 × 16 oz bags"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 14,
@@ -1934,18 +1898,6 @@
         "corn flour starch"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 105,
-            "price": 4.98,
-            "label": "Member's Mark cornstarch, ~30 oz"
-          },
-          "name": {
-            "size": 105,
-            "price": 6.48,
-            "label": "Argo cornstarch, ~30 oz"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 54,
@@ -2015,18 +1967,6 @@
         "dark sesame oil"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 100,
-            "price": 8.49,
-            "label": "Member's Mark toasted sesame oil, ~16 fl oz"
-          },
-          "name": {
-            "size": 100,
-            "price": 9.98,
-            "label": "Kadoya toasted sesame oil, ~16 fl oz"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 30,
@@ -2260,18 +2200,6 @@
         "masala sauce"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 30,
-            "price": 7.98,
-            "label": "Member's Mark tikka masala simmer sauce, 2 × 15 oz"
-          },
-          "name": {
-            "size": 30,
-            "price": 10.48,
-            "label": "Maya Kaimal tikka masala simmer sauce, 2 × 15 oz"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 15,
@@ -2340,18 +2268,6 @@
         "spanish paprika"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 90,
-            "price": 5.98,
-            "label": "Member's Mark smoked paprika, ~8 oz"
-          },
-          "name": {
-            "size": 90,
-            "price": 8.48,
-            "label": "McCormick smoked paprika, ~8 oz"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 30,
@@ -2746,18 +2662,6 @@
         "carrots can"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 8,
-            "price": 8.49,
-            "label": "Member's Mark sliced carrots, 14.5 oz cans, 8 cans"
-          },
-          "name": {
-            "size": 8,
-            "price": 11.48,
-            "label": "Del Monte sliced carrots, 14.5 oz cans, 8 cans"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 1,
@@ -2790,12 +2694,12 @@
         "sams": {
           "generic": {
             "size": 6,
-            "price": 16.14,
+            "price": 14.94,
             "label": "Member's Mark boneless skinless chicken thighs, ~6 lb"
           },
           "name": {
             "size": 6,
-            "price": 20.94,
+            "price": 19.48,
             "label": "Tyson boneless skinless chicken thighs, ~6 lb"
           }
         },
@@ -2862,7 +2766,7 @@
       "aisle": "Meat",
       "storage": "freezer",
       "kind": "measured",
-      "defaultStore": "sams",
+      "defaultStore": "jewel",
       "aliases": [
         "ground pork",
         "pork ground",
@@ -2870,18 +2774,6 @@
         "ground pork chub"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 3,
-            "price": 9.48,
-            "label": "Member's Mark ground pork, ~3 lb"
-          },
-          "name": {
-            "size": 3,
-            "price": 11.48,
-            "label": "Smithfield ground pork, 3 × 1 lb"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 1,
@@ -3201,18 +3093,6 @@
         "unseasoned rice vinegar"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 48,
-            "price": 5.48,
-            "label": "Rice vinegar, 2 × 12 fl oz"
-          },
-          "name": {
-            "size": 48,
-            "price": 6.98,
-            "label": "Marukan rice vinegar, 2 × 12 fl oz"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 24,
@@ -3241,18 +3121,6 @@
         "vinegar"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 256,
-            "price": 6.48,
-            "label": "Member's Mark apple cider vinegar, 1 gal"
-          },
-          "name": {
-            "size": 256,
-            "price": 8.98,
-            "label": "Heinz apple cider vinegar, 1 gal"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 64,
@@ -3526,18 +3394,6 @@
         "unbleached flour"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 36,
-            "price": 6.98,
-            "label": "Member's Mark all-purpose flour, 2 × 5 lb"
-          },
-          "name": {
-            "size": 36,
-            "price": 8.48,
-            "label": "Gold Medal all-purpose flour, 10 lb"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 18,
@@ -3567,18 +3423,6 @@
         "breadcrumbs"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 35,
-            "price": 7.98,
-            "label": "Panko bread crumbs, 2 × 17.6 oz"
-          },
-          "name": {
-            "size": 35,
-            "price": 9.48,
-            "label": "Kikkoman panko bread crumbs, 2 × 17.6 oz"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 8,
@@ -3607,18 +3451,6 @@
         "golden brown sugar"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 144,
-            "price": 5.98,
-            "label": "Member's Mark light brown sugar, 4 lb"
-          },
-          "name": {
-            "size": 144,
-            "price": 6.98,
-            "label": "C&H light brown sugar, 4 lb"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 72,
@@ -3797,7 +3629,7 @@
       "aisle": "Bakery",
       "storage": "counter",
       "kind": "measured",
-      "defaultStore": "sams",
+      "defaultStore": "jewel",
       "aliases": [
         "hoagie rolls",
         "sub rolls",
@@ -3807,18 +3639,6 @@
         "sandwich rolls"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 12,
-            "price": 5.98,
-            "label": "Member's Mark hoagie rolls, 12 ct"
-          },
-          "name": {
-            "size": 12,
-            "price": 7.48,
-            "label": "Turano Italian sub rolls, 12 ct"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 6,
@@ -3839,7 +3659,7 @@
       "aisle": "Frozen",
       "storage": "freezer",
       "kind": "measured",
-      "defaultStore": "sams",
+      "defaultStore": "jewel",
       "aliases": [
         "corn on the cob",
         "mini corn on the cob",
@@ -3849,18 +3669,6 @@
         "sweet corn on the cob"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 24,
-            "price": 7.98,
-            "label": "Frozen mini corn on the cob, 24 ears"
-          },
-          "name": {
-            "size": 24,
-            "price": 9.98,
-            "label": "Green Giant Nibblers mini corn on the cob, 24 ears"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 12,
@@ -3881,7 +3689,7 @@
       "aisle": "Frozen",
       "storage": "freezer",
       "kind": "measured",
-      "defaultStore": "sams",
+      "defaultStore": "jewel",
       "aliases": [
         "edamame",
         "shelled edamame",
@@ -3891,18 +3699,6 @@
         "frozen edamame"
       ],
       "packs": {
-        "sams": {
-          "generic": {
-            "size": 3,
-            "price": 7.48,
-            "label": "Frozen shelled edamame, 3 lb bag"
-          },
-          "name": {
-            "size": 3,
-            "price": 8.98,
-            "label": "Birds Eye shelled edamame, 3 lb bag"
-          }
-        },
         "jewel": {
           "generic": {
             "size": 0.75,

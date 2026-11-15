@@ -1,7 +1,7 @@
 {
   "version": 2,
   "updated": "2026-11-14",
-  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. No oven or broiler anywhere; stovetop burners, Blackstone, electric grill, outdoor grill, air fryer and microwave only. No seafood, no tofu. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit.",
+  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer and microwave only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit.",
   "dinners": [
     {
       "id": "smashburgers",
@@ -505,7 +505,7 @@
       ],
       "sides": [
         "crispy-potstickers",
-        "edamame"
+        "steamed-broccoli"
       ],
       "sideSlots": 2,
       "photo": "Crisp romaine lettuce leaves filled with glossy ginger-soy ground meat, shredded cabbage and carrots, arranged on a platter."
@@ -552,7 +552,7 @@
     {
       "id": "egg-fried-rice",
       "title": "Pork & egg fried rice",
-      "subtitle": "Takeout-style jasmine fried rice with savory ground pork, plenty of egg and mixed vegetables.",
+      "subtitle": "Takeout-style jasmine fried rice with diced soy-glazed pork, plenty of egg and mixed vegetables.",
       "category": "Asian-inspired",
       "protein": "pork",
       "minutes": 45,
@@ -565,7 +565,7 @@
       ],
       "rotation": "core",
       "items": {
-        "groundPork": 2.25,
+        "porkLoin": 2.25,
         "jasmine": 2,
         "eggs": 6,
         "vegetables": 1.5,
@@ -578,16 +578,16 @@
       },
       "steps": [
         "Rinse the jasmine rice in a strainer until the water runs mostly clear. Combine it in a saucepan with 3 cups water and ½ teaspoon of the salt, bring to a boil, then cover, turn the heat to low and cook 15 minutes. Rest, covered, 10 minutes off the heat and fluff with a fork. Spread it on a large platter to cool while you prep (day-old rice works even better).",
-        "Heat the Blackstone over medium-high. Brown the pork, breaking it up, until it reads 160°F, 8–10 minutes. Scrape off excess fat and move the pork to a cooler zone.",
+        "Cut the pork loin into ½-inch dice and toss with 1 tablespoon of the soy sauce. Heat the Blackstone over medium-high and cook the pork in a single layer, turning, until browned and the thickest pieces read 145°F, 5–7 minutes. Move it to a cooler zone to rest at least 3 minutes.",
         "Add half the oil and stir-fry the frozen vegetables with the grated ginger and minced garlic until hot. Push aside, add the remaining oil and scramble the beaten eggs until just set.",
-        "Add the rice to the hot zone and toss everything together with the soy sauce and sesame oil until steaming hot throughout."
+        "Add the rice to the hot zone and toss everything together with the remaining soy sauce and the sesame oil until steaming hot throughout."
       ],
       "sides": [
         "sesame-cucumber",
         "steamed-broccoli"
       ],
       "sideSlots": 2,
-      "photo": "A heaping plate of fried jasmine rice with browned ground pork, ribbons of scrambled egg and peas, carrots and corn."
+      "photo": "A heaping plate of fried jasmine rice with browned diced pork, ribbons of scrambled egg and peas, carrots and corn."
     },
     {
       "id": "sesame-tofu-noodles",
@@ -669,7 +669,7 @@
     {
       "id": "veggie-chow-mein",
       "title": "Pork & mushroom chow mein",
-      "subtitle": "Noodles stir-fried with savory ground pork, mushrooms, cabbage and ribbons of egg.",
+      "subtitle": "Noodles stir-fried with thin strips of pork, mushrooms, cabbage and ribbons of egg.",
       "category": "Asian-inspired",
       "protein": "pork",
       "minutes": 45,
@@ -682,7 +682,7 @@
       ],
       "rotation": "core",
       "items": {
-        "groundPork": 2.25,
+        "porkLoin": 2.25,
         "spaghetti": 20,
         "slaw": 14,
         "mushrooms": 8,
@@ -696,8 +696,8 @@
       },
       "steps": [
         "Bring a large pot of water to a boil with 1 tablespoon of salt. Cook the spaghetti until just tender, drain and toss with 1 teaspoon of the sesame oil. Whisk the soy sauce, brown sugar and remaining sesame oil.",
-        "Heat the Blackstone over medium-high. Brown the pork, breaking it up, until it reads 160°F, 8–10 minutes. Scrape off excess fat and move the pork to a cooler zone.",
-        "Add the oil and cook the mushrooms until browned, 4–5 minutes. Add the coleslaw mix and minced garlic and stir-fry until the cabbage softens. Push aside and scramble the beaten eggs until set.",
+        "Slice the pork loin into thin strips. Heat the Blackstone over medium-high with half the oil and sear the pork in a single layer, turning, until browned and the thickest strips read 145°F, 4–6 minutes. Move it to a cooler zone to rest at least 3 minutes.",
+        "Add the remaining oil and cook the mushrooms until browned, 4–5 minutes. Add the coleslaw mix and minced garlic and stir-fry until the cabbage softens. Push aside and scramble the beaten eggs until set.",
         "Add the noodles and sauce and toss everything together with the pork until glossy and hot."
       ],
       "sides": [
@@ -705,7 +705,7 @@
         "canned-carrots"
       ],
       "sideSlots": 2,
-      "photo": "Stir-fried noodles with browned ground pork, sliced mushrooms, shredded cabbage and strips of egg, piled on a platter."
+      "photo": "Stir-fried noodles with seared strips of pork, sliced mushrooms, shredded cabbage and strips of egg, piled on a platter."
     },
     {
       "id": "peanut-sweet-potatoes",
@@ -1290,7 +1290,7 @@
       "items": {
         "beef": 2.25,
         "naan": 5,
-        "hummus": 10,
+        "hummus": 8,
         "onions": 0.5,
         "cumin": 2,
         "paprika": 1,
@@ -1307,7 +1307,7 @@
         "Spread each naan with hummus, top with the spiced beef and drizzle with lemon yogurt. Cut into wedges."
       ],
       "sides": [
-        "tomato-cucumber",
+        "cucumber-spears",
         "carrot-sticks"
       ],
       "sideSlots": 2,
@@ -1980,7 +1980,7 @@
       "items": {
         "chickenThighs": 2.25,
         "spaghetti": 16,
-        "zucchini": 1.5,
+        "zucchini": 1.25,
         "onions": 1,
         "mushrooms": 8,
         "butter": 4,
@@ -2071,7 +2071,7 @@
       "rotation": "bench",
       "items": {
         "groundPork": 2.25,
-        "slaw": 28,
+        "slaw": 21,
         "carrots": 0.5,
         "garlic": 4,
         "ginger": 0.75,
@@ -2088,7 +2088,7 @@
       ],
       "sides": [
         "crispy-potstickers",
-        "sesame-cucumber"
+        "cucumber-spears"
       ],
       "sideSlots": 2,
       "photo": "A bowl of savory stir-fried ground pork with wilted shredded cabbage and carrots, glistening with soy and sesame oil."
@@ -2284,9 +2284,9 @@
         "salt": 1,
         "pepper": 0.5,
         "naan": 5,
-        "yogurt": 10,
+        "yogurt": 8,
         "cucumber": 1,
-        "tomato": 0.75,
+        "tomato": 0.5,
         "onions": 0.25
       },
       "steps": [
@@ -2297,7 +2297,7 @@
       ],
       "sides": [
         "lemon-chickpeas",
-        "garlic-green-beans"
+        "steamed-broccoli"
       ],
       "sideSlots": 2,
       "photo": "Grilled lemon-oregano pork strips with char marks on warm flatbread with creamy cucumber tzatziki, diced tomatoes, sliced onion and lemon wedges."
@@ -2397,10 +2397,10 @@
       "items": {
         "italianSausage": 2.25,
         "penne": 20,
-        "broccoli": 1.5,
+        "broccoli": 1.25,
         "garlic": 4,
         "chickenBroth": 1,
-        "parm": 3,
+        "parm": 2,
         "oil": 1,
         "redPepperFlakes": 0.25,
         "lemons": 1,
@@ -2437,7 +2437,7 @@
       "items": {
         "italianSausage": 2.5,
         "hoagies": 5,
-        "peppers": 3,
+        "peppers": 2,
         "onions": 1,
         "mozzarella": 6,
         "oil": 1,
@@ -2476,8 +2476,8 @@
         "chickenThighs": 2.25,
         "bacon": 0.5,
         "eggs": 5,
-        "lettuce": 4,
-        "tomato": 0.75,
+        "lettuce": 3,
+        "tomato": 0.5,
         "cheese": 4,
         "ranch": 10,
         "oil": 1,
@@ -2514,12 +2514,12 @@
       ],
       "rotation": "bench",
       "items": {
-        "groundTurkey": 2.25,
+        "groundTurkey": 2,
         "taco": 3,
         "beans": 1,
-        "lettuce": 4,
-        "cheese": 5,
-        "salsa": 12,
+        "lettuce": 3,
+        "cheese": 4,
+        "salsa": 8,
         "sourCream": 8,
         "tortillaChips": 8,
         "limes": 1
@@ -2532,7 +2532,7 @@
       ],
       "sides": [
         "canned-corn",
-        "orange-wedges"
+        "applesauce-cups"
       ],
       "sideSlots": 2,
       "photo": "A big taco salad of chopped romaine topped with seasoned ground meat, black beans, shredded cheddar, salsa, sour cream and crushed tortilla chips, with a lime wedge."
@@ -2553,8 +2553,8 @@
       ],
       "rotation": "bench",
       "items": {
-        "chicken": 2.25,
-        "lettuce": 3,
+        "chickenThighs": 2.25,
+        "lettuce": 2,
         "slaw": 14,
         "carrots": 0.5,
         "oranges": 2,
@@ -2567,7 +2567,7 @@
         "garlic": 1
       },
       "steps": [
-        "Pound the chicken breasts to an even ¾-inch thickness and rub with 1 tablespoon of the oil and 1 tablespoon of the soy sauce. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes. Rest 5 minutes, then slice.",
+        "Rub the chicken thighs with 1 tablespoon of the oil and 1 tablespoon of the soy sauce. Grill on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes. Rest 5 minutes, then slice.",
         "Whisk the remaining soy sauce and oil with the rice vinegar, sesame oil, honey, grated ginger and grated garlic.",
         "Chop the romaine, shred the carrots and peel and segment the oranges. Toss the romaine, coleslaw mix and carrots with most of the dressing.",
         "Divide among five bowls, top with the chicken and orange segments and drizzle with the rest of the dressing."
@@ -2594,7 +2594,7 @@
       ],
       "rotation": "bench",
       "items": {
-        "groundTurkey": 2.5,
+        "groundTurkey": 2,
         "beans": 2,
         "tomatoes": 2,
         "onions": 1,
@@ -2603,7 +2603,7 @@
         "taco": 3,
         "cumin": 2,
         "chickenBroth": 1,
-        "cheese": 5,
+        "cheese": 4,
         "sourCream": 8,
         "oil": 1,
         "salt": 0.5
@@ -2615,8 +2615,8 @@
         "Ladle into bowls and top with shredded cheddar and sour cream."
       ],
       "sides": [
-        "chips-and-salsa",
-        "corn-on-the-cob"
+        "garlic-toast",
+        "carrot-sticks"
       ],
       "sideSlots": 2,
       "photo": "A deep bowl of thick turkey and black bean chili topped with shredded cheddar and a dollop of sour cream."
@@ -2641,7 +2641,7 @@
         "garlic": 3,
         "flour": 0.25,
         "chickenBroth": 2,
-        "sourCream": 10,
+        "sourCream": 8,
         "butter": 2,
         "paprika": 0.5,
         "salt": 3,
@@ -2655,7 +2655,7 @@
       ],
       "sides": [
         "buttered-peas",
-        "canned-carrots"
+        "carrot-sticks"
       ],
       "sideSlots": 2,
       "photo": "Wide egg noodles topped with a creamy beef and mushroom stroganoff sauce, sprinkled with black pepper."
@@ -2713,11 +2713,11 @@
       ],
       "rotation": "bench",
       "items": {
-        "chicken": 2.25,
+        "chickenThighs": 2.25,
         "hoagies": 5,
         "peppers": 2,
         "onions": 1,
-        "mozzarella": 8,
+        "mozzarella": 6,
         "oil": 2,
         "garlicPowder": 1,
         "salt": 1,
@@ -2725,7 +2725,7 @@
         "mayo": 2
       },
       "steps": [
-        "Slice the chicken as thin as you can (it’s easier if it’s partly frozen). Season with the garlic powder, salt and pepper. Slice the peppers and onions into thin strips.",
+        "Slice the chicken thighs as thin as you can (it’s easier if they’re partly frozen). Season with the garlic powder, salt and pepper. Slice the peppers and onions into thin strips.",
         "Heat the Blackstone over medium-high with the oil. Cook the peppers and onions on one zone until soft and browned, 8–10 minutes.",
         "Cook the chicken on another zone in a thin layer, chopping and turning with two spatulas, until no pink remains and the thickest pieces read 165°F, 5–7 minutes.",
         "Mix the chicken and vegetables into five piles, top with the mozzarella and cover to melt. Spread the rolls with mayo, toast them on the griddle and scoop a pile into each."
