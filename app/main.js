@@ -118,6 +118,28 @@ function shell() {
     </nav>`;
 }
 
+/** Unsaved form input survives background re-renders (sync, other phones' changes). */
+function snapshotForms(root) {
+  const out = [];
+  root.querySelectorAll('form[data-submit] input, form[data-submit] select, form[data-submit] textarea').forEach((el) => {
+    if (el.type === 'hidden' || el.type === 'file' || !el.name) return;
+    const form = el.form?.dataset.submit;
+    if (!form || el.form.dataset.submitted) return;
+    const check = el.type === 'checkbox' || el.type === 'radio';
+    const dirty = check ? el.checked !== el.defaultChecked : el.value !== el.defaultValue;
+    if (dirty) out.push({ form, name: el.name, type: el.type, value: el.value, checked: el.checked });
+  });
+  return out;
+}
+function restoreForms(root, snap) {
+  for (const f of snap) {
+    root.querySelectorAll(`form[data-submit="${f.form}"] [name="${f.name}"]`).forEach((el) => {
+      if (f.type === 'radio') { if (el.value === f.value) el.checked = f.checked; } else if (f.type === 'checkbox') el.checked = f.checked;
+      else el.value = f.value;
+    });
+  }
+}
+
 let renderQueued = false;
 let lastView = null;
 function scheduleRender() {
@@ -130,9 +152,13 @@ export function render() {
   const root = document.getElementById('app');
   if (!app.db || !app.store) return;
   if (!app.store.device.who || onboarding.gateActive(app)) {
+    const snap = lastView === 'gate' ? snapshotForms(root) : [];
+    const wasFocused = lastView === 'gate' && document.activeElement?.id;
     root.className = 'app is-gate';
     setHTML(root, onboarding.render(app));
-    onboarding.mount?.(app, root);
+    restoreForms(root, snap);
+    if (wasFocused) document.getElementById(wasFocused)?.focus({ preventScroll: true });
+    else onboarding.mount?.(app, root);
     lastView = 'gate';
     return;
   }
@@ -146,10 +172,12 @@ export function render() {
     keep = { id: act.id, start: null, end: null };
     try { keep.start = act.selectionStart; keep.end = act.selectionEnd; } catch { /* inputs without a caret */ }
   }
+  const snap = changedView ? [] : snapshotForms(root);
   root.className = `app ${app.route.view === 'cook' ? 'is-cook' : ''}`;
   setHTML(root, shell());
   const main = root.querySelector('#view');
   setHTML(main, v.render(app));
+  restoreForms(main, snap);
   v.mount?.(app, main);
   document.title = v.title ? `${v.title(app)} — The Bilbrey Family Dinner Planner` : 'The Bilbrey Family Dinner Planner';
   if (changedView) { window.scrollTo(0, 0); if (lastView && lastView !== 'gate') main.focus({ preventScroll: true }); }
@@ -184,6 +212,7 @@ function delegate() {
     const form = ev.target.closest('form[data-submit]');
     if (!form) return;
     ev.preventDefault();
+    form.dataset.submitted = '1'; // once sent, a re-render may clear it
     ACTIONS[form.dataset.submit]?.(app, form, ev);
   });
 }

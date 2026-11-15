@@ -1,11 +1,11 @@
 // LIST: the shopping list for the selected period — by store, then aisle — with
 // per-item store/brand/price, check-off, the freezer panel, extras, and the store handoff.
 import { html, ic, when, openSheet, closeSheet, toast, copyText, confirmSheet, segmented, renderSheet } from '../ui.js';
-import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate } from '../util.js';
+import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate } from '../util.js';
 import { listKeyFor, dinnerById } from '../planner.js';
 import { buildList, formatPackQty, formatStoreList, formatFullList, unitText, OTHER } from '../shopping.js';
 import {
-  toggleCheckOps, doneShoppingOps, setPriceOps, clearPriceOps, notAtStoreOps, addExtraOps, removeExtraOps, setPantryOps,
+  toggleCheckOps, doneShoppingOps, setPriceOps, clearPriceOps, notAtStoreOps, addExtraOps, removeExtraOps, setPantryOps, undoFor,
 } from '../actions.js';
 import { set, del } from '../state.js';
 import { currentRange, periodNav } from './plan.js';
@@ -68,6 +68,17 @@ function storeSection(app, list, store, listKey) {
   </section>`;
 }
 
+function fzRow(f, today) {
+  return html`<li class="fz-row">
+    <span class="fz-name"><b>${f.name}</b><small>${[
+      f.have > 0 ? `${fmtQty(f.have)} ${f.unit} already in the freezer` : '',
+      f.buying > 0 ? `buying ${f.packs} × ${f.packSize ? `${fmtQty(f.packSize)} ${f.unit}` : ''} ${f.store ? `at ${f.store === 'sams' ? "Sam's" : 'Jewel'}` : ''}`.replace(/\s+/g, ' ').trim() : '',
+    ].filter(Boolean).join(', ')}</small></span>
+    <span class="fz-meter" aria-hidden="true">${f.uses.map((u, k) => html`<span class="fz-pip ${k < f.covers ? 'is-on' : ''}" title="${relativeDay(u.date, today)}"></span>`)}</span>
+    <span class="fz-what">${f.covers === f.dinners ? `Covers ${f.dinners} ${f.dinners === 1 ? 'dinner' : 'dinners'}` : `Covers ${f.covers} of ${f.dinners}`}${f.leftover > 0 ? html`<small>${fmtQty(f.leftover)} ${f.unit} left for next time</small>` : ''}</span>
+  </li>`;
+}
+
 function freezerPanel(app, list) {
   const rows = list.freezer.filter((f) => f.dinners > 0);
   if (!rows.length) return '';
@@ -75,16 +86,8 @@ function freezerPanel(app, list) {
   return html`<section class="freezer" aria-labelledby="fz-h">
     <h2 id="fz-h" class="section-title">${ic('snow', { size: 22 })}From the freezer</h2>
     <p class="muted small">How far the bulk packs go this period, and what’s left after.</p>
-    <ul class="fz-list">
-      ${rows.slice(0, 8).map((f) => html`<li class="fz-row">
-        <span class="fz-name"><b>${f.name}</b><small>${[
-          f.have > 0 ? `${fmtQty(f.have)} ${f.unit} already in the freezer` : '',
-          f.buying > 0 ? `buying ${f.packs} × ${f.packSize ? `${fmtQty(f.packSize)} ${f.unit}` : ''} ${f.store ? `at ${f.store === 'sams' ? "Sam's" : 'Jewel'}` : ''}`.replace(/\s+/g, ' ').trim() : '',
-        ].filter(Boolean).join(', ')}</small></span>
-        <span class="fz-meter" aria-hidden="true">${f.uses.map((u, k) => html`<span class="fz-pip ${k < f.covers ? 'is-on' : ''}" title="${relativeDay(u.date, today)}"></span>`)}</span>
-        <span class="fz-what">${f.covers === f.dinners ? `Covers ${f.dinners} ${f.dinners === 1 ? 'dinner' : 'dinners'}` : `Covers ${f.covers} of ${f.dinners}`}${f.leftover > 0 ? html`<small>${fmtQty(f.leftover)} ${f.unit} left for next time</small>` : ''}</span>
-      </li>`)}
-    </ul>
+    <ul class="fz-list">${rows.slice(0, 4).map((f) => fzRow(f, today))}</ul>
+    ${when(rows.length > 4, () => html`<details class="fz-more"><summary>${rows.length - 4} more from the freezer</summary><ul class="fz-list">${rows.slice(4).map((f) => fzRow(f, today))}</ul></details>`)}
   </section>`;
 }
 
@@ -169,7 +172,7 @@ export function render(app) {
 function itemSheet(app, key) {
   openSheet({
     id: `item:${key}`,
-    live: true,
+    live: false,
     size: 'tall',
     get title() { return 'Item'; },
     render: () => {
@@ -186,7 +189,7 @@ function itemSheet(app, key) {
       return html`
         <h3 class="item-sheet-name">${i.name}</h3>
         <p class="sheet-text">${detail(app, i) || 'On the list.'}</p>
-        ${when(i.uses.length, () => html`<ul class="uses">${i.uses.map((u) => html`<li><span>${relativeDay(u.date, app.today())}</span><span>${dinnerById(app.db, app.state, u.dinner)?.title}</span><span>${unitText(u.qty, i.unit)}</span></li>`)}</ul>`)}
+        ${when(i.uses.length, () => html`<ul class="uses">${i.uses.map((u) => html`<li><span>${dayAndDate(u.date, app.today())}</span><span>${dinnerById(app.db, app.state, u.dinner)?.title}</span><span>${unitText(u.qty, i.unit)}</span></li>`)}</ul>`)}
         <div class="kv">
           <p><span>Buying</span><b>${formatPackQty(i)}</b></p>
           ${when(i.pack?.label, () => html`<p><span>Pack</span><b>${i.pack.label}</b></p>`)}
@@ -232,7 +235,7 @@ function handoff(app, store) {
       title: ok ? `${info.name} list copied` : `Copy the ${info.name} list`,
       subtitle: `${list.stores[store].items.filter((i) => !i.checked).length || list.stores[store].items.length} items, about ${money(list.stores[store].subtotal)}`,
       render: () => html`
-        <ol class="steps-small">${info.handoff.map((s) => html`<li>${s}</li>`)}</ol>
+        <ol class="steps-small">${info.handoff.filter((s, k) => !(k === 0 && /^tap copy/i.test(s))).map((s) => html`<li>${s}</li>`)}</ol>
         ${when(info.handoffMethod, () => html`<p class="muted small">${info.handoffMethod}</p>`)}
         <a class="btn btn-primary btn-block" href="${info.orderUrl || info.website}" target="_blank" rel="noopener">${ic('store', { size: 20 })}Open ${info.name}</a>
         ${when(info.appUrl, () => html`<a class="btn btn-quiet btn-block" href="${info.appUrl}" target="_blank" rel="noopener">Get the ${info.name} app</a>`)}
@@ -281,16 +284,25 @@ export const actions = {
     if (!name) return;
     app.commit(addExtraOps(app.db, app.state, { name, qty: Number(f.get('qty')) || 1, store: f.get('store'), every: f.get('every'), price: f.get('price') === '' ? null : f.get('price') }));
   },
-  'item:store': (app, el) => { app.commit({ ops: [set(['storeFor', itemSheet.key], el.dataset.value)], undo: [], message: '' }, { quiet: true }); toast(`Moved to ${NAMES[el.dataset.value]}.`); },
-  'item:brand': (app, el) => app.commit({ ops: [set(['brands', itemSheet.key], el.dataset.value)], undo: [], message: '' }, { quiet: true }),
+  'item:store': (app, el) => {
+    const ops = [set(['storeFor', itemSheet.key], el.dataset.value)];
+    app.commit({ ops, undo: undoFor(app.state, ops), message: `Moved to ${NAMES[el.dataset.value]}.` });
+    renderSheet();
+  },
+  'item:brand': (app, el) => {
+    const ops = [set(['brands', itemSheet.key], el.dataset.value)];
+    app.commit({ ops, undo: undoFor(app.state, ops), message: el.dataset.value === 'name' ? 'Name brand for this item.' : 'Store brand for this item.' });
+    renderSheet();
+  },
   'item:price': (app, form) => {
     const f = new FormData(form);
     const size = Number(f.get('size'));
     const price = Number(f.get('price'));
     if (!(size > 0) || !(price >= 0)) { toast('Enter a pack size and a price.'); return; }
     app.commit(setPriceOps(app.state, { store: form.dataset.store, brand: form.dataset.brand, id: form.dataset.id, size, price, who: app.who() }));
+    renderSheet();
   },
-  'item:price-clear': (app, el) => app.commit(clearPriceOps(app.state, { store: el.dataset.store, brand: el.dataset.brand, id: el.dataset.id })),
+  'item:price-clear': (app, el) => { app.commit(clearPriceOps(app.state, { store: el.dataset.store, brand: el.dataset.brand, id: el.dataset.id })); renderSheet(); },
   'item:notat': (app, el) => { app.commit(notAtStoreOps(app.db, app.state, { store: el.dataset.store, id: el.dataset.id })); closeSheet(); },
   'item:have': (app, el) => {
     const id = el.dataset.id;

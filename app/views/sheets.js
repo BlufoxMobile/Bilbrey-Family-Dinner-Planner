@@ -3,7 +3,7 @@
 import { html, ic, when, openSheet, closeSheet, toast, avatar, renderSheet, confirmSheet, stepper } from '../ui.js';
 import { AWAY_REASONS, FAMILY } from '../config.js';
 import {
-  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName,
+  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate,
 } from '../util.js';
 import {
   dinnerById, rotationList, findInPlan, openNights, parseSideRef, shelfRef, sideInfo, isFavorite, kindOf,
@@ -81,7 +81,7 @@ function nightBody(app, date) {
     ${when(!cooked && slots === 1 && sides.length < 2, () => html`<button type="button" class="btn btn-quiet btn-small add-side" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="1">${ic('plus', { size: 18 })}Add a side</button>`)}
     <div class="action-list">
       <a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>Big steps for the dinner and both sides.</small></span></a>
-      ${when(!cooked && date !== today && !past, () => html`<button type="button" class="action-row" data-action="night:tonight" data-date="${date}">${ic('tonight')}<span><b>Make this tonight</b><small>Tonight’s dinner moves to ${relativeDay(date, today).toLowerCase() === 'tomorrow' ? 'tomorrow' : weekdayName(date)}.</small></span></button>`)}
+      ${when(!cooked && date !== today && !past, () => html`<button type="button" class="action-row" data-action="night:tonight" data-date="${date}">${ic('tonight')}<span><b>Make this tonight</b><small>Tonight’s dinner moves to ${diffDays(date, today) === 1 ? 'tomorrow' : dayAndDate(date, today)}.</small></span></button>`)}
       ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:move" data-date="${date}">${ic('move')}<span><b>Move to another night</b><small>If that night has a dinner, they trade places.</small></span></button>`)}
       ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('swap')}<span><b>Swap for a different dinner</b></span></button>`)}
       ${when(!cooked && !past, () => html`<button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('away')}<span><b>Not eating at home</b><small>Removes this dinner’s groceries.</small></span></button>`)}
@@ -166,7 +166,7 @@ function openDisplaced(app, displaced, fromDate) {
     subtitle: 'It was planned for that night.',
     render: () => html`
       <h3 class="sheet-h">Move it to an open night</h3>
-      ${open.length ? html`<div class="chip-grid">${open.map((x) => html`<button type="button" class="chip chip-lg" data-action="displaced:move" data-to="${x}" data-dinner="${displaced.dinner}">${relativeDay(x, today)}<small>${shortDate(x)}</small></button>`)}</div>`
+      ${open.length ? html`<div class="chip-grid">${open.map((x) => html`<button type="button" class="chip chip-lg" data-action="displaced:move" data-to="${x}" data-dinner="${displaced.dinner}">${dayWord(x, today)}<small>${shortDate(x)}</small></button>`)}</div>`
         : html`<p class="sheet-text">No open nights in the next six weeks.</p>`}
       <div class="sheet-actions">
         <button type="button" class="btn btn-quiet btn-block" data-action="sheet:close">Drop it from the plan</button>
@@ -202,7 +202,7 @@ export function openMove(app, fromDate) {
       const cooked = t?.status === 'cooked';
       const what = t?.status === 'away' ? `Away: ${awayReason(t).label}` : td ? (cooked ? `${td.title} (cooked)` : `Trade with ${td.title}`) : 'Open';
       return html`<li><button type="button" class="move-row ${td && !cooked ? '' : 'is-open'}" data-action="move:to" data-from="${fromDate}" data-to="${x}" data-dinner="${d.id}" ${cooked ? 'disabled' : ''}>
-        <span class="move-day"><b>${relativeDay(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${what}</span>${ic('right', { size: 18 })}
+        <span class="move-day"><b>${dayWord(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${what}</span>${ic('right', { size: 18 })}
       </button></li>`;
     })}</ul>`,
   });
@@ -220,7 +220,7 @@ export function openAway(app, date) {
     id: `away:${date}`,
     size: 'tall',
     title: 'Not eating at home',
-    subtitle: `${relativeDay(date, today)}, ${longDay(date)}`,
+    subtitle: date === today ? `Tonight, ${longDay(date)}` : longDay(date),
     render: () => html`
       <form class="form" data-submit="away:save" data-date="${date}">
         <div class="seg" role="radiogroup" aria-label="How many nights">
@@ -242,7 +242,7 @@ export function openAway(app, date) {
           <legend class="field-label">What about ${d.title}?</legend>
           <label class="radio-row"><input type="radio" name="push" value="skip" ${st.push === 'skip' ? 'checked' : ''}><span><b>Skip it this time</b><small>Its groceries come off the list.</small></span></label>
           ${opens.length ? html`<label class="radio-row"><input type="radio" name="push" value="move" ${st.push === 'move' ? 'checked' : ''}><span><b>Push it to another night</b>
-            <select class="input input-inline" name="pushTo" aria-label="Night to push it to">${opens.map((x) => html`<option value="${x}" ${x === st.pushTo ? 'selected' : ''}>${relativeDay(x, today)}, ${shortDate(x)}</option>`)}</select></span></label>` : ''}
+            <select class="input input-inline" name="pushTo" aria-label="Night to push it to">${opens.map((x) => html`<option value="${x}" ${x === st.pushTo ? 'selected' : ''}>${dayAndDate(x, today)}</option>`)}</select></span></label>` : ''}
         </fieldset>`)}
         <button type="submit" class="btn btn-primary btn-block">Mark not eating at home</button>
       </form>`,

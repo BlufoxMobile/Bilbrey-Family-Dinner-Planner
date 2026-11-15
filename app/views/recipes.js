@@ -7,8 +7,8 @@ import { dinnerPhoto } from './common.js';
 export const title = () => 'Recipes';
 
 const TABS = [
-  { id: 'rotation', label: 'In the rotation' },
-  { id: 'bench', label: 'On the bench' },
+  { id: 'rotation', label: 'In rotation' },
+  { id: 'bench', label: 'Bench' },
   { id: 'out', label: 'Voted out' },
 ];
 

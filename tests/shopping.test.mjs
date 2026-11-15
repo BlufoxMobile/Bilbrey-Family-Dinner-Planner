@@ -137,3 +137,17 @@ test('prices.json overrides catalog packs; missing optional files are fine', () 
   assert.equal(e.pricesUpdated, null);
   assert.equal(e.stores.jewel.website, 'https://www.jewelosco.com');
 });
+
+test('typical month = rotation average × nights + everyday extras', async () => {
+  const { rotationAverage, extrasPerMonth, dinnerFoodCost } = await import('../app/shopping.js');
+  const s = applyOps({}, addExtraOps(db, {}, { item: 'milk', qty: 1, every: 'week' }).ops);
+  const avg = rotationAverage(db, s);
+  assert.ok(avg > 0);
+  const b = monthBudget(db, s, '2026-11-16');
+  assert.equal(b.typical.dinners, Math.round(avg * 30 * 100) / 100);
+  assert.equal(b.typical.extras, extrasPerMonth(db, s).total);
+  assert.equal(b.typical.extras, Math.round(3.69 * 52 / 12 * 100) / 100);
+  assert.equal(b.typical.total, Math.round((b.typical.dinners + b.typical.extras) * 100) / 100);
+  const light = dinnerFoodCost(db, { settings: { meatScale: 0.85 } }, 'chix-grill');
+  assert.ok(light < dinnerFoodCost(db, {}, 'chix-grill'), 'lighter meat costs less');
+});

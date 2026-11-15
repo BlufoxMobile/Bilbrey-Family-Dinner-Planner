@@ -51,6 +51,9 @@ function dayCard(app, date, { compact = false } = {}) {
   const picked = app.ui.swapPick === date;
   const type = nightType(date, app.settings);
   const cls = ['day', away && 'is-away', cooked && 'is-cooked', !d && !away && 'is-open', past && 'is-past', date === today && 'is-today', picked && 'is-picked', app.ui.swapMode && 'is-swapping'].filter(Boolean).join(' ');
+  if (past && !d && !away) {
+    return html`<article class="day is-past is-past-empty" data-date="${date}"><span class="day-hit day-hit-static">${dayStamp(date, today)}<span class="day-note">Nothing planned</span></span></article>`;
+  }
   const label = away ? awayReason(e).label : d ? d.title : 'Nothing planned';
   const sides = d && !away ? sidesFor(app, d.id, e) : [];
   return html`<article class="${cls}" data-date="${date}" ${!cooked && !past ? html`draggable="true"` : ''}>

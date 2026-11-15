@@ -342,7 +342,7 @@ export function packFor(db, state, id, store, brand) {
   return other ? { ...other, brandFallback: true } : null;
 }
 
-function unitPrice(db, state, id, planStore) {
+export function unitPrice(db, state, id, planStore) {
   const store = storeFor(db, state, id, planStore);
   const p = packFor(db, state, id, store, brandFor(state, id));
   return p ? p.price / p.size : 0;

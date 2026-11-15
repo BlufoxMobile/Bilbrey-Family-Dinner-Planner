@@ -124,6 +124,20 @@ export function relativeDay(iso, today) {
   return `${shortWeekday(iso)}, ${shortDate(iso)}`;
 }
 
+/** One word for a night: Tonight / Tomorrow / Yesterday / Thursday. Pair it with the date on its own line. */
+export function dayWord(iso, today) {
+  const d = diffDays(iso, today);
+  if (d === 0) return 'Tonight';
+  if (d === 1) return 'Tomorrow';
+  if (d === -1) return 'Yesterday';
+  return weekdayName(iso);
+}
+
+/** "Tonight, Nov 16" / "Thursday, Nov 19" — never repeats the weekday. */
+export function dayAndDate(iso, today) {
+  return `${dayWord(iso, today)}, ${shortDate(iso)}`;
+}
+
 const moneyFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const moneyFmt0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 /** "$1,234.56" — never NaN. */

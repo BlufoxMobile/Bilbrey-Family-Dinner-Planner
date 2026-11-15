@@ -6,7 +6,7 @@ import { AISLES } from './config.js';
 import { datesBetween, endOfMonth, fmtQty, round2, startOfMonth, shortDate, rangeLabel } from './util.js';
 import { settingsOf } from './state.js';
 import {
-  brandFor, canBuyAt, dinnerById, itemsForNight, kindOf, packFor, storeFor,
+  brandFor, canBuyAt, dinnerById, itemsForNight, kindOf, packFor, storeFor, rotationList, unitPrice,
 } from './planner.js';
 
 export const OTHER = { sams: 'jewel', jewel: 'sams' };
@@ -275,6 +275,40 @@ export function boughtToPantry(list) {
 
 // ---------------------------------------------------------------- budget
 
+/** Food a dinner actually uses, priced per unit (pantry and pack leftovers ignored). */
+export function dinnerFoodCost(db, state, dinnerId, entry = null) {
+  const items = itemsForNight(db, state, dinnerId, entry);
+  let t = 0;
+  for (const [id, q] of Object.entries(items)) t += q * unitPrice(db, state, id, settingsOf(state).planStore);
+  return round2(t);
+}
+
+/** Average food cost of a dinner in the family's rotation, with remembered sides. */
+export function rotationAverage(db, state) {
+  const rot = rotationList(db, state);
+  if (!rot.length) return 0;
+  return round2(rot.reduce((t, d) => t + dinnerFoodCost(db, state, d.id, null), 0) / rot.length);
+}
+
+/** Everyday extras for a month: weekly items × 52/12 weeks (trip items counted as one trip a week). */
+export function extrasPerMonth(db, state) {
+  let t = 0;
+  let unpriced = 0;
+  for (const x of Object.values(state?.extras || {})) {
+    if (!x) continue;
+    const qty = Number(x.qty) > 0 ? Number(x.qty) : 1;
+    let each = null;
+    if (x.item && db.ingredients[x.item]) {
+      const store = x.store === 'sams' || x.store === 'jewel' ? x.store : storeFor(db, state, x.item);
+      const p = packFor(db, state, x.item, store, brandFor(state, x.item)) || packFor(db, state, x.item, OTHER[store], brandFor(state, x.item));
+      each = p ? p.price : null;
+    } else if (Number.isFinite(Number(x.price))) each = Number(x.price);
+    if (each == null) { unpriced++; continue; }
+    t += each * qty * (52 / 12);
+  }
+  return { total: round2(t), unpriced };
+}
+
 export function receiptsIn(state, month) {
   const seen = new Set();
   return (Array.isArray(state?.receipts) ? state.receipts : [])
@@ -304,11 +338,15 @@ export function monthBudget(db, state, today, { baseline = 1000 } = {}) {
   const cooked = all.filter((d) => state?.plan?.[d]?.status === 'cooked').length;
   const extras = list.extrasCost || 0;
   const projected = round2(spent + stillToBuy);
-  const ifPlanned = round2(projected + (list.perDinner || 0) * unplanned);
+  const average = rotationAverage(db, state);
+  const ifPlanned = round2(projected + average * unplanned);
+  const nights = all.length;
+  const ex = extrasPerMonth(db, state);
+  const typical = { perDinner: average, nights, dinners: round2(average * nights), extras: ex.total, extrasUnpriced: ex.unpriced, total: round2(average * nights + ex.total) };
   const target = st.monthlyTarget;
   return {
     month, start, end, target, receipts, spent, stillToBuy, plannedRemaining, unplanned, away, cooked,
-    perDinner: list.perDinner, projected, ifPlanned, extras, dinnersToBuy: round2(stillToBuy - extras), meatScale: st.meatScale,
+    perDinner: list.perDinner, average, typical, projected, ifPlanned, extras, dinnersToBuy: round2(stillToBuy - extras), meatScale: st.meatScale,
     left: round2(target - projected), baseline, savings: round2(baseline - projected),
     byStore: { sams: list.stores.sams.subtotal, jewel: list.stores.jewel.subtotal },
     pricesUpdated: db.pricesUpdated,

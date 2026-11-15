@@ -42,7 +42,7 @@ function pantryRow(app, id, p) {
   const staple = m.kind === 'staple';
   return html`<li class="pan-row ${p.low ? 'is-low' : ''}">
     <span class="pan-name"><b>${m.name}</b>
-      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${m.unit}${m.custom ? ', shelf item' : ''}`}${p.by ? `. Updated by ${p.by}` : ''}</small></span>
+      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? `${fmtQty(p.qty)} ${m.unit} on hand` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}${p.by ? `, updated by ${p.by}` : ''}</small></span>
     <span class="pan-ctrl">
       ${staple
         ? switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `${m.name} stocked until low` })

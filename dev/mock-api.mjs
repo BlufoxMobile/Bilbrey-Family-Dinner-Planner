@@ -112,13 +112,21 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
         { name: 'Canned green beans', qty: 4, unit: 'cans', confidence: 0.93 },
         { name: 'Spaghetti', qty: 32, unit: 'oz', confidence: 0.86 },
         { name: 'Table salt', qty: null, unit: null, confidence: 0.81 },
-        { name: 'Rotel diced tomatoes & green chilies', qty: 2, unit: 'cans', confidence: 0.64 },
+        { name: 'Rotel original', qty: 2, unit: 'cans', confidence: 0.64 },
       ];
       const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
       const items = seen.map((s) => {
         const n = norm(s.name);
-        const hit = known.find((k) => [k.name, ...(k.aliases || [])].some((a) => { const an = norm(a); return an && (an === n || n.includes(an) || an.includes(n)); }));
-        return { ...s, matchId: hit ? hit.id : null };
+        let best = null;
+        for (const k of known) {
+          for (const a of [k.name, ...(k.aliases || [])]) {
+            const an = norm(a);
+            if (!an) continue;
+            const score = an === n ? 1000 : n.includes(an) ? an.length : 0;
+            if (score && (!best || score > best.score)) best = { id: k.id, score };
+          }
+        }
+        return { ...s, matchId: best ? best.id : null };
       });
       return send(res, req, 200, { items, model: 'mock-vision' });
     }

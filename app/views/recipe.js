@@ -2,7 +2,7 @@
 // make tonight / add to plan / start cooking, and retire/restore for Jeff and Candi.
 import { html, ic, when, openSheet, avatar } from '../ui.js';
 import { FAMILY, PARENTS } from '../config.js';
-import { fmtQty, addDays, datesBetween, relativeDay, shortDate } from '../util.js';
+import { fmtQty, addDays, datesBetween, relativeDay, shortDate, dayWord, dayAndDate } from '../util.js';
 import { dinnerById, isRetired, isPromoted, isFavorite, voteInfo, findInPlan, inRotation, scaleItems } from '../planner.js';
 import { settingsOf } from '../state.js';
 import { voteOps, retireOps, restoreOps, promoteOps } from '../actions.js';
@@ -120,7 +120,7 @@ function openAddToPlan(app, dinnerId) {
     id: `addplan:${dinnerId}`,
     size: 'tall',
     title: `Add ${d.title} to the plan`,
-    subtitle: from ? `It’s already on ${relativeDay(from, today)}. Picking a night with a dinner trades them.` : 'Picking a night that has a dinner replaces it; you can move that one.',
+    subtitle: from ? `It’s already on ${from === today ? 'tonight' : dayAndDate(from, today)}. Picking a night with a dinner trades them.` : 'Picking a night that has a dinner replaces it; you can move that one.',
     render: () => html`<ul class="move-list">${nights.map((x) => {
       const t = app.state.plan?.[x];
       const td = t?.dinner ? dinnerById(app.db, app.state, t.dinner) : null;
@@ -128,7 +128,7 @@ function openAddToPlan(app, dinnerId) {
       const same = t?.dinner === dinnerId && t.status === 'planned';
       const what = same ? 'Already planned' : t?.status === 'away' ? `Away: ${awayReason(t).label}` : td ? (cooked ? `${td.title} (cooked)` : td.title) : 'Open';
       return html`<li><button type="button" class="move-row ${td ? '' : 'is-open'}" data-action="rec:place" data-dinner="${dinnerId}" data-to="${x}" ${cooked || same ? 'disabled' : ''}>
-        <span class="move-day"><b>${relativeDay(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${what}</span>${ic('right', { size: 18 })}
+        <span class="move-day"><b>${dayWord(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${what}</span>${ic('right', { size: 18 })}
       </button></li>`;
     })}</ul>`,
   });

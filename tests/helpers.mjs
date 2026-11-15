@@ -22,8 +22,8 @@ export function tinyDb() {
   const pack = (size, price) => ({ generic: { size, price, label: `g${size}` }, name: { size, price: price * 1.5, label: `n${size}` } });
   const catalog = {
     ingredients: {
-      chicken: { name: 'Chicken breast', unit: 'lb', aisle: 'Meat', storage: 'freezer', kind: 'measured', defaultStore: 'sams', aliases: ['chicken'], packs: { sams: pack(10, 30), jewel: pack(3, 12) } },
-      beef: { name: 'Ground beef', unit: 'lb', aisle: 'Meat', storage: 'freezer', kind: 'measured', defaultStore: 'sams', packs: { sams: pack(10, 45), jewel: pack(3, 18) } },
+      chicken: { name: 'Chicken breast', unit: 'lb', aisle: 'Meat', storage: 'freezer', kind: 'measured', meat: true, defaultStore: 'sams', aliases: ['chicken'], packs: { sams: pack(10, 30), jewel: pack(3, 12) } },
+      beef: { name: 'Ground beef', unit: 'lb', aisle: 'Meat', storage: 'freezer', kind: 'measured', meat: true, defaultStore: 'sams', packs: { sams: pack(10, 45), jewel: pack(3, 18) } },
       pasta: { name: 'Spaghetti', unit: 'oz', aisle: 'Pasta & Grains', storage: 'pantry', kind: 'measured', defaultStore: 'jewel', packs: { sams: pack(96, 7), jewel: pack(16, 1.5) } },
       salt: { name: 'Salt', unit: 'tsp', aisle: 'Spices & Baking', storage: 'pantry', kind: 'staple', defaultStore: 'jewel', packs: { jewel: pack(120, 1.29) } },
       broccoli: { name: 'Frozen broccoli', unit: 'lb', aisle: 'Frozen', storage: 'freezer', kind: 'measured', defaultStore: 'sams', packs: { sams: pack(4, 6.5), jewel: pack(1, 2.29) } },

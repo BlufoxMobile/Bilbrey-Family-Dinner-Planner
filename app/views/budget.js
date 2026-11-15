@@ -33,11 +33,22 @@ export function render(app) {
         <li><span class="key key-spent"></span>Spent so far<b>${money(b.spent)}</b></li>
         <li><span class="key key-plan"></span>Still to buy for ${b.plannedRemaining} planned ${b.plannedRemaining === 1 ? 'dinner' : 'dinners'}<b>${money(b.dinnersToBuy)}</b></li>
         ${when(b.extras, () => html`<li><span class="key key-plan"></span>Everyday extras for the rest of the month<b>${money(b.extras)}</b></li>`)}
-        ${when(b.unplanned, () => html`<li><span class="key key-maybe"></span>${b.unplanned} ${b.unplanned === 1 ? 'night' : 'nights'} not planned yet${b.perDinner ? `, at ${money(b.perDinner)} a dinner` : ''}<b>${b.perDinner ? `+${money(round2(b.ifPlanned - b.projected))}` : '—'}</b></li>`)}
+        ${when(b.unplanned, () => html`<li><span class="key key-maybe"></span>${b.unplanned} ${b.unplanned === 1 ? 'night' : 'nights'} not planned yet, at ${money(b.average)} a dinner (your rotation’s average)<b>+${money(round2(b.ifPlanned - b.projected))}</b></li>`)}
       </ul>
       <p class="budget-verdict ${over ? 'is-over' : 'is-under'}">${over ? `${money(b.projected - b.target)} over the target so far.` : `${money(b.left)} left under the target.`}</p>
       ${when(b.savings > 0, () => html`<p class="budget-save">${ic('leaf', { size: 20 })}<span>${money(b.savings)} less than the old ${money(b.baseline, { whole: true })} month.</span></p>`)}
       <p class="muted small">Projected = receipts logged this month + the shopping list for the rest of ${month} (today through ${shortDate(b.end)}), at ${app.db.pricesUpdated ? `prices estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'estimated prices'}. ${b.receipts.length ? '' : 'Log receipts after each trip so “spent so far” is real.'}</p>
+    </section>
+
+    <section class="typical" aria-labelledby="ty-h">
+      <h2 id="ty-h" class="section-title">A typical month</h2>
+      <p class="muted small">What a month of dinners costs once the pantry is stocked: the food each dinner actually uses, without the extra you pay up front for bulk packs that carry into the next week.</p>
+      <ul class="legend">
+        <li><span class="key key-plan"></span>${b.typical.nights} dinners at ${money(b.typical.perDinner)}<b>${money(b.typical.dinners)}</b></li>
+        <li><span class="key key-maybe"></span>Everyday extras${b.typical.extrasUnpriced ? ` (${b.typical.extrasUnpriced} without a price)` : ''}<b>${money(b.typical.extras)}</b></li>
+        <li><span class="key key-spent"></span><strong>Total</strong><b>${money(b.typical.total)}</b></li>
+      </ul>
+      <p class="budget-verdict ${b.typical.total > b.target ? 'is-over' : 'is-under'}">${b.typical.total > b.target ? `${money(b.typical.total - b.target)} over the ${money(b.target, { whole: true })} target. Try Lighter meat, store brands, or a Jewel-only week.` : `${money(b.target - b.typical.total)} under the ${money(b.target, { whole: true })} target.`}</p>
     </section>
 
     <section class="target" aria-labelledby="m-h">

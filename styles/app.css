@@ -41,6 +41,8 @@ small { font-size: var(--t-sm); }
 .wm-lg { width: 64px; height: 64px; border-radius: 18px; }
 .wordmark { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
 .wm-text { font-family: var(--font-display); font-size: 1.125rem; line-height: 1.1; letter-spacing: -0.005em; }
+.topbar .wm-text { white-space: nowrap; }
+@media (max-width: 359px) { .topbar .wm-text { display: none; } }
 .boot { min-height: 100dvh; display: grid; place-content: center; justify-items: center; gap: 14px; color: var(--ink-2); font-family: var(--font-display); }
 
 /* ---------------------------------------------------------------- shell */
@@ -151,6 +153,7 @@ small { font-size: var(--t-sm); }
 .seg-opt.is-on { background: var(--card); color: var(--ink); box-shadow: var(--sh-1); }
 .seg-sm .seg-opt { min-height: 38px; padding: 0 12px; }
 .form .seg, .sheet-body .seg { display: flex; width: 100%; }
+.sheet-body > .seg { margin-bottom: var(--s3); }
 
 .switch { position: relative; width: 52px; height: 32px; flex: none; border: 0; border-radius: 999px; background: var(--line-2); padding: 0; }
 .switch::before { content: ''; position: absolute; inset: -6px; }
@@ -249,8 +252,6 @@ select.input { appearance: none; -webkit-appearance: none; padding-right: 36px; 
 .index-card {
   position: relative; margin: -44px 10px 0; padding: 22px 20px 18px;
   background-color: var(--card);
-  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--rule-blue) 31px, var(--rule-blue) 32px);
-  background-position: 0 66px;
   border-radius: var(--r-index); box-shadow: var(--sh-2);
 }
 .index-card::before { content: ''; position: absolute; left: 0; right: 0; top: 56px; height: 2px; background: var(--red); opacity: .8; }
@@ -353,6 +354,10 @@ select.input { appearance: none; -webkit-appearance: none; padding-right: 36px; 
 .day.is-dragging { opacity: .5; }
 .day.is-drop { box-shadow: 0 0 0 3px var(--butter), var(--sh-2); }
 .month-heads { display: none; }
+.day.is-past-empty { background: transparent; box-shadow: none; opacity: .55; }
+.day-hit-static { min-height: 52px; grid-template-rows: auto; cursor: default; }
+.day-hit-static > .daystamp { grid-row: auto; }
+.day-hit-static .day-note { grid-column: 2 / -1; }
 
 /* ---------------------------------------------------------------- sheets */
 .sheet { padding: 0; border: 0; background: transparent; max-width: none; max-height: none; width: 100%; height: 100%; margin: 0; color: var(--ink); overflow: hidden; }
@@ -439,7 +444,7 @@ html.has-sheet { overflow: hidden; }
 .kv span { color: var(--ink-3); }
 .kv b { font-weight: 600; }
 .uses { display: grid; margin: var(--s2) 0; font-size: var(--t-sm); }
-.uses li { display: grid; grid-template-columns: 96px 1fr auto; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.uses li { display: grid; grid-template-columns: 118px 1fr auto; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
 .item-sheet-name { font-family: var(--font-display); font-weight: 400; font-size: var(--t-lg); margin-bottom: 4px; }
 .handoff-items { display: grid; margin-top: var(--s3); }
 .handoff-items li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
@@ -453,7 +458,7 @@ html.has-sheet { overflow: hidden; }
 :root[data-theme="dark"] .toast-btn { color: var(--pine-ink); }
 .toast-x { color: inherit; opacity: .7; }
 .toast-x:hover { background: transparent; color: inherit; opacity: 1; }
-html.has-sheet .toast-root { bottom: calc(var(--safe-b) + 12px); }
+html.has-sheet .toast-root, body:has(.app.is-cook) .toast-root, body:has(.app.is-gate) .toast-root { bottom: calc(var(--safe-b) + 12px); }
 
 /* empty */
 .empty { display: grid; justify-items: center; gap: 8px; padding: var(--s10) var(--s4); text-align: center; }
@@ -498,6 +503,7 @@ html.has-sheet .toast-root { bottom: calc(var(--safe-b) + 12px); }
 .freezer { padding: 16px 18px; border-radius: var(--r-card); background: color-mix(in srgb, var(--sage-tint) 70%, var(--card)); margin-bottom: var(--s6); }
 .freezer .section-title .ic { color: var(--sage); }
 .fz-list { display: grid; margin-top: var(--s3); }
+.fz-more summary { cursor: pointer; font-weight: 600; color: var(--pine); min-height: 44px; display: flex; align-items: center; border-top: 1px solid color-mix(in srgb, var(--sage) 25%, transparent); }
 .fz-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 10px 0; border-top: 1px solid color-mix(in srgb, var(--sage) 25%, transparent); }
 .fz-name { display: grid; min-width: 0; }
 .fz-name small { color: var(--ink-3); font-size: var(--t-xs); }
@@ -614,7 +620,9 @@ html.has-sheet .toast-root { bottom: calc(var(--safe-b) + 12px); }
 .budget-verdict.is-under { color: var(--sage); }
 .budget-save { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--sage-tint); font-weight: 600; }
 .budget-save .ic { color: var(--sage); flex: none; }
-.target { margin-bottom: var(--s8); }
+.target, .typical { margin-bottom: var(--s8); }
+.typical { padding: 18px; border-radius: var(--r-card); border: 1px solid var(--line); background: color-mix(in srgb, var(--card) 70%, transparent); display: grid; gap: 10px; }
+.legend strong { color: var(--ink); }
 .target .field { flex: 1; }
 .receipt-list { display: grid; margin-top: var(--s4); border-top: 1px solid var(--line); }
 .receipt-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px; min-height: 60px; border-bottom: 1px solid var(--line); }
@@ -665,9 +673,8 @@ html.has-sheet .toast-root { bottom: calc(var(--safe-b) + 12px); }
 .cook-progress { height: 4px; background: var(--paper-2); }
 .cook-progress span { display: block; height: 100%; background: var(--red); transition: width .3s var(--ease); }
 .cook-body { max-width: 760px; margin: 0 auto; padding: var(--s5) var(--gutter); display: grid; gap: var(--s6); }
-.cook-card { position: relative; padding: 70px 20px 18px; border-radius: var(--r-index); background: var(--card); box-shadow: var(--sh-1); display: grid; gap: 8px; }
-.cook-card::before { content: ''; position: absolute; left: 0; right: 0; top: 52px; height: 2px; background: var(--red); opacity: .8; }
-.cook-dish { font-family: var(--font-display); font-weight: 400; font-size: calc(var(--t-2xl) * var(--cook-scale)); line-height: 1.08; letter-spacing: -0.01em; position: absolute; top: 16px; left: 20px; right: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cook-card { position: relative; padding: 18px 20px; border-radius: var(--r-index); background: var(--card); box-shadow: var(--sh-1); display: grid; gap: 8px; }
+.cook-dish { font-family: var(--font-display); font-weight: 400; font-size: calc(var(--t-2xl) * var(--cook-scale)); line-height: 1.08; letter-spacing: -0.01em; text-wrap: balance; margin: 0 -20px 6px; padding: 0 20px 14px; border-bottom: 2px solid color-mix(in srgb, var(--red) 80%, transparent); }
 .cook-with { font-size: calc(var(--t-md) * var(--cook-scale)); color: var(--ink-2); }
 .cook-need { padding: 12px 16px; border-radius: var(--r-card); border: 1px solid var(--line); background: var(--card); }
 .cook-need summary { cursor: pointer; font-weight: 700; min-height: 36px; display: flex; align-items: center; }
@@ -738,6 +745,9 @@ html.has-sheet .toast-root { bottom: calc(var(--safe-b) + 12px); }
   .days-month { gap: 8px; }
   .week-month:first-of-type .days-month > .day:first-child { grid-column-start: calc(var(--lead) + 1); }
   .days-month .day-hit { grid-template-columns: 1fr; grid-template-rows: auto; padding: 8px; row-gap: 6px; min-height: 120px; align-items: start; }
+  .days-month .day-hit-static { min-height: 120px; }
+  .days-month .day-hit-static .day-note { grid-column: auto; }
+  .page-plan .week:not(.week-month) .day-hit-static .day-note { grid-column: auto; }
   .days-month .day-hit > .daystamp { grid-row: auto; display: flex; gap: 6px; align-items: baseline; justify-items: start; }
   .days-month .ds-d { font-size: 1.125rem; }
   .days-month .day-hit > .photo, .days-month .day-hit > .day-ph { grid-row: auto; width: 100%; height: 56px; }
