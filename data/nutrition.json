@@ -1,0 +1,1029 @@
+{
+  "version": 1,
+  "updated": "2026-11-14",
+  "notes": "kcal and protein (grams) per ONE catalog unit of each ingredient (the catalog’s \"unit\"; \"basis\" says exactly what one unit is). Generic foods use USDA FoodData Central SR Legacy reference values (fdc.nal.usda.gov; NDB numbers cited where known) converted to the catalog unit; branded/packaged items use typical package labels. Lean meats (chicken, 93/7 turkey, pork chops/loin) use raw values. Ground beef, ground pork, Italian sausage and bacon are counted AS EATEN per pound bought (USDA cooked value × cooking yield), because the recipes spoon off or drain the rendered fat. Oil, butter, mayo and dressings count in full at recipe amounts. Canned vegetables and beans are per can as eaten (drained where the recipe drains). Values are estimates for planning — a kind guide, not a lab number.",
+  "per": {
+    "chicken": {
+      "kcal": 544,
+      "protein": 102.1,
+      "unit": "lb",
+      "basis": "raw boneless skinless breast, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Chicken, broilers or fryers, breast, meat only, raw (NDB 05062); 120 kcal, 22.5 g protein per 100 g"
+    },
+    "beef": {
+      "kcal": 815,
+      "protein": 84,
+      "unit": "lb",
+      "basis": "AS EATEN: 1 lb raw 85% lean ground beef, browned with the rendered fat spooned off (~72% cooked yield, ~327 g)",
+      "source": "USDA FoodData Central, SR Legacy: Beef, ground, 85% lean meat / 15% fat, crumbles, cooked, pan-browned ~250 kcal & 25.9 g per 100 g cooked; raw is 975 kcal/84 g per lb (USDA FoodData Central, SR Legacy: Beef, ground, 85% lean meat / 15% fat, raw (NDB 23572))"
+    },
+    "pork": {
+      "kcal": 721,
+      "protein": 96.6,
+      "unit": "lb",
+      "basis": "raw boneless center-cut loin chops, lean and fat, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Pork, fresh, loin, center loin (chops), boneless, separable lean and fat, raw; ~159 kcal, 21.3 g per 100 g"
+    },
+    "eggs": {
+      "kcal": 72,
+      "protein": 6.3,
+      "unit": "eggs",
+      "basis": "per 1 large egg (50 g edible)",
+      "source": "USDA FoodData Central, SR Legacy: Egg, whole, raw, fresh (NDB 01123); 143 kcal, 12.6 g per 100 g"
+    },
+    "cheese": {
+      "kcal": 115,
+      "protein": 6.5,
+      "unit": "oz",
+      "basis": "per 1 oz cheddar",
+      "source": "USDA FoodData Central, SR Legacy: Cheese, cheddar (NDB 01009); 404 kcal, 22.9 g per 100 g"
+    },
+    "parm": {
+      "kcal": 122,
+      "protein": 10.9,
+      "unit": "oz",
+      "basis": "per 1 oz grated Parmesan",
+      "source": "USDA FoodData Central, SR Legacy: Cheese, parmesan, grated (NDB 01032); 431 kcal, 38.5 g per 100 g"
+    },
+    "yogurt": {
+      "kcal": 16.7,
+      "protein": 2.9,
+      "unit": "oz",
+      "basis": "per 1 oz plain nonfat Greek yogurt",
+      "source": "USDA FoodData Central, SR Legacy: Yogurt, Greek, plain, nonfat (NDB 01256); 59 kcal, 10.2 g per 100 g"
+    },
+    "butter": {
+      "kcal": 102,
+      "protein": 0.1,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp (14.2 g)",
+      "source": "USDA FoodData Central, SR Legacy: Butter, without salt (NDB 01145); 717 kcal per 100 g"
+    },
+    "milk": {
+      "kcal": 122,
+      "protein": 8.1,
+      "unit": "cups",
+      "basis": "per 1 cup (244 g) 2% milk",
+      "source": "USDA FoodData Central, SR Legacy: Milk, reduced fat, fluid, 2% milkfat, with added vitamin A and D (NDB 01079)"
+    },
+    "buns": {
+      "kcal": 140,
+      "protein": 5,
+      "unit": "buns",
+      "basis": "per 1 hamburger bun (~52 g)",
+      "source": "Typical package label: Member’s Mark / Pepperidge Farm hamburger buns, 130–150 kcal, 4–5 g protein per bun; cf. USDA FoodData Central, SR Legacy: Rolls, hamburger or hotdog, plain (NDB 18350)"
+    },
+    "bread": {
+      "kcal": 90,
+      "protein": 4.5,
+      "unit": "slices",
+      "basis": "per 1 slice (~1 oz) whole-grain sandwich bread",
+      "source": "Typical package label: Nature’s Own / Member’s Mark whole-grain bread, 80–110 kcal, 4–5 g protein per slice"
+    },
+    "tortillas": {
+      "kcal": 140,
+      "protein": 4,
+      "unit": "tortillas",
+      "basis": "per 1 medium (8-inch) flour tortilla",
+      "source": "Typical package label: Mission soft taco 8-inch flour tortilla, 140 kcal, 4 g protein"
+    },
+    "cornwrap": {
+      "kcal": 55,
+      "protein": 1.4,
+      "unit": "tortillas",
+      "basis": "per 1 six-inch corn tortilla (~26 g)",
+      "source": "USDA FoodData Central, SR Legacy: Tortillas, ready-to-bake or -fry, corn (NDB 18363); 218 kcal, 5.7 g per 100 g"
+    },
+    "naan": {
+      "kcal": 270,
+      "protein": 9,
+      "unit": "pieces",
+      "basis": "per 1 piece (~100 g) naan",
+      "source": "Typical package label: Member’s Mark stone-baked naan (10 pc / 35.2 oz) and Stonefire original, ~260–290 kcal, 8–10 g protein per piece"
+    },
+    "spaghetti": {
+      "kcal": 105,
+      "protein": 3.7,
+      "unit": "oz",
+      "basis": "per 1 oz DRY pasta",
+      "source": "USDA FoodData Central, SR Legacy: Pasta, dry, enriched (NDB 20120); 371 kcal, 13 g per 100 g"
+    },
+    "penne": {
+      "kcal": 105,
+      "protein": 3.7,
+      "unit": "oz",
+      "basis": "per 1 oz DRY pasta",
+      "source": "USDA FoodData Central, SR Legacy: Pasta, dry, enriched (NDB 20120)"
+    },
+    "jasmine": {
+      "kcal": 675,
+      "protein": 13.1,
+      "unit": "cups",
+      "basis": "per 1 cup DRY rice (185 g); makes ~3 cups cooked",
+      "source": "USDA FoodData Central, SR Legacy: Rice, white, long-grain, regular, raw, enriched (NDB 20444); 365 kcal, 7.1 g per 100 g"
+    },
+    "basmati": {
+      "kcal": 666,
+      "protein": 14.8,
+      "unit": "cups",
+      "basis": "per 1 cup DRY rice (185 g); makes ~3 cups cooked",
+      "source": "USDA FoodData Central, SR Legacy: Rice, white, long-grain, regular, raw, enriched (NDB 20444) with basmati label protein (~4 g per ¼ cup dry)"
+    },
+    "potatoes": {
+      "kcal": 349,
+      "protein": 9.1,
+      "unit": "lb",
+      "basis": "raw, skin on, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Potatoes, flesh and skin, raw (NDB 11352); 77 kcal, 2.0 g per 100 g"
+    },
+    "sweet": {
+      "kcal": 390,
+      "protein": 7.3,
+      "unit": "lb",
+      "basis": "raw, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Sweet potato, raw, unprepared (NDB 11507)"
+    },
+    "broccoli": {
+      "kcal": 132,
+      "protein": 14.1,
+      "unit": "lb",
+      "basis": "frozen florets as purchased, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Broccoli, frozen, spears, unprepared (NDB 11092)"
+    },
+    "peas": {
+      "kcal": 22,
+      "protein": 1.5,
+      "unit": "oz",
+      "basis": "frozen, per 1 oz",
+      "source": "USDA FoodData Central, SR Legacy: Peas, green, frozen, unprepared (NDB 11312)"
+    },
+    "vegetables": {
+      "kcal": 327,
+      "protein": 15,
+      "unit": "lb",
+      "basis": "frozen mixed vegetables, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Vegetables, mixed, frozen, unprepared (NDB 11583)"
+    },
+    "corn": {
+      "kcal": 399,
+      "protein": 13.6,
+      "unit": "lb",
+      "basis": "frozen kernels, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Corn, sweet, yellow, frozen, kernels cut off cob, unprepared (NDB 11913)"
+    },
+    "beans": {
+      "kcal": 330,
+      "protein": 21,
+      "unit": "cans",
+      "basis": "per 15 oz can, drained and rinsed (~1½ cups)",
+      "source": "Typical package label: Bush’s / Member’s Mark black beans, 110 kcal & 7 g protein per ½ cup"
+    },
+    "chickpeas": {
+      "kcal": 360,
+      "protein": 18,
+      "unit": "cans",
+      "basis": "per 15 oz can, drained and rinsed (~1½ cups)",
+      "source": "Typical package label: chickpeas, 120 kcal & 6 g protein per ½ cup drained"
+    },
+    "tomatoes": {
+      "kcal": 74,
+      "protein": 3.3,
+      "unit": "cans",
+      "basis": "per 14.5 oz can with juice",
+      "source": "USDA FoodData Central, SR Legacy: Tomatoes, red, ripe, canned, packed in tomato juice (NDB 11531)"
+    },
+    "marinara": {
+      "kcal": 14.2,
+      "protein": 0.4,
+      "unit": "oz",
+      "basis": "per 1 oz jarred marinara",
+      "source": "USDA FoodData Central, SR Legacy: Sauce, pasta, spaghetti/marinara, ready-to-serve (NDB 11549); ~50 kcal, 1.4 g per 100 g (Prego Traditional label 70 kcal per ½ cup)"
+    },
+    "carrots": {
+      "kcal": 186,
+      "protein": 4.1,
+      "unit": "lb",
+      "basis": "raw, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Carrots, raw (NDB 11124)"
+    },
+    "onions": {
+      "kcal": 181,
+      "protein": 5,
+      "unit": "lb",
+      "basis": "raw, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Onions, raw (NDB 11282)"
+    },
+    "peppers": {
+      "kcal": 36,
+      "protein": 1.4,
+      "unit": "peppers",
+      "basis": "per 1 medium bell pepper (~140 g edible)",
+      "source": "USDA FoodData Central, SR Legacy: Peppers, sweet, red, raw (NDB 11821) / green (11333) averaged; ~26 kcal, 1 g per 100 g"
+    },
+    "slaw": {
+      "kcal": 7.1,
+      "protein": 0.4,
+      "unit": "oz",
+      "basis": "per 1 oz shredded cabbage (undressed)",
+      "source": "USDA FoodData Central, SR Legacy: Cabbage, raw (NDB 11109)"
+    },
+    "lettuce": {
+      "kcal": 29,
+      "protein": 2,
+      "unit": "hearts",
+      "basis": "per 1 romaine heart (~170 g)",
+      "source": "USDA FoodData Central, SR Legacy: Lettuce, cos or romaine, raw (NDB 11251)"
+    },
+    "tomato": {
+      "kcal": 82,
+      "protein": 4.1,
+      "unit": "lb",
+      "basis": "raw, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Tomatoes, red, ripe, raw, year round average (NDB 11529)"
+    },
+    "cucumber": {
+      "kcal": 56,
+      "protein": 2.4,
+      "unit": "cucumbers",
+      "basis": "per 1 English cucumber (~370 g)",
+      "source": "USDA FoodData Central, SR Legacy: Cucumber, with peel, raw (NDB 11205)"
+    },
+    "spinach": {
+      "kcal": 6.5,
+      "protein": 0.8,
+      "unit": "oz",
+      "basis": "raw baby spinach, per 1 oz",
+      "source": "USDA FoodData Central, SR Legacy: Spinach, raw (NDB 11457)"
+    },
+    "mushrooms": {
+      "kcal": 6.2,
+      "protein": 0.9,
+      "unit": "oz",
+      "basis": "raw sliced white mushrooms, per 1 oz",
+      "source": "USDA FoodData Central, SR Legacy: Mushrooms, white, raw (NDB 11260)"
+    },
+    "apples": {
+      "kcal": 212,
+      "protein": 1.1,
+      "unit": "lb",
+      "basis": "per 1 lb as bought (~10% core removed)",
+      "source": "USDA FoodData Central, SR Legacy: Apples, raw, with skin (NDB 09003)"
+    },
+    "oranges": {
+      "kcal": 69,
+      "protein": 1.3,
+      "unit": "oranges",
+      "basis": "per 1 navel orange (~140 g edible)",
+      "source": "USDA FoodData Central, SR Legacy: Oranges, raw, navels (NDB 09202)"
+    },
+    "lemons": {
+      "kcal": 12,
+      "protein": 0.2,
+      "unit": "lemons",
+      "basis": "juice + zest of 1 lemon (~3 tbsp juice)",
+      "source": "USDA FoodData Central, SR Legacy: Lemon juice, raw (NDB 09152); 22 kcal per 100 g"
+    },
+    "limes": {
+      "kcal": 10,
+      "protein": 0.2,
+      "unit": "limes",
+      "basis": "juice + zest of 1 lime (~2 tbsp juice)",
+      "source": "USDA FoodData Central, SR Legacy: Lime juice, raw (NDB 09160); 25 kcal per 100 g"
+    },
+    "garlic": {
+      "kcal": 4.5,
+      "protein": 0.2,
+      "unit": "cloves",
+      "basis": "per 1 clove (~3 g)",
+      "source": "USDA FoodData Central, SR Legacy: Garlic, raw (NDB 11215)"
+    },
+    "ginger": {
+      "kcal": 23,
+      "protein": 0.5,
+      "unit": "oz",
+      "basis": "per 1 oz fresh ginger root",
+      "source": "USDA FoodData Central, SR Legacy: Ginger root, raw (NDB 11216)"
+    },
+    "oil": {
+      "kcal": 124,
+      "protein": 0,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp (14 g) canola/vegetable oil",
+      "source": "USDA FoodData Central, SR Legacy: Oil, canola (NDB 04582); 884 kcal per 100 g"
+    },
+    "soy": {
+      "kcal": 10,
+      "protein": 1,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp reduced-sodium soy sauce",
+      "source": "Typical package label: Kikkoman Less Sodium, 10 kcal, 1 g protein per tbsp"
+    },
+    "honey": {
+      "kcal": 64,
+      "protein": 0.1,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp (21 g)",
+      "source": "USDA FoodData Central, SR Legacy: Honey (NDB 19296); 304 kcal per 100 g"
+    },
+    "starch": {
+      "kcal": 30,
+      "protein": 0,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp (8 g) cornstarch",
+      "source": "USDA FoodData Central, SR Legacy: Cornstarch (NDB 20027); 381 kcal per 100 g"
+    },
+    "peanut": {
+      "kcal": 94,
+      "protein": 4,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp (16 g)",
+      "source": "USDA FoodData Central, SR Legacy: Peanut butter, smooth style, with salt (NDB 16098); 588 kcal, 25 g per 100 g"
+    },
+    "sesame": {
+      "kcal": 40,
+      "protein": 0,
+      "unit": "tsp",
+      "basis": "per 1 tsp (4.5 g) toasted sesame oil",
+      "source": "USDA FoodData Central, SR Legacy: Oil, sesame, salad or cooking (NDB 04058); 884 kcal per 100 g"
+    },
+    "bbq": {
+      "kcal": 30,
+      "protein": 0.1,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp barbecue sauce",
+      "source": "Typical package label: Sweet Baby Ray’s / store brand, 60–70 kcal per 2 tbsp"
+    },
+    "mustard": {
+      "kcal": 9,
+      "protein": 0.6,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp yellow mustard",
+      "source": "USDA FoodData Central, SR Legacy: Mustard, prepared, yellow (NDB 02046); 60 kcal per 100 g"
+    },
+    "ketchup": {
+      "kcal": 20,
+      "protein": 0.2,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp ketchup",
+      "source": "Typical package label: Heinz ketchup, 20 kcal per tbsp"
+    },
+    "pickles": {
+      "kcal": 3.4,
+      "protein": 0.1,
+      "unit": "oz",
+      "basis": "per 1 oz dill pickle chips",
+      "source": "USDA FoodData Central, SR Legacy: Pickles, cucumber, dill or kosher dill (NDB 11937)"
+    },
+    "salsa": {
+      "kcal": 10.2,
+      "protein": 0.4,
+      "unit": "oz",
+      "basis": "per 1 oz jarred tomato salsa",
+      "source": "USDA FoodData Central, SR Legacy: Sauce, salsa, ready-to-serve (NDB 06164)"
+    },
+    "tikka": {
+      "kcal": 35,
+      "protein": 0.6,
+      "unit": "oz",
+      "basis": "per 1 oz tikka masala simmer sauce",
+      "source": "Typical package label: jarred tikka masala simmer sauces (Maya Kaimal, Patak’s, store brand), ~100–140 kcal per ½ cup"
+    },
+    "taco": {
+      "kcal": 25,
+      "protein": 1,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp (~8 g) salt-free taco seasoning",
+      "source": "Typical package label: salt-free taco seasoning blends, ~20–30 kcal per tbsp"
+    },
+    "paprika": {
+      "kcal": 6.5,
+      "protein": 0.3,
+      "unit": "tsp",
+      "basis": "per 1 tsp (2.3 g)",
+      "source": "USDA FoodData Central, SR Legacy: Spices, paprika (NDB 02028)"
+    },
+    "oregano": {
+      "kcal": 2.7,
+      "protein": 0.1,
+      "unit": "tsp",
+      "basis": "per 1 tsp dried (1 g)",
+      "source": "USDA FoodData Central, SR Legacy: Spices, oregano, dried (NDB 02027)"
+    },
+    "pepper": {
+      "kcal": 5.8,
+      "protein": 0.2,
+      "unit": "tsp",
+      "basis": "per 1 tsp ground (2.3 g)",
+      "source": "USDA FoodData Central, SR Legacy: Spices, pepper, black (NDB 02030)"
+    },
+    "salt": {
+      "kcal": 0,
+      "protein": 0,
+      "unit": "tsp",
+      "basis": "per 1 tsp",
+      "source": "USDA FoodData Central, SR Legacy: Salt, table (NDB 02047)"
+    },
+    "jalapenos": {
+      "kcal": 7.7,
+      "protein": 0.3,
+      "unit": "oz",
+      "basis": "per 1 oz pickled jalapeño slices",
+      "source": "USDA FoodData Central, SR Legacy: Peppers, jalapeno, canned, solids and liquids (NDB 11632)"
+    },
+    "hummus": {
+      "kcal": 47,
+      "protein": 2.2,
+      "unit": "oz",
+      "basis": "per 1 oz",
+      "source": "USDA FoodData Central, SR Legacy: Hummus, commercial (NDB 16158)"
+    },
+    "minis": {
+      "kcal": 450,
+      "protein": 18,
+      "unit": "pizzas",
+      "basis": "per 1 frozen personal cheese pizza (~6–7 inch)",
+      "source": "Typical package label: single-serve frozen cheese pizzas, ~400–500 kcal, 16–20 g protein each"
+    },
+    "fries": {
+      "kcal": 43,
+      "protein": 0.7,
+      "unit": "oz",
+      "basis": "frozen fries as purchased (air-fried, no oil added), per 1 oz",
+      "source": "USDA FoodData Central, SR Legacy: Potatoes, french fried, all types, salt not added in processing, frozen, as purchased (NDB 11402); labels ~120 kcal per 3 oz"
+    },
+    "greenBeans": {
+      "kcal": 60,
+      "protein": 3,
+      "unit": "cans",
+      "basis": "per 14.5 oz can, drained (~1¾ cups)",
+      "source": "Typical package label: Del Monte cut green beans, 20 kcal & 1 g protein per ½ cup"
+    },
+    "cannedCorn": {
+      "kcal": 200,
+      "protein": 6,
+      "unit": "cans",
+      "basis": "per 15 oz can, drained (~1½ cups)",
+      "source": "Typical package label: Del Monte whole kernel corn, 60–70 kcal & 2 g protein per ½ cup"
+    },
+    "cannedCarrots": {
+      "kcal": 60,
+      "protein": 1.4,
+      "unit": "cans",
+      "basis": "per 14.5 oz can, drained (~1½ cups)",
+      "source": "Typical package label: Del Monte sliced carrots, 20–30 kcal per ½ cup"
+    },
+    "chickenThighs": {
+      "kcal": 649,
+      "protein": 84.4,
+      "unit": "lb",
+      "basis": "raw boneless skinless thighs, per 1 lb (retail trim)",
+      "source": "USDA FoodData Central, SR Legacy: Chicken, broilers or fryers, dark meat, thigh, meat only, raw (NDB 05096) is 121 kcal/19.7 g per 100 g; raised to ~143 kcal to match retail boneless-thigh labels (~160 kcal / 21 g per 112 g)"
+    },
+    "porkLoin": {
+      "kcal": 771,
+      "protein": 94.3,
+      "unit": "lb",
+      "basis": "raw whole boneless loin with typical fat cap, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Pork, fresh, loin, whole, separable lean and fat, raw (NDB 10004) (198 kcal/19.7 g) blended with lean-only values for a home-trimmed loin; ~170 kcal, 20.8 g per 100 g"
+    },
+    "groundPork": {
+      "kcal": 885,
+      "protein": 76.6,
+      "unit": "lb",
+      "basis": "AS EATEN: 1 lb raw ground pork, browned with excess fat spooned off (~66% cooked yield)",
+      "source": "USDA FoodData Central, SR Legacy: Pork, fresh, ground, cooked (NDB 10220) 297 kcal & 25.7 g per 100 g cooked; raw is 1,193 kcal/76.6 g per lb (NDB 10219)"
+    },
+    "groundTurkey": {
+      "kcal": 689,
+      "protein": 88.9,
+      "unit": "lb",
+      "basis": "raw 93/7 ground turkey, per 1 lb",
+      "source": "Typical package label: Jennie-O 93/7 ground turkey, 170 kcal & 22 g protein per 112 g; consistent with USDA FDC \"Turkey, ground, 93% lean, 7% fat, raw\""
+    },
+    "italianSausage": {
+      "kcal": 1165,
+      "protein": 65,
+      "unit": "lb",
+      "basis": "AS EATEN: 1 lb raw mild Italian pork sausage, browned with rendered fat left behind (~75% cooked yield)",
+      "source": "USDA FoodData Central, SR Legacy: Sausage, Italian, pork, cooked 344 kcal & 19.1 g per 100 g cooked; raw is ~1,570 kcal/65 g per lb"
+    },
+    "bacon": {
+      "kcal": 712,
+      "protein": 48.7,
+      "unit": "lb",
+      "basis": "AS EATEN: 1 lb raw bacon cooked crisp and drained yields ~0.29 lb (132 g); fat poured off is not counted",
+      "source": "USDA FoodData Central, SR Legacy: Pork, cured, bacon, cooked, pan-fried (NDB 10862) 541 kcal, 37 g per 100 g × USDA cooking yield ~29%"
+    },
+    "mozzarella": {
+      "kcal": 85,
+      "protein": 6.3,
+      "unit": "oz",
+      "basis": "per 1 oz low-moisture whole-milk mozzarella",
+      "source": "USDA FoodData Central, SR Legacy: Cheese, mozzarella, whole milk (NDB 01026); 300 kcal, 22.2 g per 100 g"
+    },
+    "sourCream": {
+      "kcal": 56,
+      "protein": 0.7,
+      "unit": "oz",
+      "basis": "per 1 oz regular sour cream",
+      "source": "USDA FoodData Central, SR Legacy: Cream, sour, cultured (NDB 01056); 198 kcal, 2.4 g per 100 g"
+    },
+    "mayo": {
+      "kcal": 94,
+      "protein": 0.1,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp (14 g) real mayonnaise",
+      "source": "USDA FoodData Central, SR Legacy: Salad dressing, mayonnaise, regular (NDB 04025); ~680 kcal per 100 g (Hellmann’s 90–100 per tbsp)"
+    },
+    "ranch": {
+      "kcal": 65,
+      "protein": 0.2,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp regular ranch dressing",
+      "source": "Typical package label: Hidden Valley Original Ranch, 130 kcal per 2 tbsp"
+    },
+    "riceVinegar": {
+      "kcal": 0,
+      "protein": 0,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp unseasoned rice vinegar",
+      "source": "Typical package label: unseasoned rice vinegar, 0 kcal"
+    },
+    "ciderVinegar": {
+      "kcal": 3,
+      "protein": 0,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp apple cider vinegar",
+      "source": "USDA FoodData Central, SR Legacy: Vinegar, cider (NDB 02048)"
+    },
+    "chickenBroth": {
+      "kcal": 15,
+      "protein": 1.5,
+      "unit": "cups",
+      "basis": "per 1 cup chicken broth",
+      "source": "Typical package label: Swanson / Member’s Mark chicken broth, 10–15 kcal, 1–2 g protein per cup"
+    },
+    "pineapple": {
+      "kcal": 230,
+      "protein": 2,
+      "unit": "cans",
+      "basis": "per 20 oz can, mostly the drained fruit as eaten",
+      "source": "Typical package label: Dole pineapple chunks in juice, 60 kcal per ½ cup with juice (~4.5 servings per can)"
+    },
+    "porkBeans": {
+      "kcal": 720,
+      "protein": 33,
+      "unit": "cans",
+      "basis": "per 28 oz can as eaten (~6 half-cup servings)",
+      "source": "Typical package label: Van Camp’s / store-brand pork and beans, ~110–130 kcal & 5–6 g protein per ½ cup"
+    },
+    "applesauce": {
+      "kcal": 50,
+      "protein": 0.2,
+      "unit": "snack cups",
+      "basis": "per 4 oz unsweetened applesauce cup",
+      "source": "Typical package label: Member’s Mark / Mott’s unsweetened applesauce cups, 50 kcal"
+    },
+    "elbows": {
+      "kcal": 105,
+      "protein": 3.7,
+      "unit": "oz",
+      "basis": "per 1 oz DRY pasta",
+      "source": "USDA FoodData Central, SR Legacy: Pasta, dry, enriched (NDB 20120)"
+    },
+    "eggNoodles": {
+      "kcal": 109,
+      "protein": 4,
+      "unit": "oz",
+      "basis": "per 1 oz DRY egg noodles",
+      "source": "USDA FoodData Central, SR Legacy: Noodles, egg, dry, enriched (NDB 20109); 384 kcal, 14.2 g per 100 g"
+    },
+    "flour": {
+      "kcal": 455,
+      "protein": 12.9,
+      "unit": "cups",
+      "basis": "per 1 cup (125 g) all-purpose flour",
+      "source": "USDA FoodData Central, SR Legacy: Wheat flour, white, all-purpose, enriched, bleached (NDB 20081)"
+    },
+    "panko": {
+      "kcal": 105,
+      "protein": 3.5,
+      "unit": "oz",
+      "basis": "per 1 oz panko (part of the coating is discarded, so this slightly over-counts)",
+      "source": "Typical package label: Kikkoman panko, 110 kcal, 4 g protein per 30 g"
+    },
+    "brownSugar": {
+      "kcal": 52,
+      "protein": 0,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp packed (~13.5 g)",
+      "source": "USDA FoodData Central, SR Legacy: Sugars, brown (NDB 19334); 380 kcal per 100 g"
+    },
+    "cumin": {
+      "kcal": 7.9,
+      "protein": 0.4,
+      "unit": "tsp",
+      "basis": "per 1 tsp ground (2.1 g)",
+      "source": "USDA FoodData Central, SR Legacy: Spices, cumin seed (NDB 02014)"
+    },
+    "garlicPowder": {
+      "kcal": 10.3,
+      "protein": 0.5,
+      "unit": "tsp",
+      "basis": "per 1 tsp (3.1 g)",
+      "source": "USDA FoodData Central, SR Legacy: Spices, garlic powder (NDB 02020)"
+    },
+    "italianSeasoning": {
+      "kcal": 2.7,
+      "protein": 0.1,
+      "unit": "tsp",
+      "basis": "per 1 tsp dried herbs (~1 g)",
+      "source": "USDA FoodData Central, SR Legacy: Spices, oregano, dried (NDB 02027) as a proxy for a dried-herb blend"
+    },
+    "redPepperFlakes": {
+      "kcal": 5.7,
+      "protein": 0.2,
+      "unit": "tsp",
+      "basis": "per 1 tsp (1.8 g)",
+      "source": "USDA FoodData Central, SR Legacy: Spices, pepper, red or cayenne (NDB 02031)"
+    },
+    "hoagies": {
+      "kcal": 290,
+      "protein": 10,
+      "unit": "rolls",
+      "basis": "per 1 hoagie/sub roll (~100 g)",
+      "source": "USDA FoodData Central, SR Legacy: Rolls, hard (includes kaiser) (NDB 18353); ~293 kcal, 9.9 g per 100 g"
+    },
+    "cornCobs": {
+      "kcal": 70,
+      "protein": 2.2,
+      "unit": "ears",
+      "basis": "per 1 frozen mini ear (~3-inch)",
+      "source": "Typical package label: Green Giant Nibblers, ~70 kcal, 2 g protein per mini ear"
+    },
+    "edamame": {
+      "kcal": 549,
+      "protein": 54,
+      "unit": "lb",
+      "basis": "frozen shelled edamame, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Edamame, frozen, prepared (NDB 11212)"
+    },
+    "potstickers": {
+      "kcal": 45,
+      "protein": 2,
+      "unit": "potstickers",
+      "basis": "per 1 frozen chicken & vegetable potsticker (~25 g), before pan oil",
+      "source": "Typical package label: Ling Ling / Member’s Mark chicken & vegetable potstickers, ~280–310 kcal & 12–14 g protein per 7 pieces"
+    },
+    "freshGreenBeans": {
+      "kcal": 141,
+      "protein": 8.2,
+      "unit": "lb",
+      "basis": "raw, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Beans, snap, green, raw (NDB 11052)"
+    },
+    "zucchini": {
+      "kcal": 77,
+      "protein": 5.4,
+      "unit": "lb",
+      "basis": "raw, per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Squash, summer, zucchini, includes skin, raw (NDB 11477)"
+    },
+    "cilantro": {
+      "kcal": 10.4,
+      "protein": 0.9,
+      "unit": "bunches",
+      "basis": "per 1 bunch (~45 g)",
+      "source": "USDA FoodData Central, SR Legacy: Coriander (cilantro) leaves, raw (NDB 11165)"
+    },
+    "tortillaChips": {
+      "kcal": 139,
+      "protein": 2,
+      "unit": "oz",
+      "basis": "per 1 oz tortilla chips",
+      "source": "USDA FoodData Central, SR Legacy: Snacks, tortilla chips, plain, white corn; ~489 kcal, 7 g per 100 g (labels: 140 kcal per oz)"
+    },
+    "bananas": {
+      "kcal": 258,
+      "protein": 3.2,
+      "unit": "lb",
+      "basis": "per 1 lb as bought (peel ~36% removed)",
+      "source": "USDA FoodData Central, SR Legacy: Bananas, raw (NDB 09040)"
+    },
+    "grapes": {
+      "kcal": 313,
+      "protein": 3.2,
+      "unit": "lb",
+      "basis": "per 1 lb",
+      "source": "USDA FoodData Central, SR Legacy: Grapes, red or green (European type), raw (NDB 09132)"
+    },
+    "cereal": {
+      "kcal": 105,
+      "protein": 3,
+      "unit": "oz",
+      "basis": "per 1 oz dry toasted-oat cereal",
+      "source": "Typical package label: Cheerios / Member’s Mark toasted oats, ~100–110 kcal, 3 g protein per oz"
+    },
+    "oatmeal": {
+      "kcal": 107,
+      "protein": 3.7,
+      "unit": "oz",
+      "basis": "per 1 oz DRY old-fashioned oats",
+      "source": "USDA FoodData Central, SR Legacy: Cereals, oats, regular and quick, not fortified, dry (NDB 08120)"
+    },
+    "frozenWaffles": {
+      "kcal": 90,
+      "protein": 2,
+      "unit": "waffles",
+      "basis": "per 1 frozen homestyle waffle",
+      "source": "Typical package label: Eggo Homestyle, 180 kcal & 4 g protein per 2 waffles"
+    },
+    "deliTurkey": {
+      "kcal": 28,
+      "protein": 4.8,
+      "unit": "oz",
+      "basis": "per 1 oz sliced deli turkey breast",
+      "source": "Typical package label: Oscar Mayer Deli Fresh / Member’s Mark sliced turkey breast, ~50–60 kcal & 9–10 g protein per 2 oz"
+    },
+    "cheeseSlices": {
+      "kcal": 65,
+      "protein": 3.5,
+      "unit": "slices",
+      "basis": "per 1 slice (~21 g) American cheese",
+      "source": "Typical package label: Kraft Singles / Member’s Mark American slices, 60–70 kcal, 3–4 g protein per slice"
+    },
+    "stringCheese": {
+      "kcal": 80,
+      "protein": 7,
+      "unit": "sticks",
+      "basis": "per 1 stick (28 g) part-skim mozzarella",
+      "source": "Typical package label: Sargento / Member’s Mark string cheese, 80 kcal, 7 g protein per stick"
+    },
+    "yogurtCups": {
+      "kcal": 150,
+      "protein": 5,
+      "unit": "yogurt cups",
+      "basis": "per 1 cup (6 oz) lowfat fruit yogurt",
+      "source": "Typical package label: Yoplait Original 6 oz, 150 kcal, 5 g protein"
+    },
+    "juice": {
+      "kcal": 14,
+      "protein": 0.2,
+      "unit": "oz",
+      "basis": "per 1 fl oz 100% orange juice",
+      "source": "USDA FoodData Central, SR Legacy: Orange juice, raw (NDB 09206); ~45 kcal per 100 g"
+    },
+    "coffee": {
+      "kcal": 10,
+      "protein": 0.5,
+      "unit": "oz",
+      "basis": "per 1 oz ground coffee, as brewed (~5 cups, black)",
+      "source": "USDA FoodData Central, SR Legacy: Beverages, coffee, brewed from grounds, prepared with tap water (NDB 14209); ~2 kcal per cup"
+    },
+    "creamer": {
+      "kcal": 70,
+      "protein": 0,
+      "unit": "oz",
+      "basis": "per 1 fl oz liquid flavored creamer (2 tbsp)",
+      "source": "Typical package label: Coffee mate French Vanilla, 35 kcal per tbsp"
+    },
+    "jelly": {
+      "kcal": 75,
+      "protein": 0,
+      "unit": "oz",
+      "basis": "per 1 oz",
+      "source": "USDA FoodData Central, SR Legacy: Jellies (NDB 19300); ~266 kcal per 100 g"
+    },
+    "crackers": {
+      "kcal": 140,
+      "protein": 2,
+      "unit": "oz",
+      "basis": "per 1 oz butter crackers",
+      "source": "Typical package label: Ritz, 80 kcal per 5 crackers (16 g)"
+    },
+    "granolaBars": {
+      "kcal": 100,
+      "protein": 1,
+      "unit": "bars",
+      "basis": "per 1 chewy granola bar (24 g)",
+      "source": "Typical package label: Quaker Chewy, 100 kcal, 1 g protein"
+    },
+    "popcorn": {
+      "kcal": 400,
+      "protein": 7,
+      "unit": "bags",
+      "basis": "per 1 regular-size butter microwave bag, popped",
+      "source": "Typical package label: Orville Redenbacher / Member’s Mark butter, ~2.5–3 servings of 130–170 kcal per bag"
+    },
+    "bhBlackForestHam": {
+      "kcal": 480,
+      "protein": 80,
+      "unit": "lb",
+      "basis": "1 lb",
+      "source": "boarshead.com label: 2 oz = 60 cal, 10 g protein"
+    },
+    "bhGenoaProvolone": {
+      "kcal": 360,
+      "protein": 28,
+      "unit": "packs",
+      "basis": "1 pack (4 oz)",
+      "source": "retailer label (Fred Meyer listing): 1 package = 360 cal, 28 g protein"
+    },
+    "doritosMix": {
+      "kcal": 145,
+      "protein": 2,
+      "unit": "bags",
+      "basis": "1 snack bag (1 oz — the 30-ct Sam’s mix and Jewel multipacks are 1 oz bags; hint assumed 1.75 oz)",
+      "source": "Doritos / Frito-Lay 1 oz snack-bag labels, ~140–150 kcal, 2 g protein"
+    },
+    "doritosCoolRanchBag": {
+      "kcal": 150,
+      "protein": 2,
+      "unit": "oz",
+      "basis": "1 oz",
+      "source": "estimate from Doritos Cool Ranch label (~150 cal per 1 oz)"
+    },
+    "bakedChipsMix": {
+      "kcal": 140,
+      "protein": 2,
+      "unit": "bags",
+      "basis": "1 bag (~1.2 oz avg)",
+      "source": "estimate (baked chips ~120 cal/oz)"
+    },
+    "nabiscoMix": {
+      "kcal": 140,
+      "protein": 1.5,
+      "unit": "packs",
+      "basis": "1 pack (1 oz)",
+      "source": "estimate from Oreo Mini / Chips Ahoy mini 1 oz labels (~130–150 cal)"
+    },
+    "yoohoo": {
+      "kcal": 90,
+      "protein": 1,
+      "unit": "boxes",
+      "basis": "1 box (6.5 fl oz)",
+      "source": "retailer label (Kroger): 90 cal, 20 g sugar, 1 g protein"
+    },
+    "capriSun": {
+      "kcal": 50,
+      "protein": 0,
+      "unit": "pouches",
+      "basis": "1 pouch (6 fl oz)",
+      "source": "retailer label (Giant/ShopRite) for Fruit Punch: 50 cal, 11 g sugar"
+    },
+    "bodyArmorOM": {
+      "kcal": 110,
+      "protein": 0,
+      "unit": "bottles",
+      "basis": "1 bottle (16 fl oz)",
+      "source": "retailer label (Food Lion): 110 cal, 25 g sugar"
+    },
+    "bodyArmorLyte": {
+      "kcal": 20,
+      "protein": 0,
+      "unit": "bottles",
+      "basis": "1 bottle (Jewel 16 fl oz ≈ 20 kcal; Sam’s 12 fl oz variety-pack bottles ≈ 15 kcal — the higher value is used)",
+      "source": "Jewel/Mariano's listing for LYTE Orange Clementine: 20 cal, 2 g sugar (the Sam's 12 oz LYTE ≈ 15 cal)"
+    },
+    "mmCobbSalad": {
+      "kcal": 48,
+      "protein": 4,
+      "unit": "oz",
+      "basis": "1 oz (incl. dressing)",
+      "source": "third-party nutrition database (Eat This Much): 170 cal, 14 g protein per 100 g — estimate"
+    },
+    "tfRanchChickenBowl": {
+      "kcal": 360,
+      "protein": 14,
+      "unit": "bowls",
+      "basis": "1 bowl",
+      "source": "taylorfarms.com label"
+    },
+    "tfBltChickenBowl": {
+      "kcal": 310,
+      "protein": 13,
+      "unit": "bowls",
+      "basis": "1 bowl",
+      "source": "taylorfarms.com label"
+    },
+    "gardenSalad": {
+      "kcal": 5,
+      "protein": 0.3,
+      "unit": "oz",
+      "basis": "1 oz",
+      "source": "estimate from USDA iceberg/romaine/carrot values"
+    },
+    "grilledChicken": {
+      "kcal": 45,
+      "protein": 8,
+      "unit": "oz",
+      "basis": "1 oz",
+      "source": "estimate from USDA cooked chicken breast (165 cal, 31 g protein per 100 g), seasoned products run a little lower"
+    },
+    "lightRanch": {
+      "kcal": 37,
+      "protein": 0,
+      "unit": "tbsp",
+      "basis": "1 tbsp",
+      "source": "estimate (light ranch ≈ 70–80 cal per 2 tbsp)"
+    },
+    "ranchCups": {
+      "kcal": 200,
+      "protein": 1,
+      "unit": "dip cups",
+      "basis": "1 cup (1.5 fl oz)",
+      "source": "estimate (regular ranch ≈ 65 cal per tbsp, 3 tbsp per cup)"
+    },
+    "clementines": {
+      "kcal": 165,
+      "protein": 3,
+      "unit": "lb",
+      "basis": "1 lb as bought (peel ~23% removed; ~6 clementines)",
+      "source": "USDA FoodData Central SR Legacy: Clementines, raw (NDB 09433), 47 kcal & 0.85 g protein per 100 g edible"
+    },
+    "babyCarrots": {
+      "kcal": 159,
+      "protein": 2.9,
+      "unit": "lb",
+      "basis": "1 lb",
+      "source": "USDA baby carrots: 35 cal, 0.64 g protein per 100 g"
+    },
+    "greekYogurtCups": {
+      "kcal": 110,
+      "protein": 13,
+      "unit": "yogurt cups",
+      "basis": "1 cup (5.3 oz)",
+      "source": "estimate between Chobani Fruit on the Bottom (~120 cal, 11–12 g) and Oikos Triple Zero (~90 cal, 15 g)"
+    },
+    "fruitCups": {
+      "kcal": 40,
+      "protein": 0.4,
+      "unit": "snack cups",
+      "basis": "1 cup (4 oz, fruit in water)",
+      "source": "estimate for no-sugar-added fruit cups"
+    },
+    "hummusSingles": {
+      "kcal": 175,
+      "protein": 5,
+      "unit": "snack cups",
+      "basis": "1 cup (2.5 oz)",
+      "source": "estimate (classic hummus ≈ 70 cal, 2 g protein per oz)"
+    },
+    "hardBoiledEggs": {
+      "kcal": 70,
+      "protein": 6,
+      "unit": "eggs",
+      "basis": "1 egg",
+      "source": "USDA large egg"
+    },
+    "proteinBars": {
+      "kcal": 190,
+      "protein": 10,
+      "unit": "bars",
+      "basis": "1 bar",
+      "source": "estimate from Nature Valley Protein Chewy label range"
+    },
+    "wholeGrainCrackers": {
+      "kcal": 120,
+      "protein": 3,
+      "unit": "oz",
+      "basis": "1 oz",
+      "source": "Triscuit Original label (6 crackers, 28 g)"
+    },
+    "cannedChicken": {
+      "kcal": 270,
+      "protein": 50,
+      "unit": "cans",
+      "basis": "1 can (12.5 oz, drained)",
+      "source": "estimate from chunk chicken labels (2 oz ≈ 60 cal, 11–12 g protein; ~4.5 servings a can)"
+    },
+    "skinnyPop": {
+      "kcal": 100,
+      "protein": 1.3,
+      "unit": "bags",
+      "basis": "1 bag (0.65 oz)",
+      "source": "SkinnyPop snack-bag label (~100 cal)"
+    },
+    "sparklingWater": {
+      "kcal": 0,
+      "protein": 0,
+      "unit": "cans",
+      "basis": "1 can",
+      "source": "LaCroix label"
+    },
+    "milkBoxes": {
+      "kcal": 150,
+      "protein": 8,
+      "unit": "boxes",
+      "basis": "1 box (8 fl oz whole milk)",
+      "source": "USDA whole milk"
+    },
+    "waterBottles": {
+      "kcal": 0,
+      "protein": 0,
+      "unit": "bottles",
+      "basis": "1 bottle",
+      "source": "water"
+    }
+  }
+}

@@ -289,8 +289,22 @@ if (ref) {
   }
 }
 
+// nutrition coverage (data/nutrition.json, per ONE catalog unit). Per-plate numbers: scripts/nutrition-report.mjs
+const nutrition = load('data/nutrition.json', false);
+if (nutrition) {
+  const per = nutrition.per || {};
+  for (const id of Object.keys(ING)) {
+    const n = per[id];
+    if (!n) { warn(`nutrition: no kcal/protein for catalog id "${id}"`); continue; }
+    if (!(Number.isFinite(n.kcal) && n.kcal >= 0 && Number.isFinite(n.protein) && n.protein >= 0)) err(`nutrition.${id}: kcal/protein must be numbers >= 0`);
+    if (n.unit && n.unit !== ING[id].unit) err(`nutrition.${id}: unit "${n.unit}" differs from catalog unit "${ING[id].unit}"`);
+    if (!n.source) warn(`nutrition.${id}: no source`);
+  }
+  for (const id of Object.keys(per)) if (!ING[id]) warn(`nutrition.${id}: not in the catalog`);
+} else warn('data/nutrition.json not found — skipped nutrition coverage');
+
 // catalog ingredients nobody uses (fine for extras)
-for (const id of Object.keys(ING)) if (!usedIngredients.has(id) && !ING[id].extra) warn(`catalog.${id}: not used by any dinner or side (and not marked extra)`);
+for (const id of Object.keys(ING)) if (!usedIngredients.has(id) && !ING[id].extra && !ING[id].lunch) warn(`catalog.${id}: not used by any dinner or side (and not marked extra or lunch)`);
 
 // ---------------------------------------------------------------- cost table
 const costOf = (items, uc = unitCost) => Object.entries(items || {}).reduce((a, [id, q]) => a + (uc[id]?.cost || 0) * q, 0);
