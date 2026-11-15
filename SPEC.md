@@ -448,3 +448,33 @@ priceHistory: { "<store>/<ingredientId>": [ { price, packSize, date } ] }   // n
 `{ "updated", "products": { "<ingredientId>": { "sams": [ {name, brand, size, packSize, price, url, tier:"store"|"name"} ], "jewel": [ … ] } } }`
 2–4 real options per store for the ~50 highest-spend ingredients (meats, cheese, pasta, rice, frozen
 veg, fries, buns, tortillas, sauces, lunch staples); `packSize` in the catalog unit.
+
+## 10. v2.3 — Pantry photos (Jeff's asks, 2026-11-15 late morning)
+
+> "Analyze these pictures and ensure that we have the right product to match with the Sam's Club
+> and Jewel-Osco app. I have a few things from other stores, so you could exclude those items. I also
+> would like for you to look at my seasonings and whatnot to put with recipes."
+
+### 10.1 Pantry scans
+- A scanned count ("1 jar", "2 boxes", "1 loaf") is converted into the item's catalog unit
+  (`app/scanqty.js`): one container = catalog `container.size` when set, else the single-store
+  (Jewel) pack size, else the Sam's pack; scanned weights convert by the pack label's net weight.
+  The review sheet says "Saw 1 jar, about 24 oz." (Before v2.3 a jar of Rao's was saved as 1 oz.)
+- The scanner is told each catalog item's form (`[frozen]`, `[refrigerated]`, `[shelf-stable]`,
+  `[fresh]`) and the Worker refuses cross-form matches (canned peas ≠ frozen peas, canned mushrooms
+  ≠ fresh). Worker 2.3.0 also returns `brand` and `label` read off the package; the pantry keeps
+  `label` on the entry and shows it, and new shelf items are named by it and get a guessed aisle.
+- Other-store products (Trader Joe's, Walmart Great Value, Best Choice…) can sit in the pantry and
+  count for cooking, but are never written to "My products" — that list only holds what the family
+  buys at Sam's Club or Jewel-Osco.
+
+### 10.2 Their seasonings in the recipes
+Catalog additions from the photos: Slap Ya Mama Cajun seasoning, Old Bay, Badia mango pepper,
+turmeric, cinnamon, Crystal hot sauce, Buffalo Wild Wings mango habanero sauce, Buona hot
+giardiniera, apple jelly, French's crispy fried onions, deli roast beef. Soy is Kikkoman and ranch is
+Hidden Valley (the bottles in the fridge door). Five new core dinners tagged "from your pantry"
+(blackened Cajun chicken, mango habanero chicken thighs, Chicago-style Italian beef, buffalo chicken
+ranch wraps, apple-jelly glazed pork chops) and five sides (Cajun skillet potatoes, golden turmeric
+rice, Old Bay fries, Cajun fries, green beans with crispy onions); tikka masala now comes with
+turmeric rice, the sausage skillet gets Slap Ya Mama, the sausage hoagies get giardiniera, and the
+sweet potatoes get cinnamon.

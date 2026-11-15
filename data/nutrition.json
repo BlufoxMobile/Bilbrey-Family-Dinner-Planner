@@ -1115,6 +1115,83 @@
       "unit": "tortillas",
       "basis": "1 street-taco white corn tortilla (~4.5 inch)",
       "source": "Package label (typical): Mission Street Taco White Corn Tortillas, ~100 kcal & 2 g protein per 4 tortillas"
+    },
+    "cajunSeasoning": {
+      "kcal": 5,
+      "protein": 0.2,
+      "unit": "tsp",
+      "basis": "per 1 tsp (~2.8 g)",
+      "source": "Package label (typical): Slap Ya Mama Original, 0 kcal per ¼ tsp; mostly salt and red pepper"
+    },
+    "oldBay": {
+      "kcal": 5,
+      "protein": 0.2,
+      "unit": "tsp",
+      "basis": "per 1 tsp (~2.4 g)",
+      "source": "Package label (typical): Old Bay Seasoning, 0 kcal per ¼ tsp"
+    },
+    "mangoPepper": {
+      "kcal": 8,
+      "protein": 0.1,
+      "unit": "tsp",
+      "basis": "per 1 tsp (~3 g)",
+      "source": "Package label (typical): Badia Mango Pepper, salt/sugar/spice blend"
+    },
+    "turmeric": {
+      "kcal": 9,
+      "protein": 0.3,
+      "unit": "tsp",
+      "basis": "per 1 tsp (3 g)",
+      "source": "USDA FoodData Central, SR Legacy: Spices, turmeric, ground (NDB 02043)"
+    },
+    "cinnamon": {
+      "kcal": 6,
+      "protein": 0.1,
+      "unit": "tsp",
+      "basis": "per 1 tsp (2.6 g)",
+      "source": "USDA FoodData Central, SR Legacy: Spices, cinnamon, ground (NDB 02010)"
+    },
+    "hotSauce": {
+      "kcal": 1,
+      "protein": 0.1,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp (15 ml)",
+      "source": "Package label (typical): Crystal Hot Sauce, 0 kcal per tsp"
+    },
+    "mangoHabanero": {
+      "kcal": 35,
+      "protein": 0,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp",
+      "source": "Package label (typical): Buffalo Wild Wings Mango Habanero, ~70 kcal per 2 tbsp"
+    },
+    "giardiniera": {
+      "kcal": 45,
+      "protein": 0.3,
+      "unit": "oz",
+      "basis": "1 oz oil-packed hot giardiniera",
+      "source": "Package label (typical): Chicago-style hot giardiniera in oil, ~45 kcal per oz"
+    },
+    "roastBeef": {
+      "kcal": 480,
+      "protein": 80,
+      "unit": "lb",
+      "basis": "1 lb deli roast beef",
+      "source": "Package label (typical): deli roast beef, 60 kcal & 10 g protein per 2 oz"
+    },
+    "appleJelly": {
+      "kcal": 50,
+      "protein": 0,
+      "unit": "tbsp",
+      "basis": "per 1 tbsp (20 g)",
+      "source": "USDA FoodData Central, SR Legacy: Jellies (NDB 19297), ~266 kcal/100 g"
+    },
+    "crispyOnions": {
+      "kcal": 180,
+      "protein": 2,
+      "unit": "oz",
+      "basis": "1 oz crispy fried onions",
+      "source": "Package label (typical): French's Crispy Fried Onions, 45 kcal per 2 tbsp (7 g)"
     }
   }
 }

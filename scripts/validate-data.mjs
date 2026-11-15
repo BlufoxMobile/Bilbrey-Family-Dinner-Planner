@@ -38,7 +38,7 @@ const STORES = ['sams', 'jewel'];
 const CATEGORIES = ['Burgers', 'Asian-inspired', 'Pasta', 'Tex-Mex', 'Grill', 'Comfort', 'Salads'];
 const PROTEINS = ['chicken', 'beef', 'pork', 'turkey', 'sausage', 'mixed'];
 const EQUIPMENT = ['stovetop', 'blackstone', 'electric grill', 'outdoor grill', 'air fryer', 'microwave'];
-const TAGS = ['burger', 'pizza', 'rice', 'family favorite', 'family usual', 'noodle night', 'taco night', 'grill night', 'salad', 'healthier', 'sandwiches', 'wraps'];
+const TAGS = ['burger', 'pizza', 'rice', 'family favorite', 'family usual', 'from your pantry', 'noodle night', 'taco night', 'grill night', 'salad', 'healthier', 'sandwiches', 'wraps'];
 const SIDE_KINDS = ['vegetable', 'starch', 'salad', 'fruit', 'bread', 'soup'];
 const RICE_IDS = ['jasmine', 'basmati'];
 const MAX_COST = 28, MIN_COST = 6; // v2.2: recalibrated from $22 to real prices paid (93/7 beef $6.17/lb, ⅓-lb sirloin patties, pre-seasoned/cooked meats) — ≈ $5.60 a plate
@@ -47,7 +47,7 @@ const MIN_CORE = 50, MIN_BENCH = 20;
 // Which catalog meat ids satisfy each "protein" value.
 const PROTEIN_IDS = {
   chicken: ['chicken', 'chickenThighs', 'fajitaChicken', 'pulledChicken', 'chickenAlfredoDeli'],
-  beef: ['beef', 'beefPatties'],
+  beef: ['beef', 'beefPatties', 'roastBeef'],
   pork: ['pork', 'porkLoin', 'groundPork', 'pulledPork'],
   turkey: ['groundTurkey'],
   sausage: ['italianSausage', 'smokedSausage'],
@@ -57,7 +57,7 @@ const TEMP_RULES = [
   { ids: ['chicken', 'chickenThighs', 'fajitaChicken'], temp: '165°F', what: 'chicken' },
   { ids: ['groundTurkey'], temp: '165°F', what: 'ground turkey' },
   { ids: ['beef', 'beefPatties', 'groundPork', 'italianSausage'], temp: '160°F', what: 'ground meat / sausage / patties' },
-  { ids: ['pulledPork', 'pulledChicken', 'smokedSausage', 'chickenAlfredoDeli'], temp: '165°F', what: 'fully cooked meat (reheat)' },
+  { ids: ['pulledPork', 'pulledChicken', 'smokedSausage', 'chickenAlfredoDeli', 'roastBeef'], temp: '165°F', what: 'fully cooked meat (reheat)' },
   { ids: ['pork', 'porkLoin'], temp: '145°F', what: 'pork chops / loin', rest: true },
 ];
 

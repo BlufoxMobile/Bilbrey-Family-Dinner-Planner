@@ -74,7 +74,12 @@
     "turkey-chili": "img/dinners/turkey-chili.webp",
     "beef-stroganoff": "img/dinners/beef-stroganoff.webp",
     "bacon-smashburgers": "img/dinners/bacon-smashburgers.webp",
-    "chicken-philly": "img/dinners/chicken-philly.webp"
+    "chicken-philly": "img/dinners/chicken-philly.webp",
+    "blackened-cajun-chicken": "img/dinners/blackened-cajun-chicken.webp",
+    "mango-habanero-chicken": "img/dinners/mango-habanero-chicken.webp",
+    "chicago-italian-beef": "img/dinners/chicago-italian-beef.webp",
+    "buffalo-chicken-wraps": "img/dinners/buffalo-chicken-wraps.webp",
+    "apple-glazed-pork-chops": "img/dinners/apple-glazed-pork-chops.webp"
   },
   "sides": {
     "jewel-fries": "img/sides/jewel-fries.webp",
@@ -114,7 +119,12 @@
     "applesauce-cups": "img/sides/applesauce-cups.webp",
     "pineapple-chunks": "img/sides/pineapple-chunks.webp",
     "pork-and-beans": "img/sides/pork-and-beans.webp",
-    "chips-and-salsa": "img/sides/chips-and-salsa.webp"
+    "chips-and-salsa": "img/sides/chips-and-salsa.webp",
+    "cajun-skillet-potatoes": "img/sides/cajun-skillet-potatoes.webp",
+    "turmeric-rice": "img/sides/turmeric-rice.webp",
+    "old-bay-fries": "img/sides/old-bay-fries.webp",
+    "cajun-fries": "img/sides/cajun-fries.webp",
+    "crispy-onion-green-beans": "img/sides/crispy-onion-green-beans.webp"
   },
   "generated": "2026-11-15",
   "model": "Higgsfield gpt_image_2_6 (GPT Image 2.6), quality medium, 1k; dinners 3:2 -> 1200x800 + 640x427 webp, sides 1:1 -> 640x640 webp",

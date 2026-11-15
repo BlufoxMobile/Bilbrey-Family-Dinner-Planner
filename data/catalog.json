@@ -1,7 +1,7 @@
 {
  "version": 2,
  "updated": "2026-11-15",
- "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds.",
+ "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge.",
  "units": {
   "bags": "bags",
   "bars": "bars",
@@ -1881,7 +1881,7 @@
    }
   },
   "soy": {
-   "name": "Reduced-sodium soy sauce",
+   "name": "Soy sauce (Kikkoman)",
    "unit": "tbsp",
    "aisle": "Condiments & Sauces",
    "storage": "pantry",
@@ -1889,6 +1889,8 @@
    "defaultStore": "sams",
    "aliases": [
     "soy sauce",
+    "kikkoman",
+    "kikkoman soy sauce",
     "reduced sodium soy sauce",
     "less sodium soy sauce",
     "lite soy sauce",
@@ -1919,6 +1921,11 @@
       "label": "Kikkoman reduced-sodium soy sauce, 10 fl oz"
      }
     }
+   },
+   "brand": "Kikkoman",
+   "usual": {
+    "store": "sams",
+    "tier": "name"
    }
   },
   "honey": {
@@ -3181,7 +3188,7 @@
    }
   },
   "ranch": {
-   "name": "Ranch dressing",
+   "name": "Ranch dressing (Hidden Valley)",
    "unit": "tbsp",
    "aisle": "Condiments & Sauces",
    "storage": "fridge",
@@ -3192,7 +3199,9 @@
     "ranch dressing",
     "buttermilk ranch",
     "light ranch",
-    "ranch salad dressing"
+    "ranch salad dressing",
+    "hidden valley ranch",
+    "cracked pepper ranch"
    ],
    "packs": {
     "sams": {
@@ -3219,6 +3228,11 @@
       "label": "Hidden Valley Original Ranch, 16 oz"
      }
     }
+   },
+   "brand": "Hidden Valley",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
    }
   },
   "riceVinegar": {
@@ -6425,6 +6439,359 @@
       "size": 20,
       "price": 1.99,
       "label": "Mission Street Taco White Corn Tortillas, ~20 ct (count est.)"
+     }
+    }
+   }
+  },
+  "cajunSeasoning": {
+   "name": "Cajun seasoning (Slap Ya Mama)",
+   "unit": "tsp",
+   "aisle": "Spices & Baking",
+   "storage": "pantry",
+   "kind": "staple",
+   "defaultStore": "jewel",
+   "aliases": [
+    "cajun seasoning",
+    "slap ya mama",
+    "creole seasoning",
+    "cajun spice"
+   ],
+   "brand": "Slap Ya Mama",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 80,
+      "price": 3.99,
+      "label": "Tony Chachere's Original Creole Seasoning, 8 oz (est.)"
+     },
+     "name": {
+      "size": 80,
+      "price": 5.49,
+      "label": "Slap Ya Mama Original Cajun Seasoning, 8 oz (on your shelf) (est.)"
+     }
+    }
+   }
+  },
+  "oldBay": {
+   "name": "Old Bay seasoning",
+   "unit": "tsp",
+   "aisle": "Spices & Baking",
+   "storage": "pantry",
+   "kind": "staple",
+   "defaultStore": "jewel",
+   "aliases": [
+    "old bay",
+    "old bay seasoning",
+    "bay seasoning"
+   ],
+   "brand": "Old Bay",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 36,
+      "price": 4.29,
+      "label": "Old Bay Seasoning, 2.62 oz tin (est.)"
+     },
+     "name": {
+      "size": 80,
+      "price": 7.49,
+      "label": "Old Bay Seasoning, 6 oz tin (on your shelf) (est.)"
+     }
+    }
+   }
+  },
+  "mangoPepper": {
+   "name": "Mango pepper seasoning (Badia)",
+   "unit": "tsp",
+   "aisle": "Spices & Baking",
+   "storage": "pantry",
+   "kind": "staple",
+   "defaultStore": "jewel",
+   "aliases": [
+    "mango pepper",
+    "mango pepper seasoning",
+    "badia mango pepper",
+    "pimienta mango"
+   ],
+   "brand": "Badia",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 60,
+      "price": 3.49,
+      "label": "Badia Mango Pepper seasoning, 6.5 oz (on your shelf) (est.)"
+     },
+     "name": {
+      "size": 60,
+      "price": 3.49,
+      "label": "Badia Mango Pepper seasoning, 6.5 oz (on your shelf) (est.)"
+     }
+    }
+   }
+  },
+  "turmeric": {
+   "name": "Ground turmeric",
+   "unit": "tsp",
+   "aisle": "Spices & Baking",
+   "storage": "pantry",
+   "kind": "staple",
+   "defaultStore": "jewel",
+   "aliases": [
+    "turmeric",
+    "ground turmeric",
+    "turmeric powder"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 12,
+      "price": 3.29,
+      "label": "Signature Select ground turmeric, ~1.25 oz (est.)"
+     },
+     "name": {
+      "size": 9,
+      "price": 5.99,
+      "label": "McCormick ground turmeric, 0.95 oz (on your shelf) (est.)"
+     }
+    }
+   }
+  },
+  "cinnamon": {
+   "name": "Ground cinnamon",
+   "unit": "tsp",
+   "aisle": "Spices & Baking",
+   "storage": "pantry",
+   "kind": "staple",
+   "defaultStore": "jewel",
+   "aliases": [
+    "cinnamon",
+    "ground cinnamon",
+    "cinnamon powder"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 26,
+      "price": 2.49,
+      "label": "Signature Select ground cinnamon, 2.37 oz (est.)"
+     },
+     "name": {
+      "size": 26,
+      "price": 4.99,
+      "label": "McCormick ground cinnamon, 2.37 oz (on your shelf) (est.)"
+     }
+    }
+   }
+  },
+  "hotSauce": {
+   "name": "Hot sauce (Crystal)",
+   "unit": "tbsp",
+   "aisle": "Condiments & Sauces",
+   "storage": "pantry",
+   "kind": "staple",
+   "defaultStore": "jewel",
+   "aliases": [
+    "hot sauce",
+    "crystal hot sauce",
+    "louisiana hot sauce",
+    "cayenne pepper sauce"
+   ],
+   "brand": "Crystal",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 12,
+      "price": 1.99,
+      "label": "Crystal Louisiana Hot Sauce, 6 fl oz (est.)"
+     },
+     "name": {
+      "size": 24,
+      "price": 3.49,
+      "label": "Crystal Louisiana Hot Sauce, 12 fl oz (in your fridge) (est.)"
+     }
+    }
+   }
+  },
+  "mangoHabanero": {
+   "name": "Mango habanero sauce (Buffalo Wild Wings)",
+   "unit": "tbsp",
+   "aisle": "Condiments & Sauces",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "mango habanero sauce",
+    "buffalo wild wings mango habanero",
+    "mango habanero wing sauce",
+    "wing sauce"
+   ],
+   "brand": "Buffalo Wild Wings",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 24,
+      "price": 4.99,
+      "label": "Buffalo Wild Wings Mango Habanero Sauce, 12 fl oz (in your fridge) (est.)"
+     },
+     "name": {
+      "size": 24,
+      "price": 4.99,
+      "label": "Buffalo Wild Wings Mango Habanero Sauce, 12 fl oz (in your fridge) (est.)"
+     }
+    }
+   }
+  },
+  "giardiniera": {
+   "name": "Hot giardiniera (Buona)",
+   "unit": "oz",
+   "aisle": "Condiments & Sauces",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "giardiniera",
+    "hot giardiniera",
+    "chicago giardiniera",
+    "buona giardiniera"
+   ],
+   "brand": "Buona",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 16,
+      "price": 4.49,
+      "label": "Marconi Hot Giardiniera, 16 oz (est.)"
+     },
+     "name": {
+      "size": 16,
+      "price": 6.99,
+      "label": "Buona At Home Chicago-Style Hot Giardiniera, 16 oz (on your shelf) (est.)"
+     }
+    }
+   }
+  },
+  "roastBeef": {
+   "name": "Deli roast beef, shaved thin",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "meat": true,
+   "cooked": true,
+   "aliases": [
+    "roast beef",
+    "deli roast beef",
+    "shaved roast beef",
+    "italian beef"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 8.99,
+      "label": "Signature Select deli roast beef, shaved thin, per lb — ask the deli to shave it (est.)"
+     },
+     "name": {
+      "size": 1,
+      "price": 12.99,
+      "label": "Boar's Head roast beef, shaved thin, per lb (est.)"
+     }
+    }
+   }
+  },
+  "appleJelly": {
+   "name": "Apple jelly",
+   "unit": "tbsp",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "apple jelly",
+    "apple jam",
+    "apple preserves"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 25,
+      "price": 2.99,
+      "label": "Signature Select apple jelly, 18 oz (est.)"
+     },
+     "name": {
+      "size": 25,
+      "price": 3.99,
+      "label": "Smucker's apple jelly, 18 oz (est.)"
+     }
+    }
+   }
+  },
+  "crispyOnions": {
+   "name": "Crispy fried onions (French's)",
+   "unit": "oz",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "crispy fried onions",
+    "french fried onions",
+    "french's crispy onions",
+    "fried onions"
+   ],
+   "brand": "French's",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 24,
+      "price": 8.98,
+      "label": "French's Original Crispy Fried Onions, 24 oz (est.)"
+     },
+     "name": {
+      "size": 24,
+      "price": 8.98,
+      "label": "French's Original Crispy Fried Onions, 24 oz (est.)"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 6,
+      "price": 3.29,
+      "label": "Signature Select crispy fried onions, 6 oz (est.)"
+     },
+     "name": {
+      "size": 6,
+      "price": 4.79,
+      "label": "French's Original Crispy Fried Onions, 6 oz (on your shelf) (est.)"
      }
     }
    }

@@ -1,7 +1,7 @@
 {
   "version": 2,
   "updated": "2026-11-15",
-  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer and microwave only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases.",
+  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer and microwave only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases. 2026-11-15: dinners tagged \"from your pantry\" were built around the seasonings and sauces in the family’s pantry photos (Slap Ya Mama, Badia mango pepper, Buffalo Wild Wings mango habanero, Crystal, Buona giardiniera, apple jelly, turmeric, Old Bay, French’s crispy onions).",
   "dinners": [
     {
       "id": "smashburgers",
@@ -274,7 +274,8 @@
         "stovetop"
       ],
       "tags": [
-        "family favorite"
+        "family favorite",
+        "rice"
       ],
       "rotation": "core",
       "items": {
@@ -286,12 +287,12 @@
       "steps": [
         "Cut the chicken into 1½-inch pieces, pat dry and season with the salt.",
         "Heat the oil in a large, deep skillet over medium-high. Brown the chicken in two batches, 2–3 minutes per side (it finishes cooking in the sauce), then return all of it to the pan.",
-        "Pour in both jars of Maya Kaimal tikka masala — it’s fully seasoned, so nothing else goes in. Swirl ¼ cup water in the jars and add it.",
+        "Pour in two jars of tikka masala simmer sauce (Maya Kaimal, or the Patak’s on the shelf — both are fully seasoned, so nothing else goes in). Swirl ¼ cup water in the jars and add it.",
         "Cover and simmer gently, stirring now and then, until the thickest pieces read 165°F, about 10 minutes."
       ],
       "sides": [
-        "warm-naan",
-        "buttered-peas"
+        "turmeric-rice",
+        "warm-naan"
       ],
       "sideSlots": 2,
       "photo": "Chunks of chicken in a rich orange, creamy tikka masala sauce in a shallow bowl with warm naan alongside."
@@ -1944,13 +1945,14 @@
         "cajunPotatoes": 3,
         "peppers": 1,
         "onions": 0.5,
-        "oil": 1
+        "oil": 1,
+        "cajunSeasoning": 1
       },
       "steps": [
         "Slice two ropes of smoked sausage into ½-inch coins and the pepper and onion into strips. Drain the canned potatoes well.",
-        "Heat the oil in your largest skillet over medium-high. Brown the sausage, turning, 5–6 minutes, then push it to one side.",
+        "Heat the oil in your largest skillet over medium-high. Brown the sausage, turning, 5–6 minutes, sprinkle it with the Slap Ya Mama Cajun seasoning, then push it to one side.",
         "Add the pepper and onion and cook until softened and browned at the edges, about 5 minutes.",
-        "Add the Del Monte Cajun-style potatoes — they’re already seasoned, so no spices are needed — and cook, stirring now and then, until golden in spots and everything reads 165°F, 6–8 minutes."
+        "Add the Del Monte Cajun-style potatoes — they’re already seasoned, so no more spice or salt is needed — and cook, stirring now and then, until golden in spots and everything reads 165°F, 6–8 minutes."
       ],
       "sides": [
         "canned-green-beans",
@@ -2580,13 +2582,14 @@
         "mozzarella": 6,
         "oil": 1,
         "italianSeasoning": 1,
-        "salt": 0.5
+        "salt": 0.5,
+        "giardiniera": 4
       },
       "steps": [
         "Heat the Blackstone over medium. Slice the peppers into strips and the onions into thin half-moons.",
         "Cook the peppers and onions with the oil, Italian seasoning and salt on one zone, stirring, until soft and charred at the edges, 10–12 minutes.",
         "Meanwhile cook the sausage links on another zone, turning, for 8 minutes. Split each lengthwise and griddle cut-side down until browned and the center reads 160°F, 4–6 minutes more.",
-        "Gather the sausage and peppers into five piles, top with mozzarella and cover with a dome or foil to melt. Toast the split rolls and scoop a pile into each."
+        "Gather the sausage and peppers into five piles, top with mozzarella and cover with a dome or foil to melt. Toast the split rolls, scoop a pile into each and add a spoonful of Buona hot giardiniera for anyone who likes heat."
       ],
       "sides": [
         "potato-wedges",
@@ -2869,6 +2872,196 @@
       ],
       "sideSlots": 2,
       "photo": "A toasted hoagie roll overflowing with thin-sliced griddled chicken, sautéed peppers and onions and gooey melted cheese."
+    },
+    {
+      "id": "blackened-cajun-chicken",
+      "title": "Blackened Cajun chicken",
+      "subtitle": "Slap Ya Mama–rubbed chicken breasts seared hard on the Blackstone and finished with a pat of Kerrygold.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 30,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "grill night",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.5,
+        "cajunSeasoning": 4,
+        "paprika": 1,
+        "butter": 2,
+        "oil": 1
+      },
+      "steps": [
+        "Thaw the chicken breasts in the fridge overnight. Butterfly or pound them to an even ¾ inch so they cook evenly, pat dry and rub with the oil.",
+        "Season all over with the Slap Ya Mama Cajun seasoning and the smoked paprika. It’s salty, so don’t add salt.",
+        "Heat the Blackstone over medium-high for 10 minutes. Lay the chicken on the griddle and leave it alone 5–6 minutes, until a dark, spicy crust forms.",
+        "Flip and cook 4–6 minutes more, until a thermometer in the thickest part reads 165°F. Top each piece with a little butter as it comes off, rest 5 minutes and slice."
+      ],
+      "sides": [
+        "cajun-skillet-potatoes",
+        "canned-corn"
+      ],
+      "sideSlots": 2,
+      "photo": "Sliced blackened Cajun chicken breasts with a dark spice crust and melting butter on a plate beside golden Cajun diced potatoes and buttered corn."
+    },
+    {
+      "id": "mango-habanero-chicken",
+      "title": "Mango habanero chicken thighs",
+      "subtitle": "Rubbed with Badia mango pepper, grilled, then glazed with Buffalo Wild Wings mango habanero sauce.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 35,
+      "equipment": [
+        "electric grill",
+        "outdoor grill"
+      ],
+      "tags": [
+        "grill night",
+        "rice",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.5,
+        "mangoPepper": 4,
+        "mangoHabanero": 6,
+        "oil": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Pat the chicken thighs dry, toss with the oil, then season both sides with the Badia mango pepper seasoning and the salt.",
+        "Heat the electric grill (or the outdoor grill) to medium-high. Grill the chicken 5–6 minutes per side, until a thermometer reads 165°F.",
+        "Brush the mango habanero sauce over both sides for the last 2 minutes, turning once, so it turns sticky without burning.",
+        "Rest 5 minutes and drizzle any sauce left in the bowl over the top. It’s sweet with real heat, so go light on the glaze for anyone who wants it milder."
+      ],
+      "sides": [
+        "turmeric-rice",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "Grilled chicken thighs with char marks and a glossy orange mango habanero glaze, served with golden turmeric rice and steamed broccoli."
+    },
+    {
+      "id": "chicago-italian-beef",
+      "title": "Chicago-style Italian beef",
+      "subtitle": "Shaved roast beef soaked in a seasoned jus, piled on rolls and topped with Buona hot giardiniera.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "sandwiches",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "roastBeef": 1.5,
+        "chickenBroth": 3,
+        "italianSeasoning": 2,
+        "garlicPowder": 1,
+        "oregano": 1,
+        "redPepperFlakes": 0.5,
+        "pepper": 0.5,
+        "hoagies": 5,
+        "giardiniera": 8
+      },
+      "steps": [
+        "In a wide pot, simmer the broth with the Italian seasoning, garlic powder, oregano, crushed red pepper and black pepper over medium heat for 5 minutes. This is the jus.",
+        "Turn the heat to low and add the shaved roast beef, pulling the slices apart. Let it soak in the hot jus until steaming and 165°F, 3–4 minutes. Don’t boil it or it toughens.",
+        "Split the rolls without cutting all the way through. Pile the beef in with tongs and spoon jus over each one, or dip the whole sandwich, Chicago-style.",
+        "Top with the Buona hot giardiniera and serve extra jus on the side for dipping."
+      ],
+      "sides": [
+        "jewel-fries",
+        "pepper-onions"
+      ],
+      "sideSlots": 2,
+      "photo": "A Chicago-style Italian beef sandwich on a long roll, juicy shaved beef topped with colorful hot giardiniera, beside fries and grilled peppers."
+    },
+    {
+      "id": "buffalo-chicken-wraps",
+      "title": "Buffalo chicken ranch wraps",
+      "subtitle": "Griddled chicken tossed in Crystal hot sauce and butter, wrapped with romaine, cheddar and Hidden Valley ranch.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 30,
+      "equipment": [
+        "blackstone",
+        "stovetop"
+      ],
+      "tags": [
+        "wraps",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.5,
+        "hotSauce": 6,
+        "butter": 3,
+        "garlicPowder": 0.5,
+        "oil": 1,
+        "salt": 0.5,
+        "tortillas": 10,
+        "lettuce": 1,
+        "cheese": 6,
+        "ranch": 5
+      },
+      "steps": [
+        "Thaw the chicken breasts in the fridge overnight. Cut them into thin strips and toss with the oil, garlic powder and salt.",
+        "Heat the Blackstone over medium-high and cook the strips 3–4 minutes per side, until a thermometer reads 165°F.",
+        "Meanwhile, melt the butter in a small saucepan and whisk in the Crystal hot sauce. Toss the cooked chicken in the buffalo sauce.",
+        "Warm the tortillas on the griddle for 20 seconds a side. Fill each with chopped romaine, buffalo chicken and shredded cheddar, drizzle with ranch and roll up tight."
+      ],
+      "sides": [
+        "carrot-sticks",
+        "canned-corn"
+      ],
+      "sideSlots": 2,
+      "photo": "Two buffalo chicken wraps cut in half showing spicy orange chicken, crisp romaine, cheddar and ranch, with carrot sticks and a cup of ranch."
+    },
+    {
+      "id": "apple-glazed-pork-chops",
+      "title": "Apple-jelly glazed pork chops",
+      "subtitle": "Grilled boneless chops brushed with a sweet-tangy apple jelly and mustard glaze.",
+      "category": "Grill",
+      "protein": "pork",
+      "minutes": 30,
+      "equipment": [
+        "electric grill",
+        "stovetop"
+      ],
+      "tags": [
+        "grill night",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "pork": 2.5,
+        "appleJelly": 6,
+        "mustard": 2,
+        "ciderVinegar": 1,
+        "butter": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "In a small saucepan over low heat, melt the apple jelly with the mustard, cider vinegar and butter, stirring until smooth. Set half aside for serving.",
+        "Season the pork chops on both sides with the salt and pepper. Heat the electric grill to medium-high.",
+        "Grill the chops 4–5 minutes per side, brushing with the glaze during the last 2 minutes, until a thermometer reads 145°F.",
+        "Let the chops rest 3 minutes, then spoon the reserved glaze over the top."
+      ],
+      "sides": [
+        "sweet-potatoes",
+        "crispy-onion-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "Grilled boneless pork chops with grill marks and a shiny amber apple glaze, served with buttered sweet potatoes and green beans topped with crispy onions."
     }
   ],
   "sides": [
@@ -3199,7 +3392,7 @@
     },
     {
       "id": "sweet-potatoes",
-      "title": "Buttered sweet potatoes",
+      "title": "Cinnamon-butter sweet potatoes",
       "kind": "starch",
       "minutes": 20,
       "equipment": [
@@ -3208,12 +3401,13 @@
       "items": {
         "sweet": 2.5,
         "butter": 2,
-        "salt": 0.25
+        "salt": 0.25,
+        "cinnamon": 0.5
       },
       "steps": [
         "Scrub the sweet potatoes and pierce each several times with a fork.",
         "Microwave on a plate in batches, turning halfway, until a knife slides easily into the centers, 8–15 minutes per batch depending on size.",
-        "Split open and top with the butter and a pinch of salt."
+        "Split open and top with the butter, a pinch of salt and a light dusting of the ground cinnamon."
       ],
       "photo": "Split sweet potatoes with bright orange fluffy flesh topped with melting butter."
     },
@@ -3630,6 +3824,106 @@
         "Pour the chips into a big bowl and the salsa into a smaller one for dipping."
       ],
       "photo": "A basket of golden tortilla chips beside a bowl of chunky red tomato salsa."
+    },
+    {
+      "id": "cajun-skillet-potatoes",
+      "title": "Cajun skillet potatoes",
+      "kind": "starch",
+      "minutes": 15,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "cajunPotatoes": 3,
+        "butter": 2
+      },
+      "steps": [
+        "Drain the Del Monte Cajun-style diced potatoes well and pat them dry so they brown instead of steam.",
+        "Melt the butter in your largest skillet over medium-high. Spread the potatoes in one layer and cook 8–10 minutes, stirring only every few minutes, until browned and crisp at the edges.",
+        "They’re already seasoned, so taste before adding any salt."
+      ],
+      "photo": "Golden, crisp-edged diced Cajun potatoes flecked with red pepper and spices in a cast-iron skillet."
+    },
+    {
+      "id": "turmeric-rice",
+      "title": "Golden turmeric rice",
+      "kind": "starch",
+      "minutes": 25,
+      "equipment": [
+        "stovetop",
+        "microwave"
+      ],
+      "tags": [
+        "rice"
+      ],
+      "items": {
+        "basmati": 2,
+        "turmeric": 1,
+        "butter": 1,
+        "salt": 1
+      },
+      "steps": [
+        "Rinse the basmati rice in a strainer until the water runs mostly clear.",
+        "Melt the butter in a saucepan over medium heat, stir in the turmeric for 30 seconds, then add the rice, 3 cups water and the salt. Bring to a boil.",
+        "Cover, turn the heat to low and simmer 15 minutes. Rest 5 minutes with the lid on, then fluff with a fork. Short on time? Microwave basmati rice pouches and stir in the turmeric butter instead."
+      ],
+      "photo": "A bowl of fluffy golden-yellow turmeric basmati rice with separate long grains and a small pat of butter."
+    },
+    {
+      "id": "old-bay-fries",
+      "title": "Old Bay air-fryer fries",
+      "kind": "starch",
+      "minutes": 25,
+      "equipment": [
+        "air fryer"
+      ],
+      "items": {
+        "fries": 26,
+        "oldBay": 2
+      },
+      "steps": [
+        "Air-fry one 26 oz bag of frozen fries from frozen at the package temperature (usually 400°F) in single layers, shaking the basket halfway, until crisp and golden, about 12–18 minutes per batch.",
+        "Toss the hot fries in a big bowl with the Old Bay seasoning. It’s salty, so skip any other salt."
+      ],
+      "photo": "Crispy golden french fries dusted with reddish Old Bay-style seasoning in a paper-lined basket."
+    },
+    {
+      "id": "cajun-fries",
+      "title": "Cajun air-fryer fries",
+      "kind": "starch",
+      "minutes": 25,
+      "equipment": [
+        "air fryer"
+      ],
+      "items": {
+        "fries": 26,
+        "cajunSeasoning": 1.5
+      },
+      "steps": [
+        "Air-fry one 26 oz bag of frozen fries from frozen at the package temperature (usually 400°F) in single layers, shaking the basket halfway, until crisp and golden, about 12–18 minutes per batch.",
+        "Toss the hot fries with the Slap Ya Mama Cajun seasoning right away so it sticks. It’s salty, so skip any other salt."
+      ],
+      "photo": "Crispy french fries tossed with orange-red Cajun spice seasoning in a metal basket lined with paper."
+    },
+    {
+      "id": "crispy-onion-green-beans",
+      "title": "Green beans with crispy onions",
+      "kind": "vegetable",
+      "minutes": 10,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "greenBeans": 3,
+        "butter": 1,
+        "crispyOnions": 2,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Drain the canned green beans and warm them with the butter in a saucepan over medium heat, 4–5 minutes.",
+        "Season with the black pepper, pour into a serving bowl and scatter the French’s crispy fried onions over the top right before serving so they stay crunchy."
+      ],
+      "photo": "A serving bowl of buttered green beans topped with a crunchy pile of golden crispy fried onions."
     }
   ]
 }
