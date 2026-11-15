@@ -1,0 +1,3489 @@
+{
+  "updated": "2026-11-14",
+  "notes": "Researched 2026-11-14 by the pricing agent. SAM'S CLUB: 'listed' prices were read that day from samsclub.com listing/product pages (the url on each entry is the exact page). They are Sam's ONLINE prices for its default club; samsclub.com says 'prices may vary in club and online' (a spot check on the Addison #6487 club page showed one egg item ~3% higher than the default online price). Where a temporary 'Instant Savings' price was shown, the regular price is used and the sale is noted in the label. Per-pound meat (chicken trays, ground beef rolls, pork) uses Sam's average package price and average weight (price ÷ $/lb). Sam's bakery brands differ by region (e.g., buns), so Addison may stock a different budget brand. Some Sam's tiers have no national brand online (fresh meat, eggs, produce, spices); those 'name' entries repeat the store-brand item or a premium Member's Mark item and say so. JEWEL-OSCO: jewelosco.com blocks automated reading and needs a chosen store, and Instacart pages for Jewel are closed to automated reads, so every Jewel number is 'estimated'. Anchors: Jewel-Osco listings on DoorDash (Nov 2026; sizes usually not shown, and delivery-app prices can run above in-store, so these lean slightly high on purpose), a GroceryChop scrape of a Jewel regular price, and typical late-2026 Chicago-area Albertsons/Jewel shelf prices for Signature Select/Signature Farms/Lucerne/O Organics vs national brands. Treat Jewel estimates as about ±15%, and expect weekly-ad sales (e.g., chicken breast $1.99-2.49/lb) to beat them. Produce is unbranded, so both tiers match. Items in 'notSeenAt.sams' were not found on samsclub.com and have no Sam's entry here; Sam's entries whose label says 'NOT seen on samsclub.com' are planning estimates for products Sam's commonly carries. The family can correct any price in-app.",
+  "conversions": {
+    "rice": "dry long-grain rice ≈ 2.3 cups per lb (≈ 197 g per cup)",
+    "butter": "1 stick = 4 oz = 8 tbsp",
+    "liquids": "1 fl oz = 2 tbsp = 6 tsp; 1 gallon = 16 cups = 256 tbsp; 32 fl oz broth = 4 cups",
+    "honey": "≈ 21 g per tbsp",
+    "peanutButter": "≈ 16 g per tbsp",
+    "ketchup": "≈ 17 g per tbsp",
+    "bbqSauce": "≈ 18.5 g per tbsp",
+    "mustard": "≈ 15 g per tbsp",
+    "cornstarch": "≈ 8 g per tbsp",
+    "brownSugar": "≈ 13.75 g per packed tbsp",
+    "flour": "≈ 125 g per cup",
+    "tacoSeasoning": "≈ 7.5 g per tbsp (a 1 oz packet ≈ 4 tbsp)",
+    "groundSpices": "black pepper / paprika ≈ 2.3 g per tsp; cumin ≈ 2.1 g; garlic powder ≈ 3.1 g; crushed red pepper ≈ 1.8 g",
+    "driedLeafHerbs": "oregano / Italian seasoning ≈ 1 g per tsp",
+    "salt": "table/fine sea salt ≈ 6 g per tsp",
+    "counts": "garlic ≈ 10 cloves per bulb, ≈ 5 g per peeled clove; navel orange ≈ 8 oz; lemon ≈ 4 oz; lime ≈ 2.4 oz; sandwich loaf 20 oz ≈ 20 slices; potstickers ≈ 0.8 oz each",
+    "canEquivalents": "pineapple and pork-and-beans sizes are expressed in the catalog's can size (20 oz / 28 oz) when Sam's sells smaller cans"
+  },
+  "notSeenAt": {
+    "sams": [
+      "brownSugar",
+      "cannedCarrots",
+      "ciderVinegar",
+      "cilantro",
+      "corn",
+      "cornCobs",
+      "edamame",
+      "flour",
+      "groundPork",
+      "hoagies",
+      "panko",
+      "paprika",
+      "peas",
+      "riceVinegar",
+      "sesame",
+      "slaw",
+      "starch",
+      "tikka"
+    ],
+    "note": "Not found on samsclub.com on 2026-11-14 (frozen corn/peas, coleslaw mix, tikka sauce, cornstarch, sesame oil, smoked paprika, canned carrots, ground pork, rice & cider vinegar, flour, panko, brown sugar, hoagie rolls, frozen mini corn cobs, edamame, cilantro). Plan these at Jewel-Osco unless the family confirms the Addison club stocks them."
+  },
+  "prices": {
+    "chicken": {
+      "sams": {
+        "generic": {
+          "size": 10.0,
+          "price": 26.98,
+          "label": "Member's Mark Boneless & Skinless Chicken Breasts, Frozen, 10 lb bag ($2.70/lb). Fresh tray alternative: $2.88/lb, ~5.7 lb avg $16.39",
+          "url": "https://www.samsclub.com/c/kp/chicken-breast",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 27.08,
+          "label": "Farmer Focus Organic Thin Sliced Boneless Skinless Chicken Breast, priced per lb ($6.77/lb, ~4 lb avg pack)",
+          "url": "https://www.samsclub.com/c/kp/chicken-breast",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 3.5,
+          "price": 13.97,
+          "label": "Signature Farms Boneless Skinless Chicken Breasts Value Pack, 3.5 lb (est. $3.99/lb regular; Jewel often runs $1.99-2.49/lb sales)",
+          "url": "https://www.jewelosco.com/shop/product-details.960031028.html",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 2.0,
+          "price": 12.99,
+          "label": "Perdue Boneless Skinless Chicken Breasts, 2 lb (est. $6.49/lb)",
+          "url": "https://www.instacart.com/products/16520776-perdue-boneless-chicken-breasts-2-lb",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "beef": {
+      "sams": {
+        "generic": {
+          "size": 10.74,
+          "price": 61.86,
+          "label": "Member's Mark 90/10 Ground Beef Roll, vacuum pack ($5.76/lb, ~10.7 lb avg)",
+          "url": "https://www.samsclub.com/c/kp/ground-beef",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 3.2,
+          "price": 20.22,
+          "label": "Member's Mark 93/7 Ground Beef, ~3.2 lb 3-pack ($6.32/lb) — Sam's sells no national-brand ground beef; this is the leaner store-brand option",
+          "url": "https://www.samsclub.com/c/kp/ground-beef",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 3.0,
+          "price": 20.97,
+          "label": "Jewel Ground Beef 85% Lean Value Pack, ~3 lb at $6.99/lb (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en/convenience/store/1740960/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 9.99,
+          "label": "Open Nature 93/7 Grass Fed Angus Ground Beef, 16 oz (est.)",
+          "url": "https://www.jewelosco.com/shop/product-details.960098621.html",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "pork": {
+      "sams": {
+        "generic": {
+          "size": 3.22,
+          "price": 9.6,
+          "label": "Member's Mark Boneless Center Cut Pork Loin Chops, priced per lb ($2.98/lb, ~3.2 lb avg)",
+          "url": "https://www.samsclub.com/c/kp/pork-chops",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 3.22,
+          "price": 9.6,
+          "label": "Member's Mark Boneless Center Cut Pork Loin Chops, priced per lb ($2.98/lb, ~3.2 lb avg) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/c/kp/pork-chops",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 2.5,
+          "price": 12.48,
+          "label": "Signature Farms Boneless Center Cut Pork Loin Chops Value Pack, ~2.5 lb (est. $4.99/lb; thin-cut Jewel chops list at $7.99/lb on DoorDash)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.5,
+          "price": 9.49,
+          "label": "Smithfield Boneless Pork Loin Chops, ~1.5 lb (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "chickenThighs": {
+      "sams": {
+        "generic": {
+          "size": 5.6,
+          "price": 19.52,
+          "label": "Member's Mark Boneless Skinless Chicken Thighs, priced per lb ($3.48/lb, ~5.6 lb avg; page also showed $3 off per package through Nov 16 — unclear if already applied, so regular may be up to ~$22.52)",
+          "url": "https://www.samsclub.com/browse/poultry/1546",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 5.1,
+          "price": 27.34,
+          "label": "Member's Mark Organic Boneless Skinless Chicken Thighs, priced per lb ($5.36/lb, ~5.1 lb avg) — no national brand seen",
+          "url": "https://www.samsclub.com/browse/poultry/1546",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 3.0,
+          "price": 11.97,
+          "label": "Signature Farms Boneless Skinless Chicken Thighs Value Pack, ~3 lb (est. $3.99/lb)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.5,
+          "price": 8.99,
+          "label": "Perdue Boneless Skinless Chicken Thighs, ~1.5 lb (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "porkLoin": {
+      "sams": {
+        "generic": {
+          "size": 8.74,
+          "price": 21.68,
+          "label": "Member's Mark Whole Boneless Pork Loin, vacuum pack, priced per lb ($2.48/lb, ~8.7 lb avg)",
+          "url": "https://www.samsclub.com/c/kp/pork-chops",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 8.74,
+          "price": 21.68,
+          "label": "Member's Mark Whole Boneless Pork Loin, vacuum pack, priced per lb ($2.48/lb, ~8.7 lb avg) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/c/kp/pork-chops",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 3.0,
+          "price": 10.47,
+          "label": "Signature Farms Boneless Pork Loin Center Cut Roast, ~3 lb (est. $3.49/lb)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.5,
+          "price": 8.49,
+          "label": "Hormel Always Tender Boneless Pork Loin Filet, ~1.5 lb (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "groundPork": {
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 3.99,
+          "label": "Signature Farms Ground Pork, 1 lb (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 4.99,
+          "label": "Smithfield Ground Pork, 1 lb (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "groundTurkey": {
+      "sams": {
+        "generic": {
+          "size": 5.0,
+          "price": 22.77,
+          "label": "Jennie-O 93/7 Ground Turkey, 2.5 lb × 2 pk ($4.55/lb) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/browse/poultry/1546",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 5.0,
+          "price": 22.77,
+          "label": "Jennie-O 93/7 Ground Turkey, 2.5 lb × 2 pk ($4.55/lb)",
+          "url": "https://www.samsclub.com/browse/poultry/1546",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 4.99,
+          "label": "Signature Select 93/7 Ground Turkey, 1 lb (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 5.99,
+          "label": "Jennie-O 93/7 Lean Ground Turkey, 1 lb (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "italianSausage": {
+      "sams": {
+        "generic": {
+          "size": 2.38,
+          "price": 10.98,
+          "label": "Johnsonville Mild Italian Sausage links, ~2 × 19 oz (NOT seen on samsclub.com — Sam's online showed only a 20 lb frozen food-service case; estimate)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 2.38,
+          "price": 10.98,
+          "label": "Johnsonville Mild Italian Sausage links, ~2 × 19 oz (NOT seen on samsclub.com — Sam's online showed only a 20 lb frozen food-service case; estimate)",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.25,
+          "price": 4.99,
+          "label": "Signature Select Mild Italian Sausage, ~1.25 lb (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 5.99,
+          "label": "Buona Mild Italian Sausage, ~1 lb (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en-US/convenience/store/1748780/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "bacon": {
+      "sams": {
+        "generic": {
+          "size": 3.0,
+          "price": 10.47,
+          "label": "Member's Mark Naturally Hickory Smoked Bacon, 1 lb × 3 pk ($3.49/lb)",
+          "url": "https://www.samsclub.com/c/kp/bacon",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 16.93,
+          "label": "Wright Brand Hickory Smoked Thick Cut Bacon, 4 lb ($4.23/lb)",
+          "url": "https://www.samsclub.com/c/kp/bacon",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 5.99,
+          "label": "Signature Select Hickory Smoked Bacon, 16 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 6.99,
+          "label": "Farmland Hickory Smoked Thick Sliced Bacon, 16 oz (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en-US/convenience/store/1748780/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "deliTurkey": {
+      "sams": {
+        "generic": {
+          "size": 32.0,
+          "price": 12.98,
+          "label": "Hillshire Farm Ultra Thin Oven Roasted Turkey Breast, 2 × 16 oz (NOT confirmed on samsclub.com; estimate)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 12.98,
+          "label": "Hillshire Farm Ultra Thin Oven Roasted Turkey Breast, 2 × 16 oz (NOT confirmed on samsclub.com; estimate)",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 9.0,
+          "price": 3.99,
+          "label": "Signature Select Oven Roasted Turkey Breast deli pack, 9 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 9.0,
+          "price": 5.49,
+          "label": "Oscar Mayer Deli Fresh Oven Roasted Turkey Breast, 9 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "eggs": {
+      "sams": {
+        "generic": {
+          "size": 24.0,
+          "price": 4.82,
+          "label": "Member's Mark Cage Free Grade AA Large White Eggs, 2 dozen (5-dozen flat: $8.94)",
+          "url": "https://www.samsclub.com/c/kp/eggs",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 18.0,
+          "price": 6.37,
+          "label": "Member's Mark Pasture Raised Grade A Large Brown Eggs, 1.5 dozen (no national egg brand seen online)",
+          "url": "https://www.samsclub.com/c/kp/eggs",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 12.0,
+          "price": 3.49,
+          "label": "Jewel Large Eggs, 1 dozen (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 5.49,
+          "label": "Eggland's Best Large Eggs, 1 dozen (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cheese": {
+      "sams": {
+        "generic": {
+          "size": 32.0,
+          "price": 7.36,
+          "label": "Member's Mark Sharp Cheddar Finely Shredded, 2 × 16 oz ($0.23/oz)",
+          "url": "https://www.samsclub.com/c/kp/shredded-cheese",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 40.0,
+          "price": 10.46,
+          "label": "Tillamook Medium Cheddar block, 2.5 lb ($4.18/lb) — shred or slice at home",
+          "url": "https://www.samsclub.com/c/kp/cheddar-cheese",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 3.29,
+          "label": "Lucerne Shredded Sharp Cheddar, 8 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 4.29,
+          "label": "Kraft Shredded Sharp Cheddar, 8 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "parm": {
+      "sams": {
+        "generic": {
+          "size": 24.0,
+          "price": 7.48,
+          "label": "Member's Mark Grated Parmesan, 24 oz (regular $7.48; $6.48 instant savings through Nov 29)",
+          "url": "https://www.samsclub.com/c/kp/parmesan-cheese",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 72.0,
+          "price": 25.88,
+          "label": "Kraft Grated Parmesan, 4.5 lb ($5.75/lb)",
+          "url": "https://www.samsclub.com/c/kp/parmesan-cheese",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 3.99,
+          "label": "Signature Select Grated Parmesan, 8 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 5.49,
+          "label": "Kraft Grated Parmesan, 8 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "yogurt": {
+      "sams": {
+        "generic": {
+          "size": 48.0,
+          "price": 5.93,
+          "label": "Member's Mark Nonfat Plain Greek Yogurt, 48 oz ($0.12/oz)",
+          "url": "https://www.samsclub.com/c/kp/greek-yogurt",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 6.48,
+          "label": "Chobani Plain Nonfat Greek Yogurt, 32 oz (NOT seen on samsclub.com; estimate)",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 32.0,
+          "price": 4.99,
+          "label": "Lucerne Nonfat Plain Strained Greek Yogurt, 32 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 6.99,
+          "label": "Chobani Non-Fat Plain Greek Yogurt, 32 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "butter": {
+      "sams": {
+        "generic": {
+          "size": 128.0,
+          "price": 9.74,
+          "label": "Member's Mark Unsalted Sweet Cream Butter, 16 sticks / 4 lb (8 tbsp per stick)",
+          "url": "https://www.samsclub.com/c/kp/butter",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 48.0,
+          "price": 11.22,
+          "label": "Kerrygold Unsalted Butter, 6 sticks / 1.5 lb (8 tbsp per stick)",
+          "url": "https://www.samsclub.com/c/kp/butter",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 32.0,
+          "price": 4.49,
+          "label": "Lucerne Sweet Cream Butter Quarters, 1 lb (4 sticks × 8 tbsp) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 6.49,
+          "label": "Land O Lakes Unsalted Butter, 1 lb (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "milk": {
+      "sams": {
+        "generic": {
+          "size": 16.0,
+          "price": 3.28,
+          "label": "Member's Mark 2% Milk, 1 gallon (16 cups) — dairy price not captured online; estimate",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 13.0,
+          "price": 9.98,
+          "label": "Fairlife 2% Ultra-Filtered Milk, 52 fl oz × 2 (13 cups) — estimate",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 16.0,
+          "price": 3.29,
+          "label": "Jewel 2% Reduced Fat Milk, 1 gallon = 16 cups (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en-US/convenience/store/1748780/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.5,
+          "price": 5.99,
+          "label": "Fairlife 2% Ultra-Filtered Milk, 52 fl oz = 6.5 cups (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en-US/convenience/store/1748780/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "mozzarella": {
+      "sams": {
+        "generic": {
+          "size": 80.0,
+          "price": 12.84,
+          "label": "Member's Mark Part-Skim Shredded Mozzarella, 5 lb ($2.57/lb)",
+          "url": "https://www.samsclub.com/c/kp/shredded-cheese",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 80.0,
+          "price": 12.84,
+          "label": "Member's Mark Part-Skim Shredded Mozzarella, 5 lb ($2.57/lb) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/c/kp/shredded-cheese",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 3.29,
+          "label": "Lucerne Shredded Low-Moisture Part-Skim Mozzarella, 8 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 4.29,
+          "label": "Kraft Shredded Mozzarella, 8 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "sourCream": {
+      "sams": {
+        "generic": {
+          "size": 48.0,
+          "price": 5.54,
+          "label": "Daisy Pure and Natural Sour Cream tub, 48 oz (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 48.0,
+          "price": 5.54,
+          "label": "Daisy Pure and Natural Sour Cream tub, 48 oz",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 16.0,
+          "price": 2.49,
+          "label": "Lucerne Sour Cream, 16 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 3.29,
+          "label": "Daisy Sour Cream, 16 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cheeseSlices": {
+      "sams": {
+        "generic": {
+          "size": 40.0,
+          "price": 7.36,
+          "label": "Member's Mark Sliced Sharp Cheddar, 2 lb (~40 slices, count estimated)",
+          "url": "https://www.samsclub.com/c/kp/cheddar-cheese",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 40.0,
+          "price": 7.36,
+          "label": "Member's Mark Sliced Sharp Cheddar, 2 lb (~40 slices, count estimated) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/c/kp/cheddar-cheese",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 16.0,
+          "price": 2.99,
+          "label": "Lucerne American Cheese Singles, 16 slices (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 4.79,
+          "label": "Kraft Singles American, 16 slices (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "stringCheese": {
+      "sams": {
+        "generic": {
+          "size": 36.0,
+          "price": 7.27,
+          "label": "Member's Mark Light String Cheese, 36 ct",
+          "url": "https://www.samsclub.com/c/kp/string-cheese",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 48.0,
+          "price": 9.47,
+          "label": "Frigo Cheese Heads String Cheese, 1 oz × 48 ct",
+          "url": "https://www.samsclub.com/c/kp/string-cheese",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 12.0,
+          "price": 3.99,
+          "label": "Lucerne String Cheese, 12 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 5.49,
+          "label": "Frigo Cheese Heads String Cheese, 12 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "yogurtCups": {
+      "sams": {
+        "generic": {
+          "size": 18.0,
+          "price": 8.44,
+          "label": "Yoplait Original Lowfat Yogurt Variety Pack, 6 oz × 18 (no Member's Mark cups seen)",
+          "url": "https://www.samsclub.com/c/kp/yogurt",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 12.87,
+          "label": "Chobani Nonfat Greek Fruit on the Bottom Variety Pack, 5.3 oz × 16",
+          "url": "https://www.samsclub.com/c/kp/yogurt",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 4.72,
+          "label": "Lucerne Lowfat Yogurt cups, 6 oz, 8 cups (est. ~$0.59 each)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 5.49,
+          "label": "Yoplait Original Yogurt, 6 oz × 8 pk (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "juice": {
+      "sams": {
+        "generic": {
+          "size": 104.0,
+          "price": 7.34,
+          "label": "Member's Mark Pulp-Free 100% Orange Juice, 52 fl oz × 2",
+          "url": "https://www.samsclub.com/c/kp/orange-juice",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 59.0,
+          "price": 10.83,
+          "label": "Member's Mark Fresh Squeezed Orange Juice, 59 fl oz (premium option; no national brand seen)",
+          "url": "https://www.samsclub.com/c/kp/orange-juice",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 52.0,
+          "price": 3.99,
+          "label": "Signature Select 100% Orange Juice, 52 fl oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 52.0,
+          "price": 5.29,
+          "label": "Simply Orange Pulp Free, 52 fl oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "creamer": {
+      "sams": {
+        "generic": {
+          "size": 64.0,
+          "price": 5.86,
+          "label": "Member's Mark Dairy Coffee Creamer, Lactose Free Sweet Cream, 64 fl oz",
+          "url": "https://www.samsclub.com/c/kp/coffee-creamer",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 66.0,
+          "price": 5.68,
+          "label": "Nestle Coffee mate French Vanilla liquid creamer, 66 fl oz",
+          "url": "https://www.samsclub.com/c/kp/coffee-creamer",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 32.0,
+          "price": 3.49,
+          "label": "Signature Select French Vanilla Creamer, 32 fl oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 5.29,
+          "label": "Coffee mate French Vanilla, 32 fl oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "buns": {
+      "sams": {
+        "generic": {
+          "size": 16.0,
+          "price": 3.84,
+          "label": "Home Pride Hamburger Buns, 16 pk (no Member's Mark burger bun online; bakery brands vary by club)",
+          "url": "https://www.samsclub.com/c/kp/hamburger-buns",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 3.98,
+          "label": "Sara Lee Restaurant Style Sesame Seed Hamburger Buns, 12 ct",
+          "url": "https://www.samsclub.com/c/kp/hamburger-buns",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 2.29,
+          "label": "Signature Select Hamburger Buns, 8 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 3.99,
+          "label": "Sara Lee Classic Hamburger Buns, 8 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "bread": {
+      "sams": {
+        "generic": {
+          "size": 40.0,
+          "price": 5.83,
+          "label": "Nature's Own 100% Whole Wheat Bread, 20 oz × 2 loaves (~40 slices; no Member's Mark sliced bread online)",
+          "url": "https://www.samsclub.com/c/kp/sandwich-bread",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 34.0,
+          "price": 10.26,
+          "label": "Dave's Killer Bread 21 Whole Grains, 27 oz × 2 loaves (~34 slices)",
+          "url": "https://www.samsclub.com/c/kp/sandwich-bread",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 20.0,
+          "price": 2.49,
+          "label": "Jewel-Osco Wheat Bread, 20 oz loaf (~20 slices) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en-US/convenience/store/1748780/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 20.0,
+          "price": 4.29,
+          "label": "Nature's Own 100% Whole Wheat, 20 oz (~20 slices) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "tortillas": {
+      "sams": {
+        "generic": {
+          "size": 40.0,
+          "price": 5.68,
+          "label": "Mission Soft Flour Taco Tortillas, 40 ct (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/flour-tortillas",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 40.0,
+          "price": 5.68,
+          "label": "Mission Soft Flour Taco Tortillas, 40 ct",
+          "url": "https://www.samsclub.com/c/kp/flour-tortillas",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 10.0,
+          "price": 2.49,
+          "label": "Signature Select Soft Taco Flour Tortillas, 10 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 3.29,
+          "label": "Mission Soft Taco Flour Tortillas, 10 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cornwrap": {
+      "sams": {
+        "generic": {
+          "size": 80.0,
+          "price": 5.48,
+          "label": "Yellow corn tortillas, ~80 ct club pack (NOT seen on samsclub.com; estimate)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 80.0,
+          "price": 5.48,
+          "label": "Yellow corn tortillas, ~80 ct club pack (NOT seen on samsclub.com; estimate)",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 30.0,
+          "price": 2.49,
+          "label": "Store-brand or La Banderita White Corn Tortillas, 30 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 30.0,
+          "price": 3.49,
+          "label": "Mission White Corn Tortillas, 30 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "naan": {
+      "sams": {
+        "generic": {
+          "size": 10.0,
+          "price": 5.88,
+          "label": "Member's Mark Original Stone Baked Naan, 10 pieces / 35.2 oz",
+          "url": "https://www.samsclub.com/ip/13866724907",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 5.88,
+          "label": "Member's Mark Original Stone Baked Naan, 10 pieces / 35.2 oz (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/ip/13866724907",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 2.0,
+          "price": 3.99,
+          "label": "Stonefire Original Naan, 2 pieces (no store-brand naan confirmed) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 2.0,
+          "price": 3.99,
+          "label": "Stonefire Original Naan, 2 pieces (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "hoagies": {
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 3.49,
+          "label": "Signature Select Hoagie Rolls, 6 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 4.29,
+          "label": "Turano Italian Sub Rolls, 6 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "spaghetti": {
+      "sams": {
+        "generic": {
+          "size": 96.0,
+          "price": 5.48,
+          "label": "Member's Mark Spaghetti Pasta Pantry Pack, 1 lb × 6",
+          "url": "https://www.samsclub.com/c/kp/pasta",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 96.0,
+          "price": 8.52,
+          "label": "Barilla Thin Spaghetti, 1 lb × 6",
+          "url": "https://www.samsclub.com/c/kp/pasta",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 16.0,
+          "price": 1.29,
+          "label": "Signature Select Spaghetti, 16 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 2.19,
+          "label": "Barilla Spaghetti, 16 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "penne": {
+      "sams": {
+        "generic": {
+          "size": 96.0,
+          "price": 8.52,
+          "label": "Barilla Penne, 16 oz × 6 (regular $8.52; $7.02 instant savings through Nov 29) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/penne-pasta",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 96.0,
+          "price": 8.52,
+          "label": "Barilla Penne, 16 oz × 6 (regular $8.52; $7.02 instant savings through Nov 29)",
+          "url": "https://www.samsclub.com/c/kp/penne-pasta",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 16.0,
+          "price": 1.29,
+          "label": "Signature Select Penne Rigate, 16 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 2.19,
+          "label": "Barilla Penne, 16 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "elbows": {
+      "sams": {
+        "generic": {
+          "size": 96.0,
+          "price": 8.52,
+          "label": "Barilla Elbow Pasta, 1 lb × 6 (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/pasta",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 96.0,
+          "price": 8.52,
+          "label": "Barilla Elbow Pasta, 1 lb × 6",
+          "url": "https://www.samsclub.com/c/kp/pasta",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 16.0,
+          "price": 1.29,
+          "label": "Signature Select Elbow Macaroni, 16 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 2.19,
+          "label": "Barilla Elbows, 16 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "eggNoodles": {
+      "sams": {
+        "generic": {
+          "size": 56.0,
+          "price": 7.98,
+          "label": "Country Pasta Homemade Style Egg Pasta (egg noodles), 56 oz",
+          "url": "https://www.samsclub.com/c/kp/pasta",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 56.0,
+          "price": 7.98,
+          "label": "Country Pasta Homemade Style Egg Pasta (egg noodles), 56 oz (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/c/kp/pasta",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 12.0,
+          "price": 1.99,
+          "label": "Signature Select Wide Egg Noodles, 12 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 2.79,
+          "label": "Pennsylvania Dutch Wide Egg Noodles, 12 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "jasmine": {
+      "sams": {
+        "generic": {
+          "size": 57.5,
+          "price": 22.98,
+          "label": "Member's Mark Thai Jasmine Rice, 25 lb (= ~57.5 cups dry at 2.3 cups/lb; regular $22.98, $20.98 instant savings)",
+          "url": "https://www.samsclub.com/c/kp/rice",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 18.4,
+          "price": 10.94,
+          "label": "Golden Star Prime Grade Thai Hom Mali Jasmine Rice, 8 lb (= ~18.4 cups dry)",
+          "url": "https://www.samsclub.com/c/kp/rice",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 11.5,
+          "price": 8.49,
+          "label": "Signature Select Jasmine Rice, 5 lb (= ~11.5 cups dry) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 4.6,
+          "price": 4.79,
+          "label": "Mahatma Jasmine Rice, 2 lb (= ~4.6 cups dry) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "basmati": {
+      "sams": {
+        "generic": {
+          "size": 46.0,
+          "price": 19.98,
+          "label": "Royal Basmati Rice, 20 lb (= ~46 cups dry at 2.3 cups/lb) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/ip/royal-basmati-rice-20-lbs/74504211201?xid=plp_product_13",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 46.0,
+          "price": 19.98,
+          "label": "Royal Basmati Rice, 20 lb (= ~46 cups dry at 2.3 cups/lb)",
+          "url": "https://www.samsclub.com/ip/royal-basmati-rice-20-lbs/74504211201?xid=plp_product_13",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 4.6,
+          "price": 4.49,
+          "label": "Signature Select Basmati Rice, 2 lb (= ~4.6 cups dry) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 4.6,
+          "price": 5.99,
+          "label": "Royal Basmati Rice, 2 lb (= ~4.6 cups dry) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "flour": {
+      "jewel": {
+        "generic": {
+          "size": 18.0,
+          "price": 3.49,
+          "label": "Signature Select All-Purpose Flour, 5 lb (= ~18 cups at 125 g/cup) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 18.0,
+          "price": 4.49,
+          "label": "Gold Medal All-Purpose Flour, 5 lb (= ~18 cups) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "panko": {
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 2.49,
+          "label": "Signature Select Panko Bread Crumbs, 8 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 3.49,
+          "label": "Kikkoman Panko Bread Crumbs, 8 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "oatmeal": {
+      "sams": {
+        "generic": {
+          "size": 160.0,
+          "price": 10.98,
+          "label": "Quaker Old Fashioned Oats, 2 × 80 oz (NOT seen on samsclub.com; estimate)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 160.0,
+          "price": 10.98,
+          "label": "Quaker Old Fashioned Oats, 2 × 80 oz (NOT seen on samsclub.com; estimate)",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 42.0,
+          "price": 4.49,
+          "label": "Signature Select Old Fashioned Oats, 42 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 42.0,
+          "price": 6.49,
+          "label": "Quaker Old Fashioned Oats, 42 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cereal": {
+      "sams": {
+        "generic": {
+          "size": 55.0,
+          "price": 7.88,
+          "label": "Frosted Flakes, 55 oz (lowest-cost family cereal seen; no Member's Mark cereal online)",
+          "url": "https://www.samsclub.com/c/kp/cereal",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 48.0,
+          "price": 7.64,
+          "label": "Honey Nut Cheerios, 48 oz",
+          "url": "https://www.samsclub.com/c/kp/cereal",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 14.0,
+          "price": 3.29,
+          "label": "Signature Select Toasted Oats cereal, ~14 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 10.8,
+          "price": 5.49,
+          "label": "Honey Nut Cheerios, 10.8 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "potatoes": {
+      "sams": {
+        "generic": {
+          "size": 10.0,
+          "price": 8.22,
+          "label": "Yellow (gold) Potatoes, 10 lb bag",
+          "url": "https://www.samsclub.com/c/kp/potatoes",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 8.22,
+          "label": "Yellow (gold) Potatoes, 10 lb bag (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/c/kp/potatoes",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 5.0,
+          "price": 4.99,
+          "label": "Signature Farms Yellow Potatoes, 5 lb bag (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 5.0,
+          "price": 4.99,
+          "label": "Signature Farms Yellow Potatoes, 5 lb bag (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "sweet": {
+      "sams": {
+        "generic": {
+          "size": 5.0,
+          "price": 3.98,
+          "label": "Sweet Potatoes, 5 lb bag",
+          "url": "https://www.samsclub.com/c/kp/potatoes",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 5.0,
+          "price": 3.98,
+          "label": "Sweet Potatoes, 5 lb bag (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/c/kp/potatoes",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.49,
+          "label": "Sweet potatoes, loose, per lb (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.49,
+          "label": "Sweet potatoes, loose, per lb (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "carrots": {
+      "sams": {
+        "generic": {
+          "size": 5.0,
+          "price": 3.72,
+          "label": "Organic Tender Sweet Carrots, 5 lb bag",
+          "url": "https://www.samsclub.com/browse/Fresh-Vegetables/1539",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 5.0,
+          "price": 3.72,
+          "label": "Organic Tender Sweet Carrots, 5 lb bag (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/Fresh-Vegetables/1539",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 2.0,
+          "price": 2.29,
+          "label": "Signature Farms Carrots, 2 lb bag (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 2.0,
+          "price": 2.29,
+          "label": "Signature Farms Carrots, 2 lb bag (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "onions": {
+      "sams": {
+        "generic": {
+          "size": 10.0,
+          "price": 7.96,
+          "label": "Yellow Onions, 10 lb bag",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 7.96,
+          "label": "Yellow Onions, 10 lb bag (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 3.0,
+          "price": 3.49,
+          "label": "Signature Farms Yellow Onions, 3 lb bag (est.; loose $0.76 each on DoorDash)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 3.49,
+          "label": "Signature Farms Yellow Onions, 3 lb bag (est.; loose $0.76 each on DoorDash) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "peppers": {
+      "sams": {
+        "generic": {
+          "size": 6.0,
+          "price": 5.97,
+          "label": "Multi-color Bell Sweet Peppers, 6 ct",
+          "url": "https://www.samsclub.com/browse/Fresh-Vegetables/1539",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 5.97,
+          "label": "Multi-color Bell Sweet Peppers, 6 ct (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/Fresh-Vegetables/1539",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.49,
+          "label": "Green Bell Pepper, each (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en/convenience/store/1741108/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.49,
+          "label": "Green Bell Pepper, each (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store)) (unbranded produce: same item both tiers)",
+          "url": "https://www.doordash.com/en/convenience/store/1741108/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "tomato": {
+      "sams": {
+        "generic": {
+          "size": 3.0,
+          "price": 5.42,
+          "label": "Tomatoes on the Vine, 3 lb",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 5.42,
+          "label": "Tomatoes on the Vine, 3 lb (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.84,
+          "label": "Roma tomatoes, ~1 lb (≈4 at $0.46 each on DoorDash Jewel listing) (est.)",
+          "url": "https://www.doordash.com/en/convenience/store/1740960/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.84,
+          "label": "Roma tomatoes, ~1 lb (≈4 at $0.46 each on DoorDash Jewel listing) (est.) (unbranded produce: same item both tiers)",
+          "url": "https://www.doordash.com/en/convenience/store/1740960/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cucumber": {
+      "sams": {
+        "generic": {
+          "size": 3.0,
+          "price": 2.87,
+          "label": "Seedless English Cucumbers, 3 ct",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 2.87,
+          "label": "Seedless English Cucumbers, 3 ct (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.99,
+          "label": "English seedless cucumber, each (regular price per a GroceryChop scrape of Jewel #80 Plainfield; est.)",
+          "url": "https://grocerychop.com/stores/jewel_osco",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.99,
+          "label": "English seedless cucumber, each (regular price per a GroceryChop scrape of Jewel #80 Plainfield; est.) (unbranded produce: same item both tiers)",
+          "url": "https://grocerychop.com/stores/jewel_osco",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "lettuce": {
+      "sams": {
+        "generic": {
+          "size": 6.0,
+          "price": 4.87,
+          "label": "Romaine Hearts, 6 ct (another club snapshot showed $3.92)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 4.87,
+          "label": "Romaine Hearts, 6 ct (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 3.0,
+          "price": 3.49,
+          "label": "Signature Farms Romaine Hearts, 3 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 3.49,
+          "label": "Fresh Express Hearts of Romaine, 3 ct (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en/convenience/store/1741108/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "spinach": {
+      "sams": {
+        "generic": {
+          "size": 16.0,
+          "price": 4.86,
+          "label": "Organic Baby Spinach, 16 oz",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 4.86,
+          "label": "Organic Baby Spinach, 16 oz (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 2.99,
+          "label": "Signature Farms Baby Spinach, 6 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 5.0,
+          "price": 3.49,
+          "label": "Earthbound Farm Organic Baby Spinach, 5 oz (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en/convenience/store/1741108/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "mushrooms": {
+      "sams": {
+        "generic": {
+          "size": 24.0,
+          "price": 4.36,
+          "label": "Whole White Mushrooms, 24 oz (whole — slice at home; sliced not seen)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 24.0,
+          "price": 4.36,
+          "label": "Whole White Mushrooms, 24 oz (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 2.49,
+          "label": "Signature Select Sliced White Mushrooms, 8 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 2.99,
+          "label": "Monterey Sliced White Mushrooms, 8 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "apples": {
+      "sams": {
+        "generic": {
+          "size": 5.0,
+          "price": 6.52,
+          "label": "Gala Apples, 5 lb bag",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 7.15,
+          "label": "Honeycrisp Apples, 4 lb bag",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 3.0,
+          "price": 4.99,
+          "label": "Gala Apples, 3 lb bag (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 6.99,
+          "label": "Honeycrisp Apples, 3 lb bag (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "oranges": {
+      "sams": {
+        "generic": {
+          "size": 12.0,
+          "price": 8.67,
+          "label": "Navel Oranges, 6 lb bag (~12 oranges; count estimated at ~8 oz each)",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 8.67,
+          "label": "Navel Oranges, 6 lb bag (~12 oranges; count estimated at ~8 oz each) (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 4.99,
+          "label": "Navel Oranges, 3 lb bag (~6 oranges) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 4.99,
+          "label": "Navel Oranges, 3 lb bag (~6 oranges) (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "lemons": {
+      "sams": {
+        "generic": {
+          "size": 12.0,
+          "price": 3.75,
+          "label": "Lemons, 3 lb bag (~12 lemons; count estimated)",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 3.75,
+          "label": "Lemons, 3 lb bag (~12 lemons; count estimated) (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 3.99,
+          "label": "Signature Select Lemons, 2 lb bag (~8) (est.; large lemons ~$0.99 each, $0.50 on sale)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 3.99,
+          "label": "Signature Select Lemons, 2 lb bag (~8) (est.; large lemons ~$0.99 each, $0.50 on sale) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "limes": {
+      "sams": {
+        "generic": {
+          "size": 20.0,
+          "price": 4.72,
+          "label": "Limes, 3 lb bag (~20 limes; count estimated)",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 20.0,
+          "price": 4.72,
+          "label": "Limes, 3 lb bag (~20 limes; count estimated) (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 0.33,
+          "label": "Lime, each (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 0.33,
+          "label": "Lime, each (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store)) (unbranded produce: same item both tiers)",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "garlic": {
+      "sams": {
+        "generic": {
+          "size": 160.0,
+          "price": 5.96,
+          "label": "Fresh Garlic Bulbs, 2 lb (~16 bulbs ≈ 160 cloves; count estimated)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 270.0,
+          "price": 11.47,
+          "label": "Spice World Fresh Peeled Garlic, 3 lb (≈270 cloves at ~5 g each; estimated count)",
+          "url": "https://www.samsclub.com/browse/Fresh-Vegetables/1539",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 10.0,
+          "price": 0.99,
+          "label": "Garlic bulb, each (≈10 cloves) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 0.99,
+          "label": "Garlic bulb, each (≈10 cloves) (unbranded produce: same item both tiers)",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "ginger": {
+      "sams": {
+        "generic": {
+          "size": 28.0,
+          "price": 5.97,
+          "label": "Organic Ginger Root, 1.75 lb (28 oz)",
+          "url": "https://www.samsclub.com/browse/Fresh-Vegetables/1539",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 28.0,
+          "price": 5.97,
+          "label": "Organic Ginger Root, 1.75 lb (28 oz) (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/Fresh-Vegetables/1539",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 4.0,
+          "price": 1.25,
+          "label": "Fresh ginger root, ~4 oz piece at ~$4.99/lb (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 1.25,
+          "label": "Fresh ginger root, ~4 oz piece at ~$4.99/lb (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "freshGreenBeans": {
+      "sams": {
+        "generic": {
+          "size": 1.75,
+          "price": 5.74,
+          "label": "Organic Green Beans, 28 oz",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 1.75,
+          "price": 5.74,
+          "label": "Organic Green Beans, 28 oz (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fresh-fruits-vegetables/1537",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 2.49,
+          "label": "Fresh green beans, loose, per lb (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 2.49,
+          "label": "Fresh green beans, loose, per lb (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "zucchini": {
+      "sams": {
+        "generic": {
+          "size": 3.0,
+          "price": 5.44,
+          "label": "Wholesum Organic Zucchini Squash, 3 lb",
+          "url": "https://www.samsclub.com/browse/Fresh-Vegetables/1539",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 5.44,
+          "label": "Wholesum Organic Zucchini Squash, 3 lb (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/Fresh-Vegetables/1539",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.79,
+          "label": "Zucchini, loose, ~1 lb (≈2 at $0.75 each on DoorDash) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.79,
+          "label": "Zucchini, loose, ~1 lb (≈2 at $0.75 each on DoorDash) (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "bananas": {
+      "sams": {
+        "generic": {
+          "size": 3.0,
+          "price": 1.47,
+          "label": "Bananas, 3 lb",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 1.47,
+          "label": "Bananas, 3 lb (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 0.69,
+          "label": "Bananas, per lb (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 0.69,
+          "label": "Bananas, per lb (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "grapes": {
+      "sams": {
+        "generic": {
+          "size": 3.0,
+          "price": 6.97,
+          "label": "Red Seedless Grapes, 3 lb",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 3.0,
+          "price": 6.97,
+          "label": "Red Seedless Grapes, 3 lb (unbranded produce: same item both tiers)",
+          "url": "https://www.samsclub.com/browse/fruit/1538",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 2.0,
+          "price": 5.98,
+          "label": "Seedless grapes, ~2 lb at $2.99/lb (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 2.0,
+          "price": 5.98,
+          "label": "Seedless grapes, ~2 lb at $2.99/lb (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cilantro": {
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 0.99,
+          "label": "Fresh cilantro, 1 bunch (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 0.99,
+          "label": "Fresh cilantro, 1 bunch (est.) (unbranded produce: same item both tiers)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "slaw": {
+      "jewel": {
+        "generic": {
+          "size": 14.0,
+          "price": 2.49,
+          "label": "Signature Farms Classic Coleslaw mix, 14 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 14.0,
+          "price": 2.99,
+          "label": "Fresh Express 3-Color Coleslaw, 14 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "broccoli": {
+      "sams": {
+        "generic": {
+          "size": 4.0,
+          "price": 6.86,
+          "label": "Member's Mark Steamable Broccoli Florets, 1 lb × 4",
+          "url": "https://www.samsclub.com/c/kp/frozen-vegetables",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 6.86,
+          "label": "Member's Mark Steamable Broccoli Florets, 1 lb × 4 (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/c/kp/frozen-vegetables",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 0.75,
+          "price": 1.99,
+          "label": "Signature Select Steamable Broccoli Florets, 12 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 0.68,
+          "price": 2.99,
+          "label": "Birds Eye Steamfresh Broccoli Florets, 10.8 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "vegetables": {
+      "sams": {
+        "generic": {
+          "size": 4.5,
+          "price": 5.76,
+          "label": "Member's Mark Mixed Vegetables, 12 oz × 6 bags",
+          "url": "https://www.samsclub.com/c/kp/frozen-vegetables",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 4.5,
+          "price": 5.76,
+          "label": "Member's Mark Mixed Vegetables, 12 oz × 6 bags (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/c/kp/frozen-vegetables",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 0.75,
+          "price": 1.49,
+          "label": "Signature Select Mixed Vegetables, 12 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 0.68,
+          "price": 2.99,
+          "label": "Birds Eye Steamfresh Mixed Vegetables, 10.8 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "peas": {
+      "jewel": {
+        "generic": {
+          "size": 12.0,
+          "price": 1.49,
+          "label": "Signature Select Sweet Peas, 12 oz frozen (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 2.49,
+          "label": "Birds Eye Steamfresh Sweet Peas, 10 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "corn": {
+      "jewel": {
+        "generic": {
+          "size": 0.75,
+          "price": 1.49,
+          "label": "Signature Select Sweet Corn, 12 oz frozen (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 0.63,
+          "price": 2.49,
+          "label": "Birds Eye Steamfresh Super Sweet Corn, 10 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "fries": {
+      "sams": {
+        "generic": {
+          "size": 64.0,
+          "price": 5.97,
+          "label": "Member's Mark Seasoned French Fries, 64 oz",
+          "url": "https://www.samsclub.com/c/kp/french-fries",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 128.0,
+          "price": 8.58,
+          "label": "Ore-Ida Crispy Crinkles French Fries, 8 lb",
+          "url": "https://www.samsclub.com/c/kp/french-fries",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 32.0,
+          "price": 3.99,
+          "label": "Signature Select Crinkle Cut Fries, 32 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 6.29,
+          "label": "Ore-Ida Golden Crinkles, 32 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "minis": {
+      "sams": {
+        "generic": {
+          "size": 12.0,
+          "price": 14.98,
+          "label": "Red Baron Deep Dish Singles Pepperoni & Four Cheese personal pizza combo, 12 pk (microwave-cook; no Member's Mark personal pizza) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/frozen-pizza",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 14.98,
+          "label": "Red Baron Deep Dish Singles Pepperoni & Four Cheese personal pizza combo, 12 pk (microwave-cook; no Member's Mark personal pizza)",
+          "url": "https://www.samsclub.com/c/kp/frozen-pizza",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 2.0,
+          "price": 4.49,
+          "label": "Red Baron Deep Dish Singles, 2 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 2.0,
+          "price": 4.49,
+          "label": "Red Baron Deep Dish Singles, 2 ct (est.; no store-brand personal pizza confirmed)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "potstickers": {
+      "sams": {
+        "generic": {
+          "size": 60.0,
+          "price": 11.64,
+          "label": "Member's Mark Chicken Potstickers with Vegetables, 48 oz (~60 pieces; count estimated)",
+          "url": "https://www.samsclub.com/c/kp/potstickers",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 60.0,
+          "price": 11.64,
+          "label": "Member's Mark Chicken Potstickers with Vegetables, 48 oz (~60 pieces; count estimated) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/c/kp/potstickers",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 24.0,
+          "price": 8.99,
+          "label": "Ling Ling Chicken & Vegetable Potstickers, 24 oz (~24 pieces) (est.; no store brand confirmed)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 24.0,
+          "price": 8.99,
+          "label": "Ling Ling Chicken & Vegetable Potstickers, 24 oz (~24 pieces) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "frozenWaffles": {
+      "sams": {
+        "generic": {
+          "size": 72.0,
+          "price": 11.87,
+          "label": "Eggo Homestyle Waffles, 72 ct (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/frozen-waffles",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 72.0,
+          "price": 11.87,
+          "label": "Eggo Homestyle Waffles, 72 ct",
+          "url": "https://www.samsclub.com/c/kp/frozen-waffles",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 10.0,
+          "price": 2.49,
+          "label": "Signature Select Homestyle Waffles, 10 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 3.99,
+          "label": "Eggo Homestyle Waffles, 10 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cornCobs": {
+      "jewel": {
+        "generic": {
+          "size": 12.0,
+          "price": 3.99,
+          "label": "Signature Select frozen mini corn on the cob, 12 ears (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 4.99,
+          "label": "Green Giant Nibblers mini corn on the cob, 12 ears (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "edamame": {
+      "jewel": {
+        "generic": {
+          "size": 0.75,
+          "price": 2.49,
+          "label": "Signature Select frozen shelled edamame, 12 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 0.75,
+          "price": 3.49,
+          "label": "Seapoint Farms shelled edamame, 12 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "beans": {
+      "sams": {
+        "generic": {
+          "size": 6.0,
+          "price": 6.74,
+          "label": "Bush's Black Beans, 15 oz × 6 cans (another snapshot: $6.24) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/black-beans",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 6.74,
+          "label": "Bush's Black Beans, 15 oz × 6 cans (another snapshot: $6.24)",
+          "url": "https://www.samsclub.com/c/kp/black-beans",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.19,
+          "label": "Signature Select Black Beans, 15 oz can (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.79,
+          "label": "Bush's Black Beans, 15 oz can (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "chickpeas": {
+      "sams": {
+        "generic": {
+          "size": 6.0,
+          "price": 6.38,
+          "label": "Bush's Best Fancy Garbanzo Beans, 16 oz × 6 cans (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/s/canned+beans",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 6.38,
+          "label": "Bush's Best Fancy Garbanzo Beans, 16 oz × 6 cans",
+          "url": "https://www.samsclub.com/s/canned+beans",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.29,
+          "label": "Signature Select Garbanzo Beans, 15.5 oz can (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.79,
+          "label": "Bush's Garbanzo Beans, 16 oz can (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "tomatoes": {
+      "sams": {
+        "generic": {
+          "size": 12.0,
+          "price": 9.98,
+          "label": "Member's Mark Diced Tomatoes in Tomato Juice, 14.5 oz × 12 cans",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Diced-Tomatoes-in-Tomato-Juice-14-5-oz-12-pk/19396803121",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 9.88,
+          "label": "Hunt's Fire Roasted Diced Tomatoes, 14.5 oz × 8 cans",
+          "url": "https://www.samsclub.com/s/tomatoes",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.29,
+          "label": "Signature Select Diced Tomatoes, 14.5 oz can (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.99,
+          "label": "Hunt's Diced Tomatoes, 14.5 oz can (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "marinara": {
+      "sams": {
+        "generic": {
+          "size": 135.0,
+          "price": 8.98,
+          "label": "Prego Traditional Italian Sauce, 45 oz × 3 (lowest cost; no Member's Mark marinara seen)",
+          "url": "https://www.samsclub.com/c/kp/pasta-sauce",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 44.0,
+          "price": 9.76,
+          "label": "Rao's Homemade Marinara, 22 oz × 2",
+          "url": "https://www.samsclub.com/c/kp/pasta-sauce",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 24.0,
+          "price": 2.49,
+          "label": "Signature Select Marinara / Traditional Pasta Sauce, 24 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 24.0,
+          "price": 3.49,
+          "label": "Prego Traditional Italian Sauce, 24 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "greenBeans": {
+      "sams": {
+        "generic": {
+          "size": 8.0,
+          "price": 8.42,
+          "label": "Del Monte Cut Green Beans, 14.5 oz × 8 cans (regular $8.42; $6.62 instant savings) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/browse/canned-fruits-vegetables/1468",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 8.42,
+          "label": "Del Monte Cut Green Beans, 14.5 oz × 8 cans (regular $8.42; $6.62 instant savings)",
+          "url": "https://www.samsclub.com/browse/canned-fruits-vegetables/1468",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.09,
+          "label": "Signature Select Cut Green Beans, 14.5 oz can (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.79,
+          "label": "Del Monte Cut Green Beans, 14.5 oz can (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cannedCorn": {
+      "sams": {
+        "generic": {
+          "size": 8.0,
+          "price": 8.42,
+          "label": "Del Monte Golden Sweet Whole Kernel Corn, 15.25 oz × 8 cans (regular $8.42; $6.62 instant savings) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/browse/canned-fruits-vegetables/1468",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 8.42,
+          "label": "Del Monte Golden Sweet Whole Kernel Corn, 15.25 oz × 8 cans (regular $8.42; $6.62 instant savings)",
+          "url": "https://www.samsclub.com/browse/canned-fruits-vegetables/1468",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.29,
+          "label": "Signature Select Whole Kernel Golden Sweet Corn, 15.25 oz can (est.; DoorDash showed $1.19 on sale)",
+          "url": "https://www.doordash.com/en/convenience/store/1740960/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.79,
+          "label": "Del Monte Whole Kernel Corn, 15.25 oz can (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cannedCarrots": {
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.29,
+          "label": "Signature Select Sliced Carrots, 14.5 oz can (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 1.79,
+          "label": "Del Monte Sliced Carrots, 14.5 oz can (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "chickenBroth": {
+      "sams": {
+        "generic": {
+          "size": 24.0,
+          "price": 7.98,
+          "label": "Member's Mark Chicken Broth, 32 oz × 6 = 24 cups (regular $7.98; $6.98 instant savings)",
+          "url": "https://www.samsclub.com/c/kp/chicken-broth",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 24.0,
+          "price": 9.98,
+          "label": "Swanson Chicken Broth, 32 oz × 6 = 24 cups",
+          "url": "https://www.samsclub.com/c/kp/chicken-broth",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 4.0,
+          "price": 1.99,
+          "label": "Signature Select Chicken Broth, 32 oz = 4 cups (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 3.29,
+          "label": "Swanson Chicken Broth, 32 oz = 4 cups (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "pineapple": {
+      "sams": {
+        "generic": {
+          "size": 4.58,
+          "price": 9.98,
+          "label": "Dole Tropical Gold Pineapple Chunks, 15.25 oz × 6 cans (= 4.6 twenty-ounce cans' worth) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/browse/canned-fruits-vegetables/1468",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 4.58,
+          "price": 9.98,
+          "label": "Dole Tropical Gold Pineapple Chunks, 15.25 oz × 6 cans (= 4.6 twenty-ounce cans' worth)",
+          "url": "https://www.samsclub.com/browse/canned-fruits-vegetables/1468",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.79,
+          "label": "Signature Select Pineapple Chunks in Juice, 20 oz can (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 2.49,
+          "label": "Dole Pineapple Chunks in Juice, 20 oz can (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "porkBeans": {
+      "sams": {
+        "generic": {
+          "size": 4.71,
+          "price": 11.48,
+          "label": "Bush's Original Baked Beans (with bacon), 16.5 oz × 8 cans (= 4.7 twenty-eight-ounce cans' worth) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/s/canned+beans",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 4.71,
+          "price": 11.48,
+          "label": "Bush's Original Baked Beans (with bacon), 16.5 oz × 8 cans (= 4.7 twenty-eight-ounce cans' worth)",
+          "url": "https://www.samsclub.com/s/canned+beans",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 1.0,
+          "price": 1.99,
+          "label": "Signature Select Pork & Beans, 28 oz can (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 1.0,
+          "price": 2.49,
+          "label": "Van Camp's Pork and Beans, 28 oz can (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "applesauce": {
+      "sams": {
+        "generic": {
+          "size": 36.0,
+          "price": 9.98,
+          "label": "Applesauce cups, 4 oz × 36 club pack (NOT seen on samsclub.com; estimate)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 36.0,
+          "price": 12.98,
+          "label": "Mott's Applesauce cups, 4 oz × 36 (NOT seen on samsclub.com; estimate)",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 2.29,
+          "label": "Signature Select Unsweetened Applesauce cups, 6 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 3.49,
+          "label": "Mott's Unsweetened Applesauce cups, 6 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "jelly": {
+      "sams": {
+        "generic": {
+          "size": 64.0,
+          "price": 5.98,
+          "label": "Grape jelly, ~2 × 32 oz club pack (NOT seen on samsclub.com; estimate)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 64.0,
+          "price": 7.48,
+          "label": "Smucker's Concord Grape Jelly, 2 × 32 oz (NOT seen on samsclub.com; estimate)",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 30.0,
+          "price": 2.49,
+          "label": "Signature Select Grape Jelly, 30 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 30.0,
+          "price": 3.99,
+          "label": "Welch's Concord Grape Jelly, 30 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "tikka": {
+      "jewel": {
+        "generic": {
+          "size": 15.0,
+          "price": 3.99,
+          "label": "Patak's Tikka Masala Simmer Sauce, 15 oz (no Jewel store brand confirmed) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 12.5,
+          "price": 6.49,
+          "label": "Maya Kaimal Tikka Masala Simmer Sauce, 12.5 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "hummus": {
+      "sams": {
+        "generic": {
+          "size": 32.0,
+          "price": 5.98,
+          "label": "Member's Mark Classic Hummus, 32 oz (product seen on samsclub.com; price not captured — estimate)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 7.98,
+          "label": "Sabra Classic Hummus, 32 oz (estimate)",
+          "confidence": "estimated"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 10.0,
+          "price": 2.99,
+          "label": "Signature Select Classic Hummus, 10 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 10.0,
+          "price": 4.49,
+          "label": "Sabra Classic Hummus, 10 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "jalapenos": {
+      "sams": {
+        "generic": {
+          "size": 64.0,
+          "price": 4.98,
+          "label": "La Costeña Pickled Jalapeño Nacho Slices, 64 oz (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 64.0,
+          "price": 4.98,
+          "label": "La Costeña Pickled Jalapeño Nacho Slices, 64 oz",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 12.0,
+          "price": 1.99,
+          "label": "Signature Select Sliced Jalapeños, 12 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 12.0,
+          "price": 2.29,
+          "label": "La Costeña Nacho Jalapeño Slices, 12 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "pickles": {
+      "sams": {
+        "generic": {
+          "size": 81.0,
+          "price": 5.97,
+          "label": "Member's Mark Dill Pickle Chips, 81 fl oz jar",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 81.0,
+          "price": 5.97,
+          "label": "Member's Mark Dill Pickle Chips, 81 fl oz jar (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 32.0,
+          "price": 3.29,
+          "label": "Signature Select Hamburger Dill Pickle Chips, 32 oz (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en-US/convenience/store/1748780/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 4.29,
+          "label": "Vlasic Hamburger Dill Chips, 32 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "salsa": {
+      "sams": {
+        "generic": {
+          "size": 48.0,
+          "price": 7.48,
+          "label": "Member's Mark Organic Salsa, 24 oz × 2",
+          "url": "https://www.samsclub.com/c/kp/salsa",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 76.0,
+          "price": 7.48,
+          "label": "Pace Chunky Salsa Medium, 38 oz × 2",
+          "url": "https://www.samsclub.com/c/kp/salsa",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 16.0,
+          "price": 2.49,
+          "label": "Signature Select Thick & Chunky Salsa, 16 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 3.29,
+          "label": "Pace Chunky Salsa, 16 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "oil": {
+      "sams": {
+        "generic": {
+          "size": 384.0,
+          "price": 14.98,
+          "label": "Member's Mark Canola Oil, 192 fl oz (= 384 tbsp)",
+          "url": "https://www.samsclub.com/c/kp/vegetable-oil",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 640.0,
+          "price": 32.48,
+          "label": "Mazola Corn Oil, 2.5 gal (= 640 tbsp)",
+          "url": "https://www.samsclub.com/c/kp/vegetable-oil",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 96.0,
+          "price": 4.99,
+          "label": "Signature Select Canola Oil, 48 fl oz (= 96 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 96.0,
+          "price": 6.99,
+          "label": "Crisco Pure Vegetable Oil, 48 fl oz (= 96 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "soy": {
+      "sams": {
+        "generic": {
+          "size": 128.0,
+          "price": 7.38,
+          "label": "Kikkoman Traditionally Brewed Soy Sauce, 64 fl oz (= 128 tbsp; regular, not reduced-sodium) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/soy-sauce",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 128.0,
+          "price": 7.38,
+          "label": "Kikkoman Traditionally Brewed Soy Sauce, 64 fl oz (= 128 tbsp; regular, not reduced-sodium)",
+          "url": "https://www.samsclub.com/c/kp/soy-sauce",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 30.0,
+          "price": 2.49,
+          "label": "Signature Select Less Sodium Soy Sauce, 15 fl oz (= 30 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 30.0,
+          "price": 4.69,
+          "label": "Kikkoman Soy Sauce, 15 fl oz (= 30 tbsp) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en-US/convenience/store/1748780/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "honey": {
+      "sams": {
+        "generic": {
+          "size": 64.0,
+          "price": 8.78,
+          "label": "Member's Mark Wildflower Pure Premium Honey, 48 oz (= ~64 tbsp at 21 g/tbsp)",
+          "url": "https://www.samsclub.com/ip/15006863838",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 64.0,
+          "price": 8.78,
+          "label": "Member's Mark Wildflower Pure Premium Honey, 48 oz (= ~64 tbsp at 21 g/tbsp) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/ip/15006863838",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 16.0,
+          "price": 4.49,
+          "label": "Signature Select Clover Honey, 12 oz bear (= ~16 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 16.0,
+          "price": 5.49,
+          "label": "Sue Bee Clover Honey, 12 oz (= ~16 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "starch": {
+      "jewel": {
+        "generic": {
+          "size": 56.0,
+          "price": 1.99,
+          "label": "Signature Kitchens Pure Corn Starch, 16 oz (= ~56 tbsp at 8 g/tbsp) (est.)",
+          "url": "https://www.instacart.com/store/jewel-osco/products/122403-signature-kitchens-corn-starch-pure-16-oz?retailerSlug=jewel-osco",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 56.0,
+          "price": 2.99,
+          "label": "Argo Corn Starch, 16 oz (= ~56 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "peanut": {
+      "sams": {
+        "generic": {
+          "size": 141.0,
+          "price": 7.78,
+          "label": "Member's Mark Natural Creamy Peanut Butter, 40 oz × 2 (= ~141 tbsp at 16 g/tbsp)",
+          "url": "https://www.samsclub.com/c/kp/peanut-butter",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 170.0,
+          "price": 11.98,
+          "label": "Jif Creamy Peanut Butter, 48 oz × 2 (= ~170 tbsp)",
+          "url": "https://www.samsclub.com/c/kp/peanut-butter",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 28.0,
+          "price": 2.49,
+          "label": "Signature Select Creamy Peanut Butter, 16 oz (= ~28 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 28.0,
+          "price": 3.99,
+          "label": "Jif Creamy Peanut Butter, 16 oz (= ~28 tbsp) (est.; DoorDash Jewel showed $3.89 on sale)",
+          "url": "https://www.doordash.com/en/convenience/store/1740960/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "sesame": {
+      "jewel": {
+        "generic": {
+          "size": 30.0,
+          "price": 5.79,
+          "label": "Signature Select Toasted Sesame Oil, ~5 fl oz (= ~30 tsp) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/en/convenience/store/1740960/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 33.0,
+          "price": 6.49,
+          "label": "Kadoya Pure Sesame Oil, 5.5 fl oz (= 33 tsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "bbq": {
+      "sams": {
+        "generic": {
+          "size": 122.0,
+          "price": 6.98,
+          "label": "Sweet Baby Ray's Original Barbecue Sauce, 40 oz × 2 (= ~122 tbsp at 18.5 g/tbsp; no anchovy/Worcestershire on its label) (no Member's Mark version seen online, so both tiers use this brand)",
+          "url": "https://www.samsclub.com/c/kp/bbq-sauce",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 122.0,
+          "price": 6.98,
+          "label": "Sweet Baby Ray's Original Barbecue Sauce, 40 oz × 2 (= ~122 tbsp at 18.5 g/tbsp; no anchovy/Worcestershire on its label)",
+          "url": "https://www.samsclub.com/c/kp/bbq-sauce",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 27.0,
+          "price": 1.99,
+          "label": "Signature Select Original BBQ Sauce, 18 oz (= ~27 tbsp) (est.) — read the label; skip any with Worcestershire/anchovies",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 27.0,
+          "price": 2.99,
+          "label": "Sweet Baby Ray's Original BBQ Sauce, 18 oz (= ~27 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "mustard": {
+      "sams": {
+        "generic": {
+          "size": 198.0,
+          "price": 5.38,
+          "label": "French's Classic Yellow Mustard, 105 oz jug (= ~198 tbsp at 15 g/tbsp; lowest cost, no Member's Mark seen)",
+          "url": "https://www.samsclub.com/s/mustard",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 113.0,
+          "price": 5.48,
+          "label": "French's Classic Yellow Mustard, 30 oz × 2 (= ~113 tbsp; regular $5.48, $4.48 instant savings)",
+          "url": "https://www.samsclub.com/s/mustard",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 26.0,
+          "price": 1.29,
+          "label": "Signature Select Yellow Mustard, 14 oz (= ~26 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 26.0,
+          "price": 2.49,
+          "label": "French's Classic Yellow Mustard, 14 oz (= ~26 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "ketchup": {
+      "sams": {
+        "generic": {
+          "size": 190.0,
+          "price": 5.98,
+          "label": "Member's Mark Fancy Ketchup, 114 oz (= ~190 tbsp at 17 g/tbsp; product page seen, price not captured — estimate)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 220.0,
+          "price": 10.98,
+          "label": "Heinz Original Tomato Ketchup, 44 oz × 3 (= ~220 tbsp)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 63.0,
+          "price": 3.49,
+          "label": "Signature Select Tomato Ketchup, ~38 oz (= ~63 tbsp) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 53.0,
+          "price": 4.99,
+          "label": "Heinz Tomato Ketchup, 32 oz (= ~53 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "mayo": {
+      "sams": {
+        "generic": {
+          "size": 256.0,
+          "price": 12.48,
+          "label": "Member's Mark Foodservice Extra Heavy Mayonnaise, 128 fl oz (= 256 tbsp)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 128.0,
+          "price": 7.48,
+          "label": "Hellmann's Real Mayonnaise, 64 fl oz (= 128 tbsp)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 60.0,
+          "price": 3.99,
+          "label": "Signature Select Mayonnaise, 30 fl oz (= 60 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 60.0,
+          "price": 6.99,
+          "label": "Hellmann's Real Mayonnaise, 30 fl oz (= 60 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "ranch": {
+      "sams": {
+        "generic": {
+          "size": 256.0,
+          "price": 10.98,
+          "label": "Member's Mark Ranch Dressing, 1 gal (= 256 tbsp)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 160.0,
+          "price": 12.48,
+          "label": "Hidden Valley Original Ranch, 40 fl oz × 2 (= 160 tbsp)",
+          "url": "https://www.samsclub.com/browse/condiments-sauces/1529",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 32.0,
+          "price": 2.89,
+          "label": "Signature Select Ranch Dressing, 16 fl oz (= 32 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 32.0,
+          "price": 4.49,
+          "label": "Hidden Valley Original Ranch, 16 fl oz (= 32 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "riceVinegar": {
+      "jewel": {
+        "generic": {
+          "size": 24.0,
+          "price": 3.29,
+          "label": "Marukan Rice Vinegar, 12 fl oz (= 24 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 24.0,
+          "price": 3.79,
+          "label": "Nakano Rice Vinegar, 12 fl oz (= 24 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "ciderVinegar": {
+      "jewel": {
+        "generic": {
+          "size": 64.0,
+          "price": 2.49,
+          "label": "Signature Select Apple Cider Vinegar, 32 fl oz (= 64 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 64.0,
+          "price": 3.79,
+          "label": "Heinz Apple Cider Vinegar, 32 fl oz (= 64 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "brownSugar": {
+      "jewel": {
+        "generic": {
+          "size": 66.0,
+          "price": 2.99,
+          "label": "Signature Select Light Brown Sugar, 2 lb (= ~66 packed tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 66.0,
+          "price": 4.29,
+          "label": "Domino Light Brown Sugar, 2 lb (= ~66 tbsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "taco": {
+      "sams": {
+        "generic": {
+          "size": 87.0,
+          "price": 6.98,
+          "label": "Member's Mark Taco Seasoning, 23 oz (= ~87 tbsp at ~7.5 g/tbsp; contains salt — Sam's has no salt-free version online)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 87.0,
+          "price": 6.98,
+          "label": "Member's Mark Taco Seasoning, 23 oz (= ~87 tbsp at ~7.5 g/tbsp; contains salt — Sam's has no salt-free version online) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 4.0,
+          "price": 0.89,
+          "label": "Signature Select Taco Seasoning Mix, 1 oz packet (= ~4 tbsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 4.0,
+          "price": 1.19,
+          "label": "McCormick Original Taco Seasoning Mix, 1 oz packet (= ~4 tbsp) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store); a 30% Less Sodium version exists)",
+          "url": "https://www.doordash.com/en-US/convenience/store/1748780/",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "paprika": {
+      "jewel": {
+        "generic": {
+          "size": 24.0,
+          "price": 3.99,
+          "label": "Signature Select Smoked Paprika, ~2 oz (= ~24 tsp at 2.3 g/tsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 21.0,
+          "price": 6.49,
+          "label": "McCormick Smoked Paprika, 1.75 oz (= ~21 tsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "oregano": {
+      "sams": {
+        "generic": {
+          "size": 156.0,
+          "price": 5.98,
+          "label": "Member's Mark Oregano, 5.5 oz (= ~156 tsp at ~1 g/tsp for dried leaf)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 156.0,
+          "price": 5.98,
+          "label": "Member's Mark Oregano, 5.5 oz (= ~156 tsp at ~1 g/tsp for dried leaf) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 21.0,
+          "price": 2.49,
+          "label": "Signature Select Oregano Leaves, 0.75 oz (= ~21 tsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 21.0,
+          "price": 4.79,
+          "label": "McCormick Oregano Leaves, 0.75 oz (= ~21 tsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "pepper": {
+      "sams": {
+        "generic": {
+          "size": 222.0,
+          "price": 7.98,
+          "label": "Member's Mark Fine Ground Black Pepper, 18 oz (= ~222 tsp at 2.3 g/tsp; regular $7.98, $6.98 instant savings)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 222.0,
+          "price": 7.98,
+          "label": "Member's Mark Fine Ground Black Pepper, 18 oz (= ~222 tsp at 2.3 g/tsp; regular $7.98, $6.98 instant savings) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 49.0,
+          "price": 3.99,
+          "label": "Signature Select Ground Black Pepper, 4 oz (= ~49 tsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 37.0,
+          "price": 5.49,
+          "label": "McCormick Pure Ground Black Pepper, 3 oz (= ~37 tsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "salt": {
+      "sams": {
+        "generic": {
+          "size": 170.0,
+          "price": 4.12,
+          "label": "Member's Mark Sea Salt, 36 oz (= ~170 tsp at 6 g/tsp)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 170.0,
+          "price": 4.12,
+          "label": "Member's Mark Sea Salt, 36 oz (= ~170 tsp at 6 g/tsp) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 123.0,
+          "price": 0.99,
+          "label": "Signature Select Iodized Salt, 26 oz (= ~123 tsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 123.0,
+          "price": 2.89,
+          "label": "Morton Iodized Salt, 26 oz (= ~123 tsp) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "cumin": {
+      "sams": {
+        "generic": {
+          "size": 216.0,
+          "price": 8.98,
+          "label": "Member's Mark Ground Cumin, 16 oz (= ~216 tsp at 2.1 g/tsp)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 216.0,
+          "price": 8.98,
+          "label": "Member's Mark Ground Cumin, 16 oz (= ~216 tsp at 2.1 g/tsp) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 24.0,
+          "price": 3.99,
+          "label": "Signature Select Ground Cumin, ~1.75 oz (= ~24 tsp) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store); $3.49 on sale)",
+          "url": "https://www.doordash.com/en/convenience/store/1741108/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 20.0,
+          "price": 5.79,
+          "label": "McCormick Ground Cumin, 1.5 oz (= ~20 tsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "garlicPowder": {
+      "sams": {
+        "generic": {
+          "size": 206.0,
+          "price": 10.18,
+          "label": "Member's Mark Garlic Powder, 22.5 oz (= ~206 tsp at 3.1 g/tsp)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 206.0,
+          "price": 10.18,
+          "label": "Member's Mark Garlic Powder, 22.5 oz (= ~206 tsp at 3.1 g/tsp) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 27.0,
+          "price": 4.69,
+          "label": "Signature Select Garlic Powder, ~3 oz (= ~27 tsp) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))",
+          "url": "https://www.doordash.com/convenience/store/1748639",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 28.0,
+          "price": 6.49,
+          "label": "McCormick Garlic Powder, 3.12 oz (= ~28 tsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "italianSeasoning": {
+      "sams": {
+        "generic": {
+          "size": 170.0,
+          "price": 6.98,
+          "label": "Member's Mark Italian Seasoning, 6 oz (= ~170 tsp at ~1 g/tsp)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 170.0,
+          "price": 6.98,
+          "label": "Member's Mark Italian Seasoning, 6 oz (= ~170 tsp at ~1 g/tsp) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 25.0,
+          "price": 3.99,
+          "label": "Signature Select Italian Seasoning, ~0.9 oz (= ~25 tsp) (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store); $3.49 on sale)",
+          "url": "https://www.doordash.com/en/convenience/store/1741108/",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 21.0,
+          "price": 4.99,
+          "label": "McCormick Italian Seasoning, 0.75 oz (= ~21 tsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "redPepperFlakes": {
+      "sams": {
+        "generic": {
+          "size": 213.0,
+          "price": 5.98,
+          "label": "Member's Mark Crushed Red Pepper, 13.5 oz (= ~213 tsp at 1.8 g/tsp)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 213.0,
+          "price": 5.98,
+          "label": "Member's Mark Crushed Red Pepper, 13.5 oz (= ~213 tsp at 1.8 g/tsp) (Sam's online shows no national brand for this; same item as store brand)",
+          "url": "https://www.samsclub.com/browse/pantry/1544",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 24.0,
+          "price": 2.99,
+          "label": "Signature Select Crushed Red Pepper, 1.5 oz (= ~24 tsp) (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 24.0,
+          "price": 4.99,
+          "label": "McCormick Crushed Red Pepper, 1.5 oz (= ~24 tsp) (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "tortillaChips": {
+      "sams": {
+        "generic": {
+          "size": 24.0,
+          "price": 3.84,
+          "label": "Calidad Yellow Corn Tortilla Chips, 24 oz (no plain Member's Mark chip seen)",
+          "url": "https://www.samsclub.com/c/kp/tortilla-chips",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 18.63,
+          "price": 4.48,
+          "label": "Tostitos Restaurant Style Tortilla Chips, 18.63 oz",
+          "url": "https://www.samsclub.com/c/kp/tortilla-chips",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 13.0,
+          "price": 2.99,
+          "label": "Signature Select Restaurant Style Tortilla Chips, 13 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 13.0,
+          "price": 5.79,
+          "label": "Tostitos Original Restaurant Style, 13 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "coffee": {
+      "sams": {
+        "generic": {
+          "size": 40.0,
+          "price": 17.52,
+          "label": "Member's Mark Classic Medium Roast Ground Coffee, 40 oz",
+          "url": "https://www.samsclub.com/c/kp/ground-coffee",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 43.5,
+          "price": 17.88,
+          "label": "Folgers Classic Medium Roast Ground Coffee, 43.5 oz",
+          "url": "https://www.samsclub.com/c/kp/ground-coffee",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 24.0,
+          "price": 9.99,
+          "label": "Signature Select Medium Roast Ground Coffee, ~24 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 25.9,
+          "price": 12.99,
+          "label": "Folgers Classic Roast Ground Coffee, 25.9 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "crackers": {
+      "sams": {
+        "generic": {
+          "size": 48.0,
+          "price": 9.98,
+          "label": "Cheez-It Original, 24 oz × 2 (no plain Member's Mark snack cracker seen)",
+          "url": "https://www.samsclub.com/c/kp/crackers",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 66.0,
+          "price": 11.82,
+          "label": "Pepperidge Farm Goldfish Cheddar, 22 oz × 3",
+          "url": "https://www.samsclub.com/c/kp/crackers",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 13.7,
+          "price": 2.99,
+          "label": "Signature Select Butter Crackers, 13.7 oz (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 13.7,
+          "price": 5.29,
+          "label": "Ritz Original Crackers, 13.7 oz (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "granolaBars": {
+      "sams": {
+        "generic": {
+          "size": 60.0,
+          "price": 11.48,
+          "label": "Quaker Chewy Granola Bar Variety Pack, 60 ct (no Member's Mark granola bar seen)",
+          "url": "https://www.samsclub.com/c/kp/granola-bars",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 49.0,
+          "price": 14.98,
+          "label": "Nature Valley Oats 'n Honey Crunchy Granola Bars, 49 ct (regular $14.98; $11.98 instant savings)",
+          "url": "https://www.samsclub.com/c/kp/granola-bars",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 8.0,
+          "price": 2.49,
+          "label": "Signature Select Chewy Granola Bars, 8 ct (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 8.0,
+          "price": 3.79,
+          "label": "Quaker Chewy Granola Bars, 8 ct (est.)",
+          "confidence": "estimated"
+        }
+      }
+    },
+    "popcorn": {
+      "sams": {
+        "generic": {
+          "size": 32.0,
+          "price": 9.98,
+          "label": "ACT II Butter Lovers Microwave Popcorn, 32 bags (regular $9.98; $8.98 instant savings)",
+          "url": "https://www.samsclub.com/c/kp/microwave-popcorn",
+          "confidence": "listed"
+        },
+        "name": {
+          "size": 30.0,
+          "price": 9.98,
+          "label": "Pop Secret Movie Theater Butter, 30 bags",
+          "url": "https://www.samsclub.com/c/kp/microwave-popcorn",
+          "confidence": "listed"
+        }
+      },
+      "jewel": {
+        "generic": {
+          "size": 6.0,
+          "price": 2.99,
+          "label": "Signature Select Butter Microwave Popcorn, 6 bags (est.)",
+          "confidence": "estimated"
+        },
+        "name": {
+          "size": 6.0,
+          "price": 5.29,
+          "label": "Orville Redenbacher's Butter, 6 bags (est.)",
+          "confidence": "estimated"
+        }
+      }
+    }
+  }
+}
