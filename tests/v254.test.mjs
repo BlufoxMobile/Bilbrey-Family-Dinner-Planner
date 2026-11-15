@@ -145,3 +145,17 @@ test('coupon searches: one per brand on the Jewel list', async () => {
   assert.equal(s.find((g) => g.term === "boar's head").names.length, 2);
   assert.equal(s.find((g) => g.term === 'buns').clipped, true);
 });
+
+test('the pantry counts jars, boxes and bags; the planner works out the ounces', async () => {
+  const { packageOf, packagesFor, plural } = await import('../app/packages.js');
+  const m = packageOf(db, {}, 'marinara');
+  assert.equal(m.word, 'jar');
+  assert.ok(m.per >= 20, 'a jar of marinara is about 24 oz');
+  assert.equal(packagesFor(48, m.per), 2);
+  const bread = packageOf(db, { myProducts: { 'jewel/bread': { name: "Dave's Killer Bread Thin-Sliced Powerseed", packSize: 22, date: '2026-11-15' } } }, 'bread');
+  assert.deepEqual([bread.per, bread.word], [22, 'loaf'], 'the loaf the family bought sets the size');
+  assert.equal(packageOf(db, {}, 'cannedCorn').counted, true, 'cans already count cans');
+  assert.equal(packageOf(db, {}, 'salt'), null, 'staples are stocked or not');
+  assert.equal(plural('box', 2), 'boxes');
+  assert.equal(packagesFor(11, 24), 0.5, 'quarters: about half a jar');
+});

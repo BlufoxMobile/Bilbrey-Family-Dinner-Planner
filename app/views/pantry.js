@@ -15,6 +15,7 @@ import { scanQtyIn } from '../scanqty.js';
 import { PLACES, KINDS, placeOf, kindOfItem, useSoon } from '../freshness.js';
 import { itemPhoto, hydratePhotos, rememberPhoto, cropItem, photoUrl } from '../photos.js';
 import { del } from '../state.js';
+import { packageOf, packagesFor, plural } from '../packages.js';
 
 export const title = () => 'Pantry';
 
@@ -60,19 +61,30 @@ function pantryRow(app, id, p) {
   const staple = m.kind === 'staple';
   const ph = itemPhoto(app.state, id);
   const soon = useBy?.get(id);
+  // Count jars, boxes and bags; the planner works out the ounces (SPEC §13.5).
+  const pk = staple ? null : packageOf(app.db, app.state, id);
+  const byPack = !!pk && !pk.counted;
+  const count = byPack ? packagesFor(typeof p.qty === 'number' ? p.qty : 0, pk.per) : null;
   return html`<li class="pan-row ${p.low ? 'is-low' : ''}" id="pan-${id}">
     <button type="button" class="pan-thumb ${ph ? 'has-photo' : ''}" data-action="pan:photo" data-id="${id}" aria-label="${ph ? `Picture of ${m.name}` : `Add a picture of ${m.name}`}">${ph ? html`<img data-photo="${ph}" alt="" loading="lazy" decoding="async">` : ic('camera', { size: 20 })}</button>
     <span class="pan-name"><b>${m.name}</b>
       ${when(soon, () => html`<small class="pan-soon ${soon.daysLeft <= 0 ? 'is-now' : ''}">${useByText(app, soon)}</small>`)}
       ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
-      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? `${unitText(p.qty, m.unit)} on hand` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}${p.by ? `, updated by ${p.by}` : ''}</small></span>
+      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `${fmtQty(count)} ${plural(pk.word, count)} (about ${unitText(p.qty, m.unit)})` : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}${p.by ? `, updated by ${p.by}` : ''}</small></span>
     <span class="pan-ctrl">
       ${staple
         ? switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `${m.name} stocked until low` })
+        : byPack ? html`<span class="qty-edit qty-pack">
+            <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${pk.per}" aria-label="One less ${pk.word} of ${m.name}">${ic('minus', { size: 18 })}</button>
+            <input class="qty-input" type="number" inputmode="decimal" min="0" step="any" value="${typeof p.qty === 'number' ? count : ''}" data-change="pan:qty" data-id="${id}" data-per="${pk.per}" aria-label="How many ${plural(pk.word, 2)} of ${m.name}">
+            <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${pk.per}" aria-label="One more ${pk.word} of ${m.name}">${ic('plus', { size: 18 })}</button>
+            <span class="qty-unit">${plural(pk.word, 2)}</span>
+          </span>`
         : html`<span class="qty-edit">
-            <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${stepFor(m.unit)}" aria-label="Less ${m.name}">${ic('minus', { size: 18 })}</button>
+            <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${pk?.counted ? 1 : stepFor(m.unit)}" aria-label="Less ${m.name}">${ic('minus', { size: 18 })}</button>
             <input class="qty-input" type="number" inputmode="decimal" min="0" step="any" value="${typeof p.qty === 'number' ? round2(p.qty) : ''}" data-change="pan:qty" data-id="${id}" aria-label="${m.name} amount in ${m.unit}">
-            <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${stepFor(m.unit)}" aria-label="More ${m.name}">${ic('plus', { size: 18 })}</button>
+            <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${pk?.counted ? 1 : stepFor(m.unit)}" aria-label="More ${m.name}">${ic('plus', { size: 18 })}</button>
+            ${when(pk?.counted, () => html`<span class="qty-unit">${m.unit}</span>`)}
           </span>`}
       <button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Running low'}</button>
       <button type="button" class="icon-btn" data-action="pan:remove" data-id="${id}" aria-label="Remove ${m.name}">${ic('trash', { size: 20 })}</button>
@@ -493,7 +505,8 @@ export const actions = {
   'pan:qty': (app, el) => {
     const v = el.value === '' ? 0 : Number(el.value);
     if (!Number.isFinite(v) || v < 0) return;
-    app.commit(setPantryOps(app.db, app.state, { id: el.dataset.id, qty: v, who: app.who() }), { quiet: true });
+    const per = Number(el.dataset.per) > 0 ? Number(el.dataset.per) : 1; // a count of packages
+    app.commit(setPantryOps(app.db, app.state, { id: el.dataset.id, qty: round2(v * per), who: app.who() }), { quiet: true });
   },
   'pan:stock': (app, el) => {
     const id = el.dataset.id;

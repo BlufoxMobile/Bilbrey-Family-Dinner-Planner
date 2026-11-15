@@ -594,6 +594,12 @@ sweet potatoes get cinnamon.
   the list (Boar's Head, BodyArmor…), each opening Jewel's coupon page already searched; on iPhone the
   pages can open in the Chrome app (`googlechromes://`, a per-phone choice). The family clips there.
 
+### 13.5 Counting in packages
+- Measured pantry items are counted in packages (jars, boxes, bags, loaves; quarters allowed). One
+  package is the size of the product the family last bought (`myProducts`, from receipts), else the
+  catalog's single-store pack; the amount is still kept in recipe units (`app/packages.js`). Items
+  whose unit already counts packages (cans, bottles, bowls, pouches) show their own unit.
+
 ### 13.4 Five extras (Claude's picks for "save money, eat healthier")
 1. Use it first: perishables get an estimated use-by from the day they came home (`pantry[id].since`,
    set when stock is added by hand, scan, Done shopping or a receipt). The package date wins.
