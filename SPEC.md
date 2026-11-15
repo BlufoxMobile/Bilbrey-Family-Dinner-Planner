@@ -364,3 +364,85 @@ health: { showNutrition: true }                        // per-device preferences
   Never preachy; never on Knox/kids' items unless their parent opens the editor.
 - Coupons: a "Clip Jewel coupons" button (and Sam's Instant Savings link) in the List screen and in
   the store handoff sheet, using URLs in data/stores.json (`coupons` field per store).
+
+---------------------------------------------------------------------------------------
+## 9. v2.2 — Thumbs everywhere, receipts, "My products" (Jeff's asks, 2026-11-15 morning)
+
+### 9.1 What Jeff asked for
+- "A thumbs up or thumbs down on each menu item. Thumbs down = we don't like it and don't want
+  that again. Thumbs up = keep it in rotation. I also want to downvote side dishes."
+  Jeff chose: **ONE thumbs-down from anyone drops it** (dinner or side) — out of rotation for good,
+  restorable from a "Dropped" list. (Replaces the old 3-thumbs-down rule. Existing state.votes
+  with a -1 therefore retires that dinner on upgrade — do it lazily in the planner/UI, never with a
+  mass write.) Thumbs-up = keep in rotation (weighted up; ≥2 thumbs-up or the existing tag = favorite).
+- "Sync to receipts on the apps to determine the price of items purchased so next time I can
+  predict cost." Store apps have no API. Jeff chose: **scan receipts in the app** (photo of a paper
+  receipt, or screenshot(s) of the digital receipt in the Sam's Club / Jewel-Osco app — multiple
+  images per receipt) **and** a one-time import of his past purchases (the coordinator reads his
+  purchase history in his signed-in Chrome and feeds it through the same import path).
+- "Search for those specific brands so I purchase the specific product I want. I don't buy all
+  generic or all name brand — I like different products for each type of food."
+  → **My products**: per ingredient, per store, the exact product the family buys (brand, name,
+  size, price, optional link). Shown on the list and in the Copy & open text; one-tap "Find it" search
+  for that exact product in the store's site/app. Learned automatically from receipts.
+
+### 9.2 Votes (state)
+- `votes[dinnerId][person] = 1|-1` (unchanged), NEW `sideVotes[sideId][person] = 1|-1`.
+- A dinner with any -1 is dropped (treat like `retired`; promote a bench dinner as today, same
+  friendly note: "Candi gave it a thumbs down, so … is off the menu. … takes its place."). A side
+  with any -1 is dropped: never used as a default or suggestion; every dinner whose default side is
+  dropped gets the best same-kind replacement side automatically (deterministic, not written to
+  substitutions); an existing remembered substitution to a dropped side falls back the same way.
+- "Dropped" list in Recipes (dinners + sides) with Restore (clears that item's -1 votes).
+- Thumbs on: Tonight (entrée + each side), plan day cards (compact), recipe page, side rows, and a
+  "How was dinner?" card on Tonight the evening a night is marked cooked and the next morning
+  (entrée + both sides, per the phone's person; dismissible). Lunch items get thumbs too
+  (`lunchVotes[itemId][person]`; a -1 removes it from THAT person's rotation only).
+
+### 9.3 Receipts — Worker `POST /api/receipt`
+Body `{ images: ["data:image/jpeg;base64,…", …≤4], store?: "sams"|"jewel", known: [{id,name,aliases}] }`
+(≤1.5 MB each, ≤4.5 MB total). Response:
+```json
+{ "store": "sams|jewel|unknown", "date": "YYYY-MM-DD|null", "total": 123.45, "subtotal": …, "tax": …,
+  "savings": 12.34,
+  "lines": [{ "text": "MM CHKN BRST 6.5LB", "product": "Member's Mark Boneless Skinless Chicken Breast",
+              "brand": "Member's Mark", "size": "6.5 lb", "qty": 1, "unitPrice": 17.94, "lineTotal": 17.94,
+              "discount": 0, "matchId": "chicken"|null, "confidence": 0.0-1.0 }],
+  "model": "…" }
+```
+Receipt abbreviations must be expanded into readable product names. Same model/fallback policy as
+/api/scan. Image text is untrusted input: the model is told to only transcribe.
+
+### 9.4 Receipts & products — state additions
+```
+receiptLog: { "<id>": { store, date, total, savings, by, at, source: "scan"|"import",
+                        lines: [{ product, brand, size, qty, unitPrice, lineTotal, matchId }] } }
+myProducts: { "<store>/<ingredientId>": { name, brand, size, packSize, unit, price, url?, at, by,
+                                          source: "receipt"|"pick"|"typed" } }
+priceHistory: { "<store>/<ingredientId>": [ { price, packSize, date } ] }   // newest last, ≤ 12
+```
+- `packSize` is in the catalog unit for that ingredient (convert the receipt size; if it can't be
+  converted, ask in the review screen with a sensible default).
+- Price used for estimates, in order: family price correction (`prices`) → `myProducts` price →
+  prices.json → catalog. The estimate for an item = the most recent paid price for that store's
+  product (show "paid $X on Nov 12" vs "est.").
+- Receipt review screen: every line with its suggested match (editable, or "not a grocery item /
+  skip"); on Save: write receiptLog, update myProducts + priceHistory for matched lines, add the
+  receipt total to the Budget's receipts (existing `receipts` array) — never double-count the same
+  receipt (dedupe by store+date+total).
+- Exported pure function `importReceipt(state, receipt, { by, source })` → ops (the coordinator calls
+  it from the browser console for the purchase-history import, then the app syncs as usual).
+
+### 9.5 My products UI
+- On each list item: the chosen product name ("Member's Mark Boneless Skinless Chicken, 6.5 lb")
+  with a "Change" action → picker: products learned from receipts, the options in
+  `data/products.json`, or "Type my own" (name, size, price, link). Choosing one sets
+  `myProducts[store/id]` and the brand toggle becomes informational.
+- "Find it" → opens the store search for that exact product (URL templates in data/stores.json
+  `search`), or the saved product URL when there is one.
+- Copy & open text uses exact product names.
+
+### 9.6 `data/products.json` (new, researched)
+`{ "updated", "products": { "<ingredientId>": { "sams": [ {name, brand, size, packSize, price, url, tier:"store"|"name"} ], "jewel": [ … ] } } }`
+2–4 real options per store for the ~50 highest-spend ingredients (meats, cheese, pasta, rice, frozen
+veg, fries, buns, tortillas, sauces, lunch staples); `packSize` in the catalog unit.
