@@ -1,7 +1,7 @@
 {
  "version": 2,
  "updated": "2026-11-15",
- "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge.",
+ "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos.",
  "units": {
   "bags": "bags",
   "bars": "bars",
@@ -6792,6 +6792,142 @@
       "size": 6,
       "price": 4.79,
       "label": "French's Original Crispy Fried Onions, 6 oz (on your shelf) (est.)"
+     }
+    }
+   }
+  },
+  "eyeRoundSteak": {
+   "name": "Eye of round steaks (Member’s Mark Choice Angus)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "meat": true,
+   "aliases": [
+    "eye of round",
+    "eye of round steak",
+    "round eye steak",
+    "round steak"
+   ],
+   "brand": "Member's Mark",
+   "usual": {
+    "store": "sams",
+    "tier": "name"
+   },
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 3.2,
+      "price": 21.77,
+      "label": "Member's Mark USDA Choice Angus Beef Eye of Round Steak, ~3.2 lb ($6.74/lb, paid Sep 25) (the family’s usual)"
+     },
+     "name": {
+      "size": 3.2,
+      "price": 21.77,
+      "label": "Member's Mark USDA Choice Angus Beef Eye of Round Steak, ~3.2 lb ($6.74/lb, paid Sep 25) (the family’s usual)"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 1.5,
+      "price": 11.24,
+      "label": "USDA Choice eye of round steak, ~1.5 lb ($7.49/lb) (est.)"
+     },
+     "name": {
+      "size": 1.5,
+      "price": 11.24,
+      "label": "USDA Choice eye of round steak, ~1.5 lb ($7.49/lb) (est.)"
+     }
+    }
+   }
+  },
+  "chorizo": {
+   "name": "Pork chorizo (raw links)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "meat": true,
+   "aliases": [
+    "chorizo",
+    "pork chorizo",
+    "mexican chorizo",
+    "chorizo links"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 0.56,
+      "price": 2.99,
+      "label": "Cacique pork chorizo, 9 oz (est.)"
+     },
+     "name": {
+      "size": 2.6,
+      "price": 9.99,
+      "label": "Premium pork chorizo links, 42 oz pack (in your freezer) (est.)"
+     }
+    }
+   }
+  },
+  "nopalitos": {
+   "name": "Nopalitos (jarred cactus)",
+   "unit": "oz",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "nopalitos",
+    "nopales",
+    "cactus",
+    "tender cactus"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 30,
+      "price": 3.49,
+      "label": "La Costeña nopalitos (tender cactus), 30 oz jar (est.)"
+     },
+     "name": {
+      "size": 30,
+      "price": 3.99,
+      "label": "Doña María nopalitos, 30 oz jar (est.)"
+     }
+    }
+   }
+  },
+  "charroBeans": {
+   "name": "Charro beans (La Preferida), 15 oz cans",
+   "unit": "cans",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "charro beans",
+    "frijoles charros",
+    "la preferida beans",
+    "mexican homestyle beans"
+   ],
+   "brand": "La Preferida",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 2,
+      "label": "La Preferida Mexican Homestyle Beans (Frijoles Charros), 15 oz (paid $2.00 on sale Oct 26) (the family’s usual)"
+     },
+     "name": {
+      "size": 1,
+      "price": 2,
+      "label": "La Preferida Mexican Homestyle Beans (Frijoles Charros), 15 oz (paid $2.00 on sale Oct 26) (the family’s usual)"
      }
     }
    }

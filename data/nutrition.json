@@ -1192,6 +1192,34 @@
       "unit": "oz",
       "basis": "1 oz crispy fried onions",
       "source": "Package label (typical): French's Crispy Fried Onions, 45 kcal per 2 tbsp (7 g)"
+    },
+    "eyeRoundSteak": {
+      "kcal": 640,
+      "protein": 104,
+      "unit": "lb",
+      "basis": "1 lb raw eye of round, trimmed",
+      "source": "USDA FoodData Central, SR Legacy: Beef, round, eye of round, lean, raw (NDB 13368), ~141 kcal & 23 g protein / 100 g"
+    },
+    "chorizo": {
+      "kcal": 2070,
+      "protein": 110,
+      "unit": "lb",
+      "basis": "1 lb raw pork chorizo (about a third cooks off as fat)",
+      "source": "USDA FoodData Central, SR Legacy: Chorizo, pork and beef (NDB 07019), 455 kcal & 24 g protein / 100 g"
+    },
+    "nopalitos": {
+      "kcal": 5,
+      "protein": 0.4,
+      "unit": "oz",
+      "basis": "1 oz drained jarred nopalitos",
+      "source": "USDA FoodData Central, SR Legacy: Nopales, cooked (NDB 11965), 15 kcal & 1.3 g protein / 100 g"
+    },
+    "charroBeans": {
+      "kcal": 300,
+      "protein": 18,
+      "unit": "cans",
+      "basis": "one 15 oz can, about 3.5 servings",
+      "source": "Package label (typical): La Preferida Frijoles Charros, ~90 kcal & 5 g protein per ½ cup"
     }
   }
 }

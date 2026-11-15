@@ -79,7 +79,10 @@
     "mango-habanero-chicken": "img/dinners/mango-habanero-chicken.webp",
     "chicago-italian-beef": "img/dinners/chicago-italian-beef.webp",
     "buffalo-chicken-wraps": "img/dinners/buffalo-chicken-wraps.webp",
-    "apple-glazed-pork-chops": "img/dinners/apple-glazed-pork-chops.webp"
+    "apple-glazed-pork-chops": "img/dinners/apple-glazed-pork-chops.webp",
+    "cajun-steak-bites": "img/dinners/cajun-steak-bites.webp",
+    "chorizo-nopalitos-tacos": "img/dinners/chorizo-nopalitos-tacos.webp",
+    "pantry-beef-chili": "img/dinners/pantry-beef-chili.webp"
   },
   "sides": {
     "jewel-fries": "img/sides/jewel-fries.webp",
@@ -124,7 +127,8 @@
     "turmeric-rice": "img/sides/turmeric-rice.webp",
     "old-bay-fries": "img/sides/old-bay-fries.webp",
     "cajun-fries": "img/sides/cajun-fries.webp",
-    "crispy-onion-green-beans": "img/sides/crispy-onion-green-beans.webp"
+    "crispy-onion-green-beans": "img/sides/crispy-onion-green-beans.webp",
+    "charro-beans": "img/sides/charro-beans.webp"
   },
   "generated": "2026-11-15",
   "model": "Higgsfield gpt_image_2_6 (GPT Image 2.6), quality medium, 1k; dinners 3:2 -> 1200x800 + 640x427 webp, sides 1:1 -> 640x640 webp",

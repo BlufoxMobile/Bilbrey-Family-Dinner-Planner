@@ -47,16 +47,17 @@ const MIN_CORE = 50, MIN_BENCH = 20;
 // Which catalog meat ids satisfy each "protein" value.
 const PROTEIN_IDS = {
   chicken: ['chicken', 'chickenThighs', 'fajitaChicken', 'pulledChicken', 'chickenAlfredoDeli'],
-  beef: ['beef', 'beefPatties', 'roastBeef'],
+  beef: ['beef', 'beefPatties', 'roastBeef', 'eyeRoundSteak'],
   pork: ['pork', 'porkLoin', 'groundPork', 'pulledPork'],
   turkey: ['groundTurkey'],
-  sausage: ['italianSausage', 'smokedSausage'],
+  sausage: ['italianSausage', 'smokedSausage', 'chorizo'],
 };
 // Safe-temperature rules: if a dinner uses one of these ids, its steps must state the temp.
 const TEMP_RULES = [
   { ids: ['chicken', 'chickenThighs', 'fajitaChicken'], temp: '165°F', what: 'chicken' },
   { ids: ['groundTurkey'], temp: '165°F', what: 'ground turkey' },
-  { ids: ['beef', 'beefPatties', 'groundPork', 'italianSausage'], temp: '160°F', what: 'ground meat / sausage / patties' },
+  { ids: ['beef', 'beefPatties', 'groundPork', 'italianSausage', 'chorizo'], temp: '160°F', what: 'ground meat / sausage / patties' },
+  { ids: ['eyeRoundSteak'], temp: '145°F', what: 'whole-cut beef' },
   { ids: ['pulledPork', 'pulledChicken', 'smokedSausage', 'chickenAlfredoDeli', 'roastBeef'], temp: '165°F', what: 'fully cooked meat (reheat)' },
   { ids: ['pork', 'porkLoin'], temp: '145°F', what: 'pork chops / loin', rest: true },
 ];

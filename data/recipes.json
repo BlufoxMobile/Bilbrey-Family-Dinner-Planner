@@ -1,7 +1,7 @@
 {
   "version": 2,
   "updated": "2026-11-15",
-  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer and microwave only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases. 2026-11-15: dinners tagged \"from your pantry\" were built around the seasonings and sauces in the family’s pantry photos (Slap Ya Mama, Badia mango pepper, Buffalo Wild Wings mango habanero, Crystal, Buona giardiniera, apple jelly, turmeric, Old Bay, French’s crispy onions).",
+  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer and microwave only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases. 2026-11-15: dinners tagged \"from your pantry\" were built around the seasonings and sauces in the family’s pantry photos (Slap Ya Mama, Badia mango pepper, Buffalo Wild Wings mango habanero, Crystal, Buona giardiniera, apple jelly, turmeric, Old Bay, French’s crispy onions). 2026-11-15 pm: Cajun butter steak bites (eye of round), chorizo & nopalitos street tacos and smoky beef & bean chili were built from the family’s freezer and pantry photos.",
   "dinners": [
     {
       "id": "smashburgers",
@@ -3062,6 +3062,116 @@
       ],
       "sideSlots": 2,
       "photo": "Grilled boneless pork chops with grill marks and a shiny amber apple glaze, served with buttered sweet potatoes and green beans topped with crispy onions."
+    },
+    {
+      "id": "cajun-steak-bites",
+      "title": "Cajun butter steak bites",
+      "subtitle": "Eye of round cut into bites, seared hot and fast on the Blackstone with Slap Ya Mama and Kerrygold.",
+      "category": "Grill",
+      "protein": "beef",
+      "minutes": 25,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "grill night",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "eyeRoundSteak": 2.5,
+        "cajunSeasoning": 2,
+        "soy": 1,
+        "oil": 1,
+        "butter": 3,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Thaw the eye of round steaks in the fridge overnight. Pat them dry, trim any silver skin and cut into 1-inch cubes.",
+        "Toss the cubes with the oil, soy sauce and Slap Ya Mama Cajun seasoning. It’s salty, so don’t add salt.",
+        "Heat the Blackstone over high for 10 minutes. Spread the steak in one layer (two batches if it’s crowded) and sear without moving for 2 minutes, then turn and cook 1–2 minutes more, until a thermometer in a thick piece reads 145°F.",
+        "Push the steak together, drop the butter and black pepper on top and toss as it melts. Rest 3 minutes before serving. Eye of round is lean, so cook it hot and fast and don’t go past medium or it turns tough."
+      ],
+      "sides": [
+        "corn-on-the-cob",
+        "smashed-potatoes"
+      ],
+      "sideSlots": 2,
+      "photo": "Seared, glossy Cajun butter steak bites with a dark spice crust piled on a plate beside an ear of buttered corn on the cob and creamy potatoes."
+    },
+    {
+      "id": "chorizo-nopalitos-tacos",
+      "title": "Chorizo & nopalitos street tacos",
+      "subtitle": "Pork chorizo and lean ground beef with tender jarred nopalitos, in Mission street taco tortillas.",
+      "category": "Tex-Mex",
+      "protein": "mixed",
+      "minutes": 25,
+      "equipment": [
+        "stovetop",
+        "blackstone"
+      ],
+      "tags": [
+        "taco night",
+        "from your pantry",
+        "rice"
+      ],
+      "rotation": "core",
+      "items": {
+        "chorizo": 1,
+        "beef": 1.25,
+        "nopalitos": 15,
+        "streetTacoFlour": 15,
+        "cheese": 4,
+        "salsa": 8
+      },
+      "steps": [
+        "Thaw the chorizo and ground beef in the fridge overnight (or sealed, in cold water, about an hour). Drain the nopalitos in a strainer and rinse well under cold water to wash off the slippery brine, then pat dry.",
+        "Squeeze the chorizo out of its casings into your largest skillet with the ground beef. Cook over medium-high, breaking it up, until no pink remains and a thermometer reads 160°F, 8–10 minutes. Spoon off extra grease. Chorizo is fully seasoned, so nothing else goes in.",
+        "Stir in the nopalitos and cook 3–4 minutes more, until hot and catching a little color at the edges.",
+        "Warm the tortillas on the Blackstone or in a dry skillet for 20 seconds a side. Fill with the chorizo and nopalitos, shredded cheese and salsa. Out of tortillas? Spoon it over Spanish rice as a bowl."
+      ],
+      "sides": [
+        "charro-beans",
+        "cilantro-lime-rice"
+      ],
+      "sideSlots": 2,
+      "photo": "Small flour street tacos filled with crumbly red chorizo, ground beef and diced green nopalitos, topped with shredded cheese and salsa, with charro beans and rice."
+    },
+    {
+      "id": "pantry-beef-chili",
+      "title": "Smoky beef & bean chili",
+      "subtitle": "Lean ground beef with chili beans and fire-roasted tomatoes, seasoned with smoked paprika and Slap Ya Mama.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 35,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2,
+        "chiliBeans": 2,
+        "tomatoes": 1,
+        "paprika": 1,
+        "cajunSeasoning": 1,
+        "oil": 1,
+        "cheese": 4
+      },
+      "steps": [
+        "Thaw the ground beef in the fridge overnight. Heat the oil in a large pot over medium-high and brown the beef, breaking it up, until no pink remains and it reads 160°F, 8–10 minutes.",
+        "Stir in the smoked paprika and Slap Ya Mama Cajun seasoning for 30 seconds, then add the chili beans with their sauce and the diced tomatoes with their juice. The Serious Bean chipotle pintos on your shelf work as the chili beans, and a can of National Coney Island chili can go in too.",
+        "Bring to a boil, then turn to low and simmer, partly covered, 15–20 minutes, stirring now and then, until thick.",
+        "Taste, then serve in bowls topped with shredded cheddar."
+      ],
+      "sides": [
+        "canned-corn",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "A bowl of thick beef and bean chili topped with melting shredded cheddar, with buttered corn on the side."
     }
   ],
   "sides": [
@@ -3924,6 +4034,23 @@
         "Season with the black pepper, pour into a serving bowl and scatter the French’s crispy fried onions over the top right before serving so they stay crunchy."
       ],
       "photo": "A serving bowl of buttered green beans topped with a crunchy pile of golden crispy fried onions."
+    },
+    {
+      "id": "charro-beans",
+      "title": "Charro beans",
+      "kind": "vegetable",
+      "minutes": 10,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "charroBeans": 2
+      },
+      "steps": [
+        "Empty the La Preferida charro beans and their broth into a saucepan.",
+        "Warm over medium, stirring now and then, until bubbling, 6–8 minutes. They’re already seasoned, so nothing else goes in."
+      ],
+      "photo": "A bowl of brothy Mexican charro beans (pinto beans with bits of bacon, tomato and jalapeño)."
     }
   ]
 }
