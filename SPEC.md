@@ -590,6 +590,9 @@ sweet potatoes get cinnamon.
   Jewel-Osco), saved per phone, always opens the real app.
 - Coupons from a price check can be marked `clipped` (already on the family's card) and carry `q`,
   the words that find them on Jewel's coupon page; unclipped ones get a "Clip it" link.
+- "Find coupons for this list" (Jewel trips) opens a sheet with one coupon-page search per brand on
+  the list (Boar's Head, BodyArmor…), each opening Jewel's coupon page already searched; on iPhone the
+  pages can open in the Chrome app (`googlechromes://`, a per-phone choice). The family clips there.
 
 ### 13.4 Five extras (Claude's picks for "save money, eat healthier")
 1. Use it first: perishables get an estimated use-by from the day they came home (`pantry[id].since`,

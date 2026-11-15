@@ -127,3 +127,21 @@ test('the family can say where an item is kept, and updates keep it', () => {
   assert.equal(state.pantry.pulledPork.place, 'freezer', 'kept through an amount change');
   assert.equal(placeOf(db, { pantry: { pulledPork: { qty: 1, place: 'garage' } } }, 'pulledPork'), db.ingredients.pulledPork.storage, 'unknown places fall back');
 });
+
+test('coupon searches: one per brand on the Jewel list', async () => {
+  const { couponTerm, couponSearches } = await import('../app/views/list.js');
+  assert.equal(couponTerm("Boar's Head SmokeMaster Black Forest Ham"), "boar's head");
+  assert.equal(couponTerm('BODYARMOR Orange Mango Sports Drink'), 'bodyarmor');
+  assert.equal(couponTerm('Organic bananas'), 'bananas');
+  assert.equal(couponTerm('Fresh ginger'), 'ginger');
+  const list = { coupons: [{ id: 'buns', store: 'jewel', clipped: true, q: 'buns' }], onDay: [], stores: { jewel: { items: [
+    { id: 'bhHam', name: "Boar's Head ham", checked: false },
+    { id: 'bhBuff', name: "Boar's Head Blazing Buffalo chicken", checked: false },
+    { id: 'buns', name: 'Jewel Hamburger Buns', checked: false },
+    { id: 'x', name: 'Tillamook slices', checked: true },
+  ] } } };
+  const s = couponSearches(list, 'jewel');
+  assert.deepEqual(s.map((g) => g.term), ["boar's head", 'buns']);
+  assert.equal(s.find((g) => g.term === "boar's head").names.length, 2);
+  assert.equal(s.find((g) => g.term === 'buns').clipped, true);
+});

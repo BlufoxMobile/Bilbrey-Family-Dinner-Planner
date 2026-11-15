@@ -131,17 +131,86 @@ function onDaySection(app, list) {
 }
 
 const COUPON_PAGE = { jewel: 'https://www.jewelosco.com/loyalty/coupons-deals.html?q={q}' };
+const isIOSDevice = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const BROWSER_KEY = 'bfdp.v2.couponBrowser';
+/** This phone's choice for store pages: 'chrome' (the Chrome app on iPhone) or the default browser. */
+function couponBrowser() {
+  try { return localStorage.getItem(BROWSER_KEY) || ''; } catch { return ''; }
+}
+/** A store link, opened in the Chrome app on iPhone when the family picked Chrome (googlechromes://). */
+function viaBrowser(url) {
+  return isIOSDevice() && couponBrowser() === 'chrome' ? url.replace(/^https:\/\//, 'googlechromes://') : url;
+}
 
 /** The store's coupon page, searched for this coupon (or the product's first words). */
 function couponFindUrl(c) {
   const tpl = COUPON_PAGE[c.store];
   if (!tpl) return '';
-  const q = c.q || String(c.name).replace(/\(.*?\)/g, ' ').replace(/[^A-Za-z0-9' ]+/g, ' ').trim().split(/\s+/).slice(0, 2).join(' ');
-  return tpl.replace('{q}', encodeURIComponent(q));
+  const q = c.q || couponTerm(c.name);
+  return viaBrowser(tpl.replace('{q}', encodeURIComponent(q)));
+}
+
+const MULTI_BRANDS = ["boar's head", 'del monte', 'capri sun', "miss vickie's", 'signature select', 'signature farms', 'signature cafe', 'o organics', 'open nature', 'ball park', 'sara lee', 'old el paso', 'hidden valley', "land o'lakes", "trader joe's", 'pepperidge farm', "nature's own", "king's hawaiian", "dave's killer", "sweet baby ray's", 'jimmy dean', 'oscar mayer', 'hormel black label', 'la preferida', 'mt. olive', 'french\'s'];
+const SKIP_WORDS = new Set(['fresh', 'frozen', 'large', 'small', 'sliced', 'shredded', 'organic', 'whole', 'boneless', 'lean', 'ground', 'the', 'a', 'mini', 'family', 'party', 'size']);
+
+/** The word to search a store's coupon page with: the brand ("boar's head"), else the first real word. */
+export function couponTerm(name) {
+  const n = String(name || '').replace(/[’‘]/g, "'").replace(/\(.*?\)/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  const mb = MULTI_BRANDS.find((b) => n.startsWith(b));
+  if (mb) return mb.replace("hormel black label", 'hormel');
+  const words = n.split(/[\s,]+/).map((w) => w.replace(/[^a-z0-9'.-]/g, '')).filter(Boolean);
+  const w = words.find((x) => !SKIP_WORDS.has(x) && x.length > 2) || words[0] || '';
+  return w.replace(/'s$/, '');
+}
+
+/** One coupon search per brand on the store's part of the list. → [{ term, names, clipped }] */
+export function couponSearches(list, store = 'jewel') {
+  const items = [...(list.stores?.[store]?.items || []).filter((i) => !i.checked), ...(list.onDay || []).filter((i) => i.store === store)];
+  const by = new Map();
+  for (const i of items) {
+    const name = productName(i) || i.name;
+    const known = list.coupons.find((c) => c.id === i.id && c.store === store);
+    const term = known?.q || couponTerm(name);
+    if (!term) continue;
+    if (!by.has(term)) by.set(term, { term, names: [], clipped: true });
+    const g = by.get(term);
+    g.names.push(String(name).replace(/\s*\(.*?\)\s*/g, ' ').trim());
+    if (!known?.clipped) g.clipped = false;
+  }
+  return [...by.values()].sort((a, b) => Number(a.clipped) - Number(b.clipped) || a.term.localeCompare(b.term));
+}
+
+function couponFinder(app, list) {
+  const searches = couponSearches(list, 'jewel');
+  if (!searches.length) return '';
+  return html`<button type="button" class="btn btn-secondary btn-block" data-action="list:find-coupons">${ic('search', { size: 20 })}Find coupons for this list <span class="chip-count">${searches.length} ${searches.length === 1 ? 'search' : 'searches'}</span></button>`;
+}
+
+function openCouponFinder(app) {
+  const { list } = current(app);
+  openSheet({
+    id: 'coupon-finder',
+    size: 'tall',
+    title: 'Find Jewel coupons',
+    subtitle: 'One search per brand on your list. Sign in to Jewel-Osco once in that browser, then tap Clip Coupon on any offer that matches.',
+    render: () => {
+      const searches = couponSearches(list, 'jewel');
+      const seen = couponFinder.seen || new Set();
+      return html`
+        ${when(isIOSDevice(), () => html`<div class="field"><span class="field-label">Open coupon pages in</span>${segmented('coupon-browser', [{ id: 'safari', label: 'Safari' }, { id: 'chrome', label: 'Chrome' }], couponBrowser() === 'chrome' ? 'chrome' : 'safari', { label: 'Open coupon pages in', action: 'list:coupon-browser', small: true })}</div>`)}
+        <ul class="finder-list">${searches.map((g) => html`<li class="${seen.has(g.term) ? 'is-seen' : ''}">
+          <span><b>${g.term.replace(/(^|\s)\S/g, (c) => c.toUpperCase())}</b><small>${listJoin(g.names.slice(0, 3))}${g.names.length > 3 ? ` and ${g.names.length - 3} more` : ''}${g.clipped ? '. Already clipped' : ''}</small></span>
+          <a class="btn btn-small ${g.clipped || seen.has(g.term) ? 'btn-quiet' : 'btn-secondary'}" href="${viaBrowser(COUPON_PAGE.jewel.replace('{q}', encodeURIComponent(g.term)))}" target="_blank" rel="noopener" data-action="list:finder-open" data-term="${g.term}">${seen.has(g.term) ? 'Opened' : 'Coupons'}</a>
+        </li>`)}</ul>
+        <a class="btn btn-quiet btn-block" href="${viaBrowser('https://www.jewelosco.com/loyalty/coupons-deals.html')}" target="_blank" rel="noopener">All Jewel coupons</a>
+        <p class="muted small">Only clip what matches the brand and size on your list. Clipped coupons come off at the register when you enter your phone number or scan the Jewel app.</p>`;
+    },
+  });
 }
 
 function couponsToClip(app, list) {
-  if (!list.coupons.length) return '';
+  const finder = couponFinder(app, list);
+  if (!list.coupons.length) return finder ? html`<section class="clip-first" aria-label="Coupons">${finder}</section>` : '';
   const left = list.coupons.filter((c) => !c.clipped);
   const title = left.length
     ? `Clip ${left.length === 1 ? 'this coupon' : `these ${left.length} coupons`} first`
@@ -153,6 +222,7 @@ function couponsToClip(app, list) {
       ${c.clipped ? html`<span class="tag tag-clipped">${ic('check', { size: 14 })}Clipped</span>`
         : when(couponFindUrl(c), () => html`<a class="btn btn-small btn-secondary" href="${couponFindUrl(c)}" target="_blank" rel="noopener">Clip it</a>`)}
     </li>`)}</ul>
+    ${finder}
     <p class="muted small">${left.length ? `“Clip it” opens that coupon on ${NAMES[left[0].store] || 'the store'}’s page; sign in and tap Clip Coupon. ` : ''}Coupons only count once they’re clipped in your ${NAMES[list.coupons[0].store] || 'store'} account. The total above assumes they are.</p>
   </section>`;
 }
@@ -590,6 +660,21 @@ export const actions = {
   'list:handoff': (app, el) => handoff(app, el.dataset.store),
   'list:coupons': (app, el) => openCoupons(app, el.dataset.store),
   'list:filter': (app, el) => { app.ui.listFilter = el.dataset.value; app.render(); },
+  'list:find-coupons': (app) => openCouponFinder(app),
+  'list:finder-open': (app, el) => {
+    // The click handler stops links with an action, so open it here (still inside the tap).
+    const url = el.getAttribute('href');
+    if (/^googlechromes?:/.test(url)) window.location.href = url;
+    else window.open(url, '_blank', 'noopener');
+    couponFinder.seen = couponFinder.seen || new Set();
+    couponFinder.seen.add(el.dataset.term);
+    setTimeout(() => renderSheet(), 300); // after the link opens
+  },
+  'list:coupon-browser': (app, el) => {
+    try { if (el.dataset.value === 'chrome') localStorage.setItem(BROWSER_KEY, 'chrome'); else localStorage.removeItem(BROWSER_KEY); } catch { /* private mode */ }
+    if (el.dataset.value === 'chrome') toast('Coupon pages open in the Chrome app. Sign in to Jewel-Osco there once.');
+    renderSheet();
+  },
   'list:copy-ai': async (app, el) => {
     const { list } = current(app);
     const parts = formatAssistantList(app.db, list, el.dataset.store);
