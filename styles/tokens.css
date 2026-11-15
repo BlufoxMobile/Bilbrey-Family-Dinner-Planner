@@ -36,7 +36,14 @@
   --focus: #2E6BD6;
   --scrim: rgba(36, 28, 14, 0.42);
 
-  --p-jeff: #2F5D46; --p-candi: #8A4E6B; --p-knox: #93681C; --p-jordan: #3C5C7C; --p-jackson: #8A5236; --av-ink: #FFF8EC;
+  /* Each person's color: a fill, the ink for initials on it (AA, 4.5:1), and a line for rings and
+     borders on card or paper (3:1). Jeff and Candi share the green; Candi points at Jeff's tokens
+     here, once, so the dark themes below only restate Jeff. */
+  --p-jeff: #2F5D46;    --p-jeff-ink: #FFF8EC;    --p-jeff-line: var(--p-jeff);
+  --p-jackson: #A8352D; --p-jackson-ink: #FFF8EC; --p-jackson-line: var(--p-jackson);
+  --p-jordan: #2F5E9C;  --p-jordan-ink: #FFF8EC;  --p-jordan-line: var(--p-jordan);
+  --p-knox: #EEC032;    --p-knox-ink: #2A2620;    --p-knox-line: #8F6B0E;
+  --p-candi: var(--p-jeff); --p-candi-ink: var(--p-jeff-ink); --p-candi-line: var(--p-jeff-line);
 
   --sh-1: 0 1px 0 rgba(84, 62, 28, 0.06), 0 2px 8px -3px rgba(84, 62, 28, 0.16);
   --sh-2: 0 1px 0 rgba(84, 62, 28, 0.05), 0 14px 34px -14px rgba(64, 44, 16, 0.34);
@@ -78,7 +85,8 @@
     --pine: #A9D0B3; --pine-2: #BEDEC6; --pine-ink: #12201A; --sage: #93B49E; --sage-tint: #233629;
     --red: #E5695D; --red-tint: #3E2420; --butter: #E2C176; --butter-tint: #3A3220;
     --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --dusk-text: #C9D0EA; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
-    --p-jeff: #7DB394; --p-candi: #D19AB6; --p-knox: #D9AE5E; --p-jordan: #8EB0D3; --p-jackson: #D39C76; --av-ink: #16201A;
+    --p-jeff: #7DB394; --p-jeff-ink: #16201A; --p-jackson: #EA6355; --p-jackson-ink: #16201A;
+    --p-jordan: #7FAAE2; --p-jordan-ink: #16201A; --p-knox: #F0CB55; --p-knox-ink: #16201A; --p-knox-line: var(--p-knox);
     --sh-1: 0 1px 0 rgba(0, 0, 0, 0.25), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
     --sh-2: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -14px rgba(0, 0, 0, 0.7);
     --sh-3: 0 24px 60px -18px rgba(0, 0, 0, 0.8);
@@ -91,7 +99,8 @@
   --pine: #A9D0B3; --pine-2: #BEDEC6; --pine-ink: #12201A; --sage: #93B49E; --sage-tint: #233629;
   --red: #E5695D; --red-tint: #3E2420; --butter: #E2C176; --butter-tint: #3A3220;
   --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --dusk-text: #C9D0EA; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
-  --p-jeff: #7DB394; --p-candi: #D19AB6; --p-knox: #D9AE5E; --p-jordan: #8EB0D3; --p-jackson: #D39C76; --av-ink: #16201A;
+  --p-jeff: #7DB394; --p-jeff-ink: #16201A; --p-jackson: #EA6355; --p-jackson-ink: #16201A;
+  --p-jordan: #7FAAE2; --p-jordan-ink: #16201A; --p-knox: #F0CB55; --p-knox-ink: #16201A; --p-knox-line: var(--p-knox);
   --sh-1: 0 1px 0 rgba(0, 0, 0, 0.25), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
   --sh-2: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -14px rgba(0, 0, 0, 0.7);
   --sh-3: 0 24px 60px -18px rgba(0, 0, 0, 0.8);

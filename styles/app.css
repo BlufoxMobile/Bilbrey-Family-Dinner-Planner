@@ -213,7 +213,10 @@ select.input { appearance: none; -webkit-appearance: none; padding-right: 36px; 
 .tag-est { background: transparent; color: var(--ink-3); font-weight: 600; padding: 0 0 0 2px; }
 
 /* avatars */
-.avatar { display: inline-grid; place-items: center; flex: none; border-radius: 50%; background: var(--av, var(--line-2)); color: var(--av-ink); font-weight: 700; letter-spacing: 0.01em; }
+/* avatar() sets --av / --av-ink to the person's tokens; nobody picked yet is a neutral "?". */
+.avatar { display: inline-grid; place-items: center; flex: none; border-radius: 50%; background: var(--av, var(--line-2)); color: var(--av-ink, var(--ink)); font-weight: 700; letter-spacing: 0.01em; }
+/* Chips and rows that belong to one person carry personStyle(): --pc (fill) and --pc-line (ring). */
+.who-btn.is-on .avatar { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--pc-line, var(--pine)); }
 .avatar-sm { width: 32px; height: 32px; font-size: 0.75rem; }
 .avatar-md { width: 40px; height: 40px; font-size: 0.875rem; }
 .avatar-lg { width: 60px; height: 60px; font-size: 1.125rem; }
@@ -431,8 +434,8 @@ html.has-sheet { overflow: hidden; }
 .shelf-name small { color: var(--ink-3); }
 .who-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
 .who-pick { display: grid; justify-items: center; gap: 8px; padding: 14px 6px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); font-weight: 600; }
-.who-pick.is-on { border-color: var(--pine); box-shadow: 0 0 0 2px var(--pine); }
-.who-pick:hover { border-color: var(--pine); }
+.who-pick:hover { border-color: var(--pc-line, var(--pine)); }
+.who-pick.is-on { border-color: var(--pc-line, var(--pine)); box-shadow: 0 0 0 2px var(--pc-line, var(--pine)); background: color-mix(in srgb, var(--pc, var(--pine)) 14%, var(--card)); }
 .steps-small { display: grid; gap: 10px; margin-bottom: var(--s4); padding-left: 1.4em; list-style: decimal; color: var(--ink-2); }
 .copy-box { font-family: var(--font-text); }
 .scan-progress { display: grid; justify-items: center; gap: 12px; padding: var(--s8) 0; color: var(--ink-2); }
@@ -602,7 +605,8 @@ html.has-sheet .toast-root, body:has(.app.is-cook) .toast-root, body:has(.app.is
 .vote-state { position: absolute; top: 24px; right: calc(50% - 26px); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: transparent; }
 .vote-person.is-up .vote-state { background: var(--sage); color: #fff; box-shadow: 0 0 0 2px var(--card); }
 .vote-person.is-down .vote-state { background: var(--red); color: #fff; box-shadow: 0 0 0 2px var(--card); }
-.vote-person:not(.is-up):not(.is-down) .avatar { opacity: .55; }
+/* Not voted yet: an outline in the person's color instead of the solid fill (a faded fill would wash the initials out). */
+.vote-person:not(.is-up):not(.is-down) .avatar { background: color-mix(in srgb, var(--av, var(--line-2)) 14%, var(--card)); color: var(--ink-2); box-shadow: inset 0 0 0 2px var(--pc-line, var(--line-2)); }
 .vote-mine { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: var(--s2); }
 .vote-btn { background: var(--paper-2); color: var(--ink); }
 .vote-btn.is-on { background: var(--sage); color: #fff; }
@@ -648,7 +652,7 @@ html.has-sheet .toast-root, body:has(.app.is-cook) .toast-root, body:has(.app.is
 .set-sec { padding: var(--s5) 0; border-bottom: 1px solid var(--line); display: grid; gap: var(--s3); justify-items: start; }
 .set-sec > * { max-width: 100%; }
 .set-sec .form, .set-sec .seg, .set-sec details { width: 100%; }
-.me-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; width: 100%; }
+.me-row { --pc: var(--line-2); --pc-line: var(--line-2); display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; width: 100%; padding: 12px; border: 1px solid color-mix(in srgb, var(--pc-line) 40%, transparent); border-radius: 16px; background: color-mix(in srgb, var(--pc) 10%, var(--card)); }
 .me-row span { display: grid; }
 .me-row small { color: var(--ink-3); }
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
@@ -825,7 +829,8 @@ details[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
 /* person chips */
 .people { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--s4); }
 .person { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 14px 0 6px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--card); font-weight: 600; color: var(--ink); }
-.person.is-on { border-color: var(--pine); box-shadow: 0 0 0 2px var(--pine); }
+.person:hover { border-color: var(--pc-line, var(--pine)); }
+.person.is-on { border-color: var(--pc-line, var(--pine)); box-shadow: 0 0 0 2px var(--pc-line, var(--pine)); background: color-mix(in srgb, var(--pc, var(--pine)) 14%, var(--card)); }
 .person-add { padding-left: 12px; color: var(--pine); border-style: dashed; }
 
 /* a person's week */

@@ -1,5 +1,5 @@
 // FAMILY & SETTINGS: this phone, family sync + passcode, planner rules, stores, data.
-import { html, ic, when, toast, avatar, confirmSheet, segmented, stepper, switchToggle, tf } from '../ui.js';
+import { html, ic, when, toast, avatar, personStyle, confirmSheet, segmented, stepper, switchToggle, tf } from '../ui.js';
 import { PARENTS, VERSION } from '../config.js';
 import { mediumDate } from '../util.js';
 import { settingOps } from '../actions.js';
@@ -113,7 +113,7 @@ export function render(app) {
     <header class="page-head"><h1 class="page-title">Family & settings</h1></header>
     <section class="set-sec me" aria-labelledby="me-h">
       <h2 id="me-h" class="sr-only">This phone</h2>
-      <div class="me-row">${avatar(who, { size: 'lg' })}<span><b>${who ? `${who}’s phone` : 'Whose phone is this?'}</b><small>Votes and changes from this phone say ${who || 'nobody yet'}.</small></span>
+      <div class="me-row" style="${personStyle(who)}">${avatar(who, { size: 'lg' })}<span><b>${who ? `${who}’s phone` : 'Whose phone is this?'}</b><small>Votes and changes from this phone say ${who || 'nobody yet'}.</small></span>
         <button type="button" class="btn btn-small btn-secondary" data-action="sheet:who">Change</button></div>
       <div class="set-row"><span class="set-label">Show calories and protein<small>On this phone only. Lunches and dinners; breakfast and snacks aren’t tracked.</small></span>${switchToggle({ on: !app.store.device.hideNutrition, action: 'fam:nutrition', label: 'Show calories and protein on this phone' })}</div>
       <div class="set-row set-col"><span class="set-label">Appearance</span>${segmented('theme', [{ id: 'auto', label: 'Match phone' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }], theme, { label: 'Appearance', action: 'fam:theme', small: true })}</div>

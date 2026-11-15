@@ -4,7 +4,7 @@ import { loadDb } from './data.js';
 import { Store, settingsOf } from './state.js';
 import { todayISO } from './util.js';
 import {
-  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, avatar, sheetOpen,
+  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, avatar, personStyle, sheetOpen,
 } from './ui.js';
 import * as tonight from './views/tonight.js';
 import * as planView from './views/plan.js';
@@ -116,7 +116,7 @@ function shell() {
       <div class="topbar-right">
         ${syncPill()}
         <a class="icon-btn ${active === 'budget' ? 'is-on' : ''}" href="#/budget" aria-label="Budget">${ic('budget')}</a>
-        <a class="who-btn ${active === 'family' ? 'is-on' : ''}" href="#/family" aria-label="Family and settings${who ? `, ${who} is using this phone` : ''}">${avatar(who || '?', { size: 'sm' })}</a>
+        <a class="who-btn ${active === 'family' ? 'is-on' : ''}" style="${personStyle(who)}" href="#/family" aria-label="Family and settings${who ? `, ${who} is using this phone` : ''}">${avatar(who || '?', { size: 'sm' })}</a>
       </div>
     </header>
     <main id="view" class="view view-${app.route.view}" tabindex="-1"></main>

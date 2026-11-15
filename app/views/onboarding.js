@@ -1,5 +1,5 @@
 // First launch: who's using this phone, then the family passcode (create or enter).
-import { html, avatar, when } from '../ui.js';
+import { html, avatar, personStyle, when } from '../ui.js';
 import { FAMILY } from '../config.js';
 import { passcodeForm, actions as familyActions } from './family.js';
 
@@ -19,7 +19,7 @@ export function render(app) {
         <h1 id="gate-h" class="gate-title">The Bilbrey Family Dinner Planner</h1>
         <p class="gate-text">Dinner for five, planned around Sam’s Club and Jewel-Osco.</p>
         <h2 class="gate-q">Who’s using this phone?</h2>
-        <div class="who-grid">${FAMILY.map((n) => html`<button type="button" class="who-pick" data-action="gate:who" data-who="${n}">${avatar(n, { size: 'lg' })}<span>${n}</span></button>`)}</div>
+        <div class="who-grid">${FAMILY.map((n) => html`<button type="button" class="who-pick" style="${personStyle(n)}" data-action="gate:who" data-who="${n}">${avatar(n, { size: 'lg' })}<span>${n}</span></button>`)}</div>
       </div>
     </section>`;
   }

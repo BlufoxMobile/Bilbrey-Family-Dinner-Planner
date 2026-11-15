@@ -32,11 +32,25 @@ export function setHTML(el, safe) {
 
 // ---------------------------------------------------------------- avatars
 
-export const PERSON_COLORS = { Jeff: 'var(--p-jeff)', Candi: 'var(--p-candi)', Knox: 'var(--p-knox)', Jordan: 'var(--p-jordan)', Jackson: 'var(--p-jackson)' };
+/**
+ * Each person's color, from styles/tokens.css (light and dark): the fill, the ink for initials on
+ * it, and a line for rings and borders. Jeff and Candi share the green; Jackson is red, Jordan
+ * blue, Knox yellow. Names always show beside the color, so color is never the only cue.
+ */
+const tokens = (id) => ({ fill: `var(--p-${id})`, ink: `var(--p-${id}-ink)`, line: `var(--p-${id}-line)` });
+export const PERSON_COLORS = { Jeff: tokens('jeff'), Candi: tokens('candi'), Knox: tokens('knox'), Jordan: tokens('jordan'), Jackson: tokens('jackson') };
+const colorOf = (name) => (FAMILY.includes(name) ? PERSON_COLORS[name] : null);
+
+/** Inline style for a chip or row that belongs to one person: --pc (fill) and --pc-line (ring). */
+export function personStyle(name) {
+  const c = colorOf(name);
+  return c ? `--pc:${c.fill};--pc-line:${c.line}` : '';
+}
+
 export function initials(name) { return name ? name.slice(0, 2) : '?'; }
 export function avatar(name, { size = 'md', cls = '' } = {}) {
-  const known = FAMILY.includes(name);
-  return html`<span class="avatar avatar-${size} ${cls}" style="${known ? `--av:${PERSON_COLORS[name]}` : ''}" aria-hidden="true">${initials(name)}</span>`;
+  const c = colorOf(name);
+  return html`<span class="avatar avatar-${size} ${cls}" style="${c ? `--av:${c.fill};--av-ink:${c.ink}` : ''}" aria-hidden="true">${initials(name)}</span>`;
 }
 
 // ---------------------------------------------------------------- photos
