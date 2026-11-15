@@ -119,3 +119,11 @@ test('after the trip: receipt lines that weren’t on the list', () => {
   assert.equal(x.extraTotal, 2.39);
   assert.equal(x.unmatchedTotal, 3.5);
 });
+
+test('the family can say where an item is kept, and updates keep it', () => {
+  let state = { pantry: { pulledPork: { qty: 3, stocked: false, place: 'freezer', at: '2026-11-10T00:00:00Z' } } };
+  assert.equal(placeOf(db, state, 'pulledPork'), 'freezer');
+  state = applyOps(state, setPantryOps(db, state, { id: 'pulledPork', qty: 2, who: 'Jeff' }).ops);
+  assert.equal(state.pantry.pulledPork.place, 'freezer', 'kept through an amount change');
+  assert.equal(placeOf(db, { pantry: { pulledPork: { qty: 1, place: 'garage' } } }, 'pulledPork'), db.ingredients.pulledPork.storage, 'unknown places fall back');
+});

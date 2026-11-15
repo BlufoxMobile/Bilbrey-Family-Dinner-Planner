@@ -46,6 +46,8 @@ export function kindOfItem(db, state, id) {
 
 /** Where an item is kept (the catalog's storage, or the shelf item's own). */
 export function placeOf(db, state, id) {
+  const own = state?.pantry?.[id]?.place; // the family moved it ("we keep the ranch in the fridge")
+  if (PLACES.some((p) => p.id === own)) return own;
   const s = itemMeta(db, state, id).storage;
   return PLACES.some((p) => p.id === s) ? s : 'pantry';
 }

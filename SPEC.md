@@ -578,6 +578,8 @@ sweet potatoes get cinnamon.
 - Shelves are grouped by place (in the fridge, freezer, pantry, on the counter; jump chips at the
   top) and then by kind: meat & protein, dairy & eggs, fruits & vegetables, frozen meals & sides,
   bread, drinks, canned & jarred, pasta/rice/grains, sauces, spices & baking, snacks & sweets.
+- The place comes from the catalog unless the family moves it (`pantry[id].place`, set from the
+  item's picture sheet); amount changes, Done shopping and receipts keep it.
 
 ### 13.3 Store hand-off
 - Jewel-Osco: "Copy & open" copies plain lines for Jewel-Osco AI's "Shop my grocery list"

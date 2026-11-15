@@ -749,7 +749,7 @@ details[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
   .sheet-panel { border-radius: var(--r-sheet); max-height: min(86dvh, 860px); }
   .sheet-tall .sheet-panel { height: min(86dvh, 860px); }
   .sheet-grip { display: none; }
-  .pan-row { grid-template-columns: 1fr auto; align-items: center; }
+  .pan-row { grid-template-columns: 56px 1fr auto; grid-template-areas: "thumb name ctrl"; align-items: center; }
   .pan-ctrl .icon-btn { margin-left: 0; }
 }
 

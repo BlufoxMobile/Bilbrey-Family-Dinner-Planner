@@ -452,10 +452,11 @@ export function receiptPantryOps(db, state, receiptId, { who = 'Family', at = nu
   for (const a of receiptPantryAdds(db, state, log)) {
     const prev = state?.pantry?.[a.id] || {};
     const since = /^\d{4}-\d{2}-\d{2}$/.test(String(log.date || '')) ? log.date : now.slice(0, 10);
-    if (a.staple) ops.push(set(['pantry', a.id], { qty: null, stocked: true, since, by: who, at: now }));
+    const keep = { ...(prev.place ? { place: prev.place } : {}) };
+    if (a.staple) ops.push(set(['pantry', a.id], { qty: null, stocked: true, since, ...keep, by: who, at: now }));
     else {
       const base = typeof prev.qty === 'number' && !prev.low ? prev.qty : 0;
-      ops.push(set(['pantry', a.id], { ...(prev.label ? { label: prev.label } : {}), qty: round2(base + a.add), stocked: false, since, bought: { qty: a.add, on: since }, by: who, at: now }));
+      ops.push(set(['pantry', a.id], { ...keep, ...(prev.label ? { label: prev.label } : {}), qty: round2(base + a.add), stocked: false, since, bought: { qty: a.add, on: since }, by: who, at: now }));
     }
   }
   ops.push(set(['receiptLog', receiptId, 'pantry'], now));

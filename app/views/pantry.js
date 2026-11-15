@@ -206,7 +206,7 @@ function photoSheet(app, itemId) {
   openSheet({
     id: `photo:${itemId}`,
     title: m.name,
-    subtitle: 'The picture the family sees for this item.',
+    subtitle: 'Its picture, and where the family keeps it.',
     render: () => {
       const ph = itemPhoto(app.state, itemId);
       const canSave = app.store.device.key && !app.store.device.localOnly;
@@ -217,7 +217,9 @@ function photoSheet(app, itemId) {
             <input type="file" accept="image/*" class="sr-only" data-change="pan:photo-file" data-id="${itemId}" aria-label="Picture of ${m.name}"></label>
           <p class="muted small">Fill the square with the package so the label shows. Pictures stay in the family’s private storage.</p>`
           : html`<p class="sheet-text">Pictures are kept on the family server. Connect this phone with the family passcode in Family & settings to add one.</p>`}
-        ${when(ph, () => html`<button type="button" class="btn btn-quiet btn-block" data-action="pan:photo-off" data-id="${itemId}">Remove the picture</button>`)}`;
+        ${when(ph, () => html`<button type="button" class="btn btn-quiet btn-block" data-action="pan:photo-off" data-id="${itemId}">Remove the picture</button>`)}
+        <h3 class="sheet-h">Where it’s kept</h3>
+        <div class="chip-grid place-pick">${PLACES.map((pl) => html`<button type="button" class="chip ${placeOf(app.db, app.state, itemId) === pl.id ? 'is-on' : ''}" aria-pressed="${placeOf(app.db, app.state, itemId) === pl.id ? 'true' : 'false'}" data-action="pan:place" data-id="${itemId}" data-place="${pl.id}">${pl.label.replace(/^(In|On) the /, '').replace(/^./, (c) => c.toUpperCase())}</button>`)}</div>`;
     },
   });
   setTimeout(() => hydratePhotos(document.getElementById('sheet'), app.store), 0);
@@ -400,6 +402,14 @@ export const actions = {
     if (t.classList.contains('pan-row')) { t.classList.add('is-flash'); setTimeout(() => t.classList.remove('is-flash'), 1600); }
   },
   'pan:photo': (app, el) => photoSheet(app, el.dataset.id),
+  'pan:place': (app, el) => {
+    const id = el.dataset.id;
+    if (!app.state.pantry?.[id] || !PLACES.some((p) => p.id === el.dataset.place)) return;
+    const ops = [set(['pantry', id, 'place'], el.dataset.place)];
+    app.commit({ ops, undo: undoFor(app.state, ops), message: `Moved to ${PLACES.find((p) => p.id === el.dataset.place).label.toLowerCase()}.` });
+    renderSheet();
+    setTimeout(() => hydratePhotos(document.getElementById('sheet'), app.store), 0);
+  },
   'pan:photo-file': async (app, el) => {
     const file = el.files?.[0];
     const itemId = el.dataset.id;
@@ -539,7 +549,7 @@ export const actions = {
       const now = new Date().toISOString();
       const prev = app.state.pantry?.[id];
       const had = prev && !prev.low && (prev.stocked || prev.qty > 0);
-      const since = had && prev.since ? { since: prev.since } : had ? {} : { since: now.slice(0, 10) };
+      const since = { ...(had && prev.since ? { since: prev.since } : had ? {} : { since: now.slice(0, 10) }), ...(prev?.place ? { place: prev.place } : {}) };
       ops.push(set(['pantry', id], staple ? { qty: null, stocked: true, ...label, ...since, by: app.who(), at: now }
         : { qty: Number.isFinite(qty) && qty >= 0 ? round2(qty) : (app.state.pantry?.[id]?.qty ?? 1), stocked: false, ...label, ...since, by: app.who(), at: now }));
       picked.push({ id, r });
