@@ -10,6 +10,7 @@ import {
 } from './planner.js';
 import { lunchNeeds, lunchesIn } from './lunch.js';
 import { shownProduct, productLabel } from './products.js';
+import { activeDeal, applyDeal, regularPrice } from './deals.js';
 
 export const OTHER = { sams: 'jewel', jewel: 'sams' };
 
@@ -119,9 +120,13 @@ const aisleIndex = (a) => { const i = AISLES.indexOf(a); return i < 0 ? AISLES.l
  * The shopping list for a set of dates.
  * opts: { dates, listKey } — listKey keys check-offs in state.checked.
  */
-export function buildList(db, state, { dates, listKey = '' } = {}) {
+export function buildList(db, state, { dates, listKey = '', store: tripStore = null, today = null } = {}) {
   const st = settingsOf(state);
-  const planStore = st.planStore;
+  // A trip (SPEC §12) shops one store: everything that store carries is bought there.
+  const planStore = tripStore === 'sams' || tripStore === 'jewel' ? tripStore : st.planStore;
+  const skips = (listKey && state?.skips?.[listKey]) || {};
+  const skipped = [];
+  const onDay = [];
   const dinner = needsFor(db, state, dates);
   const lunch = lunchNeeds(db, state, dates);
   const { uses, nights } = dinner;
@@ -176,7 +181,8 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
       continue;
     }
     const { store, fallback } = listStore(db, state, id, planStore);
-    const pack = packFor(db, state, id, store);
+    const deal = activeDeal(state, store, id, today);
+    const pack = deal ? applyDeal(packFor(db, state, id, store), deal) : packFor(db, state, id, store);
     let packs = 0;
     if (pack) {
       packs = Math.ceil(shortfall / pack.size - 1e-9);
@@ -199,7 +205,7 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
     const mealPart = Math.max(0, (cost || 0) - extrasPart);
     const lunchShare = need > 0 ? lunchNeed / need : 0;
     const usedTotal = pack ? pack.price * Math.min(packs, shortfall / pack.size) : 0;
-    items.push({
+    const it = {
       key: id, id, name: meta.name, unit: meta.unit, aisle: meta.aisle, storage: meta.storage, kind, custom: meta.custom, unknown: !!meta.unknown,
       need, have, stocked, low, shortfall, extraPacks: xp,
       store, storeFallback: fallback,
@@ -216,7 +222,13 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
       uses: (uses[id] || []).slice().sort((a, b) => a.date.localeCompare(b.date)),
       lunchUses: (lunch.uses[id] || []).slice().sort((a, b) => a.date.localeCompare(b.date)),
       reasons, checked: !!checked[id],
-    });
+      regularCost: pack ? round2(packs * (regularPrice(pack) ?? pack.price)) : null,
+      coupon: pack?.coupon || null,
+      organic: !!(pack?.organic || it_organic(pack)),
+    };
+    if (meta.buyOnDay) { onDay.push(it); continue; }
+    if (skips[id]) { skipped.push({ ...it, skip: skips[id] }); continue; }
+    items.push(it);
   }
   items.push(...freeExtras);
   items.sort((a, b) => aisleIndex(a.aisle) - aisleIndex(b.aisle) || a.name.localeCompare(b.name));
@@ -271,8 +283,15 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
   // Everyday extras: free-text lines plus the extra packs added to catalog items.
   const extrasCost = round2(items.reduce((t, i) => t + (i.freeText ? (i.cost || 0) : (i.costExtras || 0)), 0));
   const lunchCost = round2(items.reduce((t, i) => t + (i.costLunch || 0), 0));
+  // Sales and coupons from a price check (SPEC §12.3): what the regular prices would have been.
+  const regularTotal = round2(items.reduce((t, i) => t + (i.regularCost ?? i.cost ?? 0), 0));
+  const coupons = items.filter((i) => i.coupon).map((i) => ({ id: i.id, name: i.product?.label || i.name, store: i.store, text: i.coupon.text, expires: i.coupon.expires, packs: i.packs }));
+  const checkedDates = items.map((i) => (i.pack?.kind === 'deal' ? i.pack.date : null)).filter(Boolean).sort();
   return {
     listKey, dates, nights, lunches, items, covered, stores, leftovers, freezer, total,
+    skipped, onDay, coupons, regularTotal, savings: round2(Math.max(0, regularTotal - total)),
+    onDayCost: round2(onDay.reduce((t, i) => t + (i.cost || 0), 0)),
+    checkedCount: checkedDates.length, checkedOn: checkedDates.length ? checkedDates[checkedDates.length - 1] : null,
     usedByDinners, usedByLunches, leftoverValue, extrasCost, lunchCost,
     // Dinners get the rest, so the three lines always add up to the total.
     dinnerCost: round2(total - extrasCost - lunchCost),
@@ -289,6 +308,8 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
  * the family's own, their usual, or the researched product at that store — so the store's search
  * finds that one. A rough catalog estimate ("Store-brand or …") falls back to the item's name.
  */
+function it_organic(pack) { return /\borganic\b/i.test(String(pack?.label || '')); }
+
 export function productName(i) {
   if (i?.product?.chosen) return productLabel(i.product);
   if (i?.product?.label && (i.pack?.kind === 'usual' || i.pack?.kind === 'option' || i.pack?.confidence === 'paid')) return i.product.label;

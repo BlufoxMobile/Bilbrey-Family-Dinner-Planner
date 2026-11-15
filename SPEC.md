@@ -499,3 +499,61 @@ sweet potatoes get cinnamon.
   keep their capitals.
 - Profile colors: Jeff and Candi green, Jackson red, Jordan blue, Knox yellow, carried on avatars and
   on selected person chips.
+
+## 12. v2.5 — Trip lists, healthier and cheaper (Jeff, 2026-11-15 evening)
+
+> "For my lunches each week, I would variate between spicy chicken sandwiches from the jewel deli and
+> the salads … I want to know how many full meals I currently have groceries for … make smart
+> schedules for my meal prep … sync our pantry with recent jewel receipts … clear the current list
+> and let's see if you can get me right for today's Jewel trip … Anytime we are buying fruits or
+> veggies, I want to buy only organic if possible … let me know an estimated price after coupons …
+> The goal here is saving money and eating healthier."
+
+### 12.1 Trip lists
+- "Shopping today? Make a list for just this trip" picks a store (Jewel, Sam's or both) and the last
+  day the trip shops for (default: this Friday, payday). The list then covers today through that day,
+  everything the store carries is bought there, and it starts fresh: nothing checked, nothing skipped
+  (`settings.trip = { start, end, store }`; check-offs and skips are keyed `trip:start:end:store`).
+- "Back to the week/month" ends the trip. A trip also ends by itself after its last day.
+
+### 12.2 Skips
+- Any item can be skipped for this trip: "we'll make do" (stretch what's at home) or "check at home
+  first". Skipped items leave the cart and the total and are listed under "Not buying this trip" with
+  a note and "Put back" (`skips[listKey][id] = { reason, note, by, at }`).
+- Items bought fresh the day they're eaten (the Jewel hot-deli chicken sandwich, `buyOnDay`) are never
+  in a trip's cart; they're listed under "Buy fresh on the day" with their cost.
+
+### 12.3 Price checks, sales and coupons
+- Jewel-Osco and Sam's Club don't let apps read prices or coupons, so a price check (Claude reading
+  the store's own site) writes `deals["store/id"] = { label, size, price, was, ends, coupon: { price,
+  text, expires }, checked }`. While current (sale until `ends`, coupon until `expires`, the whole
+  check for 14 days) the list uses that exact product and price, shows Sale / Clip coupon tags and
+  "reg $X", totals "after sales and coupons", says how much the sales save, and lists the coupons to
+  clip before going. Coupons are never clipped for the family: they clip them in their own account.
+
+### 12.4 Organic produce
+- Family setting "Organic fruits and vegetables". When on, produce uses the store's organic version
+  (catalog `organic: { jewel, sams }`, Jewel prices read Nov 15) where one exists; a receipt product
+  that's already organic stays. Items with no organic version keep the regular one.
+
+### 12.5 What the pantry covers, and the prep schedule
+- Pantry, top: planned dinners from today to the end of the period, in date order, each taking its
+  ingredients (main and sides, for five) from the shelf. "N of M planned dinners are fully stocked",
+  night by night with what each short one needs, what the list buys to finish the rest, dinners the
+  leftovers could also make, and ready-made backups on the shelf (burritos, soups, smashed patties).
+- Prep schedule (Plan page; "Prep today and tomorrow" on Tonight): thaw meat the evening before
+  (only what's in the freezer; a cold-water thaw if it's too late), cook-once for ground beef on two
+  nights within three days (thawed together), once-a-week lunch jobs (split the party bag, bag the
+  Ritz), packing the next day's lunches each evening, and a morning reminder for anything bought fresh.
+
+### 12.6 Receipts → pantry
+- Saving a scanned receipt (a paper photo or a screenshot from the store's app) can add its matched
+  groceries to the pantry (on by default; receipts from the last 14 days). The Pantry page lists
+  recent saved receipts not yet synced, with "Add to pantry". A receipt syncs once
+  (`receiptLog[id].pantry`).
+
+### 12.7 Lunches
+- Jeff alternates Jewel salad bowls that come with ranch (Bonduelle Chicken BLT with buttermilk ranch,
+  Chef with turkey & ham with creamy ranch, Kickin' BBQ chicken with BBQ ranch) and a spicy chicken
+  sandwich from the Jewel hot deli, with BODYARMOR Orange Mango. Knox's snacks can be Ritz from the
+  pantry box; party-bag chips are split into snack bags once a week.

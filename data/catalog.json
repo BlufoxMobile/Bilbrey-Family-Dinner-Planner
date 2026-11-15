@@ -1,7 +1,7 @@
 {
  "version": 2,
  "updated": "2026-11-15",
- "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos.",
+ "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos. 2026-11-15 (v2.5): Jewel salad bowls and the hot-deli chicken sandwich for Jeff’s lunches; organic produce at Jewel (prices read from jewelosco.com, Glen Ellyn, Nov 15) used when the family buys organic; frozen sirloin patties cook from frozen.",
  "units": {
   "bags": "bags",
   "bars": "bars",
@@ -31,6 +31,7 @@
   "potstickers": "potstickers",
   "pouches": "pouches",
   "rolls": "rolls",
+  "sandwiches": "sandwiches",
   "slices": "slices",
   "snack cups": "snack cups",
   "sticks": "sticks",
@@ -887,6 +888,14 @@
    "usual": {
     "store": "sams",
     "tier": "generic"
+   },
+   "organic": {
+    "jewel": {
+     "size": 3,
+     "price": 5.79,
+     "label": "O Organics gold potatoes, 3 lb bag",
+     "confidence": "listed"
+    }
    }
   },
   "sweet": {
@@ -1278,6 +1287,20 @@
       "label": "Whole carrots, 1 lb bag (produce — no name-brand version)"
      }
     }
+   },
+   "organic": {
+    "jewel": {
+     "size": 2,
+     "price": 3.79,
+     "label": "O Organics carrots, 2 lb bag",
+     "confidence": "listed"
+    },
+    "sams": {
+     "size": 5,
+     "price": 3.72,
+     "label": "Organic Tender Sweet Carrots, 5 lb bag",
+     "confidence": "est"
+    }
    }
   },
   "onions": {
@@ -1317,6 +1340,14 @@
       "price": 3.49,
       "label": "Yellow onions, 3 lb bag (produce — no name-brand version)"
      }
+    }
+   },
+   "organic": {
+    "jewel": {
+     "size": 2,
+     "price": 3.49,
+     "label": "O Organics yellow onions, 2 lb bag",
+     "confidence": "listed"
     }
    }
   },
@@ -1358,6 +1389,14 @@
       "price": 1.49,
       "label": "Bell peppers, each (produce — no name-brand version)"
      }
+    }
+   },
+   "organic": {
+    "jewel": {
+     "size": 1,
+     "price": 2.49,
+     "label": "Organic bell pepper (red, yellow or orange), each",
+     "confidence": "listed"
     }
    }
   },
@@ -1429,6 +1468,14 @@
       "label": "Fresh Express romaine hearts, 3 ct"
      }
     }
+   },
+   "organic": {
+    "jewel": {
+     "size": 2,
+     "price": 2.99,
+     "label": "Organic green romaine lettuce, 1 head (about 2 hearts, $2.99/lb)",
+     "confidence": "listed"
+    }
    }
   },
   "tomato": {
@@ -1469,6 +1516,14 @@
       "price": 2.49,
       "label": "Fresh tomatoes, per lb (produce — no name-brand version)"
      }
+    }
+   },
+   "organic": {
+    "jewel": {
+     "size": 1,
+     "price": 3.49,
+     "label": "Organic Roma tomatoes, per lb",
+     "confidence": "listed"
     }
    }
   },
@@ -1511,6 +1566,14 @@
       "label": "English cucumbers, each (produce — no name-brand version)"
      }
     }
+   },
+   "organic": {
+    "jewel": {
+     "size": 1,
+     "price": 1.49,
+     "label": "Organic cucumber, each",
+     "confidence": "listed"
+    }
    }
   },
   "spinach": {
@@ -1550,6 +1613,14 @@
       "price": 3.29,
       "label": "Fresh Express baby spinach, 8 oz"
      }
+    }
+   },
+   "organic": {
+    "jewel": {
+     "size": 5,
+     "price": 3.49,
+     "label": "Earthbound Farm Organic Baby Spinach, 5 oz tray",
+     "confidence": "listed"
     }
    }
   },
@@ -1591,6 +1662,14 @@
       "price": 2.79,
       "label": "Monterey sliced white mushrooms, 8 oz"
      }
+    }
+   },
+   "organic": {
+    "jewel": {
+     "size": 8,
+     "price": 2.99,
+     "label": "O Organics sliced baby bella mushrooms, 8 oz",
+     "confidence": "listed"
     }
    }
   },
@@ -1634,7 +1713,15 @@
      }
     }
    },
-   "extra": true
+   "extra": true,
+   "organic": {
+    "jewel": {
+     "size": 3,
+     "price": 5.99,
+     "label": "Organic Gala apples, 3 lb bag",
+     "confidence": "listed"
+    }
+   }
   },
   "oranges": {
    "name": "Oranges",
@@ -1754,6 +1841,14 @@
       "label": "Limes, each (produce — no name-brand version)"
      }
     }
+   },
+   "organic": {
+    "jewel": {
+     "size": 1,
+     "price": 0.69,
+     "label": "Organic lime, each",
+     "confidence": "listed"
+    }
    }
   },
   "garlic": {
@@ -1795,6 +1890,14 @@
       "price": 0.75,
       "label": "Fresh garlic, 1 head (~10 cloves) (produce — no name-brand version)"
      }
+    }
+   },
+   "organic": {
+    "jewel": {
+     "size": 30,
+     "price": 2.49,
+     "label": "Organic garlic, 3-head mesh bag (about 30 cloves)",
+     "confidence": "listed"
     }
    }
   },
@@ -3956,6 +4059,14 @@
       "label": "Fresh green beans, loose, per lb (produce — no name-brand version)"
      }
     }
+   },
+   "organic": {
+    "jewel": {
+     "size": 0.75,
+     "price": 4.49,
+     "label": "Earthbound Farm Organic Green Beans, 12 oz bag",
+     "confidence": "listed"
+    }
    }
   },
   "zucchini": {
@@ -3996,6 +4107,14 @@
       "label": "Zucchini, loose, per lb (produce — no name-brand version)"
      }
     }
+   },
+   "organic": {
+    "jewel": {
+     "size": 1,
+     "price": 1.99,
+     "label": "Organic green zucchini, per lb",
+     "confidence": "listed"
+    }
    }
   },
   "cilantro": {
@@ -4023,6 +4142,14 @@
       "price": 0.99,
       "label": "Fresh cilantro, 1 bunch (produce — no name-brand version)"
      }
+    }
+   },
+   "organic": {
+    "jewel": {
+     "size": 1,
+     "price": 1.49,
+     "label": "Organic cilantro, 1 bunch",
+     "confidence": "listed"
     }
    }
   },
@@ -4111,6 +4238,20 @@
    "usual": {
     "store": "sams",
     "tier": "generic"
+   },
+   "organic": {
+    "jewel": {
+     "size": 1,
+     "price": 0.79,
+     "label": "Organic bananas, per lb (about 3 bananas)",
+     "confidence": "listed"
+    },
+    "sams": {
+     "size": 3,
+     "price": 2.16,
+     "label": "Organic Bananas, 3 lbs. (the family’s usual)",
+     "confidence": "paid"
+    }
    }
   },
   "grapes": {
@@ -4153,7 +4294,15 @@
      }
     }
    },
-   "extra": true
+   "extra": true,
+   "organic": {
+    "jewel": {
+     "size": 2,
+     "price": 7.98,
+     "label": "Organic black seedless grapes, 2 lb bag",
+     "confidence": "listed"
+    }
+   }
   },
   "cereal": {
    "name": "Breakfast cereal",
@@ -5262,7 +5411,15 @@
      }
     }
    },
-   "lunch": true
+   "lunch": true,
+   "organic": {
+    "jewel": {
+     "size": 16,
+     "price": 5.99,
+     "label": "Earthbound Farm Organic Spring Mix, 16 oz tray",
+     "confidence": "listed"
+    }
+   }
   },
   "grilledChicken": {
    "name": "Fully cooked grilled chicken breast",
@@ -5455,7 +5612,21 @@
      }
     }
    },
-   "lunch": true
+   "lunch": true,
+   "organic": {
+    "jewel": {
+     "size": 1,
+     "price": 2.49,
+     "label": "O Organics baby-cut carrots, 16 oz",
+     "confidence": "listed"
+    },
+    "sams": {
+     "size": 3,
+     "price": 4.62,
+     "label": "Organic Sweet Petite Baby Carrots, 3 lb",
+     "confidence": "est"
+    }
+   }
   },
   "greekYogurtCups": {
    "name": "Greek yogurt cups (5.3 oz)",
@@ -5958,7 +6129,8 @@
       "label": "Certified Angus Beef ⅓ lb patties, 8 ct (est.)"
      }
     }
-   }
+   },
+   "cookFromFrozen": true
   },
   "cookedBacon": {
    "name": "Fully cooked bacon (Hormel Black Label)",
@@ -6928,6 +7100,124 @@
       "size": 1,
       "price": 2,
       "label": "La Preferida Mexican Homestyle Beans (Frijoles Charros), 15 oz (paid $2.00 on sale Oct 26) (the family’s usual)"
+     }
+    }
+   }
+  },
+  "bonduelleBltBowl": {
+   "name": "Bonduelle Bistro Bowl, Chicken BLT (buttermilk ranch)",
+   "unit": "bowls",
+   "aisle": "Produce",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "lunch": true,
+   "aliases": [
+    "bonduelle chicken blt",
+    "bistro bowl chicken blt",
+    "chicken blt salad bowl",
+    "ready pac chicken blt"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Chicken BLT with Buttermilk Ranch, 6.1 oz (260 cal, 11 g protein)"
+     },
+     "name": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Chicken BLT with Buttermilk Ranch, 6.1 oz (260 cal, 11 g protein)"
+     }
+    }
+   }
+  },
+  "bonduelleChefBowl": {
+   "name": "Bonduelle Bistro Bowl, Chef with turkey & ham (creamy ranch)",
+   "unit": "bowls",
+   "aisle": "Produce",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "lunch": true,
+   "aliases": [
+    "bonduelle chef salad",
+    "bistro bowl chef",
+    "chef salad bowl turkey ham",
+    "ready pac chef salad"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Chef with Turkey & Ham, Creamy Ranch, 7.75 oz (250 cal, 12 g protein)"
+     },
+     "name": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Chef with Turkey & Ham, Creamy Ranch, 7.75 oz (250 cal, 12 g protein)"
+     }
+    }
+   }
+  },
+  "bonduelleBbqBowl": {
+   "name": "Bonduelle Bistro Bowl, Kickin' BBQ chicken (BBQ ranch)",
+   "unit": "bowls",
+   "aisle": "Produce",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "lunch": true,
+   "aliases": [
+    "bonduelle bbq chicken salad",
+    "kickin bbq chicken salad",
+    "bistro bowl bbq",
+    "bbq ranch salad bowl"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Kickin' BBQ Style Chicken Salad with BBQ Ranch, 7 oz (230 cal, 9 g protein)"
+     },
+     "name": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Kickin' BBQ Style Chicken Salad with BBQ Ranch, 7 oz (230 cal, 9 g protein)"
+     }
+    }
+   }
+  },
+  "jewelDeliChickenSandwich": {
+   "name": "Spicy chicken sandwich (Jewel hot deli)",
+   "unit": "sandwiches",
+   "aisle": "Meat",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "lunch": true,
+   "buyOnDay": true,
+   "aliases": [
+    "spicy chicken sandwich",
+    "jewel chicken sandwich",
+    "jojos chicken sandwich",
+    "hot deli chicken sandwich",
+    "deli chicken sandwich"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 1,
+      "label": "Jojo's Chicken Sandwich from the Jewel hot deli, made fresh (listed at $1 on jewelosco.com, in store only: check the deli’s price)"
+     },
+     "name": {
+      "size": 1,
+      "price": 1,
+      "label": "Jojo's Chicken Sandwich from the Jewel hot deli, made fresh (listed at $1 on jewelosco.com, in store only: check the deli’s price)"
      }
     }
    }

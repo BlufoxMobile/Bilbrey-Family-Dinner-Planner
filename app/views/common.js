@@ -7,6 +7,7 @@ import { lunchVote } from '../lunch.js';
 import { listJoin, midSentence, relativeDay, shortWeekday } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
+import { prepSchedule } from '../prep.js';
 
 /** Calories are shown when nutrition.json is there and this phone hasn't hidden them. */
 export const showNutrition = (app) => hasNutrition(app.db) && !app.store?.device?.hideNutrition;
@@ -125,3 +126,22 @@ export function entryDinner(app, entry) {
 }
 
 export { raw };
+
+// ---------------------------------------------------------------- v2.5: the prep schedule (SPEC §12.5)
+
+const PREP_WHEN = { morning: 'Morning', anytime: 'Today', evening: 'Evening' };
+const PREP_ICON = { thaw: 'snow', cook: 'flame', lunch: 'lunch', buy: 'store' };
+
+/** Thaw, cook-once and lunch-packing jobs for the next few days, from the plan and the pantry. */
+export function prepCard(app, { days = 7, title = 'Prep schedule', empty = true } = {}) {
+  const today = app.today();
+  const sched = prepSchedule(app.db, app.state, { today, days });
+  if (!sched.length && !empty) return '';
+  return html`<section class="prep-card" aria-labelledby="prep-h-${days}">
+    <h2 id="prep-h-${days}" class="section-title">${ic('clock', { size: 22 })}${title}</h2>
+    ${sched.length ? html`<ol class="prep-days">${sched.map((d) => html`<li class="prep-day">
+      <h3 class="prep-date">${d.date === today ? 'Today' : relativeDay(d.date, today)}</h3>
+      <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${PREP_WHEN[t.when] || ''}</small>${t.text}</span></li>`)}</ul>
+    </li>`)}</ol>` : html`<p class="muted small">Nothing to thaw or pack in the next few days.</p>`}
+  </section>`;
+}

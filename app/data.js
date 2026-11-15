@@ -51,6 +51,15 @@ function cleanPack(p, source) {
   return out;
 }
 
+function organicPacks(raw) {
+  let out = null;
+  for (const s of STORES) {
+    const p = cleanPack(raw?.organic?.[s], 'catalog');
+    if (p) (out ||= {})[s] = { ...p, organic: true };
+  }
+  return out;
+}
+
 export function normalizeIngredient(id, raw) {
   const packs = {};
   for (const s of STORES) {
@@ -75,6 +84,12 @@ export function normalizeIngredient(id, raw) {
     ...(raw?.usual && STORES.includes(raw.usual.store) ? { usual: { store: raw.usual.store, tier: BRANDS.includes(raw.usual.tier) ? raw.usual.tier : 'generic' } } : {}),
     // One retail container in catalog units (1 jar = 24 oz), for pantry scans that count jars and boxes.
     ...(Number(raw?.container?.size) > 0 ? { container: { size: Number(raw.container.size), ...(raw.container.label ? { label: String(raw.container.label) } : {}) } } : {}),
+    // v2.5: the organic version at each store, for produce (used when settings.organic is on).
+    ...(organicPacks(raw) ? { organic: organicPacks(raw) } : {}),
+    // Bought fresh the day it's eaten (a hot-deli sandwich), so it isn't on a trip's cart.
+    ...(raw?.buyOnDay ? { buyOnDay: true } : {}),
+    // Cooks straight from frozen (frozen burger patties), so the prep schedule doesn't thaw it.
+    ...(raw?.cookFromFrozen ? { cookFromFrozen: true } : {}),
     packs,
   };
 }
@@ -228,6 +243,8 @@ export function normalizeLunchItem(raw, extra = {}) {
     items: cleanItems(raw.items),
     tags: Array.isArray(raw.tags) ? raw.tags.map((t) => String(t).toLowerCase()) : [],
     prep: raw.prep ? String(raw.prep) : '',
+    // v2.5: a once-a-week job for the prep schedule ("Split the party bag into snack bags").
+    ...(raw.batch ? { batch: String(raw.batch) } : {}),
     ...extra,
   };
 }

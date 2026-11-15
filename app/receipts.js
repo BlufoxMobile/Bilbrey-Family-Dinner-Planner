@@ -418,3 +418,58 @@ export function suggestMatches(db, state, line, limit = 5) {
   for (const [id, c] of Object.entries(state?.custom || {})) consider(id, c?.name || id, []);
   return out.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)).slice(0, limit);
 }
+
+// ---------------------------------------------------------------- v2.5: receipts → pantry
+
+/** How recent a receipt still is when its groceries are likely all still in the house. */
+export const PANTRY_SYNC_DAYS = 14;
+
+/**
+ * What one saved receipt adds to the pantry: each line matched to a grocery adds its pack size ×
+ * quantity (a staple is just marked stocked). → [{ id, add, staple, name }]
+ */
+export function receiptPantryAdds(db, state, log) {
+  const adds = new Map();
+  for (const raw of log?.lines || []) {
+    const l = expandLine(raw);
+    if (!l?.matchId || !validId(db, state, l.matchId)) continue;
+    const staple = (db?.ingredients?.[l.matchId]?.kind || state?.custom?.[l.matchId]?.kind) === 'staple';
+    const size = Number(l.packSize) > 0 ? Number(l.packSize) : null;
+    if (!staple && !size) continue;
+    const prev = adds.get(l.matchId) || { id: l.matchId, add: 0, staple, name: db?.ingredients?.[l.matchId]?.name || state?.custom?.[l.matchId]?.name || l.product };
+    if (!staple) prev.add = round3(prev.add + size * (l.qty || 1));
+    adds.set(l.matchId, prev);
+  }
+  return [...adds.values()];
+}
+
+/** The ops that put a saved receipt's groceries in the pantry, once (the log remembers). */
+export function receiptPantryOps(db, state, receiptId, { who = 'Family', at = null } = {}) {
+  const log = state?.receiptLog?.[receiptId];
+  if (!log || log.pantry) return [];
+  const now = at || new Date().toISOString();
+  const ops = [];
+  for (const a of receiptPantryAdds(db, state, log)) {
+    const prev = state?.pantry?.[a.id] || {};
+    if (a.staple) ops.push(set(['pantry', a.id], { qty: null, stocked: true, by: who, at: now }));
+    else {
+      const base = typeof prev.qty === 'number' && !prev.low ? prev.qty : 0;
+      ops.push(set(['pantry', a.id], { ...(prev.label ? { label: prev.label } : {}), qty: round2(base + a.add), stocked: false, by: who, at: now }));
+    }
+  }
+  ops.push(set(['receiptLog', receiptId, 'pantry'], now));
+  return ops;
+}
+
+/** Saved receipts from the last two weeks whose groceries aren't in the pantry yet. */
+export function unsyncedReceipts(db, state, today) {
+  const out = [];
+  for (const [id, log] of Object.entries(state?.receiptLog || {})) {
+    if (!log || log.pantry || !isISODate(log.date) || !today) continue;
+    const days = (Date.parse(`${today}T12:00:00Z`) - Date.parse(`${log.date}T12:00:00Z`)) / 86400000;
+    if (days < 0 || days > PANTRY_SYNC_DAYS) continue;
+    const adds = receiptPantryAdds(db, state, log);
+    if (adds.length) out.push({ id, store: log.store, date: log.date, total: log.total, adds });
+  }
+  return out.sort((a, b) => b.date.localeCompare(a.date));
+}

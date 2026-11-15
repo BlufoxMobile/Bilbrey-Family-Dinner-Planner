@@ -3,11 +3,14 @@
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, switchToggle, confirmSheet } from '../ui.js';
 import { resizeImage, LIMITS } from '../images.js';
 import { STORAGE, AISLES } from '../config.js';
-import { fmtQty, round2 } from '../util.js';
+import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween } from '../util.js';
 import { setPantryOps, removePantryOps, customItemOps, undoFor } from '../actions.js';
 import { set } from '../state.js';
 import { kindOf } from '../planner.js';
-import { unitText } from '../shopping.js';
+import { unitText, buildList } from '../shopping.js';
+import { pantryCoverage } from '../coverage.js';
+import { unsyncedReceipts, receiptPantryOps } from '../receipts.js';
+import { currentRange } from './plan.js';
 import { scanQtyIn } from '../scanqty.js';
 
 export const title = () => 'Pantry';
@@ -61,6 +64,49 @@ function pantryRow(app, id, p) {
   </li>`;
 }
 
+/** The dates the coverage card looks at: today to the end of the plan's period (at least a week). */
+function coverDates(app) {
+  const today = app.today();
+  const range = currentRange(app);
+  const end = range.end > addDays(today, 6) ? range.end : addDays(today, 6);
+  return datesBetween(today, end);
+}
+
+const STORE_NAMES = { sams: 'Sam’s Club', jewel: 'Jewel-Osco', other: 'Other store' };
+
+function coverageCard(app) {
+  const dates = coverDates(app);
+  const cov = pantryCoverage(app.db, app.state, { dates });
+  if (!cov.total && !cov.extra.length && !cov.backups.length) return '';
+  const today = app.today();
+  const short = cov.rows.filter((r) => !r.ready);
+  const list = short.length ? buildList(app.db, app.state, { dates, today }) : null;
+  const toBuy = list ? list.items.filter((i) => i.reasons.includes('dinners')) : [];
+  return html`<section class="cover-card" aria-labelledby="cov-h">
+    <h2 id="cov-h" class="section-title">What the pantry covers</h2>
+    ${cov.total ? html`<p class="cover-big"><b>${cov.ready}</b><span>of ${cov.total} planned ${cov.total === 1 ? 'dinner is' : 'dinners are'} fully stocked<small>${rangeLabel(dates[0], dates[dates.length - 1])}, main and sides for five</small></span></p>
+      <div class="cover-meter" role="img" aria-label="${cov.ready} of ${cov.total} dinners stocked">${cov.rows.map((r) => html`<span class="cover-pip ${r.ready ? 'is-on' : ''}" title="${shortWeekday(r.date)}: ${r.title}"></span>`)}</div>
+      <details class="cover-more" ${cov.total <= 8 ? 'open' : ''}><summary>Night by night</summary>
+        <ul class="cover-list">${cov.rows.map((r) => html`<li class="${r.ready ? 'is-ready' : ''}"><span class="cover-day">${r.date === today ? 'Tonight' : `${shortWeekday(r.date)} ${shortDate(r.date)}`}</span><span class="cover-what"><b>${r.title}</b><small>${r.ready ? 'Everything’s here' : `Needs ${listJoin(r.missing.map((m) => m.name.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()))}`}</small></span></li>`)}</ul>
+      </details>
+      ${when(short.length, () => html`<p class="small">To make the other ${short.length}, the list buys ${toBuy.length} ${toBuy.length === 1 ? 'item' : 'items'}, about ${money(list.dinnerCost)} for dinners. <a href="#/list">See the list</a></p>`)}` : html`<p class="small">Nothing planned yet. <a href="#/plan">Plan dinners</a> and this shows which ones the pantry already covers.</p>`}
+    ${when(cov.extra.length, () => html`<p class="small"><b>The leftovers could also make:</b> ${listJoin(cov.extra.slice(0, 6).map((x) => x.title))}.</p>`)}
+    ${when(cov.backups.length, () => html`<p class="small"><b>Quick backups on the shelf:</b> ${listJoin(cov.backups.slice(0, 8).map((b) => `${b.name.replace(/\s*\(.*?\)\s*/g, ' ').trim()} (${fmtQty(b.qty)})`))}.</p>`)}
+  </section>`;
+}
+
+function syncCard(app) {
+  const recs = unsyncedReceipts(app.db, app.state, app.today());
+  return html`<section class="sync-card" aria-labelledby="sync-h">
+    <h2 id="sync-h" class="section-title">Sync from receipts</h2>
+    ${recs.length ? html`<ul class="sync-list">${recs.map((r) => html`<li><span><b>${STORE_NAMES[r.store] || 'Receipt'}, ${shortDate(r.date)}</b><small>${r.adds.length} ${r.adds.length === 1 ? 'grocery' : 'groceries'}: ${listJoin(r.adds.slice(0, 4).map((a) => a.name.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()))}${r.adds.length > 4 ? '…' : ''}</small></span>
+      <button type="button" class="btn btn-small btn-secondary" data-action="pan:sync" data-id="${r.id}">Add to pantry</button></li>`)}</ul>`
+      : html`<p class="small">Scan a receipt after each trip and its groceries go straight onto these shelves.</p>`}
+    <p class="muted small">Jewel-Osco and Sam’s Club don’t let other apps read your receipts, so the scanner reads them instead: a photo of the paper receipt, or a screenshot of the receipt in the store’s app (Account, then Purchases or Purchase history).</p>
+    <button type="button" class="btn btn-secondary btn-block" data-action="rcpt:scan">${ic('camera', { size: 20 })}Scan a receipt</button>
+  </section>`;
+}
+
 export function render(app) {
   const pantry = app.state.pantry || {};
   const entries = Object.entries(pantry).filter(([id, p]) => p && meta(app, id));
@@ -69,6 +115,7 @@ export function render(app) {
   const canScan = app.store.device.key && !app.store.device.localOnly && app.store.health?.ai !== false;
   return html`<div class="page page-pantry">
     <header class="page-head"><h1 class="page-title">Pantry</h1></header>
+    ${coverageCard(app)}
     <section class="scan-card">
       <div class="scan-text">
         <h2 class="scan-title">Scan the pantry before you shop</h2>
@@ -85,6 +132,7 @@ export function render(app) {
       <label class="search">${ic('search', { size: 20 })}<input type="search" id="pantry-search" placeholder="Chicken, rice, green beans…" value="${app.ui.pantryQuery}" data-input="pan:search" aria-label="Search ingredients to add" autocomplete="off"></label>
       <div id="pan-results">${results(app)}</div>
     </section>
+    ${syncCard(app)}
     ${when(low.length, () => html`<section class="pan-group"><h2 class="section-title">Running low</h2><ul class="pan-list">${low.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)}
     ${entries.length ? groups.filter((g) => g.rows.length).map((g) => html`<section class="pan-group"><h2 class="section-title">${g.label}</h2><ul class="pan-list">${g.rows.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)
       : html`<div class="empty"><span class="empty-ic">${ic('pantry', { size: 28 })}</span><h3 class="empty-title">The pantry is empty</h3><p class="empty-body">Scan your shelves or add what you have. Staples like salt and spices stay off the list until you mark them running low.</p></div>`}
@@ -247,6 +295,12 @@ function review(app, st) {
 }
 
 export const actions = {
+  'pan:sync': (app, el) => {
+    const ops = receiptPantryOps(app.db, app.state, el.dataset.id, { who: app.who() || 'Family' });
+    const n = ops.filter((o) => o.path[0] === 'pantry').length;
+    if (!n) { toast('That receipt is already in the pantry.'); return; }
+    app.commit({ ops, undo: undoFor(app.state, ops), message: `${n} ${n === 1 ? 'item is' : 'items are'} in the pantry now.` });
+  },
   'pan:search': (app, el) => {
     app.ui.pantryQuery = el.value;
     const box = document.getElementById('pan-results');

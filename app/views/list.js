@@ -1,7 +1,7 @@
 // LIST: the shopping list for the selected period — by store, then aisle — with
 // per-item store, product and price, check-off, the freezer panel, extras, and the store handoff.
 import { html, ic, when, openSheet, closeSheet, toast, copyText, confirmSheet, segmented, renderSheet } from '../ui.js';
-import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate, round2 } from '../util.js';
+import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate, round2, datesBetween, addDays, weekday, isISODate, weekdayName } from '../util.js';
 import { listKeyFor, dinnerById } from '../planner.js';
 import { buildList, formatPackQty, formatStoreList, formatFullList, unitText, OTHER, productName } from '../shopping.js';
 import {
@@ -16,10 +16,102 @@ import { openReceiptScan } from './receipts.js';
 export const title = () => 'Shopping list';
 const NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
 
+/** The trip in progress (SPEC §12): one store, today through the last day it shops for. */
+export function activeTrip(app) {
+  const t = app.settings.trip;
+  return t && t.end >= app.today() ? t : null;
+}
+export const tripKey = (t) => `trip:${t.start}:${t.end}:${t.store}`;
+
 function current(app) {
+  const today = app.today();
+  const trip = activeTrip(app);
+  if (trip) {
+    const start = trip.start > today ? trip.start : today;
+    const range = { start, end: trip.end, dates: datesBetween(start, trip.end), trip: true };
+    const listKey = tripKey(trip);
+    return { range, listKey, trip, list: buildList(app.db, app.state, { dates: range.dates, listKey, store: trip.store === 'both' ? null : trip.store, today }) };
+  }
   const range = currentRange(app);
   const listKey = listKeyFor(range);
-  return { range, listKey, list: buildList(app.db, app.state, { dates: range.dates, listKey }) };
+  return { range, listKey, trip: null, list: buildList(app.db, app.state, { dates: range.dates, listKey, today }) };
+}
+
+const TRIP_STORES = [{ id: 'jewel', label: 'Jewel-Osco' }, { id: 'sams', label: "Sam's Club" }, { id: 'both', label: 'Both' }];
+const SKIP_WHY = { stretch: 'Making do with what we have', check: 'Check at home first', have: 'We have it' };
+
+function tripBar(app, trip, range, list) {
+  const nights = list.nights.length;
+  const lunches = list.lunches.length;
+  return html`<div class="trip-bar">
+    <span class="trip-ic">${ic('cart', { size: 22 })}</span>
+    <p class="trip-what"><b>This trip: ${trip.store === 'both' ? 'Sam’s Club and Jewel-Osco' : NAMES[trip.store]}</b>
+      <small>For ${rangeLabel(range.start, range.end)}${nights || lunches ? `: ${listJoin([nights ? `${nights} ${nights === 1 ? 'dinner' : 'dinners'}` : '', lunches ? `${lunches} packed ${lunches === 1 ? 'lunch' : 'lunches'}` : ''].filter(Boolean))}` : ''}</small></p>
+    <span class="trip-acts">
+      <button type="button" class="btn btn-small btn-quiet" data-action="trip:new">Change</button>
+      <button type="button" class="btn btn-small btn-quiet" data-action="trip:end">Back to the ${app.settings.period === 'month' ? 'month' : 'week'}</button>
+    </span>
+  </div>`;
+}
+
+/** The last day a new trip shops for: this coming Friday (payday), or Sunday if it's already the weekend. */
+export function defaultTripEnd(today) {
+  const wd = weekday(today); // 0 = Sunday
+  const toFri = (5 - wd + 7) % 7;
+  return addDays(today, wd === 6 ? 1 : toFri);
+}
+
+function openTrip(app) {
+  const t = activeTrip(app);
+  const st = openTrip.state = { store: t?.store || 'jewel', end: t?.end || defaultTripEnd(app.today()) };
+  openSheet({
+    id: 'trip',
+    title: t ? 'Change this trip' : 'Shop for one trip',
+    subtitle: 'The list shows only what this trip needs: the dinners and packed lunches from today through the day you pick, minus what’s in the pantry.',
+    render: () => html`
+      <h3 class="sheet-h">Store</h3>
+      ${segmented('tripStore', TRIP_STORES, st.store, { label: 'Store for this trip', action: 'trip:store' })}
+      <form class="form" data-submit="trip:save">
+        <label class="field"><span class="field-label">Shopping for meals through</span>
+          <input class="input" type="date" name="end" min="${app.today()}" value="${st.end}" required></label>
+        <p class="muted small">${t ? 'Changing the dates or store starts a fresh list: nothing checked, nothing skipped.' : 'Starts a fresh list: nothing checked, nothing skipped. The week or month view comes back when the trip is over.'}</p>
+        <button type="submit" class="btn btn-primary btn-block">${ic('cart', { size: 20 })}${t ? 'Update the trip' : 'Start the trip list'}</button>
+      </form>`,
+  });
+}
+
+function skippedSection(app, list, listKey) {
+  if (!list.skipped.length) return '';
+  return html`<section class="skipped" aria-labelledby="sk-h">
+    <h2 id="sk-h" class="section-title">Not buying this trip (${list.skipped.length})</h2>
+    <ul class="skip-list">${list.skipped.map((i) => html`<li class="skip-row">
+      <span><b>${i.name}</b><small>${[SKIP_WHY[i.skip?.reason] || 'Skipped', i.skip?.note || `${unitText(i.shortfall, i.unit)} short`].filter(Boolean).join(': ')}${i.cost != null ? ` (saves ${money(i.cost)})` : ''}</small></span>
+      <button type="button" class="btn btn-small btn-quiet" data-action="list:unskip" data-key="${i.id}" data-list="${listKey}">Put back</button>
+    </li>`)}</ul>
+  </section>`;
+}
+
+function onDaySection(app, list) {
+  if (!list.onDay.length) return '';
+  const today = app.today();
+  return html`<section class="on-day" aria-labelledby="od-h">
+    <h2 id="od-h" class="section-title">Buy fresh on the day</h2>
+    <p class="muted small">Not in this trip’s cart: pick these up the morning they’re eaten.</p>
+    <ul class="skip-list">${list.onDay.map((i) => {
+      const days = [...new Set([...(i.lunchUses || []), ...(i.uses || [])].map((u) => u.date))].sort().map((d) => (d === today ? 'today' : shortWeekday(d)));
+      const who = [...new Set((i.lunchUses || []).map((u) => u.person))];
+      return html`<li class="skip-row"><span><b>${i.name}</b><small>${listJoin(days)}${who.length ? ` for ${listJoin(who)}` : ''}${i.pack ? `, ${money(i.pack.price)} each (${priceSource(i.pack).kind === 'checked' ? 'checked' : 'listed'})` : ''}</small></span><b>${i.cost != null ? money(i.cost) : ''}</b></li>`;
+    })}</ul>
+  </section>`;
+}
+
+function couponsToClip(app, list) {
+  if (!list.coupons.length) return '';
+  return html`<section class="clip-first" aria-labelledby="clip-h">
+    <h2 id="clip-h" class="section-title">${ic('receipt', { size: 22 })}Clip ${list.coupons.length === 1 ? 'this coupon' : `these ${list.coupons.length} coupons`} first</h2>
+    <ul class="clip-list">${list.coupons.map((c) => html`<li><b>${c.name}</b><small>${c.text}${c.expires ? `, ends ${weekdayName(c.expires)} ${shortDate(c.expires)}` : ''}</small></li>`)}</ul>
+    <p class="muted small">Coupons only count once they’re clipped in your ${NAMES[list.coupons[0].store] || 'store'} account. The total above assumes you clip them.</p>
+  </section>`;
 }
 
 function usesText(app, item) {
@@ -50,6 +142,10 @@ function priceTag(i) {
   const src = priceSource(i.pack);
   if (src.kind === 'paid') return html`<small class="paid" title="What you paid on a receipt">paid${i.pack.date ? ` ${money(i.pack.price)} · ${shortDate(i.pack.date)}` : ''}</small>`;
   if (src.kind === 'family' || src.kind === 'typed') return html`<small class="paid">your price</small>`;
+  if (src.kind === 'checked') {
+    if (i.regularCost != null && i.cost != null && i.regularCost > i.cost + 0.004) return html`<small class="was" title="Regular price">reg ${money(i.regularCost)}</small>`;
+    return html`<small class="paid" title="Price checked on the store’s site">checked${src.date ? ` ${shortDate(src.date)}` : ''}</small>`;
+  }
   if (src.kind === 'listed') return '';
   return html`<small class="est" title="Estimated price">est.</small>`;
 }
@@ -62,7 +158,7 @@ function itemRow(app, i, listKey) {
     <button type="button" class="item-main" data-action="list:item" data-key="${i.key}">
       <span class="item-name">${i.name}</span>
       ${when(!i.freeText && i.product?.label, () => html`<span class="item-product ${chosen ? '' : 'is-usual'}">${i.product.label}</span>`)}
-      <span class="item-qty">${qty}${i.reasons.includes('lunches') ? html` <span class="tag tag-lunch">Lunch</span>` : ''}${i.pack?.source === 'family' ? html` <span class="tag">family price</span>` : ''}</span>
+      <span class="item-qty">${qty}${i.reasons.includes('lunches') ? html` <span class="tag tag-lunch">Lunch</span>` : ''}${i.organic ? html` <span class="tag tag-organic">Organic</span>` : ''}${i.pack?.sale ? html` <span class="tag tag-sale">Sale</span>` : ''}${i.coupon ? html` <span class="tag tag-coupon">Clip coupon</span>` : ''}${i.pack?.source === 'family' ? html` <span class="tag">family price</span>` : ''}</span>
       <span class="item-detail">${detail(app, i)}</span>
     </button>
     <span class="item-price">${i.cost == null ? html`<span class="muted">add price</span>` : html`${money(i.cost)}${priceTag(i)}`}
@@ -193,7 +289,7 @@ function extrasSection(app) {
 }
 
 export function render(app) {
-  const { range, listKey, list } = current(app);
+  const { range, listKey, list, trip } = current(app);
   const checked = list.items.filter((i) => i.checked).length;
   const paidCount = list.items.filter((i) => priceSource(i.pack).kind === 'paid').length;
   const estNote = app.db.pricesUpdated ? `estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'estimated from the recipe box';
@@ -209,7 +305,8 @@ export function render(app) {
         <button type="button" class="icon-btn" data-action="list:print" aria-label="Print the list">${ic('print')}</button>
       </div>
     </header>
-    ${periodNav(app, range, { compact: true })}
+    ${trip ? tripBar(app, trip, range, list) : html`${periodNav(app, range, { compact: true })}
+      <button type="button" class="btn btn-secondary btn-block trip-start" data-action="trip:new">${ic('cart', { size: 20 })}Shopping today? Make a list for just this trip</button>`}
     ${noNights && !list.lunches.length && !list.items.length ? html`<div class="empty">
         <span class="empty-ic">${ic('list', { size: 28 })}</span>
         <h3 class="empty-title">Nothing planned for ${rangeLabel(range.start, range.end)}</h3>
@@ -217,23 +314,27 @@ export function render(app) {
         <div class="empty-actions"><a class="btn btn-primary" href="#/plan">Go to the planner</a></div>
       </div>` : html`
       <section class="totals" aria-label="Estimated cost">
-        <p class="total-big"><span class="total-num">${money(list.total)}</span><span class="total-label">estimated for ${listJoin([
+        <p class="total-big"><span class="total-num">${money(list.total)}</span><span class="total-label">${list.checkedCount ? 'after sales and coupons, ' : ''}estimated for ${listJoin([
           list.nights.length ? `${list.nights.length} ${list.nights.length === 1 ? 'dinner' : 'dinners'}` : '',
           list.lunches.length ? `${list.lunches.length} packed ${list.lunches.length === 1 ? 'lunch' : 'lunches'}` : '',
           Object.keys(app.state.extras || {}).length ? 'everyday extras' : '',
         ].filter(Boolean))}</span></p>
         ${when(list.lunches.length, () => html`<ul class="cost-lines"><li><span>Dinners</span><b>${money(list.dinnerCost)}</b></li><li><span>Lunches</span><b>${money(list.lunchCost)}</b></li>${when(list.extrasCost, () => html`<li><span>Extras</span><b>${money(list.extrasCost)}</b></li>`)}</ul>`)}
-        <div class="total-split">
+        ${when(list.savings > 0.5, () => html`<p class="total-save">${ic('check', { size: 18 })}<span>Saves ${money(list.savings)} on sales and coupons (regular prices: ${money(list.regularTotal)}).</span></p>`)}
+        ${trip && trip.store !== 'both' ? '' : html`<div class="total-split">
           ${['sams', 'jewel'].map((s) => html`<p><span>${NAMES[s]}</span><b>${money(list.stores[s].subtotal)}</b></p>`)}
-        </div>
+        </div>`}
+        ${when(list.onDay.length, () => html`<p class="muted small">Plus ${money(list.onDayCost)} bought fresh on the day (below).</p>`)}
         ${when((list.nights.length || list.lunches.length) && list.leftoverValue > 1, () => html`<p class="total-used">${listJoin([
           list.nights.length ? `${money(list.usedByDinners)} goes into these ${list.nights.length} dinners (${money(list.perDinner)} each)` : '',
           list.lunches.length ? `${money(list.usedByLunches)} into the lunches` : '',
         ].filter(Boolean))}. ${money(list.leftoverValue)} is bulk packs and staples left over for later.</p>`)}
+        ${when(list.checkedCount, () => html`<p class="muted small">${list.checkedCount} ${list.checkedCount === 1 ? 'price was' : 'prices were'} checked on the store’s site ${list.checkedOn ? shortDate(list.checkedOn) : ''}, with that week’s sales and coupons. Tax isn’t included.</p>`)}
         <p class="muted small">${pricesNote} Sam’s prices were read from samsclub.com; prices marked est. are estimates and can be off by about 15%. ${list.unpriced ? `${list.unpriced} ${list.unpriced === 1 ? 'item has' : 'items have'} no price yet.` : ''} Tap any item to fix its price; the family sees your correction.</p>
         ${when(list.items.length, () => html`<div class="progress" role="img" aria-label="${checked} of ${list.items.length} in the cart"><span style="width:${Math.round((checked / list.items.length) * 100)}%"></span></div>
           <p class="muted small">${checked} of ${list.items.length} in the cart</p>`)}
       </section>
+      ${couponsToClip(app, list)}
       ${couponsCard(app)}
       <nav class="list-links" aria-label="Receipts and products">
         <button type="button" class="btn btn-secondary" data-action="rcpt:scan">${ic('camera', { size: 20 })}Scan a receipt</button>
@@ -243,6 +344,8 @@ export function render(app) {
       ${when(list.lunches.length, () => html`<div class="list-filter">${segmented('listFilter', FILTERS, activeFilter(app, list), { label: 'Show', action: 'list:filter', small: true })}</div>`)}
       ${storeSection(app, list, 'sams', listKey)}
       ${storeSection(app, list, 'jewel', listKey)}
+      ${onDaySection(app, list)}
+      ${skippedSection(app, list, listKey)}
       ${when(list.leftovers.length, () => {
         const top = list.leftovers.filter((l) => l.storage === 'freezer' || l.storage === 'fridge').slice(0, 6);
         const rest = list.leftovers.length - top.length;
@@ -283,6 +386,7 @@ function itemSheet(app, key) {
           : ps.kind === 'listed' ? `Listed on the ${NAMES[i.store]} site` : 'Estimated';
       return html`
         <h3 class="item-sheet-name">${i.name}</h3>
+        ${when(i.coupon, () => html`<p class="hint">${ic('receipt', { size: 18 })}<span><b>Clip the coupon first:</b> ${i.coupon.text}${i.coupon.expires ? `, ends ${shortDate(i.coupon.expires)}` : ''}.</span></p>`)}
         <p class="sheet-text">${detail(app, i) || 'On the list.'}</p>
         ${when(i.uses.length, () => html`<ul class="uses">${i.uses.map((u) => html`<li><span>${dayAndDate(u.date, app.today())}</span><span>${dinnerById(app.db, app.state, u.dinner)?.title}</span><span>${unitText(u.qty, i.unit)}</span></li>`)}</ul>`)}
         <div class="product-box">
@@ -311,6 +415,8 @@ function itemSheet(app, key) {
         </form>
         <div class="action-list">
           <button type="button" class="action-row" data-action="item:have" data-id="${i.id}">${ic('pantry')}<span><b>We already have it</b><small>Adds it to the pantry so it drops off the list.</small></span></button>
+          <button type="button" class="action-row" data-action="list:skip" data-reason="stretch" data-key="${i.id}">${ic('check')}<span><b>Skip it this trip: we’ll make do</b><small>Stretch what’s at home. Only this list changes.</small></span></button>
+          <button type="button" class="action-row" data-action="list:skip" data-reason="check" data-key="${i.id}">${ic('info')}<span><b>Check at home first</b><small>Moves it to “Not buying this trip” until you put it back.</small></span></button>
           <button type="button" class="action-row" data-action="item:notat" data-id="${i.id}" data-store="${i.store}">${ic('store')}<span><b>${NAMES[i.store]} doesn’t carry this</b><small>${both ? `Moves it to ${NAMES[OTHER[i.store]]}.` : 'Planning from one store will skip dinners that need it.'}</small></span></button>
         </div>`;
     },
@@ -353,6 +459,36 @@ function handoff(app, store) {
 }
 
 export const actions = {
+  'trip:new': (app) => openTrip(app),
+  'trip:store': (app, el) => { if (openTrip.state) openTrip.state.store = el.dataset.value; renderSheet(); },
+  'trip:save': (app, form) => {
+    const end = String(new FormData(form).get('end') || '');
+    const today = app.today();
+    if (!isISODate(end) || end < today) { toast('Pick today or a later day.'); return; }
+    const store = openTrip.state?.store || 'jewel';
+    const prev = activeTrip(app);
+    const trip = { start: today, end, store, by: app.who() || 'Family', at: new Date().toISOString() };
+    const ops = [set(['settings', 'trip'], trip)];
+    if (prev) ops.push(del(['checked', tripKey(prev)]), del(['skips', tripKey(prev)]));
+    app.commit({ ops, undo: undoFor(app.state, ops), message: `Trip list for ${store === 'both' ? 'both stores' : NAMES[store]}, through ${weekdayName(end)}.` });
+    closeSheet();
+  },
+  'trip:end': (app) => {
+    const t = app.settings.trip;
+    const ops = [del(['settings', 'trip'])];
+    if (t) ops.push(del(['checked', tripKey(t)]), del(['skips', tripKey(t)]));
+    app.commit({ ops, undo: undoFor(app.state, ops), message: 'Back to the full list.' });
+  },
+  'list:skip': (app, el) => {
+    const { listKey } = current(app);
+    const ops = [set(['skips', listKey, el.dataset.key], { reason: el.dataset.reason === 'check' ? 'check' : 'stretch', by: app.who() || 'Family', at: new Date().toISOString() })];
+    app.commit({ ops, undo: undoFor(app.state, ops), message: el.dataset.reason === 'check' ? 'Check at home first. It’s under “Not buying this trip.”' : 'Skipped for this trip.' });
+    closeSheet();
+  },
+  'list:unskip': (app, el) => {
+    const ops = [del(['skips', el.dataset.list, el.dataset.key])];
+    app.commit({ ops, undo: undoFor(app.state, ops), message: 'Back on the list.' });
+  },
   'list:check': (app, el) => app.commit(toggleCheckOps(app.state, { listKey: el.dataset.list, key: el.dataset.key }), { quiet: true }),
   'list:item': (app, el) => itemSheet(app, el.dataset.key),
   'list:handoff': (app, el) => handoff(app, el.dataset.store),

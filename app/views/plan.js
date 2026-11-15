@@ -6,7 +6,7 @@ import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, s
 import { listJoin } from '../util.js';
 import { buildList } from '../shopping.js';
 import { generateOps, swapNightsOps, settingOps } from '../actions.js';
-import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition, thumbs } from './common.js';
+import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition, thumbs, prepCard } from './common.js';
 import { plateNutrition, fmtKcal } from '../nutrition.js';
 import { openNight } from './sheets.js';
 
@@ -135,6 +135,7 @@ export function render(app) {
     <p class="plan-summary">${planned} ${planned === 1 ? 'dinner' : 'dinners'} planned${away ? `, ${away} ${away === 1 ? 'night' : 'nights'} away` : ''}. About <a href="#/list">${money(list.total)} in groceries</a>${list.nights.length ? `, ${money(list.perDinner)} a dinner` : ''}.</p>
     ${grid(app, range)}
     ${when(auto, () => html`<p class="muted small center">Re-planning keeps cooked and away nights and anything the family set by hand.</p>`)}
+    ${prepCard(app, { days: 7 })}
   </div>`;
 }
 

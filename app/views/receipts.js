@@ -6,7 +6,9 @@ import { money, shortDate, mediumDate, monthName, fmtQty, round2, isISODate } fr
 import { resizeImage, LIMITS } from '../images.js';
 import {
   normalizeReceipt, importReceipt, packSizeFor, linePaid, suggestMatches, findDuplicate, receiptList, deleteReceiptOps,
+  receiptPantryOps, PANTRY_SYNC_DAYS,
 } from '../receipts.js';
+import { applyOps } from '../state.js';
 import { undoFor } from '../actions.js';
 import { itemMeta } from '../shopping.js';
 
@@ -117,7 +119,7 @@ function review(app, raw, storeHint) {
   const r = normalizeReceipt(raw, { today: null });
   if (r.store === 'other' && (storeHint === 'sams' || storeHint === 'jewel')) r.store = storeHint;
   const st = {
-    store: r.store, date: r.date || today, total: r.total || '', tax: r.tax, savings: r.savings,
+    store: r.store, date: r.date || today, total: r.total || '', tax: r.tax, savings: r.savings, toPantry: true,
     lines: r.lines.map((l) => {
       const sugg = suggestMatches(app.db, app.state, l, 4);
       const known = l.matchId && (app.db.ingredients[l.matchId] || app.state.custom?.[l.matchId]) ? l.matchId : null;
@@ -180,6 +182,7 @@ function reviewBody(app, st) {
       <p><span>Receipt total</span><b>${Number(st.total) > 0 ? money(Number(st.total)) : '—'}</b></p>
       <small>${Math.abs(off) > 0.5 ? `${money(Math.abs(off))} ${off > 0 ? 'isn’t in the lines above (skipped or misread lines, deposits, bags)' : 'more in the lines than the total: check quantities'}. The receipt total is what the Budget counts.` : 'The lines add up to the total.'}</small>
     </div>
+    ${when(matched, () => html`<label class="rcpt-pantry"><input type="checkbox" ${st.toPantry ? 'checked' : ''} data-change="rcpt:topantry"><span><b>Add these groceries to the pantry</b><small>${matched} matched ${matched === 1 ? 'item goes' : 'items go'} on the shelf, so the list stops asking for them. Leave it off for an old receipt.</small></span></label>`)}
     <button type="button" class="btn btn-primary btn-block" data-action="rcpt:save" ${dupe || !(Number(st.total) > 0) || !isISODate(st.date) ? 'disabled' : ''}>${ic('check', { size: 20 })}${dupe ? 'Already saved' : `Save receipt${matched ? `: learn ${matched} ${matched === 1 ? 'price' : 'prices'}` : ''}`}</button>`;
 }
 
@@ -212,8 +215,16 @@ async function save(app) {
   if (ops.duplicate) { toast('That receipt is already saved.'); closeSheet(); return; }
   if (ops.error) { toast(ops.error); return; }
   const where = STORE_NAMES[ops.store] || 'the store';
+  // v2.5: sync the pantry from the receipt (recent receipts only, and only when asked).
+  let stocked = 0;
+  const recent = isISODate(ops.date) && (Date.parse(`${app.today()}T12:00:00Z`) - Date.parse(`${ops.date}T12:00:00Z`)) / 86400000 <= PANTRY_SYNC_DAYS;
+  if (st.toPantry && recent && ops.id) {
+    const pops = receiptPantryOps(app.db, applyOps(app.state, ops), ops.id, { who: app.who() || 'Family' });
+    stocked = pops.filter((o) => o.path[0] === 'pantry').length;
+    ops.push(...pops);
+  }
   const learned = ops.learned ? ` Learned ${ops.learned === 1 ? 'one price' : `${ops.learned} prices`} for next time.` : '';
-  const message = `Saved ${money(ops.total)} from ${where}, ${shortDate(ops.date)}.${ops.counted ? '' : ' It was already in the Budget, so it’s not counted twice.'}${learned}`;
+  const message = `Saved ${money(ops.total)} from ${where}, ${shortDate(ops.date)}.${ops.counted ? '' : ' It was already in the Budget, so it’s not counted twice.'}${learned}${stocked ? ` ${stocked} ${stocked === 1 ? 'item is' : 'items are'} in the pantry now.` : ''}`;
   app.commit({ ops: [...ops], undo: undoFor(app.state, ops), message });
   closeSheet();
 }
@@ -274,6 +285,7 @@ export const actions = {
     renderSheet();
   },
   'rcpt:read': (app) => readReceipt(app),
+  'rcpt:topantry': (app, el) => { if (review.state) review.state.toPantry = !!el.checked; },
   'rcpt:head': (app, el) => {
     const st = review.state;
     if (!st) return;

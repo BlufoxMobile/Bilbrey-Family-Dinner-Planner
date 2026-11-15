@@ -1220,6 +1220,34 @@
       "unit": "cans",
       "basis": "one 15 oz can, about 3.5 servings",
       "source": "Package label (typical): La Preferida Frijoles Charros, ~90 kcal & 5 g protein per ½ cup"
+    },
+    "bonduelleBltBowl": {
+      "kcal": 260,
+      "protein": 11,
+      "unit": "bowls",
+      "basis": "one 6.1 oz bowl with its dressing",
+      "source": "Retailer label (ShopRite listing): 260 cal, 11 g protein, 600 mg sodium"
+    },
+    "bonduelleChefBowl": {
+      "kcal": 250,
+      "protein": 12,
+      "unit": "bowls",
+      "basis": "one 7.75 oz bowl with its dressing",
+      "source": "Retailer label (Giant Food listing): 250 cal, 12 g protein, 860 mg sodium"
+    },
+    "bonduelleBbqBowl": {
+      "kcal": 230,
+      "protein": 9,
+      "unit": "bowls",
+      "basis": "one 7 oz bowl with its dressing",
+      "source": "Retailer label (ShopRite listing): 230 cal, 9 g protein, 450 mg sodium"
+    },
+    "jewelDeliChickenSandwich": {
+      "kcal": 550,
+      "protein": 28,
+      "unit": "sandwiches",
+      "basis": "one breaded spicy chicken sandwich on a bun",
+      "source": "Estimate: breaded spicy chicken sandwiches run 500–700 cal and 25–30 g protein"
     }
   }
 }

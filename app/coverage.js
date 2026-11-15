@@ -1,0 +1,86 @@
+// What the pantry covers (SPEC §12.4): walk the planned dinners in date order, take each one's
+// ingredients (main and its sides, for five) out of what's on the shelf, and count the dinners
+// that are fully covered. The rest show exactly what's missing, which is what the list buys.
+// Then: dinners in rotation the leftovers could still make, and ready-made backups on the shelf.
+// Pure: no DOM, no clock.
+
+import { plannedNights, itemMeta } from './shopping.js';
+import { itemsForNight, kindOf, rotationList, dinnerById } from './planner.js';
+import { round2 } from './util.js';
+
+/** Within 5% counts as enough: a can's worth of rounding shouldn't call a dinner short. */
+export const ENOUGH = 0.95;
+
+/** id → amount on hand (Infinity for stocked staples). Items marked running low don't count. */
+export function onHand(db, state) {
+  const rem = {};
+  for (const [id, p] of Object.entries(state?.pantry || {})) {
+    if (!p || p.low) continue;
+    if (kindOf(db, state, id) === 'staple' || (p.stocked && p.qty == null)) {
+      if (p.stocked) rem[id] = Infinity;
+      continue;
+    }
+    if (typeof p.qty === 'number' && p.qty > 0) rem[id] = p.qty;
+  }
+  return rem;
+}
+
+function take(rem, id, need) {
+  const have = rem[id] ?? 0;
+  if (have === Infinity) return 0;
+  rem[id] = Math.max(0, have - need);
+  return Math.max(0, need - have);
+}
+
+function missingFor(db, state, rem, items) {
+  const out = [];
+  for (const [id, need] of Object.entries(items)) {
+    const have = rem[id] ?? 0;
+    if (have === Infinity || have + 1e-9 >= need * ENOUGH) continue;
+    const meta = itemMeta(db, state, id);
+    out.push({ id, name: meta.name, unit: meta.unit, need: round2(need), have: round2(have), short: round2(need - have) });
+  }
+  return out;
+}
+
+/** Ready-made backups: frozen and shelf items that are a meal on their own (burritos, soups). */
+const BACKUP = /burrito|tamale|soup|bites|pizza|ramen|smashed|patties|chili/i;
+export function backups(db, state) {
+  const out = [];
+  for (const [id, p] of Object.entries(state?.pantry || {})) {
+    if (!p || p.low || !(typeof p.qty === 'number' && p.qty > 0)) continue;
+    const meta = itemMeta(db, state, id);
+    if (!meta.custom || !BACKUP.test(meta.name)) continue;
+    out.push({ id, name: meta.name, qty: p.qty, unit: meta.unit, storage: meta.storage });
+  }
+  return out.sort((a, b) => (a.storage === 'freezer' ? 0 : 1) - (b.storage === 'freezer' ? 0 : 1) || a.name.localeCompare(b.name));
+}
+
+/**
+ * → { rows: [{ date, dinner, title, ready, missing }], ready, total, shortIds,
+ *     extra: [{ id, title }], backups }
+ */
+export function pantryCoverage(db, state, { dates }) {
+  const rem = onHand(db, state);
+  const nights = plannedNights(db, state, dates).sort((a, b) => a.date.localeCompare(b.date));
+  const rows = [];
+  const short = new Set();
+  for (const { date, entry } of nights) {
+    const items = itemsForNight(db, state, entry.dinner, entry);
+    const missing = missingFor(db, state, rem, items);
+    for (const [id, need] of Object.entries(items)) take(rem, id, need);
+    for (const m of missing) short.add(m.id);
+    rows.push({ date, dinner: entry.dinner, title: dinnerById(db, state, entry.dinner)?.title || 'Dinner', ready: !missing.length, missing });
+  }
+  // Beyond the plan: what the leftovers still make, each dinner once, with its usual sides.
+  const planned = new Set(nights.map((n) => n.entry.dinner));
+  const extra = [];
+  for (const d of rotationList(db, state)) {
+    if (planned.has(d.id)) continue;
+    const items = itemsForNight(db, state, d.id, null);
+    if (!Object.keys(items).length || missingFor(db, state, rem, items).length) continue;
+    for (const [id, need] of Object.entries(items)) take(rem, id, need);
+    extra.push({ id: d.id, title: d.title });
+  }
+  return { rows, ready: rows.filter((r) => r.ready).length, total: rows.length, shortIds: [...short], extra, backups: backups(db, state) };
+}

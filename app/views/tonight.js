@@ -4,7 +4,7 @@ import { addDays, dateRange, longDay, money, relativeDay, rangeLabel, fmtQty, li
 import { dinnerById, periodRange } from '../planner.js';
 import { buildList } from '../shopping.js';
 import { generateOps, markCookedOps, awayBlock } from '../actions.js';
-import { sidesFor, dinnerPhoto, equipment, favoriteBadge, awayReason, dayStamp, nutri, showNutrition, lighterChip, rateList, isDismissed, replacedText } from './common.js';
+import { sidesFor, dinnerPhoto, equipment, favoriteBadge, awayReason, dayStamp, nutri, showNutrition, lighterChip, rateList, isDismissed, replacedText, prepCard } from './common.js';
 import { plateNutrition, dayNutrition, lighterSide, fmtKcal } from '../nutrition.js';
 import { openPick, openAway, openNight } from './sheets.js';
 import { defaultAnchor } from './plan.js';
@@ -191,7 +191,7 @@ export function render(app) {
     ${todayLine(app, today)}
     <div class="tonight-grid">
       <div class="tonight-main">${hero(app, today)}${when(howWasDate(app) === today, () => howWas(app, today))}</div>
-      <div class="tonight-side">${weekAhead(app, today)}${glance(app)}</div>
+      <div class="tonight-side">${prepCard(app, { days: 2, title: 'Prep today and tomorrow', empty: false })}${weekAhead(app, today)}${glance(app)}</div>
     </div>
   </div>`;
 }

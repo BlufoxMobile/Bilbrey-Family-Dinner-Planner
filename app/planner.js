@@ -360,6 +360,8 @@ export function pantryCovers(db, state, id, qty) {
 export function canBuyAt(db, state, id, store) {
   if (state?.availability?.[`${store}/${id}`] === false) return false;
   if (state?.prices?.[`${store}/generic/${id}`] || state?.prices?.[`${store}/name/${id}`]) return true;
+  if (state?.deals?.[`${store}/${id}`]?.price != null) return true;
+  if (settingsOf(state).organic && db.ingredients[id]?.organic?.[store]) return true;
   const mine = state?.myProducts?.[`${store}/${id}`];
   if (mine && Number(mine.packSize) > 0 && typeof mine.price === 'number' && mine.price >= 0) return true;
   const packs = db.ingredients[id]?.packs?.[store];
@@ -498,6 +500,10 @@ export function packFor(db, state, id, store) {
   const mine = myProduct(state, store, id);
   const packs = ing?.packs?.[store] || {};
   const withMine = (p) => (p && mine ? { ...p, product: mine } : p);
+  // v2.5 organic produce: the store's organic version wins over a conventional usual or receipt
+  // product (a receipt product that's already organic stays).
+  const org = organicPackFor(db, state, id, store);
+  if (org && !(mine && /organic/i.test(String(mine.name)))) return org;
   if (mine && Number(mine.packSize) > 0 && typeof mine.price === 'number' && Number.isFinite(mine.price) && mine.price >= 0) {
     const src = mine.source === 'receipt' ? 'paid' : mine.source === 'typed' ? 'typed' : 'product';
     const base = (ing?.usual?.store === store && packs[ing.usual.tier]) || packs.generic || packs.name;
@@ -523,6 +529,14 @@ export function packFor(db, state, id, store) {
     return withMine({ ...(base || { store, kind: 'catalog' }), size: Number(fam.size), price: Number(fam.price), source: 'family', at: fam.at, by: fam.by });
   }
   return withMine(base);
+}
+
+/** The organic pack for produce when the family buys organic, or null. */
+export function organicPackFor(db, state, id, store) {
+  const ing = db?.ingredients?.[id];
+  const o = ing?.organic?.[store];
+  if (!o || !settingsOf(state).organic) return null;
+  return { ...o, store, kind: 'organic', organic: true };
 }
 
 export function unitPrice(db, state, id, planStore) {

@@ -41,6 +41,11 @@ export function brandedLabel(label, brand) {
  * the catalog's pack. `usual` is true only for the pack the family actually buys there.
  */
 export function shownProduct(state, store, id, pack, db = null) {
+  // A price check or the organic version names the exact product on the shelf (v2.5).
+  if (pack?.kind === 'deal' || pack?.kind === 'organic') {
+    const name = cleanPackLabel(pack.label) || db?.ingredients?.[id]?.name || '';
+    return name ? { name, brand: '', chosen: false, usual: false, label: name, url: pack.url || null, organic: pack.kind === 'organic' || /organic/i.test(name), checked: pack.kind === 'deal' } : null;
+  }
   const mine = myProduct(state, store, id);
   if (mine) return { ...mine, chosen: true, label: productLabel(mine) };
   const usual = pack?.kind === 'usual' && !!db?.ingredients?.[id]?.brand;
@@ -110,6 +115,7 @@ export function chosenProducts(state) {
 /** "paid $17.94 · Nov 12" style facts about where an item's price came from. */
 export function priceSource(pack) {
   if (!pack) return { kind: 'none' };
+  if (pack.source === 'checked') return { kind: 'checked', date: pack.date };
   if (pack.source === 'family') return { kind: 'family', by: pack.by };
   if (pack.source === 'paid') return { kind: 'paid', date: pack.date };
   if (pack.source === 'typed') return { kind: 'typed' };

@@ -14,7 +14,17 @@ export const DEFAULT_SETTINGS = Object.freeze({
   riceMaxPerWeek: 1,
   weekStartsOn: 1,
   meatScale: 1, // 1 = hearty (as written), 0.85 = lighter (−15% on catalog items marked meat)
+  organic: false, // buy organic produce when the store has it (catalog `organic` packs)
+  trip: null, // { start, end, store }: the shopping list for one trip (SPEC §12)
 });
+
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+/** A shopping trip in settings: a store and the last day it shops for, or null. */
+export function normalizeTrip(t) {
+  if (!t || typeof t !== 'object' || !ISO.test(String(t.end || '')) || !ISO.test(String(t.start || ''))) return null;
+  if (t.end < t.start) return null;
+  return { start: t.start, end: t.end, store: ['sams', 'jewel', 'both'].includes(t.store) ? t.store : 'both', ...(t.by ? { by: String(t.by) } : {}), ...(t.at ? { at: String(t.at) } : {}) };
+}
 
 export function settingsOf(state) {
   const s = { ...DEFAULT_SETTINGS, ...(state?.settings || {}) };
@@ -27,6 +37,8 @@ export function settingsOf(state) {
   s.riceMaxPerWeek = Math.max(0, Math.min(7, Number.isFinite(Number(s.riceMaxPerWeek)) ? Number(s.riceMaxPerWeek) : 1));
   s.weekStartsOn = [0, 1].includes(Number(s.weekStartsOn)) ? Number(s.weekStartsOn) : 1;
   s.meatScale = Number(s.meatScale) === 0.85 ? 0.85 : 1;
+  s.organic = s.organic === true;
+  s.trip = normalizeTrip(s.trip);
   return s;
 }
 

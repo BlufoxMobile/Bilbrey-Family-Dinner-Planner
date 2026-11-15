@@ -78,6 +78,7 @@ function rules(app) {
     <div class="set-row"><span class="set-label">Rice dinners a week, at most<small>Candi’s rule.</small></span>${stepper({ value: s.riceMaxPerWeek, step: 1, min: 0, action: 'fam:num', data: { key: 'riceMaxPerWeek', max: 3 }, label: 'Rice dinners a week' })}</div>
     <div class="set-row set-col"><span class="set-label">Meat per dinner<small>Lighter trims every meat amount by 15% to save money.</small></span>${segmented('meatScale', MEAT_OPTS, String(s.meatScale), { label: 'Meat per dinner', action: 'fam:meat', small: true })}</div>
     <div class="set-row set-col"><span class="set-label">Plan from</span>${segmented('planStore', [{ id: 'both', label: 'Both stores' }, { id: 'sams', label: "Sam's only" }, { id: 'jewel', label: 'Jewel only' }], s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}</div>
+    <div class="set-row"><span class="set-label">Organic fruits and vegetables<small>The list picks the organic version when the store has one. Prices are Jewel-Osco’s, checked Nov 15.</small></span>${switchToggle({ on: s.organic, action: 'fam:organic', label: 'Buy organic fruits and vegetables' })}</div>
     <div class="set-row"><span class="set-label">Products<small>Every item is the exact product you buy at each store, learned from your receipts. Change one from the list.</small></span><a class="btn btn-small btn-quiet" href="#/products">My products</a></div>
     <div class="set-row set-col"><span class="set-label">Weeks start on</span>${segmented('weekStartsOn', [{ id: '1', label: 'Monday' }, { id: '0', label: 'Sunday' }], String(s.weekStartsOn), { label: 'Weeks start on', action: 'fam:weekstart', small: true })}</div>
     <div class="set-row"><span class="set-label">Monthly grocery target</span><a class="btn btn-small btn-quiet" href="#/budget">$${s.monthlyTarget}</a></div>
@@ -211,6 +212,7 @@ export const actions = {
     const v = Number(el.dataset.value) === 0.85 ? 0.85 : 1;
     app.commit({ ...settingOps(app.state, 'meatScale', v), message: v === 1 ? 'Meat amounts are back to hearty, as written.' : 'Lighter: every meat amount is 15% less, and the list and budget follow.' });
   },
+  'fam:organic': (app) => app.commit(settingOps(app.state, 'organic', !app.settings.organic), { quiet: true }),
   'fam:weekstart': (app, el) => app.commit(settingOps(app.state, 'weekStartsOn', Number(el.dataset.value)), { quiet: true }),
   'fam:reset': async (app) => {
     const ok = await confirmSheet({
