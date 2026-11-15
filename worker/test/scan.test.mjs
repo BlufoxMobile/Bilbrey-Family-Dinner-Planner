@@ -231,3 +231,35 @@ test("scan without an AI binding is a clear 503", async () => {
     await noAi.dispose();
   }
 });
+
+test("brand and label pass through; a form tag keeps canned items off fresh or frozen catalog items", async () => {
+  const known = [
+    { id: "mushrooms", name: "Sliced mushrooms [refrigerated]", aliases: ["mushrooms", "sliced mushrooms"] },
+    { id: "peas", name: "Frozen peas [frozen]", aliases: ["peas", "sweet peas"] },
+    { id: "marinara", name: "Marinara sauce (Rao's Homemade) [shelf-stable]", aliases: ["marinara", "marinara sauce"] },
+    { id: "chicken", name: "Chicken breasts [frozen]", aliases: ["chicken breasts"] },
+  ];
+  const items = [
+    { name: "Sliced mushrooms, canned", brand: "Green Giant", label: "Pieces & Stems Mushrooms", matchId: "mushrooms", qty: 6, unit: "can", confidence: 0.9 },
+    { name: "Sweet peas, canned", brand: "Del Monte", label: "Sweet Peas", matchId: null, qty: 2, unit: "can", confidence: 0.9 },
+    { name: "Marinara sauce, jarred", brand: "Rao's", label: "Homemade Marinara Sauce", matchId: "marinara", qty: 1, unit: "jar", confidence: 0.95 },
+    { name: "Chicken breasts, frozen", brand: "null", label: "N/A", matchId: "chicken", qty: 3, unit: "lb", confidence: 0.8 },
+  ];
+  w.setAI(() => ({ choices: [{ message: { content: JSON.stringify({ items }) } }] }));
+  const r = await scan({ image: PNG_DATA_URL, known });
+  assert.equal(r.status, 200, r.text);
+  const [mush, peas, sauce, chicken] = r.json.items;
+  assert.equal(mush.matchId, null, "canned mushrooms are not the fresh ones, even when the model says so");
+  assert.equal(mush.brand, "Green Giant");
+  assert.equal(mush.label, "Pieces & Stems Mushrooms");
+  assert.equal(peas.matchId, null, "the name fallback doesn't match canned peas to frozen peas");
+  assert.equal(sauce.matchId, "marinara");
+  assert.equal(sauce.brand, "Rao's");
+  assert.equal(sauce.label, "Homemade Marinara Sauce");
+  assert.equal(chicken.matchId, "chicken", "frozen matches frozen");
+  assert.equal(chicken.brand, undefined, '"null" and "N/A" are not brands');
+  assert.equal(chicken.label, undefined);
+  const text = w.calls[0].inputs.messages[1].content.find((p) => p.type === "text").text;
+  assert.ok(text.includes('"brand"') && text.includes('"label"'), "the prompt asks for brand and label");
+  assert.deepEqual(w.calls[0].inputs.response_format.json_schema.schema.properties.items.items.required, ["name", "brand", "label", "matchId", "qty", "unit", "confidence"]);
+});

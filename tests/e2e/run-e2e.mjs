@@ -244,6 +244,8 @@ test('pantry scan (mock AI) confirms items and they drop off the list', async ()
   assert.equal(s.pantry.greenBeans.qty, 4);
   assert.equal(s.pantry.salt.stocked, true);
   assert.ok(Object.keys(s.custom || {}).some((k) => /rotel/.test(k)), 'unmatched item became a shelf item');
+  assert.ok(s.pantry.marinara.qty >= 22, `one jar of Rao's is a jar of ounces, not 1 oz (got ${s.pantry.marinara.qty})`);
+  assert.equal(s.pantry.marinara.label, "Rao's Homemade Marinara Sauce", 'the label the scanner read is kept');
   const after = await listNames(page);
   assert.ok(!after.includes('Table salt'), 'salt is off the list');
   await go(page, '#/pantry', '.page-pantry');

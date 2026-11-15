@@ -19,7 +19,7 @@
 import { DurableObject } from "cloudflare:workers";
 
 const SERVICE = "bilbrey-dinner-planner";
-const VERSION = "2.2.0";
+const VERSION = "2.3.0";
 const KITCHEN_NAME = "bilbrey";
 
 // ── CORS (SPEC §5) ────────────────────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ const GLOBAL_CLIENT = "*";
 const SCAN_MODEL = "@cf/google/gemma-4-26b-a4b-it";
 const SCAN_FALLBACK_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
 const SCAN_TIMEOUTS_MS = [45_000, 45_000]; // [primary, fallback]
-const SCAN_MAX_TOKENS = 2500;
+const SCAN_MAX_TOKENS = 4000;
 // Receipts: one call per image (in parallel), merged server-side, so a 60+ line receipt split over
 // several screenshots never has to fit in one reply. ~60 lines × ~60 tokens fits well inside 6,000.
 const RECEIPT_TIMEOUTS_MS = [90_000, 60_000];
@@ -761,7 +761,9 @@ function scanUserPrompt(known) {
     "",
     "For each product return:",
     '- "name": what a shopper would call it — the food first, then the form after a comma — e.g. "Cut green beans, canned", "Spaghetti, dry pasta", "Chicken breasts, frozen", "Jasmine rice", "Ketchup". No brand names unless that is the only way to describe it.',
-    '- "matchId": the id from KNOWN ITEMS below when the product clearly IS that item; otherwise null. Never invent an id. When unsure, use null.',
+    '- "brand": the brand printed on the package (e.g. "Rao\'s", "Member\'s Mark", "Signature Select", "Progresso"), or null if you can\'t read one.',
+    '- "label": the product name as printed on the package, without the size (e.g. "Homemade Marinara Sauce", "Chicken Noodle Soup"), or null if you can\'t read it.',
+    '- "matchId": the id from KNOWN ITEMS below when the product clearly IS that item, in the same form (the [frozen] / [refrigerated] / [shelf-stable] / [fresh] tag): canned mushrooms are not fresh mushrooms and canned peas are not frozen peas. Otherwise null. Never invent an id. When unsure, use null.',
     '- "qty": how many you can see (cans, boxes, bags, jars, bottles, packages); if there is a single large package whose label shows its weight, you may give that weight instead. null if you can\'t tell.',
     '- "unit": the unit for qty, e.g. "can", "box", "bag", "jar", "bottle", "package", "lb", "oz". null when qty is null.',
     '- "confidence": a number from 0 to 1 for how sure you are of what the product is.',
@@ -772,7 +774,7 @@ function scanUserPrompt(known) {
     "- Skip things that are not food or drink (cleaning supplies, dishes, appliances, containers).",
     "- Don't guess at items you can't actually see. If there is no food in the photo, return {\"items\": []}.",
     "",
-    'Answer with exactly one JSON object: {"items":[{"name":"Cut green beans, canned","matchId":null,"qty":3,"unit":"can","confidence":0.9}]}',
+    'Answer with exactly one JSON object: {"items":[{"name":"Cut green beans, canned","brand":"Del Monte","label":"Cut Green Beans","matchId":null,"qty":3,"unit":"can","confidence":0.9}]}',
     "",
     "KNOWN ITEMS (id = name):",
     lines.length ? lines.join("\n") : "(none)",
@@ -788,12 +790,14 @@ const SCAN_SCHEMA = {
         type: "object",
         properties: {
           name: { type: "string" },
+          brand: { type: ["string", "null"] },
+          label: { type: ["string", "null"] },
           matchId: { type: ["string", "null"] },
           qty: { type: ["number", "null"] },
           unit: { type: ["string", "null"] },
           confidence: { type: "number" },
         },
-        required: ["name", "matchId", "qty", "unit", "confidence"],
+        required: ["name", "brand", "label", "matchId", "qty", "unit", "confidence"],
         additionalProperties: false,
       },
     },
@@ -1048,32 +1052,63 @@ function normKey(s) {
 }
 
 /** Lookup for validating model-claimed catalog ids against the `known` list the client sent. */
+const FORM_TAG_RE = /\s*\[(frozen|refrigerated|shelf-stable|fresh)\]\s*$/i;
+
+/** The form a scanned name states after its comma ("…, canned" → shelf-stable), or null. */
+function scannedForm(name) {
+  const tail = String(name || "").toLowerCase().split(",").slice(1).join(",");
+  if (!tail) return null;
+  if (/\bfrozen\b/.test(tail)) return "frozen";
+  if (/\b(canned|jarred|can|jar|dry|dried|boxed|shelf)\b/.test(tail)) return "shelf-stable";
+  if (/\b(fresh|refrigerated|deli)\b/.test(tail)) return "fresh";
+  return null;
+}
+
+/** True when a scanned form can't be the known item's form (canned mushrooms vs fresh ones). */
+function formConflict(scanned, known) {
+  if (!scanned || !known) return false;
+  if (scanned === "frozen") return known !== "frozen";
+  if (scanned === "shelf-stable") return known !== "shelf-stable";
+  if (scanned === "fresh") return known === "frozen" || known === "shelf-stable";
+  return false;
+}
+
 function knownIndex(known) {
   const ids = new Set(known.map((k) => k.id));
+  const forms = new Map(); // id -> "frozen" | "refrigerated" | "shelf-stable" | "fresh"
   const byKey = new Map(); // normalized id / name / alias -> id (first wins)
   const add = (k, id) => {
     const nk = normKey(k);
     if (nk && !byKey.has(nk)) byKey.set(nk, id);
   };
+  for (const k of known) {
+    const m = FORM_TAG_RE.exec(k.name);
+    if (m) forms.set(k.id, m[1].toLowerCase());
+  }
   for (const k of known) add(k.id, k.id);
-  for (const k of known) add(k.name, k.id);
+  for (const k of known) add(k.name.replace(FORM_TAG_RE, ""), k.id);
   for (const k of known) for (const a of k.aliases) add(a, k.id);
-  return { ids, byKey };
+  return { ids, byKey, forms };
 }
 
-/** A known id, or null. Only the client's ids pass; names only match exactly (normalized). */
+/**
+ * A known id, or null. Only the client's ids pass; names only match exactly (normalized), and
+ * never across forms: "Sliced mushrooms, canned" doesn't match fresh sliced mushrooms.
+ */
 function resolveMatch(index, claimed, names) {
+  const form = scannedForm(names[0]);
+  const ok = (id) => (id && !formConflict(form, index.forms?.get(id)) ? id : null);
   if (typeof claimed === "string" && claimed.trim()) {
     const c = claimed.trim();
-    if (index.ids.has(c)) return c;
+    if (index.ids.has(c)) return ok(c);
     if (!/^(null|none|n\/a|unknown)$/i.test(c)) {
       const hit = index.byKey.get(normKey(c));
-      if (hit) return hit;
+      if (hit) return ok(hit);
     }
   }
   for (const name of names) {
     if (!name) continue;
-    const hit = index.byKey.get(normKey(name)) || index.byKey.get(normKey(name.split(",")[0]));
+    const hit = ok(index.byKey.get(normKey(name))) || ok(index.byKey.get(normKey(name.split(",")[0])));
     if (hit) return hit;
   }
   return null;
@@ -1108,7 +1143,9 @@ function normalizeScanItems(rawItems, known) {
       prev.confidence = Math.max(prev.confidence, confidence);
       continue;
     }
-    const item = { name, matchId, qty, unit, confidence };
+    const brand = cleanLabelText(raw.brand, 60);
+    const label = cleanLabelText(raw.label ?? raw.productName ?? raw.product_name, 120);
+    const item = { name, matchId, qty, unit, confidence, ...(brand ? { brand } : {}), ...(label ? { label } : {}) };
     index.set(key, item);
     out.push(item);
   }
@@ -1854,6 +1891,12 @@ function parseJson(text) {
 
 function isPlainObject(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
+/** A brand or label as printed, or "" for the model's ways of saying "none". */
+function cleanLabelText(v, max) {
+  const t = cleanText(v, max);
+  return /^(null|none|n\/a|unknown|not visible|unreadable|-)$/i.test(t) ? "" : t;
 }
 
 function cleanText(v, max) {

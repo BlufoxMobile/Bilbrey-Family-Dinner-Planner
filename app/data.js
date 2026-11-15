@@ -73,6 +73,8 @@ export function normalizeIngredient(id, raw) {
     // The exact pack the family buys, from their receipts: the default store and brand tier.
     ...(typeof raw?.brand === 'string' && raw.brand.trim() ? { brand: raw.brand.trim() } : {}),
     ...(raw?.usual && STORES.includes(raw.usual.store) ? { usual: { store: raw.usual.store, tier: BRANDS.includes(raw.usual.tier) ? raw.usual.tier : 'generic' } } : {}),
+    // One retail container in catalog units (1 jar = 24 oz), for pantry scans that count jars and boxes.
+    ...(Number(raw?.container?.size) > 0 ? { container: { size: Number(raw.container.size), ...(raw.container.label ? { label: String(raw.container.label) } : {}) } } : {}),
     packs,
   };
 }

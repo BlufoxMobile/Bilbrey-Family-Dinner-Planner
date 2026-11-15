@@ -552,6 +552,7 @@ html.has-sheet .toast-root, body:has(.app.is-cook) .toast-root, body:has(.app.is
 .pan-row { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .pan-name { display: grid; }
 .pan-name small { color: var(--ink-3); font-size: var(--t-xs); }
+.pan-name .pan-label { color: var(--ink-2); }
 .pan-ctrl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pan-ctrl .icon-btn { margin-left: auto; }
 .pan-row.is-low .pan-name b { color: var(--red); }

@@ -414,7 +414,7 @@ export function promoteOps(db, state, { dinnerId, at }) {
 
 export function setPantryOps(db, state, { id, qty, stocked, low, who, at }) {
   const prev = state?.pantry?.[id] || {};
-  const next = { qty: prev.qty ?? null, stocked: !!prev.stocked, ...stamp(who, at) };
+  const next = { qty: prev.qty ?? null, stocked: !!prev.stocked, ...(prev.label ? { label: prev.label } : {}), ...stamp(who, at) };
   if (qty !== undefined) next.qty = qty === null ? null : Math.max(0, round2(Number(qty) || 0));
   if (stocked !== undefined) next.stocked = !!stocked;
   // Changing the amount or the stocked toggle counts as restocking, which clears "running low".

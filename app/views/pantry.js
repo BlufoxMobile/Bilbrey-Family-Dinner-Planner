@@ -7,6 +7,7 @@ import { fmtQty, round2 } from '../util.js';
 import { setPantryOps, removePantryOps, customItemOps, undoFor } from '../actions.js';
 import { set } from '../state.js';
 import { kindOf } from '../planner.js';
+import { scanQtyIn } from '../scanqty.js';
 
 export const title = () => 'Pantry';
 
@@ -43,6 +44,7 @@ function pantryRow(app, id, p) {
   const staple = m.kind === 'staple';
   return html`<li class="pan-row ${p.low ? 'is-low' : ''}">
     <span class="pan-name"><b>${m.name}</b>
+      ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
       <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? `${fmtQty(p.qty)} ${m.unit} on hand` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}${p.by ? `, updated by ${p.by}` : ''}</small></span>
     <span class="pan-ctrl">
       ${staple
@@ -104,8 +106,11 @@ function results(app) {
 
 const resize = (file) => resizeImage(file, LIMITS.pantry);
 
+const FORM = { freezer: 'frozen', fridge: 'refrigerated', pantry: 'shelf-stable', counter: 'fresh' };
+
 function knownList(app) {
-  const out = Object.values(app.db.ingredients).map((i) => ({ id: i.id, name: i.name, aliases: i.aliases || [] }));
+  // The form tells the scanner canned mushrooms aren't the fresh ones and canned peas aren't frozen.
+  const out = Object.values(app.db.ingredients).map((i) => ({ id: i.id, name: `${i.name} [${FORM[i.storage] || 'shelf-stable'}]`, aliases: i.aliases || [] }));
   for (const [id, c] of Object.entries(app.state.custom || {})) out.push({ id, name: c.name, aliases: [] });
   return out;
 }
@@ -152,21 +157,45 @@ async function runScan(app, files) {
   review(app, st);
 }
 
-function mergeDetections(app, items) {
+/** "Rao's Homemade Marinara Sauce" — what the label says, brand first, when the scanner could read it. */
+export function scanLabel(it) {
+  const brand = String(it?.brand || '').trim();
+  const label = String(it?.label || '').trim();
+  if (label && brand && !label.toLowerCase().includes(brand.toLowerCase())) return `${brand} ${label}`.slice(0, 120);
+  return (label || brand).slice(0, 120);
+}
+
+export function mergeDetections(app, items) {
   const by = new Map();
   for (const it of items) {
     const matchId = it.matchId && (app.db.ingredients[it.matchId] || app.state.custom?.[it.matchId]) ? it.matchId : null;
-    const key = matchId || norm(it.name);
+    const key = matchId || norm(scanLabel(it) || it.name);
     if (!key) continue;
     const prev = by.get(key);
-    const qty = Number(it.qty);
-    if (!prev) by.set(key, { name: it.name || meta(app, matchId)?.name || 'Item', matchId, qty: Number.isFinite(qty) && qty > 0 ? qty : null, unit: it.unit || null, confidence: Number(it.confidence) || 0, include: (Number(it.confidence) || 0) >= 0.35 });
-    else {
-      if (Number.isFinite(qty) && qty > (prev.qty || 0)) prev.qty = qty;
+    const ing = matchId ? app.db.ingredients[matchId] : null;
+    // A scanned count ("1 jar") in the recipe box's unit (24 oz) for catalog items.
+    const conv = ing ? scanQtyIn(ing, it.qty, it.unit) : { qty: Number(it.qty) > 0 ? Number(it.qty) : null, per: null, from: null };
+    const label = scanLabel(it);
+    if (!prev) {
+      by.set(key, { name: it.name || meta(app, matchId)?.name || 'Item', label, matchId, qty: conv.qty, seen: conv.per ? conv.from : null, unit: it.unit || null, confidence: Number(it.confidence) || 0, include: (Number(it.confidence) || 0) >= 0.35 });
+    } else {
+      // The same product on two photos (or two shelves): keep the larger count, never double it.
+      if (conv.qty !== null && conv.qty > (prev.qty || 0)) { prev.qty = conv.qty; prev.seen = conv.per ? conv.from : null; }
+      if (!prev.label && label) prev.label = label;
       prev.confidence = Math.max(prev.confidence, Number(it.confidence) || 0);
     }
   }
   return [...by.values()].sort((a, b) => (b.matchId ? 1 : 0) - (a.matchId ? 1 : 0) || b.confidence - a.confidence);
+}
+
+/** A best guess at the aisle for a new shelf item, so spices don't land in "Canned & Jarred". */
+export function guessAisle(name) {
+  const n = String(name || '').toLowerCase();
+  if (/season|spice|pepper,? ground|ground (cinnamon|cumin|ginger|turmeric|red pepper)|turmeric|cinnamon|paprika|oregano|basil|thyme|rosemary|poppy|old bay|cajun|rub\b|bouillon|extract|baking|flour|sugar|cooking spray|pam\b|crumbs/.test(n)) return 'Spices & Baking';
+  if (/sauce|dressing|ketchup|mustard|mayo|salsa|vinegar|hot sauce|syrup/.test(n)) return 'Condiments & Sauces';
+  if (/chips|stix|crackers?|cookies|cereal|snack|candy|popcorn|pretzel|granola|bars?\b|nuts\b|tea\b|chamomile|coffee/.test(n)) return 'Snacks & Extras';
+  if (/pasta|noodle|rice|macaroni|spaghetti|ramen|potato bake|au gratin|stuffing/.test(n)) return 'Pasta & Grains';
+  return 'Canned & Jarred';
 }
 
 function review(app, st) {
@@ -193,7 +222,8 @@ function review(app, st) {
             return html`<li class="review-row">
               <label class="review-inc"><input type="checkbox" name="inc-${k}" ${r.include ? 'checked' : ''}><span class="sr-only">Add ${r.name}</span></label>
               <div class="review-main">
-                <input class="input" name="name-${k}" value="${m ? m.name : r.name}" aria-label="Name" maxlength="60">
+                <input class="input" name="name-${k}" value="${m ? m.name : (r.label || r.name).slice(0, 60)}" aria-label="Name" maxlength="60">
+                ${when(m && r.label, () => html`<p class="muted small">Label: ${r.label}</p>`)}
                 <select class="input" name="match-${k}" aria-label="Match to">
                   ${when(m, () => html`<option value="${r.matchId}" selected>Matches: ${m.name}</option>`)}
                   ${cands.map((c) => html`<option value="${c.id}">Matches: ${c.name}</option>`)}
@@ -202,7 +232,8 @@ function review(app, st) {
                 ${staple ? html`<p class="muted small">Staple: marked stocked until low.</p>` : html`<div class="field-row">
                   <input class="input" name="qty-${k}" type="number" inputmode="decimal" min="0" step="any" value="${r.qty ?? ''}" placeholder="Amount" aria-label="Amount">
                   <input class="input" name="unit-${k}" value="${m?.unit || r.unit || 'each'}" aria-label="Unit" ${m ? 'readonly' : ''}>
-                </div>`}
+                </div>
+                ${when(m && r.seen, () => html`<p class="muted small">Saw ${r.seen}, about ${fmtQty(r.qty)} ${m.unit}.</p>`)}`}
                 ${when(r.confidence && r.confidence < 0.6, () => html`<p class="muted small">Not sure about this one. Double-check it.</p>`)}
               </div>
             </li>`;
@@ -311,15 +342,17 @@ export const actions = {
       const qty = qtyRaw === null || qtyRaw === '' ? null : Number(qtyRaw);
       let id = match || null;
       if (!id) {
-        const c = customItemOps(state, { name, unit: String(f.get(`unit-${k}`) || r.unit || 'each') });
+        const c = customItemOps(state, { name, unit: String(f.get(`unit-${k}`) || r.unit || 'each'), aisle: guessAisle(name) });
         id = c.id;
         ops.push(...c.ops);
         for (const op of c.ops) state = { ...state, custom: { ...(state.custom || {}), [op.path[1]]: op.value } };
       }
       const m = app.db.ingredients[id];
       const staple = m?.kind === 'staple';
-      ops.push(set(['pantry', id], staple ? { qty: null, stocked: true, by: app.who(), at: new Date().toISOString() }
-        : { qty: Number.isFinite(qty) && qty >= 0 ? round2(qty) : (app.state.pantry?.[id]?.qty ?? 1), stocked: false, by: app.who(), at: new Date().toISOString() }));
+      // Keep what the label said (brand and product) so the family can see which product is on the shelf.
+      const label = match && r.label ? { label: r.label.slice(0, 120) } : {};
+      ops.push(set(['pantry', id], staple ? { qty: null, stocked: true, ...label, by: app.who(), at: new Date().toISOString() }
+        : { qty: Number.isFinite(qty) && qty >= 0 ? round2(qty) : (app.state.pantry?.[id]?.qty ?? 1), stocked: false, ...label, by: app.who(), at: new Date().toISOString() }));
       n++;
     });
     if (!n) { toast('Nothing checked to add.'); return; }

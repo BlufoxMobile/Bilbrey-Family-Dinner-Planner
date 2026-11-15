@@ -113,6 +113,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
         { name: 'Spaghetti', qty: 32, unit: 'oz', confidence: 0.86 },
         { name: 'Table salt', qty: null, unit: null, confidence: 0.81 },
         { name: 'Rotel original', qty: 2, unit: 'cans', confidence: 0.64 },
+        { name: 'Marinara sauce, jarred', brand: "Rao's", label: 'Homemade Marinara Sauce', qty: 1, unit: 'jar', confidence: 0.95 },
       ];
       const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
       const items = seen.map((s) => {
