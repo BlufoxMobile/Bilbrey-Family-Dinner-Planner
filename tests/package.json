@@ -1,0 +1,12 @@
+{
+  "name": "bfdp-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "unit": "node --test ./*.test.mjs",
+    "e2e": "node ./e2e/run-e2e.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.65.1"
+  }
+}

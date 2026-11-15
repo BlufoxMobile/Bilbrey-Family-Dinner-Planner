@@ -1,0 +1,11 @@
+{
+  "name": "bfdp-dev-tools",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only tools for The Bilbrey Family Dinner Planner (icon rendering, font sourcing, local servers). Not shipped.",
+  "devDependencies": {
+    "@fontsource/young-serif": "5.3.0",
+    "@fontsource/atkinson-hyperlegible-next": "5.3.0",
+    "sharp": "0.35.5"
+  }
+}
