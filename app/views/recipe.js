@@ -3,7 +3,8 @@
 import { html, ic, when, openSheet, avatar } from '../ui.js';
 import { FAMILY, PARENTS } from '../config.js';
 import { fmtQty, addDays, datesBetween, relativeDay, shortDate } from '../util.js';
-import { dinnerById, isRetired, isPromoted, isFavorite, voteInfo, findInPlan, inRotation } from '../planner.js';
+import { dinnerById, isRetired, isPromoted, isFavorite, voteInfo, findInPlan, inRotation, scaleItems } from '../planner.js';
+import { settingsOf } from '../state.js';
 import { voteOps, retireOps, restoreOps, promoteOps } from '../actions.js';
 import { itemMeta, singular } from '../shopping.js';
 import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason } from './common.js';
@@ -15,10 +16,13 @@ function amount(qty, unit) {
   return `${fmtQty(qty)} ${Math.abs(qty - 1) < 1e-9 ? singular(unit) : unit}`;
 }
 
-function ingredients(app, items) {
-  return html`<ul class="ingredients">${Object.entries(items).map(([id, q]) => {
+export function ingredients(app, items) {
+  const lighter = settingsOf(app.state).meatScale !== 1;
+  const scaled = scaleItems(app.db, app.state, items);
+  return html`<ul class="ingredients">${Object.entries(scaled).map(([id, q]) => {
     const m = itemMeta(app.db, app.state, id);
-    return html`<li><span class="ing-amt">${amount(q, m.unit)}</span><span class="ing-name">${m.name}</span></li>`;
+    const light = lighter && app.db.ingredients[id]?.meat;
+    return html`<li><span class="ing-amt">${amount(q, m.unit)}</span><span class="ing-name">${m.name}${light ? html` <span class="tag">lighter</span>` : ''}</span></li>`;
   })}</ul>`;
 }
 

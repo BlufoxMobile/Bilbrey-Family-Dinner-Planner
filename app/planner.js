@@ -154,6 +154,17 @@ function addItems(into, items, mult = 1) {
   return into;
 }
 
+/** "Meat per dinner": scales catalog items marked meat by settings.meatScale (1 or 0.85). */
+export function scaleItems(db, state, items) {
+  const k = settingsOf(state).meatScale;
+  if (k === 1) return { ...(items || {}) };
+  const out = {};
+  for (const [id, q] of Object.entries(items || {})) out[id] = db.ingredients[id]?.meat ? Math.round(q * k * 100) / 100 : q;
+  return out;
+}
+
+export const isMeat = (db, id) => !!db.ingredients[id]?.meat;
+
 /** Everything a night's dinner uses: entrée + effective sides, keyed by ingredient/custom id. */
 export function itemsForNight(db, state, dinnerId, entry) {
   const d = dinnerById(db, state, dinnerId);
@@ -163,7 +174,15 @@ export function itemsForNight(db, state, dinnerId, entry) {
     if (s.parsed.type === 'side') addItems(out, db.sides[s.parsed.id]?.items);
     else out[s.parsed.id] = (out[s.parsed.id] || 0) + s.parsed.qty;
   }
-  return out;
+  return scaleItems(db, state, out);
+}
+
+/** A night counts as a rice night if the dinner or any of its sides is tagged rice. */
+export function nightIsRice(db, state, dinnerId, entry) {
+  const d = dinnerById(db, state, dinnerId);
+  if (!d) return false;
+  if (isRice(d)) return true;
+  return effectiveSides(db, state, dinnerId, entry).some((s) => s.parsed.type === 'side' && db.sides[s.parsed.id]?.tags?.includes('rice'));
 }
 
 function itemsForSides(db, state, refs) {
@@ -239,6 +258,22 @@ function storedSides(state, d, refs) {
   const out = [];
   for (let i = 0; i < n; i++) out.push(subs[String(i)] != null ? (d.sides[i] ?? null) : (refs[i] ?? d.sides[i] ?? null));
   return out;
+}
+
+/** How much of the rotation one store can cover, and the items most often missing there. */
+export function storeCoverage(db, state, store) {
+  const rot = rotationList(db, state);
+  const missing = {};
+  let ok = 0;
+  for (const d of rot) {
+    if (feasibleSides(db, state, d, store, null)) { ok++; continue; }
+    const items = itemsForNight(db, state, d.id, null);
+    for (const [id, q] of Object.entries(items)) {
+      if (!pantryCovers(db, state, id, q) && !canBuyAt(db, state, id, store)) missing[id] = (missing[id] || 0) + 1;
+    }
+  }
+  const top = Object.entries(missing).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([id]) => db.ingredients[id]?.name || state?.custom?.[id]?.name || id);
+  return { ok, total: rot.length, missing: top };
 }
 
 export function dinnerFeasibleAt(db, state, dinnerId, store, entry) {
@@ -417,7 +452,7 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
     const weekStart = startOfWeek(date, st.weekStartsOn);
     const week = dateRange(weekStart, 7);
     const weekDinners = week.filter((d) => d !== date && eaten(merged[d])).map((d) => dinnerById(db, state, merged[d].dinner)).filter(Boolean);
-    const riceCount = weekDinners.filter(isRice).length;
+    const riceCount = week.filter((d) => d !== date && eaten(merged[d]) && nightIsRice(db, state, merged[d].dinner, merged[d])).length;
     const asianCount = weekDinners.filter(isAsian).length;
     const known = week.filter((d) => dateSet.has(d) || merged[d]).length;
     const floor = known >= 5 ? 2 : known >= 3 ? 1 : 0;
@@ -445,11 +480,11 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
     ];
     let candidates = [];
     for (const L of levels) {
-      candidates = feasible.filter(({ d }) => {
+      candidates = feasible.filter(({ d, sides }) => {
         if (L.type && !typeOk(d)) return false;
         if (!L.type && type === 'regular' && isPizza(d)) return false;
         if (lastUse(d.id, date, L.repeat) !== null) return false;
-        if (L.rice && isRice(d) && riceCount >= st.riceMaxPerWeek) return false;
+        if (L.rice && riceCount >= st.riceMaxPerWeek && nightIsRice(db, state, d.id, { sides: sides })) return false;
         if (L.cap && isAsian(d) && asianCount >= 3) return false;
         if (L.force && mustAsian && !isAsian(d)) return false;
         return true;

@@ -5,6 +5,8 @@ import { BASELINE_MONTHLY } from '../config.js';
 import { money, monthOnly, mediumDate, shortDate, round2, isISODate } from '../util.js';
 import { monthBudget } from '../shopping.js';
 import { addReceiptOps, removeReceiptOps, settingOps } from '../actions.js';
+import { segmented } from '../ui.js';
+import { MEAT_OPTS, actions as familyActions } from './family.js';
 
 export const title = () => 'Budget';
 const NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco', other: 'Other' };
@@ -29,7 +31,8 @@ export function render(app) {
       </div>
       <ul class="legend">
         <li><span class="key key-spent"></span>Spent so far<b>${money(b.spent)}</b></li>
-        <li><span class="key key-plan"></span>Still to buy for ${b.plannedRemaining} planned ${b.plannedRemaining === 1 ? 'dinner' : 'dinners'}<b>${money(b.stillToBuy)}</b></li>
+        <li><span class="key key-plan"></span>Still to buy for ${b.plannedRemaining} planned ${b.plannedRemaining === 1 ? 'dinner' : 'dinners'}<b>${money(b.dinnersToBuy)}</b></li>
+        ${when(b.extras, () => html`<li><span class="key key-plan"></span>Everyday extras for the rest of the month<b>${money(b.extras)}</b></li>`)}
         ${when(b.unplanned, () => html`<li><span class="key key-maybe"></span>${b.unplanned} ${b.unplanned === 1 ? 'night' : 'nights'} not planned yet${b.perDinner ? `, at ${money(b.perDinner)} a dinner` : ''}<b>${b.perDinner ? `+${money(round2(b.ifPlanned - b.projected))}` : '—'}</b></li>`)}
       </ul>
       <p class="budget-verdict ${over ? 'is-over' : 'is-under'}">${over ? `${money(b.projected - b.target)} over the target so far.` : `${money(b.left)} left under the target.`}</p>
@@ -37,6 +40,11 @@ export function render(app) {
       <p class="muted small">Projected = receipts logged this month + the shopping list for the rest of ${month} (today through ${shortDate(b.end)}), at ${app.db.pricesUpdated ? `prices estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'estimated prices'}. ${b.receipts.length ? '' : 'Log receipts after each trip so “spent so far” is real.'}</p>
     </section>
 
+    <section class="target" aria-labelledby="m-h">
+      <h2 id="m-h" class="section-title">Meat per dinner</h2>
+      <p class="muted small">Recipes are written hearty: about 2¼–2½ lb of meat for five adult plates. Lighter uses 15% less meat in every dinner, and the list and this projection follow.</p>
+      ${segmented('meatScale', MEAT_OPTS, String(b.meatScale), { label: 'Meat per dinner', action: 'fam:meat' })}
+    </section>
     <section class="target" aria-labelledby="t-h">
       <h2 id="t-h" class="section-title">Monthly target</h2>
       <form class="form form-row" data-submit="bud:target">

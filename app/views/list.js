@@ -50,7 +50,7 @@ function itemRow(app, i, listKey) {
       <span class="item-qty">${qty}${i.pack?.source === 'family' ? html` <span class="tag">family price</span>` : ''}${i.brand === 'name' && !i.freeText ? html` <span class="tag">name brand</span>` : ''}</span>
       <span class="item-detail">${detail(app, i)}</span>
     </button>
-    <span class="item-price">${i.cost == null ? html`<span class="muted">add price</span>` : money(i.cost)}</span>
+    <span class="item-price">${i.cost == null ? html`<span class="muted">add price</span>` : html`${money(i.cost)}${i.pack?.source !== 'family' && i.pack?.confidence !== 'listed' ? html`<small class="est" title="Estimated price">est.</small>` : ''}`}</span>
   </li>`;
 }
 
@@ -141,7 +141,8 @@ export function render(app) {
         <div class="total-split">
           ${['sams', 'jewel'].map((s) => html`<p><span>${NAMES[s]}</span><b>${money(list.stores[s].subtotal)}</b></p>`)}
         </div>
-        <p class="muted small">${pricesNote} ${list.unpriced ? `${list.unpriced} ${list.unpriced === 1 ? 'item has' : 'items have'} no price yet.` : ''} Tap any item to fix its price; the family sees your correction.</p>
+        ${when(list.nights.length && list.leftoverValue > 1, () => html`<p class="total-used">${money(list.usedByDinners)} of it goes into these ${list.nights.length} dinners (${money(list.perDinner)} each). ${money(list.leftoverValue)} is bulk packs and staples left over for later.</p>`)}
+        <p class="muted small">${pricesNote} Sam’s prices were read from samsclub.com; prices marked est. are estimates and can be off by about 15%. ${list.unpriced ? `${list.unpriced} ${list.unpriced === 1 ? 'item has' : 'items have'} no price yet.` : ''} Tap any item to fix its price; the family sees your correction.</p>
         ${when(list.items.length, () => html`<div class="progress" role="img" aria-label="${checked} of ${list.items.length} in the cart"><span style="width:${Math.round((checked / list.items.length) * 100)}%"></span></div>
           <p class="muted small">${checked} of ${list.items.length} in the cart</p>`)}
       </section>
@@ -215,6 +216,12 @@ function itemSheet(app, key) {
   itemSheet.key = key;
 }
 
+/** Short search words for a store search URL: drop sizes and parentheticals. */
+function searchWords(name, store) {
+  const words = String(name).replace(/\(.*?\)/g, ' ').replace(/,.*$/, '').replace(/[^A-Za-z0-9' ]+/g, ' ').trim().split(/\s+/).slice(0, 4);
+  return store === 'sams' ? words.map(encodeURIComponent).join('+') : encodeURIComponent(words.join(' '));
+}
+
 function handoff(app, store) {
   const { list } = current(app);
   const text = formatStoreList(app.db, list, store);
@@ -229,6 +236,10 @@ function handoff(app, store) {
         ${when(info.handoffMethod, () => html`<p class="muted small">${info.handoffMethod}</p>`)}
         <a class="btn btn-primary btn-block" href="${info.orderUrl || info.website}" target="_blank" rel="noopener">${ic('store', { size: 20 })}Open ${info.name}</a>
         ${when(info.appUrl, () => html`<a class="btn btn-quiet btn-block" href="${info.appUrl}" target="_blank" rel="noopener">Get the ${info.name} app</a>`)}
+        ${when(info.searchTemplate, () => {
+          const items = list.stores[store].items.filter((i) => !i.checked);
+          return items.length ? html`<details class="more"><summary>Search each item on ${info.name}</summary><ul class="handoff-items">${items.map((i) => html`<li><span>${i.name}</span><a class="btn btn-small btn-quiet" href="${info.searchTemplate.replace('{query}', searchWords(i.name, store))}" target="_blank" rel="noopener">Search</a></li>`)}</ul></details>` : '';
+        })}
         <label class="field"><span class="field-label">${ok ? 'What was copied' : 'Select and copy this'}</span><textarea class="input copy-box" readonly rows="8">${text}</textarea></label>
         <button type="button" class="btn btn-quiet btn-block" data-action="list:copy-again" data-store="${store}">${ic('copy', { size: 20 })}Copy again</button>
         ${when(info.address || info.phone, () => html`<p class="muted small">${[info.address, info.phone, info.hours].filter(Boolean).join('. ')}</p>`)}`,

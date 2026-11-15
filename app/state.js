@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   pizzaPerMonth: 2,
   riceMaxPerWeek: 1,
   weekStartsOn: 1,
+  meatScale: 1, // 1 = hearty (as written), 0.85 = lighter (−15% on catalog items marked meat)
 });
 
 export function settingsOf(state) {
@@ -25,6 +26,7 @@ export function settingsOf(state) {
   s.pizzaPerMonth = Math.max(0, Math.min(4, Number.isFinite(Number(s.pizzaPerMonth)) ? Number(s.pizzaPerMonth) : 2));
   s.riceMaxPerWeek = Math.max(0, Math.min(7, Number.isFinite(Number(s.riceMaxPerWeek)) ? Number(s.riceMaxPerWeek) : 1));
   s.weekStartsOn = [0, 1].includes(Number(s.weekStartsOn)) ? Number(s.weekStartsOn) : 1;
+  s.meatScale = Number(s.meatScale) === 0.85 ? 0.85 : 1;
   return s;
 }
 

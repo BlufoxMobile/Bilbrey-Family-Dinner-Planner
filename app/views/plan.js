@@ -2,7 +2,8 @@
 // two-tap swap, drag-and-drop on desktop, plan / re-plan.
 import { html, ic, when, segmented, toast } from '../ui.js';
 import { addDays, diffDays, money, rangeLabel, shortDate, startOfWeek, monthName, weekday, monthOnly } from '../util.js';
-import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType } from '../planner.js';
+import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage } from '../planner.js';
+import { listJoin } from '../util.js';
 import { buildList } from '../shopping.js';
 import { generateOps, swapNightsOps, settingOps } from '../actions.js';
 import { sidesFor, dinnerPhoto, awayReason, dayStamp } from './common.js';
@@ -120,7 +121,11 @@ export function render(app) {
       <div class="opt"><span class="opt-label" id="pf-l">Plan from</span>${segmented('planStore', STORE_OPTS, s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}</div>
       <div class="opt"><span class="opt-label">Brands</span>${segmented('brand', BRAND_OPTS, s.brand, { label: 'Brand default', action: 'plan:setting', small: true })}</div>
     </div>
-    ${when(s.planStore !== 'both', () => html`<p class="hint">${ic('store', { size: 18 })}<span>Only dinners you can buy at ${s.planStore === 'jewel' ? 'Jewel-Osco' : "Sam's Club"} (or already have in the pantry) get planned.${auto ? ' Re-plan to apply it to nights already planned.' : ''}</span></p>`)}
+    ${when(s.planStore !== 'both', () => {
+      const cov = storeCoverage(app.db, app.state, s.planStore);
+      const name = s.planStore === 'jewel' ? 'Jewel-Osco' : "Sam's Club";
+      return html`<p class="hint">${ic('store', { size: 18 })}<span>${cov.ok} of ${cov.total} dinners can be made from ${name} alone (or with what’s in the pantry), so only those get planned.${cov.missing.length ? ` The others need something ${name} doesn’t carry, like ${listJoin(cov.missing.map((m) => m.toLowerCase()))}. Mark those stocked in the pantry and more dinners qualify.` : ''}${auto ? ' Re-plan to apply this to nights already planned.' : ''}</span></p>`;
+    })}
     <div class="plan-actions">
       ${open ? html`<button type="button" class="btn btn-primary" data-action="plan:fill">${ic('sparkle', { size: 20 })}Plan ${open} open ${open === 1 ? 'night' : 'nights'}</button>` : ''}
       ${auto ? html`<button type="button" class="btn btn-secondary" data-action="plan:replan">${ic('refresh', { size: 20 })}Re-plan this period</button>` : ''}

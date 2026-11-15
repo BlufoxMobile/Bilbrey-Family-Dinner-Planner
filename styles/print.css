@@ -1,0 +1,15 @@
+/* Printing the shopping list (or any page) cleanly on paper. */
+@page { margin: 14mm; }
+:root { --paper: #fff; --card: #fff; --ink: #000; --ink-2: #222; --ink-3: #444; --line: #bbb; }
+body { background: #fff; color: #000; font-size: 11pt; }
+.topbar, .tabbar, .rail, .toast-root, .sheet, .skip, .head-tools, .period-nav .icon-btn, .period-nav .btn,
+.store-handoff, .done-shopping, .extras form, .extras .chip-grid, .honest, .check, .freezer .fz-meter, .progress, .icon-btn { display: none !important; }
+.app { display: block !important; }
+.view { padding: 0 !important; max-width: none !important; }
+.totals, .freezer, .covered, .budget-card, .votes { box-shadow: none !important; border: 1px solid #bbb; }
+.item { grid-template-columns: 18px 1fr auto; break-inside: avoid; }
+.item::before { content: ''; width: 12px; height: 12px; border: 1.5px solid #000; border-radius: 2px; }
+.store-sec { break-inside: auto; }
+.store-head { break-after: avoid; }
+a { color: #000; text-decoration: none; }
+.photo { display: none !important; }

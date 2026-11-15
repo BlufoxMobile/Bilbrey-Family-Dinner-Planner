@@ -6,6 +6,7 @@ import { settingOps } from '../actions.js';
 import { allDinners } from '../planner.js';
 
 export const title = () => 'Family & settings';
+export const MEAT_OPTS = [{ id: '1', label: 'Hearty (as written)' }, { id: '0.85', label: 'Lighter (−15%)' }];
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export function passcodeForm(app, mode, { compact = false } = {}) {
@@ -75,6 +76,7 @@ function rules(app) {
       <div class="chip-grid days-pick">${DAYS.map((d, i) => html`<button type="button" class="chip ${s.burgerNights.includes(i) ? 'is-on' : ''}" aria-pressed="${s.burgerNights.includes(i)}" data-action="fam:burger" data-day="${i}">${d}</button>`)}</div></div>
     <div class="set-row"><span class="set-label">Frozen pizza nights a month<small>On Saturdays.</small></span>${stepper({ value: s.pizzaPerMonth, step: 1, min: 0, action: 'fam:num', data: { key: 'pizzaPerMonth', max: 4 }, label: 'Pizza nights a month' })}</div>
     <div class="set-row"><span class="set-label">Rice dinners a week, at most<small>Candi’s rule.</small></span>${stepper({ value: s.riceMaxPerWeek, step: 1, min: 0, action: 'fam:num', data: { key: 'riceMaxPerWeek', max: 3 }, label: 'Rice dinners a week' })}</div>
+    <div class="set-row set-col"><span class="set-label">Meat per dinner<small>Lighter trims every meat amount by 15% to save money.</small></span>${segmented('meatScale', MEAT_OPTS, String(s.meatScale), { label: 'Meat per dinner', action: 'fam:meat', small: true })}</div>
     <div class="set-row set-col"><span class="set-label">Plan from</span>${segmented('planStore', [{ id: 'both', label: 'Both stores' }, { id: 'sams', label: "Sam's only" }, { id: 'jewel', label: 'Jewel only' }], s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}</div>
     <div class="set-row set-col"><span class="set-label">Brands by default<small>Change any single item on the list.</small></span>${segmented('brand', [{ id: 'generic', label: 'Store brand' }, { id: 'name', label: 'Name brand' }], s.brand, { label: 'Brand default', action: 'plan:setting', small: true })}</div>
     <div class="set-row set-col"><span class="set-label">Weeks start on</span>${segmented('weekStartsOn', [{ id: '1', label: 'Monday' }, { id: '0', label: 'Sunday' }], String(s.weekStartsOn), { label: 'Weeks start on', action: 'fam:weekstart', small: true })}</div>
@@ -198,6 +200,10 @@ export const actions = {
     const max = Number(el.dataset.max);
     const v = Math.max(0, Math.min(max, (app.settings[key] || 0) + Number(el.dataset.delta)));
     app.commit(settingOps(app.state, key, v), { quiet: true });
+  },
+  'fam:meat': (app, el) => {
+    const v = Number(el.dataset.value) === 0.85 ? 0.85 : 1;
+    app.commit({ ...settingOps(app.state, 'meatScale', v), message: v === 1 ? 'Meat amounts are back to hearty, as written.' : 'Lighter: every meat amount is 15% less, and the list and budget follow.' });
   },
   'fam:weekstart': (app, el) => app.commit(settingOps(app.state, 'weekStartsOn', Number(el.dataset.value)), { quiet: true }),
   'fam:reset': async (app) => {

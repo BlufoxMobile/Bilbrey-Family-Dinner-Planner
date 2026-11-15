@@ -168,3 +168,39 @@ test('effective sides: remembered substitution beats the night and the default',
   const burger = effectiveSides(t, { substitutions: { burger: { 1: 'broc' } } }, 'burger', null);
   assert.deepEqual(burger.map((s) => s.ref), ['fries', 'broc'], 'burger night: fries + an added side');
 });
+
+test('meat per dinner: "lighter" scales only catalog items marked meat', async () => {
+  const { itemsForNight, scaleItems } = await import('../app/planner.js');
+  const meatId = Object.keys(db.ingredients).find((id) => db.ingredients[id].meat);
+  const d = db.dinnerList.find((x) => x.items[meatId]);
+  if (!meatId || !d) return;
+  const full = itemsForNight(db, {}, d.id, null);
+  const light = itemsForNight(db, { settings: { meatScale: 0.85 } }, d.id, null);
+  assert.equal(light[meatId], Math.round(full[meatId] * 0.85 * 100) / 100);
+  const other = Object.keys(full).find((id) => !db.ingredients[id]?.meat);
+  if (other) assert.equal(light[other], full[other]);
+  assert.deepEqual(scaleItems(db, {}, { x: 1 }), { x: 1 });
+});
+
+test('Sam’s-only still fills a week and explains what’s missing', async () => {
+  const { storeCoverage } = await import('../app/planner.js');
+  const cov = storeCoverage(db, {}, 'sams');
+  assert.ok(cov.ok >= 20, `enough dinners for Sam's only (${cov.ok}/${cov.total})`);
+  const dates = periodRange('2026-11-16', 'week').dates;
+  const { entries, unfilled } = generatePlan({ db, state: { settings: { planStore: 'sams' } }, dates, today: TODAY });
+  assert.equal(unfilled.length, 0);
+  assert.equal(Object.keys(entries).length, 7);
+  for (const e of Object.values(entries)) assert.ok(dinnerFeasibleAt(db, { settings: { planStore: 'sams' } }, e.dinner, 'sams', e));
+});
+
+test('a rice side counts toward the weekly rice limit', async () => {
+  const { nightIsRice } = await import('../app/planner.js');
+  const riceSide = db.sideList.find((s) => s.tags?.includes('rice'));
+  const plain = db.dinnerList.find((d) => !isRice(d) && !isBurger(d));
+  if (!riceSide || !plain) return;
+  assert.equal(nightIsRice(db, {}, plain.id, { sides: [riceSide.id] }), true);
+  const range = periodRange('2026-12-07', 'week');
+  const { entries } = plan({}, range.dates);
+  const n = Object.entries(entries).filter(([, e]) => nightIsRice(db, {}, e.dinner, e)).length;
+  assert.ok(n <= 1, `at most one rice night (got ${n})`);
+});

@@ -2,7 +2,7 @@
 // screen stays awake while it's open.
 import { html, ic, when } from '../ui.js';
 import { fmtQty, isISODate, relativeDay } from '../util.js';
-import { dinnerById } from '../planner.js';
+import { dinnerById, scaleItems } from '../planner.js';
 import { markCookedOps } from '../actions.js';
 import { itemMeta, singular } from '../shopping.js';
 import { sidesFor, equipment } from './common.js';
@@ -64,7 +64,7 @@ export function render(app) {
   const total = sections.reduce((n, s) => n + s.steps.length, 0);
   const done = sections.reduce((n, s) => n + s.steps.filter((_, k) => checks[`${s.id}:${k}`]).length, 0);
   const all = {};
-  for (const s of sections) for (const [id, q] of Object.entries(s.items)) all[id] = (all[id] || 0) + q;
+  for (const s of sections) for (const [id, q] of Object.entries(scaleItems(app.db, app.state, s.items))) all[id] = (all[id] || 0) + q;
   const cooked = t.entry?.status === 'cooked';
   return html`<div class="cook" style="--cook-scale:${size}">
     <header class="cook-bar">

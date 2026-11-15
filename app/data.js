@@ -61,6 +61,7 @@ export function normalizeIngredient(id, raw) {
     defaultStore: STORES.includes(raw?.defaultStore) ? raw.defaultStore : (packs.sams && !packs.jewel ? 'sams' : 'jewel'),
     aliases: Array.isArray(raw?.aliases) ? raw.aliases.map(String) : [],
     extra: !!raw?.extra,
+    meat: !!raw?.meat,
     packs,
   };
 }
@@ -104,6 +105,7 @@ export function normalizeSide(raw) {
     equipment: Array.isArray(raw.equipment) ? raw.equipment.map(String) : [],
     items: cleanItems(raw.items),
     steps: Array.isArray(raw.steps) ? raw.steps.map(String) : [],
+    tags: Array.isArray(raw.tags) ? raw.tags.map((t) => String(t).toLowerCase()) : [],
   };
 }
 

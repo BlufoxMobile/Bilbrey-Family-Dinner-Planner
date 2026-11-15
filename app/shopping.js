@@ -54,7 +54,8 @@ function listStore(db, state, id, planStore) {
 }
 
 const COUNT_UNITS = new Set(['eggs', 'buns', 'slices', 'tortillas', 'pieces', 'cans', 'peppers', 'hearts', 'cucumbers', 'oranges', 'lemons',
-  'limes', 'cloves', 'pizzas', 'each', 'count', 'heads', 'bunches', 'packages', 'jars', 'bottles', 'bags', 'boxes', 'loaves', 'avocados', 'bananas']);
+  'limes', 'cloves', 'pizzas', 'each', 'count', 'heads', 'bunches', 'packages', 'jars', 'bottles', 'bags', 'boxes', 'loaves', 'avocados', 'bananas',
+  'snack cups', 'yogurt cups', 'rolls', 'ears', 'potstickers', 'waffles', 'sticks', 'bars']);
 const WEIGHT_UNITS = new Set(['lb', 'oz', 'g', 'kg']);
 
 export function singular(unit) {
@@ -229,6 +230,8 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
   return {
     listKey, dates, nights, items, covered, stores, leftovers, freezer, total,
     usedByDinners, leftoverValue,
+    // Everyday extras: free-text lines plus the extra packs added to catalog items.
+    extrasCost: round2(items.reduce((t, i) => t + (i.freeText ? (i.cost || 0) : (i.extraPacks && i.pack ? i.extraPacks * i.pack.price : 0)), 0)),
     // What one dinner costs in food it actually uses (pack leftovers excluded).
     perDinner: nights.length ? round2(usedByDinners / nights.length) : 0,
     weeks, planStore, pricesUpdated: db.pricesUpdated,
@@ -299,12 +302,13 @@ export function monthBudget(db, state, today, { baseline = 1000 } = {}) {
   const unplanned = remaining.filter((d) => { const e = state?.plan?.[d]; return !e || (e.status === 'planned' && !e.dinner); }).length;
   const away = all.filter((d) => state?.plan?.[d]?.status === 'away').length;
   const cooked = all.filter((d) => state?.plan?.[d]?.status === 'cooked').length;
+  const extras = list.extrasCost || 0;
   const projected = round2(spent + stillToBuy);
   const ifPlanned = round2(projected + (list.perDinner || 0) * unplanned);
   const target = st.monthlyTarget;
   return {
     month, start, end, target, receipts, spent, stillToBuy, plannedRemaining, unplanned, away, cooked,
-    perDinner: list.perDinner, projected, ifPlanned,
+    perDinner: list.perDinner, projected, ifPlanned, extras, dinnersToBuy: round2(stillToBuy - extras), meatScale: st.meatScale,
     left: round2(target - projected), baseline, savings: round2(baseline - projected),
     byStore: { sams: list.stores.sams.subtotal, jewel: list.stores.jewel.subtotal },
     pricesUpdated: db.pricesUpdated,
