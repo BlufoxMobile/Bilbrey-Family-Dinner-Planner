@@ -1,5 +1,15 @@
 # Deploying `bilbrey-dinner-planner`
 
+> **Since 2026-11-15: automatic deploys.** The Worker is connected to GitHub through Cloudflare
+> Workers Builds (Worker → Settings → Build): repo `BlufoxMobile/bilbrey-family-dinner-planner`,
+> branch `main`, root directory `worker`, deploy command `npx wrangler deploy`, build watch path
+> `worker/*`. Every push to `main` that changes `worker/` deploys `src/index.js` with the bindings
+> in `wrangler.toml` (KITCHEN Durable Object, Workers AI, observability). Migration `v1` is already
+> applied, so wrangler skips it. After a push, run `node worker/smoke.mjs <worker URL>` and check
+> `version=` in `/api/health`. The manual upload below is the fallback (the dashboard's firewall
+> has blocked it for some code changes).
+
+
 The Worker is ONE ES-module file, `worker/src/index.js` (v2.2.0, ~80 KB, no npm runtime
 dependencies; its only import is the built-in `cloudflare:workers`). Deploy it with the Workers
 Script Upload API as a `multipart/form-data` PUT. No wrangler and no build step are needed.

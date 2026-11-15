@@ -1,6 +1,7 @@
-# Local dev / test config for the Bilbrey Family Dinner Planner Worker.
-# Production is deployed by uploading src/index.js through the Cloudflare API with the
-# equivalent metadata documented in DEPLOY.md (keep the two in sync).
+# Config for the Bilbrey Family Dinner Planner Worker — local dev, tests AND production.
+# Since 2026-11-15 production deploys through Cloudflare Workers Builds: every push to main that
+# touches worker/ runs `npx wrangler deploy` from this folder (see DEPLOY.md). Keep the bindings
+# below identical to what's live: the KITCHEN Durable Object, Workers AI, observability on.
 name = "bilbrey-dinner-planner"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
@@ -18,3 +19,6 @@ new_sqlite_classes = ["Kitchen"]
 # The automated tests replace this binding with a mock (see test/fixtures/entry.mjs).
 [ai]
 binding = "AI"
+
+[observability]
+enabled = true
