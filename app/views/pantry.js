@@ -7,6 +7,7 @@ import { fmtQty, round2 } from '../util.js';
 import { setPantryOps, removePantryOps, customItemOps, undoFor } from '../actions.js';
 import { set } from '../state.js';
 import { kindOf } from '../planner.js';
+import { unitText } from '../shopping.js';
 import { scanQtyIn } from '../scanqty.js';
 
 export const title = () => 'Pantry';
@@ -45,7 +46,7 @@ function pantryRow(app, id, p) {
   return html`<li class="pan-row ${p.low ? 'is-low' : ''}">
     <span class="pan-name"><b>${m.name}</b>
       ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
-      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? `${fmtQty(p.qty)} ${m.unit} on hand` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}${p.by ? `, updated by ${p.by}` : ''}</small></span>
+      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? `${unitText(p.qty, m.unit)} on hand` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}${p.by ? `, updated by ${p.by}` : ''}</small></span>
     <span class="pan-ctrl">
       ${staple
         ? switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `${m.name} stocked until low` })
