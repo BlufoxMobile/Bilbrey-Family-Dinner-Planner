@@ -214,11 +214,11 @@ function itemsFeasible(db, state, items, store) {
 export function feasibleSides(db, state, d, store, entry) {
   const base = effectiveSides(db, state, d.id, entry);
   if (!itemsFeasible(db, state, d.items, store)) return null;
-  const refs = base.map((s) => s.ref);
+  const refs = [];
+  for (const s of base) refs[s.slot] = s.ref;
   if (store === 'both') return refs;
-  const used = new Set(refs);
-  for (let i = 0; i < base.length; i++) {
-    const s = base[i];
+  const used = new Set(base.map((s) => s.ref));
+  for (const s of base) {
     if (itemsFeasible(db, state, itemsForSides(db, state, [s.ref]), store)) continue;
     if (s.remembered) return null; // the family chose this side; don't silently change it
     const want = s.parsed.type === 'side' ? db.sides[s.parsed.id]?.kind : null;
@@ -226,10 +226,19 @@ export function feasibleSides(db, state, d, store, entry) {
       .filter((x) => !used.has(x.id) && itemsFeasible(db, state, x.items, store))
       .sort((a, b) => (b.kind === want) - (a.kind === want) || a.id.localeCompare(b.id));
     if (!alts.length) return null;
-    refs[i] = alts[0].id;
+    refs[s.slot] = alts[0].id;
     used.add(alts[0].id);
   }
   return refs;
+}
+
+/** What the generator writes into a night's `sides`: never a remembered substitution (that lives in state.substitutions). */
+function storedSides(state, d, refs) {
+  const subs = state?.substitutions?.[d.id] || {};
+  const n = sideSlotsFor(d);
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(subs[String(i)] != null ? (d.sides[i] ?? null) : (refs[i] ?? d.sides[i] ?? null));
+  return out;
 }
 
 export function dinnerFeasibleAt(db, state, dinnerId, store, entry) {
@@ -453,7 +462,7 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
       if (lastUse(d.id, date, 28) !== null) score -= 0.6;
       if (!best || score > best.score + 1e-9 || (Math.abs(score - best.score) <= 1e-9 && d.id < best.c.d.id)) best = { score, c };
     }
-    const entry = { dinner: best.c.d.id, sides: best.c.sides, status: 'planned', by, at };
+    const entry = { dinner: best.c.d.id, sides: storedSides(state, best.c.d, best.c.sides), status: 'planned', by, at };
     entries[date] = entry;
     merged[date] = entry;
     ledger.consume(itemsForNight(db, state, entry.dinner, entry));

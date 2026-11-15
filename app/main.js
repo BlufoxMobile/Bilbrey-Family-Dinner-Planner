@@ -1,0 +1,224 @@
+// Boot, routing, the app shell and the shared `app` context the views use.
+import { apiBase, VERSION } from './config.js';
+import { loadDb } from './data.js';
+import { Store, settingsOf } from './state.js';
+import { todayISO } from './util.js';
+import {
+  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, installPhotoFallback, avatar, sheetOpen,
+} from './ui.js';
+import * as tonight from './views/tonight.js';
+import * as planView from './views/plan.js';
+import * as listView from './views/list.js';
+import * as pantryView from './views/pantry.js';
+import * as recipesView from './views/recipes.js';
+import * as recipeView from './views/recipe.js';
+import * as budgetView from './views/budget.js';
+import * as familyView from './views/family.js';
+import * as cookView from './views/cook.js';
+import * as onboarding from './views/onboarding.js';
+import * as sheets from './views/sheets.js';
+
+const VIEWS = {
+  tonight, plan: planView, list: listView, pantry: pantryView, recipes: recipesView, recipe: recipeView,
+  budget: budgetView, family: familyView, cook: cookView,
+};
+const TABS = [
+  { id: 'tonight', label: 'Tonight', icon: 'tonight' },
+  { id: 'plan', label: 'Plan', icon: 'plan' },
+  { id: 'list', label: 'List', icon: 'list' },
+  { id: 'pantry', label: 'Pantry', icon: 'pantry' },
+  { id: 'recipes', label: 'Recipes', icon: 'recipes' },
+];
+const MORE = [
+  { id: 'budget', label: 'Budget', icon: 'budget' },
+  { id: 'family', label: 'Family & settings', icon: 'family' },
+];
+
+const ACTIONS = {};
+for (const m of [...Object.values(VIEWS), onboarding, sheets]) Object.assign(ACTIONS, m.actions || {});
+
+export const app = {
+  db: null,
+  store: null,
+  ui: { anchor: null, swapPick: null, swapMode: false, recipeQuery: '', recipeFilters: {}, recipeTab: 'rotation', pantryQuery: '' },
+  route: { view: 'tonight', params: [] },
+  get state() { return this.store.state; },
+  get settings() { return settingsOf(this.store.state); },
+  today() { return todayISO(); },
+  who() { return this.store.device.who; },
+  /** Apply an action result: commit ops, show its message with Undo. */
+  commit(res, { quiet = false, undoable = true, onUndo } = {}) {
+    if (!res) return false;
+    if (res.error || !res.ops?.length) {
+      if (res.message && !quiet) toast(res.message);
+      return false;
+    }
+    this.store.commit(res.ops);
+    if (!quiet && res.message) {
+      toast(res.message, undoable && res.undo?.length ? { undo: () => { this.store.commit(res.undo); onUndo?.(); toast('Undone.'); } } : {});
+    }
+    return true;
+  },
+  navigate(hash) {
+    if (location.hash === hash) render();
+    else location.hash = hash;
+  },
+  render: () => scheduleRender(),
+};
+
+function parseRoute() {
+  const h = (location.hash || '#/tonight').replace(/^#\/?/, '');
+  const [view, ...params] = h.split('/').map(decodeURIComponent);
+  return { view: VIEWS[view] ? view : 'tonight', params };
+}
+
+function syncPill() {
+  const s = app.store;
+  const pending = s.pending.length;
+  const map = {
+    synced: { label: 'Synced', tone: 'ok', icon: 'cloud', long: 'Everyone sees the same plan.' },
+    syncing: { label: 'Syncing', tone: 'busy', icon: 'refresh', long: 'Sending your changes to the family.' },
+    offline: { label: pending ? 'Saved on this phone' : 'Offline', tone: 'off', icon: 'cloudOff', long: 'Offline — changes are saved on this phone and sync when you reconnect.' },
+    local: { label: 'This phone only', tone: 'off', icon: 'phone', long: 'Using the planner on this phone only.' },
+    'needs-setup': { label: 'Connect', tone: 'warn', icon: 'lock', long: 'Create the family passcode to share the plan.' },
+    'needs-passcode': { label: 'Connect', tone: 'warn', icon: 'lock', long: 'Enter the family passcode to share the plan.' },
+    error: { label: 'Sync paused', tone: 'warn', icon: 'cloudOff', long: s.statusDetail || 'Sync paused.' },
+  };
+  const m = map[s.status] || map.offline;
+  return html`<button type="button" class="sync sync-${m.tone}" data-action="sheet:sync" aria-label="${m.label}. ${m.long}" title="${m.long}">
+    <span class="sync-dot" aria-hidden="true"></span><span class="sync-label">${m.label}</span>
+  </button>`;
+}
+
+function shell() {
+  const who = app.who();
+  const active = app.route.view === 'recipe' ? 'recipes' : app.route.view;
+  return html`
+    <a class="skip" href="#view">Skip to content</a>
+    <aside class="rail" aria-label="Sections">
+      <a class="wordmark" href="#/tonight"><span class="wm-mark" aria-hidden="true"></span><span class="wm-text">The Bilbrey<br>Family Dinners</span></a>
+      <nav class="rail-nav">
+        ${[...TABS, ...MORE].map((t) => html`<a class="rail-link ${active === t.id ? 'is-on' : ''}" href="#/${t.id}" ${active === t.id ? html`aria-current="page"` : ''}>${ic(t.icon)}<span>${t.label}</span></a>`)}
+      </nav>
+      <div class="rail-foot">${syncPill()}
+        <button type="button" class="rail-who" data-action="sheet:who">${avatar(who || '?', { size: 'sm' })}<span>${who ? `${who}’s phone` : 'Who’s using this phone?'}</span></button>
+      </div>
+    </aside>
+    <header class="topbar">
+      <a class="wordmark wordmark-sm" href="#/tonight" aria-label="The Bilbrey Family Dinner Planner, tonight"><span class="wm-mark" aria-hidden="true"></span><span class="wm-text">Bilbrey Dinners</span></a>
+      <div class="topbar-right">
+        ${syncPill()}
+        <a class="icon-btn ${active === 'budget' ? 'is-on' : ''}" href="#/budget" aria-label="Budget">${ic('budget')}</a>
+        <a class="who-btn ${active === 'family' ? 'is-on' : ''}" href="#/family" aria-label="Family and settings${who ? `, ${who} is using this phone` : ''}">${avatar(who || '?', { size: 'sm' })}</a>
+      </div>
+    </header>
+    <main id="view" class="view view-${app.route.view}" tabindex="-1"></main>
+    <nav class="tabbar" aria-label="Sections">
+      ${TABS.map((t) => html`<a class="tab ${active === t.id ? 'is-on' : ''}" href="#/${t.id}" ${active === t.id ? html`aria-current="page"` : ''}>${ic(t.icon, { size: 24 })}<span>${t.label}</span></a>`)}
+    </nav>`;
+}
+
+let renderQueued = false;
+let lastView = null;
+function scheduleRender() {
+  if (renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(() => { renderQueued = false; render(); });
+}
+
+export function render() {
+  const root = document.getElementById('app');
+  if (!app.db || !app.store) return;
+  if (!app.store.device.who || onboarding.gateActive(app)) {
+    root.className = 'app is-gate';
+    setHTML(root, onboarding.render(app));
+    onboarding.mount?.(app, root);
+    lastView = 'gate';
+    return;
+  }
+  app.route = parseRoute();
+  const v = VIEWS[app.route.view];
+  const changedView = lastView !== `${app.route.view}/${app.route.params.join('/')}`;
+  const y = window.scrollY;
+  root.className = `app ${app.route.view === 'cook' ? 'is-cook' : ''}`;
+  setHTML(root, shell());
+  const main = root.querySelector('#view');
+  setHTML(main, v.render(app));
+  v.mount?.(app, main);
+  document.title = v.title ? `${v.title(app)} — The Bilbrey Family Dinner Planner` : 'The Bilbrey Family Dinner Planner';
+  if (changedView) { window.scrollTo(0, 0); if (lastView && lastView !== 'gate') main.focus({ preventScroll: true }); }
+  else window.scrollTo(0, y);
+  lastView = `${app.route.view}/${app.route.params.join('/')}`;
+}
+
+function applyTheme() {
+  const t = app.store.device.theme;
+  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+}
+
+function delegate() {
+  const run = (attr) => (ev) => {
+    const el = ev.target.closest(`[data-${attr}]`);
+    if (!el || el.disabled) return;
+    const name = el.dataset[attr];
+    const fn = ACTIONS[name];
+    if (!fn) return;
+    if (attr === 'action' && (el.tagName === 'BUTTON' || el.tagName === 'A')) ev.preventDefault();
+    fn(app, el, ev);
+  };
+  document.addEventListener('click', run('action'));
+  document.addEventListener('change', run('change'));
+  document.addEventListener('input', run('input'));
+  document.addEventListener('submit', (ev) => {
+    const form = ev.target.closest('form[data-submit]');
+    if (!form) return;
+    ev.preventDefault();
+    ACTIONS[form.dataset.submit]?.(app, form, ev);
+  });
+}
+
+ACTIONS['sheet:close'] = () => closeSheet();
+ACTIONS.nav = (a, el) => a.navigate(el.dataset.href);
+
+async function boot() {
+  const root = document.getElementById('app');
+  installPhotoFallback(document);
+  try {
+    app.db = await loadDb({ base: './' });
+  } catch (e) {
+    root.className = 'app is-gate';
+    setHTML(root, html`<section class="gate"><div class="gate-card">
+      <span class="wm-mark wm-lg" aria-hidden="true"></span>
+      <h1 class="gate-title">The recipes didn’t load</h1>
+      <p class="gate-text">Check your connection, then try again. (${e.message})</p>
+      <button type="button" class="btn btn-primary btn-block" onclick="location.reload()">Try again</button>
+    </div></section>`);
+    return;
+  }
+  app.store = new Store({ apiBase: apiBase() });
+  applyTheme();
+  app.store.subscribe((kind) => {
+    if (kind === 'device') applyTheme();
+    scheduleRender();
+    if (kind === 'state') refreshLiveSheet();
+  });
+  delegate();
+  window.addEventListener('hashchange', () => { if (sheetOpen()) closeSheet(); render(); });
+  render();
+  if (app.store.device.who) app.store.connect();
+  const resync = () => { if (document.visibilityState === 'visible' && app.store.device.key && !app.store.device.localOnly) app.store.sync(); };
+  document.addEventListener('visibilitychange', resync);
+  window.addEventListener('online', () => (app.store.device.key ? app.store.sync() : app.store.connect()));
+  window.addEventListener('focus', resync);
+  setInterval(resync, 30000);
+  // Re-render at midnight Chicago time so "tonight" moves on.
+  let day = app.today();
+  setInterval(() => { const t = app.today(); if (t !== day) { day = t; scheduleRender(); } }, 60000);
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => { /* offline support is a bonus */ });
+  }
+  document.documentElement.dataset.version = VERSION;
+}
+
+boot();

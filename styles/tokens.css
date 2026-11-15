@@ -1,0 +1,97 @@
+/* The Bilbrey Family Dinner Planner — design tokens.
+   Idea: the family recipe box. Card-stock paper, deep pine enamel, and one thin
+   red margin rule like a 3×5 index card — used only for tonight and cook mode. */
+
+@font-face { font-family: 'Young Serif'; src: url('../fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson Next'; src: url('../fonts/atkinson-next-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson Next'; src: url('../fonts/atkinson-next-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Atkinson Next'; src: url('../fonts/atkinson-next-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Atkinson Next'; src: url('../fonts/atkinson-next-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+
+:root {
+  color-scheme: light;
+  --paper: #F3EAD7;
+  --paper-2: #EADFC6;
+  --card: #FFFBF2;
+  --card-2: #F8F0DF;
+  --ink: #2A2620;
+  --ink-2: #5B5548;
+  --ink-3: #6F6757;
+  --line: #E2D5BA;
+  --line-2: #CDBC9A;
+  --pine: #1F3B2D;
+  --pine-2: #2B5040;
+  --pine-ink: #F8F1E1;
+  --sage: #557260;
+  --sage-tint: #DFE7D7;
+  --red: #BF3A2F;
+  --red-tint: #F5DCD5;
+  --butter: #D9A93E;
+  --butter-tint: #F5E6BC;
+  --dusk: #343E5A;
+  --dusk-2: #46527A;
+  --dusk-ink: #F3EEE3;
+  --rule-blue: rgba(79, 115, 160, 0.13);
+  --focus: #2E6BD6;
+  --scrim: rgba(36, 28, 14, 0.42);
+
+  --p-jeff: #2F5D46; --p-candi: #8A4E6B; --p-knox: #93681C; --p-jordan: #3C5C7C; --p-jackson: #8A5236; --av-ink: #FFF8EC;
+
+  --sh-1: 0 1px 0 rgba(84, 62, 28, 0.06), 0 2px 8px -3px rgba(84, 62, 28, 0.16);
+  --sh-2: 0 1px 0 rgba(84, 62, 28, 0.05), 0 14px 34px -14px rgba(64, 44, 16, 0.34);
+  --sh-3: 0 24px 60px -18px rgba(48, 32, 10, 0.45);
+
+  --font-display: 'Young Serif', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-text: 'Atkinson Next', 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --t-xs: 0.8125rem;  /* 13 */
+  --t-sm: 0.9375rem;  /* 15 */
+  --t-md: 1.0625rem;  /* 17 */
+  --t-lg: 1.25rem;    /* 20 */
+  --t-xl: 1.5rem;     /* 24 */
+  --t-2xl: 1.875rem;  /* 30 */
+  --t-3xl: 2.375rem;  /* 38 */
+  --t-4xl: 2.875rem;  /* 46 */
+
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px; --s12: 48px;
+
+  --r-index: 6px;
+  --r-btn: 12px;
+  --r-card: 12px;
+  --r-photo: 14px;
+  --r-sheet: 22px;
+
+  --gutter: 16px;
+  --tabbar-h: 64px;
+  --header-h: 56px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #131C17; --paper-2: #0F1612; --card: #1B2620; --card-2: #212D26;
+    --ink: #EFE7D6; --ink-2: #C3BCAA; --ink-3: #A39D8B; --line: #2B3931; --line-2: #3C4C42;
+    --pine: #A9D0B3; --pine-2: #BEDEC6; --pine-ink: #12201A; --sage: #93B49E; --sage-tint: #233629;
+    --red: #E5695D; --red-tint: #3E2420; --butter: #E2C176; --butter-tint: #3A3220;
+    --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
+    --p-jeff: #7DB394; --p-candi: #D19AB6; --p-knox: #D9AE5E; --p-jordan: #8EB0D3; --p-jackson: #D39C76; --av-ink: #16201A;
+    --sh-1: 0 1px 0 rgba(0, 0, 0, 0.25), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
+    --sh-2: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -14px rgba(0, 0, 0, 0.7);
+    --sh-3: 0 24px 60px -18px rgba(0, 0, 0, 0.8);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #131C17; --paper-2: #0F1612; --card: #1B2620; --card-2: #212D26;
+  --ink: #EFE7D6; --ink-2: #C3BCAA; --ink-3: #A39D8B; --line: #2B3931; --line-2: #3C4C42;
+  --pine: #A9D0B3; --pine-2: #BEDEC6; --pine-ink: #12201A; --sage: #93B49E; --sage-tint: #233629;
+  --red: #E5695D; --red-tint: #3E2420; --butter: #E2C176; --butter-tint: #3A3220;
+  --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
+  --p-jeff: #7DB394; --p-candi: #D19AB6; --p-knox: #D9AE5E; --p-jordan: #8EB0D3; --p-jackson: #D39C76; --av-ink: #16201A;
+  --sh-1: 0 1px 0 rgba(0, 0, 0, 0.25), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
+  --sh-2: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -14px rgba(0, 0, 0, 0.7);
+  --sh-3: 0 24px 60px -18px rgba(0, 0, 0, 0.8);
+}
