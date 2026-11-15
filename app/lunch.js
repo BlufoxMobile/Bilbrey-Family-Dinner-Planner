@@ -54,7 +54,19 @@ export function personConfig(db, state, name) {
     days: has('days') && Array.isArray(own.days) ? own.days : base.days,
     slots: { ...(base.slots || {}), ...(own?.slots && typeof own.slots === 'object' ? own.slots : {}) },
   };
-  return { ...normalizeLunchPerson(raw, lunchSlots(db)), saved: !!own };
+  const cfg = normalizeLunchPerson(raw, lunchSlots(db));
+  // A thumbs-down on a lunch item takes it out of this person's rotation (§9.2), read lazily.
+  const votes = state?.lunchVotes;
+  if (votes && typeof votes === 'object') {
+    for (const k of Object.keys(cfg.slots)) cfg.slots[k] = cfg.slots[k].filter((id) => votes[id]?.[name] !== -1);
+  }
+  return { ...cfg, saved: !!own };
+}
+
+/** This person's thumbs on a lunch item: 1, -1 or 0. */
+export function lunchVote(state, itemId, name) {
+  const v = state?.lunchVotes?.[itemId]?.[name];
+  return v === 1 || v === -1 ? v : 0;
 }
 
 /** The family, enabled people first; the phone's own person leads. */

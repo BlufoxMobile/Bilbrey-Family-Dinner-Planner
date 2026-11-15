@@ -2,13 +2,16 @@
 // per-item store/brand/price, check-off, the freezer panel, extras, and the store handoff.
 import { html, ic, when, openSheet, closeSheet, toast, copyText, confirmSheet, segmented, renderSheet } from '../ui.js';
 import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate, round2 } from '../util.js';
-import { listKeyFor, dinnerById } from '../planner.js';
-import { buildList, formatPackQty, formatStoreList, formatFullList, unitText, OTHER } from '../shopping.js';
+import { listKeyFor, dinnerById, brandFor } from '../planner.js';
+import { buildList, formatPackQty, formatStoreList, formatFullList, unitText, OTHER, productName } from '../shopping.js';
 import {
   toggleCheckOps, doneShoppingOps, setPriceOps, clearPriceOps, notAtStoreOps, addExtraOps, removeExtraOps, setPantryOps, undoFor,
 } from '../actions.js';
 import { set, del } from '../state.js';
 import { currentRange, periodNav } from './plan.js';
+import { productLabel, findItUrl, priceSource } from '../products.js';
+import { openProductPicker, productSource } from './products.js';
+import { openReceiptScan } from './receipts.js';
 
 export const title = () => 'Shopping list';
 const NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
@@ -43,16 +46,28 @@ function detail(app, i) {
   return parts.join('; ');
 }
 
+/** "paid $17.94 · Nov 12", "est.", "family price" — where an item's price comes from (SPEC §9.4). */
+function priceTag(i) {
+  const src = priceSource(i.pack);
+  if (src.kind === 'paid') return html`<small class="paid" title="What you paid on a receipt">paid${i.pack.date ? ` ${money(i.pack.price)} · ${shortDate(i.pack.date)}` : ''}</small>`;
+  if (src.kind === 'family' || src.kind === 'typed') return html`<small class="paid">your price</small>`;
+  if (src.kind === 'listed') return '';
+  return html`<small class="est" title="Estimated price">est.</small>`;
+}
+
 function itemRow(app, i, listKey) {
   const qty = i.freeText ? (i.qty ? unitText(i.qty, i.unit || 'each') : '') : formatPackQty(i);
+  const chosen = i.product?.chosen;
   return html`<li class="item ${i.checked ? 'is-checked' : ''}">
     <button type="button" class="check" role="checkbox" aria-checked="${i.checked ? 'true' : 'false'}" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-label="${i.name}${i.checked ? ', in the cart' : ''}"><span class="check-box">${ic('check', { size: 18 })}</span></button>
     <button type="button" class="item-main" data-action="list:item" data-key="${i.key}">
       <span class="item-name">${i.name}</span>
-      <span class="item-qty">${qty}${i.reasons.includes('lunches') ? html` <span class="tag tag-lunch">Lunch</span>` : ''}${i.pack?.source === 'family' ? html` <span class="tag">family price</span>` : ''}${i.brand === 'name' && !i.freeText ? html` <span class="tag">name brand</span>` : ''}</span>
+      ${when(chosen || i.product?.usual, () => html`<span class="item-product ${chosen ? '' : 'is-usual'}">${chosen ? productLabel(i.product) : i.product.label}</span>`)}
+      <span class="item-qty">${qty}${i.reasons.includes('lunches') ? html` <span class="tag tag-lunch">Lunch</span>` : ''}${i.pack?.source === 'family' ? html` <span class="tag">family price</span>` : ''}${i.brand === 'name' && !i.freeText && !chosen ? html` <span class="tag">name brand</span>` : ''}</span>
       <span class="item-detail">${detail(app, i)}</span>
     </button>
-    <span class="item-price">${i.cost == null ? html`<span class="muted">add price</span>` : html`${money(i.cost)}${i.pack?.source !== 'family' && i.pack?.confidence !== 'listed' ? html`<small class="est" title="Estimated price">est.</small>` : ''}`}</span>
+    <span class="item-price">${i.cost == null ? html`<span class="muted">add price</span>` : html`${money(i.cost)}${priceTag(i)}`}
+      ${when(!i.freeText, () => html`<a class="find-it" href="${findItUrl(app.db, i.store, i.product?.chosen ? i.product : null, i.product?.name || i.name)}" target="_blank" rel="noopener" data-findit="${i.id}" aria-label="Find ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">Find it</a>`)}</span>
   </li>`;
 }
 
@@ -217,6 +232,10 @@ export function render(app) {
           <p class="muted small">${checked} of ${list.items.length} in the cart</p>`)}
       </section>
       ${couponsCard(app)}
+      <nav class="list-links" aria-label="Receipts and products">
+        <button type="button" class="btn btn-secondary" data-action="rcpt:scan">${ic('camera', { size: 20 })}Scan a receipt</button>
+        <a class="btn btn-quiet" href="#/products">${ic('cart', { size: 20 })}My products</a>
+      </nav>
       ${freezerPanel(app, list)}
       ${when(list.lunches.length, () => html`<div class="list-filter">${segmented('listFilter', FILTERS, activeFilter(app, list), { label: 'Show', action: 'list:filter', small: true })}</div>`)}
       ${storeSection(app, list, 'sams', listKey)}
@@ -255,14 +274,23 @@ function itemSheet(app, key) {
       }
       const both = app.settings.planStore === 'both';
       const fam = i.pack?.source === 'family';
-      const src = !i.pack ? 'No price yet' : fam ? `Family price${i.pack.by ? ` from ${i.pack.by}` : ''}` : i.pack.confidence === 'listed' ? `Listed on the ${NAMES[i.store]} site` : 'Estimated';
+      const ps = priceSource(i.pack);
+      const src = !i.pack ? 'No price yet' : fam ? `Family price${i.pack.by ? ` from ${i.pack.by}` : ''}`
+        : ps.kind === 'paid' ? (i.pack.date ? `Paid on your ${shortDate(i.pack.date)} receipt` : 'What you paid, from your receipts') : ps.kind === 'typed' ? 'The price you typed in'
+          : ps.kind === 'listed' ? `Listed on the ${NAMES[i.store]} site` : 'Estimated';
       return html`
         <h3 class="item-sheet-name">${i.name}</h3>
         <p class="sheet-text">${detail(app, i) || 'On the list.'}</p>
         ${when(i.uses.length, () => html`<ul class="uses">${i.uses.map((u) => html`<li><span>${dayAndDate(u.date, app.today())}</span><span>${dinnerById(app.db, app.state, u.dinner)?.title}</span><span>${unitText(u.qty, i.unit)}</span></li>`)}</ul>`)}
+        <div class="product-box">
+          <span><small>${i.product?.chosen ? `Your product at ${NAMES[i.store]}` : i.product?.usual ? `What you usually buy at ${NAMES[i.store]}` : `The estimate’s product at ${NAMES[i.store]}`}</small><b>${i.product?.label || i.name}</b><small>${i.product?.chosen ? productSource(i.product) : i.product?.usual ? 'From your past receipts. Pick another any time.' : 'Not chosen yet. Scan a receipt, or pick one.'}</small></span>
+          <span class="product-box-acts">
+            <a class="btn btn-small btn-secondary" href="${findItUrl(app.db, i.store, i.product?.chosen ? i.product : null, i.product?.name || i.name)}" target="_blank" rel="noopener" data-findit="${i.id}">${ic('search', { size: 18 })}Find it</a>
+            <button type="button" class="btn btn-small btn-quiet" data-action="item:product" data-store="${i.store}" data-id="${i.id}">Change</button>
+          </span>
+        </div>
         <div class="kv">
           <p><span>Buying</span><b>${formatPackQty(i)}</b></p>
-          ${when(i.pack?.label, () => html`<p><span>Pack</span><b>${i.pack.label}</b></p>`)}
           <p><span>Price</span><b>${i.cost == null ? '—' : `${money(i.cost)}${i.packs > 1 ? ` (${money(i.pack.price)} each)` : ''}`}</b></p>
           <p><span>Source</span><b>${src}${i.pack?.url ? html`, <a href="${i.pack.url}" target="_blank" rel="noopener">see it</a>` : ''}</b></p>
         </div>
@@ -270,7 +298,9 @@ function itemSheet(app, key) {
         ${both ? segmented('store', [{ id: 'sams', label: "Sam's Club" }, { id: 'jewel', label: 'Jewel-Osco' }], i.store, { label: 'Store for this item', action: 'item:store' })
           : html`<p class="muted small">This period is planned from ${NAMES[app.settings.planStore]} only. Switch “Plan from” to both stores to move items.</p>`}
         <h3 class="sheet-h">Brand</h3>
-        ${segmented('brand', [{ id: 'generic', label: 'Store brand' }, { id: 'name', label: 'Name brand' }], app.state.brands?.[i.id] || app.settings.brand, { label: 'Brand for this item', action: 'item:brand' })}
+        ${i.product?.chosen
+          ? html`<p class="muted small">You buy ${i.product.brand ? `${i.product.brand}, ` : ''}the product above, so the brand setting doesn’t change this item. It applies when no product is chosen.</p>`
+          : segmented('brand', [{ id: 'generic', label: 'Store brand' }, { id: 'name', label: 'Name brand' }], brandFor(app.state, i.id, app.db), { label: 'Brand for this item', action: 'item:brand' })}
         <h3 class="sheet-h">Fix the price</h3>
         <form class="form" data-submit="item:price" data-store="${i.store}" data-brand="${i.brand}" data-id="${i.id}">
           <div class="field-row">
@@ -314,7 +344,7 @@ function handoff(app, store) {
         ${when(info.appUrl, () => html`<a class="btn btn-quiet btn-block" href="${info.appUrl}" target="_blank" rel="noopener">Get the ${info.name} app</a>`)}
         ${when(info.searchTemplate, () => {
           const items = list.stores[store].items.filter((i) => !i.checked);
-          return items.length ? html`<details class="more"><summary>Search each item on ${info.name}</summary><ul class="handoff-items">${items.map((i) => html`<li><span>${i.name}</span><a class="btn btn-small btn-quiet" href="${info.searchTemplate.replace('{query}', searchWords(i.name, store))}" target="_blank" rel="noopener">Search</a></li>`)}</ul></details>` : '';
+          return items.length ? html`<details class="more"><summary>Find each item on ${info.name}</summary><ul class="handoff-items">${items.map((i) => html`<li><span>${productName(i)}</span><a class="btn btn-small btn-quiet" href="${i.freeText ? info.searchTemplate.replace(/\{q\}|\{query\}/, searchWords(i.name, store)) : findItUrl(app.db, store, i.product?.chosen ? i.product : null, i.product?.chosen ? i.product.name : productName(i))}" target="_blank" rel="noopener">Find it</a></li>`)}</ul></details>` : '';
         })}
         <label class="field"><span class="field-label">${ok ? 'What was copied' : 'Select and copy this'}</span><textarea class="input copy-box" readonly rows="8">${text}</textarea></label>
         <button type="button" class="btn btn-quiet btn-block" data-action="list:copy-again" data-store="${store}">${ic('copy', { size: 20 })}Copy again</button>
@@ -379,6 +409,7 @@ export const actions = {
   },
   'item:price-clear': (app, el) => { app.commit(clearPriceOps(app.state, { store: el.dataset.store, brand: el.dataset.brand, id: el.dataset.id })); renderSheet(); },
   'item:notat': (app, el) => { app.commit(notAtStoreOps(app.db, app.state, { store: el.dataset.store, id: el.dataset.id })); closeSheet(); },
+  'item:product': (app, el) => openProductPicker(app, { store: el.dataset.store, id: el.dataset.id }),
   'item:have': (app, el) => {
     const id = el.dataset.id;
     const { list } = current(app);

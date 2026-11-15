@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated": "2026-11-14",
-  "notes": "kcal and protein (grams) per ONE catalog unit of each ingredient (the catalog’s \"unit\"; \"basis\" says exactly what one unit is). Generic foods use USDA FoodData Central SR Legacy reference values (fdc.nal.usda.gov; NDB numbers cited where known) converted to the catalog unit; branded/packaged items use typical package labels. Lean meats (chicken, 93/7 turkey, pork chops/loin) use raw values. Ground beef, ground pork, Italian sausage and bacon are counted AS EATEN per pound bought (USDA cooked value × cooking yield), because the recipes spoon off or drain the rendered fat. Oil, butter, mayo and dressings count in full at recipe amounts. Canned vegetables and beans are per can as eaten (drained where the recipe drains). Values are estimates for planning — a kind guide, not a lab number.",
+  "updated": "2026-11-15",
+  "notes": "kcal and protein (grams) per ONE catalog unit of each ingredient (the catalog’s \"unit\"; \"basis\" says exactly what one unit is). Generic foods use USDA FoodData Central SR Legacy reference values (fdc.nal.usda.gov; NDB numbers cited where known) converted to the catalog unit; branded/packaged items use typical package labels. Lean meats (chicken, 93/7 turkey, pork chops/loin) use raw values. Ground beef, ground pork, Italian sausage and bacon are counted AS EATEN per pound bought (USDA cooked value × cooking yield), because the recipes spoon off or drain the rendered fat. Oil, butter, mayo and dressings count in full at recipe amounts. Canned vegetables and beans are per can as eaten (drained where the recipe drains). v2.2: items the family buys by brand (93/7 beef, Rao’s, Artesano, Tillamook, whole milk, fast-food-style fries, etc.) use that product’s label; fully cooked/heat-and-serve products use package labels. Values are estimates for planning — a kind guide, not a lab number.",
   "per": {
     "chicken": {
       "kcal": 544,
@@ -11,11 +11,11 @@
       "source": "USDA FoodData Central, SR Legacy: Chicken, broilers or fryers, breast, meat only, raw (NDB 05062); 120 kcal, 22.5 g protein per 100 g"
     },
     "beef": {
-      "kcal": 815,
-      "protein": 84,
+      "kcal": 690,
+      "protein": 95,
       "unit": "lb",
-      "basis": "AS EATEN: 1 lb raw 85% lean ground beef, browned with the rendered fat spooned off (~72% cooked yield, ~327 g)",
-      "source": "USDA FoodData Central, SR Legacy: Beef, ground, 85% lean meat / 15% fat, crumbles, cooked, pan-browned ~250 kcal & 25.9 g per 100 g cooked; raw is 975 kcal/84 g per lb (USDA FoodData Central, SR Legacy: Beef, ground, 85% lean meat / 15% fat, raw (NDB 23572))"
+      "basis": "1 lb raw 93/7 lean ground beef (little fat renders, so raw ≈ as eaten)",
+      "source": "USDA FoodData Central, SR Legacy: Beef, ground, 93% lean meat / 7% fat, raw; 152 kcal, 20.9 g protein per 100 g"
     },
     "pork": {
       "kcal": 721,
@@ -60,11 +60,11 @@
       "source": "USDA FoodData Central, SR Legacy: Butter, without salt (NDB 01145); 717 kcal per 100 g"
     },
     "milk": {
-      "kcal": 122,
-      "protein": 8.1,
+      "kcal": 149,
+      "protein": 7.7,
       "unit": "cups",
-      "basis": "per 1 cup (244 g) 2% milk",
-      "source": "USDA FoodData Central, SR Legacy: Milk, reduced fat, fluid, 2% milkfat, with added vitamin A and D (NDB 01079)"
+      "basis": "1 cup whole milk (244 g)",
+      "source": "USDA FoodData Central, SR Legacy: Milk, whole, 3.25% milkfat, with added vitamin D (NDB 01077)"
     },
     "buns": {
       "kcal": 140,
@@ -74,11 +74,11 @@
       "source": "Typical package label: Member’s Mark / Pepperidge Farm hamburger buns, 130–150 kcal, 4–5 g protein per bun; cf. USDA FoodData Central, SR Legacy: Rolls, hamburger or hotdog, plain (NDB 18350)"
     },
     "bread": {
-      "kcal": 90,
-      "protein": 4.5,
+      "kcal": 110,
+      "protein": 4,
       "unit": "slices",
-      "basis": "per 1 slice (~1 oz) whole-grain sandwich bread",
-      "source": "Typical package label: Nature’s Own / Member’s Mark whole-grain bread, 80–110 kcal, 4–5 g protein per slice"
+      "basis": "1 slice Sara Lee Artesano bakery bread (~37 g)",
+      "source": "Package label (typical): Sara Lee Artesano Bakery Bread, 110 kcal & 4 g protein per slice"
     },
     "tortillas": {
       "kcal": 140,
@@ -130,11 +130,11 @@
       "source": "USDA FoodData Central, SR Legacy: Rice, white, long-grain, regular, raw, enriched (NDB 20444) with basmati label protein (~4 g per ¼ cup dry)"
     },
     "potatoes": {
-      "kcal": 349,
-      "protein": 9.1,
+      "kcal": 358,
+      "protein": 9.5,
       "unit": "lb",
-      "basis": "raw, skin on, per 1 lb",
-      "source": "USDA FoodData Central, SR Legacy: Potatoes, flesh and skin, raw (NDB 11352); 77 kcal, 2.0 g per 100 g"
+      "basis": "1 lb raw russet potatoes, skin on",
+      "source": "USDA FoodData Central, SR Legacy: Potatoes, russet, flesh and skin, raw (NDB 11353); 79 kcal, 2.1 g per 100 g"
     },
     "sweet": {
       "kcal": 390,
@@ -172,11 +172,11 @@
       "source": "USDA FoodData Central, SR Legacy: Corn, sweet, yellow, frozen, kernels cut off cob, unprepared (NDB 11913)"
     },
     "beans": {
-      "kcal": 330,
+      "kcal": 300,
       "protein": 21,
       "unit": "cans",
-      "basis": "per 15 oz can, drained and rinsed (~1½ cups)",
-      "source": "Typical package label: Bush’s / Member’s Mark black beans, 110 kcal & 7 g protein per ½ cup"
+      "basis": "1 can (15.5 oz) Goya black beans, drained and rinsed (~3 half-cup servings)",
+      "source": "Package label (typical): Goya Black Beans, 90–100 kcal & 7 g protein per ½ cup"
     },
     "chickpeas": {
       "kcal": 360,
@@ -193,11 +193,11 @@
       "source": "USDA FoodData Central, SR Legacy: Tomatoes, red, ripe, canned, packed in tomato juice (NDB 11531)"
     },
     "marinara": {
-      "kcal": 14.2,
-      "protein": 0.4,
+      "kcal": 23,
+      "protein": 0.5,
       "unit": "oz",
-      "basis": "per 1 oz jarred marinara",
-      "source": "USDA FoodData Central, SR Legacy: Sauce, pasta, spaghetti/marinara, ready-to-serve (NDB 11549); ~50 kcal, 1.4 g per 100 g (Prego Traditional label 70 kcal per ½ cup)"
+      "basis": "1 oz Rao's Homemade Marinara",
+      "source": "Package label (typical): Rao's Homemade Marinara, 100 kcal & 2 g protein per ½ cup (125 g)"
     },
     "carrots": {
       "kcal": 186,
@@ -382,11 +382,11 @@
       "source": "USDA FoodData Central, SR Legacy: Sauce, salsa, ready-to-serve (NDB 06164)"
     },
     "tikka": {
-      "kcal": 35,
-      "protein": 0.6,
+      "kcal": 33,
+      "protein": 0.7,
       "unit": "oz",
-      "basis": "per 1 oz tikka masala simmer sauce",
-      "source": "Typical package label: jarred tikka masala simmer sauces (Maya Kaimal, Patak’s, store brand), ~100–140 kcal per ½ cup"
+      "basis": "1 oz Maya Kaimal mild tikka masala simmer sauce",
+      "source": "Package label (typical): Maya Kaimal Tikka Masala (mild), ~140 kcal & 3 g protein per ½ cup (~122 g)"
     },
     "taco": {
       "kcal": 25,
@@ -445,11 +445,11 @@
       "source": "Typical package label: single-serve frozen cheese pizzas, ~400–500 kcal, 16–20 g protein each"
     },
     "fries": {
-      "kcal": 43,
+      "kcal": 50,
       "protein": 0.7,
       "unit": "oz",
-      "basis": "frozen fries as purchased (air-fried, no oil added), per 1 oz",
-      "source": "USDA FoodData Central, SR Legacy: Potatoes, french fried, all types, salt not added in processing, frozen, as purchased (NDB 11402); labels ~120 kcal per 3 oz"
+      "basis": "1 oz frozen fast-food-style (coated) fries as purchased, air-fried with no oil added",
+      "source": "Package label (typical): Signature Select / Ore-Ida Fast Food Style extra crispy fries, ~140–160 kcal & 2 g protein per 3 oz"
     },
     "greenBeans": {
       "kcal": 60,
@@ -557,11 +557,11 @@
       "source": "USDA FoodData Central, SR Legacy: Vinegar, cider (NDB 02048)"
     },
     "chickenBroth": {
-      "kcal": 15,
-      "protein": 1.5,
+      "kcal": 20,
+      "protein": 3,
       "unit": "cups",
-      "basis": "per 1 cup chicken broth",
-      "source": "Typical package label: Swanson / Member’s Mark chicken broth, 10–15 kcal, 1–2 g protein per cup"
+      "basis": "1 cup Kitchen Basics chicken stock",
+      "source": "Package label (typical): Kitchen Basics Original Chicken Stock, ~20 kcal & 3 g protein per cup"
     },
     "pineapple": {
       "kcal": 230,
@@ -746,11 +746,11 @@
       "source": "Typical package label: Oscar Mayer Deli Fresh / Member’s Mark sliced turkey breast, ~50–60 kcal & 9–10 g protein per 2 oz"
     },
     "cheeseSlices": {
-      "kcal": 65,
-      "protein": 3.5,
+      "kcal": 70,
+      "protein": 4.5,
       "unit": "slices",
-      "basis": "per 1 slice (~21 g) American cheese",
-      "source": "Typical package label: Kraft Singles / Member’s Mark American slices, 60–70 kcal, 3–4 g protein per slice"
+      "basis": "1 slice Tillamook sliced cheese (~17 g; 6 oz ≈ 10 slices)",
+      "source": "Package label (typical): Tillamook Smoked Cheddar / Colby Jack slices, ~110 kcal & 7 g protein per 28 g"
     },
     "stringCheese": {
       "kcal": 80,
@@ -1024,6 +1024,97 @@
       "unit": "bottles",
       "basis": "1 bottle",
       "source": "water"
+    },
+    "beefPatties": {
+      "kcal": 275,
+      "protein": 28,
+      "unit": "patties",
+      "basis": "AS EATEN: 1 frozen ⅓-lb (151 g raw) 85/15 ground sirloin patty, griddled with the fat rendered off (~72% cooked yield)",
+      "source": "USDA FoodData Central, SR Legacy: Beef, ground, 85% lean meat / 15% fat, patty, cooked, broiled ~250 kcal & 25.9 g per 100 g cooked; raw label ~330 kcal & 28 g per patty"
+    },
+    "cookedBacon": {
+      "kcal": 23,
+      "protein": 1.7,
+      "unit": "slices",
+      "basis": "1 slice fully cooked bacon",
+      "source": "Package label (typical): Hormel Black Label Fully Cooked Bacon, 70 kcal & 5 g protein per 3 slices"
+    },
+    "smokedSausage": {
+      "kcal": 1440,
+      "protein": 56,
+      "unit": "lb",
+      "basis": "1 lb fully cooked smoked sausage (pork/beef)",
+      "source": "Package label (typical): Eckrich Hardwood Smoked Sausage, 180 kcal & 7 g protein per 2 oz"
+    },
+    "fajitaChicken": {
+      "kcal": 560,
+      "protein": 88,
+      "unit": "lb",
+      "basis": "1 lb raw pre-seasoned fajita chicken",
+      "source": "Package label (typical): seasoned/marinated raw chicken fajita meat, ~140 kcal & 22 g protein per 4 oz; cf. USDA FoodData Central, SR Legacy: Chicken, broilers or fryers, breast, meat only, raw (NDB 05062)"
+    },
+    "pulledChicken": {
+      "kcal": 600,
+      "protein": 95,
+      "unit": "lb",
+      "basis": "1 lb fully cooked seasoned pulled chicken",
+      "source": "Package label (typical): Member's Mark Seasoned Pulled Chicken, ~110–120 kcal & 18–20 g protein per 3 oz"
+    },
+    "pulledPork": {
+      "kcal": 820,
+      "protein": 60,
+      "unit": "lb",
+      "basis": "1 lb fully cooked pulled pork in barbecue sauce",
+      "source": "Package label (typical): Jack Daniel's Pulled Pork, ~180 kcal & 13 g protein per 100 g"
+    },
+    "chickenAlfredoDeli": {
+      "kcal": 1000,
+      "protein": 50,
+      "unit": "lb",
+      "basis": "1 lb heat-and-serve deli chicken Alfredo (pasta, sauce and chicken)",
+      "source": "Package label (typical): Member's Mark deli Chicken Alfredo / similar trays, ~220 kcal & 11 g protein per 100 g (estimate)"
+    },
+    "fajitaSauce": {
+      "kcal": 30,
+      "protein": 0.3,
+      "unit": "oz",
+      "basis": "1 fl oz Cholula fajita sauce",
+      "source": "Package label (typical): Cholula Fajita Sauce, ~15 kcal per tbsp"
+    },
+    "cajunPotatoes": {
+      "kcal": 220,
+      "protein": 6,
+      "unit": "cans",
+      "basis": "1 can (14.5 oz) Cajun-style diced potatoes, drained",
+      "source": "Package label (typical): Del Monte Cajun Style Diced Potatoes, ~70 kcal & 2 g protein per ½ cup"
+    },
+    "chiliBeans": {
+      "kcal": 385,
+      "protein": 21,
+      "unit": "cans",
+      "basis": "1 can (16 oz) chili beans with their sauce (~3.5 half-cup servings)",
+      "source": "Package label (typical): Bush's Chili Beans, 110 kcal & 6 g protein per ½ cup"
+    },
+    "knorrTeriyaki": {
+      "kcal": 600,
+      "protein": 15,
+      "unit": "pouches",
+      "basis": "1 pouch (4.6 oz) Knorr teriyaki noodles, dry mix (butter counted separately)",
+      "source": "Package label (typical): Knorr Asian Sides Teriyaki Noodles, ~240 kcal & 6 g protein per ⅔ cup dry, ~2.5 servings per pouch"
+    },
+    "streetTacoFlour": {
+      "kcal": 70,
+      "protein": 2,
+      "unit": "tortillas",
+      "basis": "1 street-taco flour tortilla (~4.5 inch)",
+      "source": "Package label (typical): Mission Street Taco Flour Tortillas, ~140 kcal & 4 g protein per 2 tortillas"
+    },
+    "streetTacoCorn": {
+      "kcal": 25,
+      "protein": 0.6,
+      "unit": "tortillas",
+      "basis": "1 street-taco white corn tortilla (~4.5 inch)",
+      "source": "Package label (typical): Mission Street Taco White Corn Tortillas, ~100 kcal & 2 g protein per 4 tortillas"
     }
   }
 }

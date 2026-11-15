@@ -78,7 +78,7 @@ function rules(app) {
     <div class="set-row"><span class="set-label">Rice dinners a week, at most<small>Candi’s rule.</small></span>${stepper({ value: s.riceMaxPerWeek, step: 1, min: 0, action: 'fam:num', data: { key: 'riceMaxPerWeek', max: 3 }, label: 'Rice dinners a week' })}</div>
     <div class="set-row set-col"><span class="set-label">Meat per dinner<small>Lighter trims every meat amount by 15% to save money.</small></span>${segmented('meatScale', MEAT_OPTS, String(s.meatScale), { label: 'Meat per dinner', action: 'fam:meat', small: true })}</div>
     <div class="set-row set-col"><span class="set-label">Plan from</span>${segmented('planStore', [{ id: 'both', label: 'Both stores' }, { id: 'sams', label: "Sam's only" }, { id: 'jewel', label: 'Jewel only' }], s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}</div>
-    <div class="set-row set-col"><span class="set-label">Brands by default<small>Change any single item on the list.</small></span>${segmented('brand', [{ id: 'generic', label: 'Store brand' }, { id: 'name', label: 'Name brand' }], s.brand, { label: 'Brand default', action: 'plan:setting', small: true })}</div>
+    <div class="set-row set-col"><span class="set-label">Default brand for items you haven’t picked<small>Foods you usually buy a certain brand of (Rao’s, Kerrygold…) keep it. Change any single item on the list.</small></span>${segmented('brand', [{ id: 'generic', label: 'Store brand' }, { id: 'name', label: 'Name brand' }], s.brand, { label: 'Default brand for items you haven’t picked', action: 'plan:setting', small: true })}</div>
     <div class="set-row set-col"><span class="set-label">Weeks start on</span>${segmented('weekStartsOn', [{ id: '1', label: 'Monday' }, { id: '0', label: 'Sunday' }], String(s.weekStartsOn), { label: 'Weeks start on', action: 'fam:weekstart', small: true })}</div>
     <div class="set-row"><span class="set-label">Monthly grocery target</span><a class="btn btn-small btn-quiet" href="#/budget">$${s.monthlyTarget}</a></div>
   </section>`;
@@ -99,6 +99,10 @@ function stores(app) {
         </p>
       </article>`;
     })}</div>
+    <div class="action-list">
+      <a class="action-row" href="#/products">${ic('cart')}<span><b>My products</b><small>The exact product you buy for each item, at each store. Learned from receipts.</small></span></a>
+      <a class="action-row" href="#/receipts">${ic('receipt')}<span><b>Receipts</b><small>Scan one after a trip; see what was on each.</small></span></a>
+    </div>
   </section>`;
 }
 

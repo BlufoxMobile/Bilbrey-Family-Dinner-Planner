@@ -1,16 +1,20 @@
 {
   "version": 2,
-  "updated": "2026-11-14",
-  "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item.",
+  "updated": "2026-11-15",
+  "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds.",
   "units": {
     "bags": "bags",
     "bars": "bars",
+    "bottles": "bottles",
+    "bowls": "bowls",
+    "boxes": "boxes",
     "bunches": "bunches",
     "buns": "buns",
     "cans": "cans",
     "cloves": "cloves",
     "cucumbers": "cucumbers",
     "cups": "cups",
+    "dip cups": "dip cups",
     "ears": "ears",
     "eggs": "eggs",
     "hearts": "hearts",
@@ -19,10 +23,13 @@
     "limes": "limes",
     "oranges": "oranges",
     "oz": "oz",
+    "packs": "packs",
+    "patties": "patties",
     "peppers": "peppers",
     "pieces": "pieces",
     "pizzas": "pizzas",
     "potstickers": "potstickers",
+    "pouches": "pouches",
     "rolls": "rolls",
     "slices": "slices",
     "snack cups": "snack cups",
@@ -31,13 +38,7 @@
     "tortillas": "tortillas",
     "tsp": "tsp",
     "waffles": "waffles",
-    "yogurt cups": "yogurt cups",
-    "bottles": "bottles",
-    "bowls": "bowls",
-    "boxes": "boxes",
-    "dip cups": "dip cups",
-    "packs": "packs",
-    "pouches": "pouches"
+    "yogurt cups": "yogurt cups"
   },
   "ingredients": {
     "chicken": {
@@ -59,8 +60,8 @@
         "sams": {
           "generic": {
             "size": 10,
-            "price": 29.9,
-            "label": "Member's Mark boneless skinless chicken breasts, ~10 lb"
+            "price": 24.97,
+            "label": "Member's Mark Boneless Skinless Chicken Breasts, frozen, 10 lb bag (the family’s usual)"
           },
           "name": {
             "size": 10,
@@ -81,10 +82,15 @@
           }
         }
       },
-      "meat": true
+      "meat": true,
+      "brand": "Member's Mark",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      }
     },
     "beef": {
-      "name": "Lean ground beef",
+      "name": "Lean ground beef (93/7)",
       "unit": "lb",
       "aisle": "Meat",
       "storage": "freezer",
@@ -96,35 +102,43 @@
         "85% lean ground beef",
         "ground chuck",
         "hamburger meat",
-        "ground beef chub"
+        "ground beef chub",
+        "93/7 ground beef",
+        "93% lean ground beef",
+        "extra lean ground beef"
       ],
       "packs": {
         "sams": {
           "generic": {
-            "size": 10,
-            "price": 44.9,
-            "label": "Member's Mark 85% lean ground beef, ~10 lb"
+            "size": 3.1,
+            "price": 19.13,
+            "label": "Member's Mark 93/7 Lean Ground Beef, ~3.1 lb pack ($6.17/lb) (the family’s usual)"
           },
           "name": {
-            "size": 10,
-            "price": 53.98,
-            "label": "Certified Angus Beef 85% lean ground beef, ~10 lb"
+            "size": 3,
+            "price": 23.97,
+            "label": "Certified Angus Beef 93/7 ground beef, ~3 lb ($7.99/lb, est.)"
           }
         },
         "jewel": {
           "generic": {
             "size": 3,
-            "price": 17.97,
-            "label": "Signature Farms 85% lean ground beef, ~3 lb family pack"
+            "price": 20.97,
+            "label": "Signature Farms 93% lean ground beef, ~3 lb ($6.99/lb, est.)"
           },
           "name": {
             "size": 3,
-            "price": 21.49,
-            "label": "Certified Angus Beef 85% lean ground beef, ~3 lb family pack"
+            "price": 23.97,
+            "label": "Certified Angus Beef 93/7 ground beef, ~3 lb ($7.99/lb, est.)"
           }
         }
       },
-      "meat": true
+      "meat": true,
+      "brand": "Member's Mark",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      }
     },
     "pork": {
       "name": "Boneless pork chops",
@@ -200,7 +214,7 @@
           "generic": {
             "size": 12,
             "price": 3.49,
-            "label": "Lucerne large eggs, 12 ct"
+            "label": "Lucerne large eggs, 12 ct (the family’s usual)"
           },
           "name": {
             "size": 12,
@@ -209,7 +223,12 @@
           }
         }
       },
-      "extra": true
+      "extra": true,
+      "brand": "Jewel (Lucerne)",
+      "usual": {
+        "store": "jewel",
+        "tier": "generic"
+      }
     },
     "cheese": {
       "name": "Cheddar cheese",
@@ -337,7 +356,7 @@
       }
     },
     "butter": {
-      "name": "Unsalted butter",
+      "name": "Butter (Kerrygold salted)",
       "unit": "tbsp",
       "aisle": "Dairy & Eggs",
       "storage": "fridge",
@@ -349,7 +368,10 @@
         "salted butter",
         "sweet cream butter",
         "butter sticks",
-        "butter quarters"
+        "butter quarters",
+        "kerrygold",
+        "irish butter",
+        "kerrygold butter"
       ],
       "packs": {
         "sams": {
@@ -359,9 +381,9 @@
             "label": "Member's Mark butter, 2 lb (8 sticks)"
           },
           "name": {
-            "size": 64,
-            "price": 13.48,
-            "label": "Land O Lakes butter, 2 lb (8 sticks)"
+            "size": 48,
+            "price": 11.22,
+            "label": "Kerrygold Pure Irish Salted Butter, 4 oz sticks × 6 (the family’s usual)"
           }
         },
         "jewel": {
@@ -371,16 +393,21 @@
             "label": "Lucerne butter, 1 lb (4 sticks)"
           },
           "name": {
-            "size": 32,
-            "price": 6.49,
-            "label": "Land O Lakes butter, 1 lb (4 sticks)"
+            "size": 16,
+            "price": 4.49,
+            "label": "Kerrygold Pure Irish Salted Butter, 8 oz (est.)"
           }
         }
       },
-      "extra": true
+      "extra": true,
+      "brand": "Kerrygold",
+      "usual": {
+        "store": "sams",
+        "tier": "name"
+      }
     },
     "milk": {
-      "name": "Milk",
+      "name": "Milk (whole)",
       "unit": "cups",
       "aisle": "Dairy & Eggs",
       "storage": "fridge",
@@ -411,7 +438,7 @@
           "generic": {
             "size": 8,
             "price": 2.29,
-            "label": "Lucerne milk, half gallon"
+            "label": "Lucerne whole milk, half gallon (the family’s usual)"
           },
           "name": {
             "size": 8,
@@ -420,7 +447,12 @@
           }
         }
       },
-      "extra": true
+      "extra": true,
+      "brand": "Jewel (Lucerne)",
+      "usual": {
+        "store": "jewel",
+        "tier": "generic"
+      }
     },
     "buns": {
       "name": "Hamburger buns",
@@ -435,7 +467,9 @@
         "buns",
         "sandwich buns",
         "brioche buns",
-        "sesame buns"
+        "sesame buns",
+        "ball park buns",
+        "ball park hamburger buns"
       ],
       "packs": {
         "sams": {
@@ -458,14 +492,19 @@
           },
           "name": {
             "size": 8,
-            "price": 2.99,
-            "label": "Pepperidge Farm hamburger buns, 8 ct"
+            "price": 3.99,
+            "label": "Ball Park Hamburger Buns, 8 ct (the family’s usual)"
           }
         }
+      },
+      "brand": "Ball Park",
+      "usual": {
+        "store": "jewel",
+        "tier": "name"
       }
     },
     "bread": {
-      "name": "Whole-grain sandwich bread",
+      "name": "Sandwich bread (Artesano)",
       "unit": "slices",
       "aisle": "Bakery",
       "storage": "counter",
@@ -477,7 +516,10 @@
         "whole grain bread",
         "whole wheat bread",
         "loaf of bread",
-        "white bread"
+        "white bread",
+        "artesano bread",
+        "artesano bakery bread",
+        "bakery bread"
       ],
       "packs": {
         "sams": {
@@ -487,9 +529,9 @@
             "label": "Member's Mark whole-grain sandwich bread, 2 loaves (40 slices)"
           },
           "name": {
-            "size": 40,
-            "price": 7.48,
-            "label": "Nature's Own whole-grain sandwich bread, 2 loaves (40 slices)"
+            "size": 32,
+            "price": 5.78,
+            "label": "Sara Lee Artesano Bakery Bread, 20 oz × 2 (~16 thick slices each) (the family’s usual)"
           }
         },
         "jewel": {
@@ -499,13 +541,18 @@
             "label": "Signature Select whole-grain sandwich bread, 1 loaf (20 slices)"
           },
           "name": {
-            "size": 20,
+            "size": 16,
             "price": 3.99,
-            "label": "Nature's Own whole-grain sandwich bread, 1 loaf (20 slices)"
+            "label": "Sara Lee Artesano Bakery Bread, 20 oz (~16 slices) (est.)"
           }
         }
       },
-      "extra": true
+      "extra": true,
+      "brand": "Sara Lee Artesano",
+      "usual": {
+        "store": "sams",
+        "tier": "name"
+      }
     },
     "tortillas": {
       "name": "Medium flour tortillas",
@@ -607,8 +654,8 @@
         "sams": {
           "generic": {
             "size": 10,
-            "price": 6.5,
-            "label": "Member's Mark naan flatbreads, 10 ct"
+            "price": 5.78,
+            "label": "Member's Mark Original Stone Baked Naan, 10 pc / 35.2 oz (the family’s usual)"
           },
           "name": {
             "size": 10,
@@ -628,6 +675,11 @@
             "label": "Stonefire naan flatbreads, 4 ct"
           }
         }
+      },
+      "brand": "Member's Mark",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
       }
     },
     "spaghetti": {
@@ -791,7 +843,7 @@
       }
     },
     "potatoes": {
-      "name": "Gold potatoes",
+      "name": "Potatoes (russet)",
       "unit": "lb",
       "aisle": "Produce",
       "storage": "pantry",
@@ -802,19 +854,21 @@
         "yukon gold potatoes",
         "potatoes",
         "yellow potatoes",
-        "russet potatoes"
+        "russet potatoes",
+        "idaho potatoes",
+        "baking potatoes"
       ],
       "packs": {
         "sams": {
           "generic": {
             "size": 10,
-            "price": 7.5,
-            "label": "Yukon Gold potatoes, 10 lb bag"
+            "price": 4.76,
+            "label": "Russet potatoes, 10 lb bag (the family’s usual)"
           },
           "name": {
             "size": 10,
-            "price": 7.5,
-            "label": "Yukon Gold potatoes, 10 lb bag (produce — no name-brand version)"
+            "price": 4.76,
+            "label": "Russet potatoes, 10 lb bag (produce — no name-brand version)"
           }
         },
         "jewel": {
@@ -829,6 +883,10 @@
             "label": "Yukon Gold potatoes, 5 lb bag (produce — no name-brand version)"
           }
         }
+      },
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
       }
     },
     "sweet": {
@@ -1030,8 +1088,8 @@
           },
           "name": {
             "size": 8,
-            "price": 10.98,
-            "label": "Bush's black beans, 15 oz cans, 8 cans"
+            "price": 8.48,
+            "label": "Goya Black Beans, 15.5 oz × 8 (the family’s usual)"
           }
         },
         "jewel": {
@@ -1046,6 +1104,11 @@
             "label": "Bush's black beans, 15 oz cans, 1 can"
           }
         }
+      },
+      "brand": "Goya",
+      "usual": {
+        "store": "sams",
+        "tier": "name"
       }
     },
     "chickpeas": {
@@ -1129,7 +1192,7 @@
       }
     },
     "marinara": {
-      "name": "Marinara sauce",
+      "name": "Marinara sauce (Rao's Homemade)",
       "unit": "oz",
       "aisle": "Canned & Jarred",
       "storage": "pantry",
@@ -1141,7 +1204,9 @@
         "pasta sauce",
         "spaghetti sauce",
         "tomato basil sauce",
-        "traditional pasta sauce"
+        "traditional pasta sauce",
+        "rao's marinara",
+        "rao's homemade marinara"
       ],
       "packs": {
         "sams": {
@@ -1151,9 +1216,9 @@
             "label": "Member's Mark marinara sauce, 24 oz jars, 3 jars (72 oz)"
           },
           "name": {
-            "size": 72,
-            "price": 12.98,
-            "label": "Rao’s marinara sauce, 24 oz jars, 3 jars (72 oz)"
+            "size": 44,
+            "price": 9.76,
+            "label": "Rao's Homemade Marinara, 22 oz × 2 (the family’s usual)"
           }
         },
         "jewel": {
@@ -1164,10 +1229,15 @@
           },
           "name": {
             "size": 24,
-            "price": 3.99,
-            "label": "Rao’s marinara sauce, 24 oz jars, 1 jar (24 oz)"
+            "price": 8.99,
+            "label": "Rao's Homemade Marinara, 24 oz (est.; the family's other Jewel pick is Signature Reserve Tomato & Basil, $5.21)"
           }
         }
+      },
+      "brand": "Rao's Homemade",
+      "usual": {
+        "store": "sams",
+        "tier": "name"
       }
     },
     "carrots": {
@@ -1934,9 +2004,9 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 80,
-            "price": 7,
-            "label": "Member's Mark creamy peanut butter, ~48 oz (2 jars)"
+            "size": 142,
+            "price": 7.78,
+            "label": "Member's Mark Natural Creamy Peanut Butter, 40 oz × 2 (the family’s usual)"
           },
           "name": {
             "size": 80,
@@ -1957,7 +2027,12 @@
           }
         }
       },
-      "extra": true
+      "extra": true,
+      "brand": "Member's Mark",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      }
     },
     "sesame": {
       "name": "Toasted sesame oil",
@@ -2120,7 +2195,10 @@
         "sliced pickles",
         "hamburger dill chips",
         "pickles",
-        "kosher dill"
+        "kosher dill",
+        "claussen pickles",
+        "pickle spears",
+        "kosher dill spears"
       ],
       "packs": {
         "sams": {
@@ -2142,11 +2220,16 @@
             "label": "Signature Select dill pickle chips, 16 oz jar"
           },
           "name": {
-            "size": 16,
-            "price": 3.79,
-            "label": "Vlasic dill pickle chips, 16 oz jar"
+            "size": 24,
+            "price": 4.99,
+            "label": "Claussen Kosher Dill Pickle Spears, 24 oz (est. price) (the family’s usual); Vienna spears also bought"
           }
         }
+      },
+      "brand": "Claussen",
+      "usual": {
+        "store": "jewel",
+        "tier": "name"
       }
     },
     "salsa": {
@@ -2192,7 +2275,7 @@
       }
     },
     "tikka": {
-      "name": "Tikka masala simmer sauce",
+      "name": "Tikka masala simmer sauce (Maya Kaimal mild)",
       "unit": "oz",
       "aisle": "Condiments & Sauces",
       "storage": "pantry",
@@ -2203,7 +2286,10 @@
         "tikka masala",
         "simmer sauce",
         "indian simmer sauce",
-        "masala sauce"
+        "masala sauce",
+        "maya kaimal tikka masala",
+        "tikka masala simmer sauce",
+        "mild indian simmer sauce"
       ],
       "packs": {
         "jewel": {
@@ -2213,15 +2299,20 @@
             "label": "Signature Select tikka masala simmer sauce, 15 oz jar"
           },
           "name": {
-            "size": 15,
-            "price": 5.29,
-            "label": "Maya Kaimal tikka masala simmer sauce, 15 oz jar"
+            "size": 12.5,
+            "price": 4.99,
+            "label": "Maya Kaimal Tikka Masala Mild Indian Simmer Sauce, 12.5 oz (the family’s usual)"
           }
         }
+      },
+      "brand": "Maya Kaimal",
+      "usual": {
+        "store": "jewel",
+        "tier": "name"
       }
     },
     "taco": {
-      "name": "Salt-free taco seasoning",
+      "name": "Taco seasoning (La Preferida packets)",
       "unit": "tbsp",
       "aisle": "Spices & Baking",
       "storage": "pantry",
@@ -2231,7 +2322,10 @@
         "taco seasoning",
         "taco seasoning mix",
         "salt free taco seasoning",
-        "mexican seasoning"
+        "mexican seasoning",
+        "la preferida taco seasoning",
+        "taco seasoning packet",
+        "taco mix"
       ],
       "packs": {
         "sams": {
@@ -2253,11 +2347,16 @@
             "label": "Signature Select salt-free taco seasoning, ~2.5 oz jar"
           },
           "name": {
-            "size": 10,
-            "price": 4.49,
-            "label": "McCormick salt-free taco seasoning, ~2.5 oz jar"
+            "size": 3,
+            "price": 0.95,
+            "label": "La Preferida Taco Seasoning Mix, 1 oz packet (~3 tbsp) (the family’s usual)"
           }
         }
+      },
+      "brand": "La Preferida",
+      "usual": {
+        "store": "jewel",
+        "tier": "name"
       }
     },
     "paprika": {
@@ -2340,7 +2439,9 @@
         "ground black pepper",
         "pepper",
         "cracked black pepper",
-        "peppercorns"
+        "peppercorns",
+        "black pepper grinder",
+        "peppercorn grinder"
       ],
       "packs": {
         "sams": {
@@ -2367,7 +2468,8 @@
             "label": "McCormick ground black pepper, ~2.5 oz"
           }
         }
-      }
+      },
+      "brand": "Member's Mark black pepper (grinder)"
     },
     "salt": {
       "name": "Table salt",
@@ -2381,7 +2483,9 @@
         "table salt",
         "iodized salt",
         "kosher salt",
-        "sea salt"
+        "sea salt",
+        "himalayan pink salt",
+        "pink salt grinder"
       ],
       "packs": {
         "sams": {
@@ -2408,7 +2512,8 @@
             "label": "Morton table salt, 26 oz canister"
           }
         }
-      }
+      },
+      "brand": "Member's Mark Himalayan pink salt (grinder)"
     },
     "jalapenos": {
       "name": "Pickled jalapeños",
@@ -2534,7 +2639,7 @@
       }
     },
     "fries": {
-      "name": "Frozen French fries",
+      "name": "Frozen fries (fast-food style)",
       "unit": "oz",
       "aisle": "Frozen",
       "storage": "freezer",
@@ -2546,14 +2651,18 @@
         "fries",
         "straight cut fries",
         "crinkle fries",
-        "shoestring fries"
+        "shoestring fries",
+        "fast food style fries",
+        "extra crispy fries",
+        "waffle fries",
+        "curly fries"
       ],
       "packs": {
         "sams": {
           "generic": {
             "size": 64,
-            "price": 5.97,
-            "label": "Member's Mark frozen straight-cut French fries, 4 lb bag"
+            "price": 6.98,
+            "label": "Member's Mark Southern Style Waffle Fries, frozen, 4 lb (bought at Sam's)"
           },
           "name": {
             "size": 128,
@@ -2563,20 +2672,25 @@
         },
         "jewel": {
           "generic": {
-            "size": 32,
+            "size": 26,
             "price": 3.99,
-            "label": "Signature Select frozen straight-cut French fries, 32 oz bag"
+            "label": "Signature Select Fries, Fast Food Style Extra Crispy, 26 oz (the family’s usual); Shoestring 28 oz and Curly 24 oz also bought"
           },
           "name": {
-            "size": 32,
-            "price": 5.99,
-            "label": "Ore-Ida Golden fries, 32 oz bag"
+            "size": 26,
+            "price": 5.49,
+            "label": "Ore-Ida Extra Crispy Fast Food Fries, 26 oz (est.)"
           }
         }
+      },
+      "brand": "Signature Select",
+      "usual": {
+        "store": "jewel",
+        "tier": "generic"
       }
     },
     "greenBeans": {
-      "name": "Cut green beans, 14.5 oz cans",
+      "name": "Green beans, 14.5 oz cans (French style)",
       "unit": "cans",
       "aisle": "Canned & Jarred",
       "storage": "pantry",
@@ -2586,7 +2700,8 @@
         "cut green beans",
         "green beans",
         "canned green beans",
-        "french style green beans"
+        "french style green beans",
+        "french cut green beans"
       ],
       "packs": {
         "sams": {
@@ -2610,9 +2725,14 @@
           "name": {
             "size": 1,
             "price": 1.49,
-            "label": "Del Monte cut green beans, 14.5 oz cans, 1 can"
+            "label": "Del Monte French Style Green Beans, 14.5 oz (the family’s usual); Signature Select French style also bought"
           }
         }
+      },
+      "brand": "Del Monte",
+      "usual": {
+        "store": "jewel",
+        "tier": "name"
       }
     },
     "cannedCorn": {
@@ -2920,7 +3040,8 @@
           }
         }
       },
-      "meat": true
+      "meat": true,
+      "extra": true
     },
     "mozzarella": {
       "name": "Shredded mozzarella",
@@ -2935,7 +3056,9 @@
         "low moisture mozzarella",
         "mozzarella cheese",
         "pizza cheese",
-        "italian blend cheese"
+        "italian blend cheese",
+        "tillamook mozzarella",
+        "farmstyle mozzarella"
       ],
       "packs": {
         "sams": {
@@ -2958,10 +3081,15 @@
           },
           "name": {
             "size": 8,
-            "price": 3.99,
-            "label": "Kraft shredded mozzarella, 8 oz"
+            "price": 4.99,
+            "label": "Tillamook Farmstyle Shredded Mozzarella, 8 oz (the family’s usual)"
           }
         }
+      },
+      "brand": "Tillamook",
+      "usual": {
+        "store": "jewel",
+        "tier": "name"
       }
     },
     "sourCream": {
@@ -3142,7 +3270,7 @@
       }
     },
     "chickenBroth": {
-      "name": "Chicken broth",
+      "name": "Chicken stock (Kitchen Basics)",
       "unit": "cups",
       "aisle": "Canned & Jarred",
       "storage": "pantry",
@@ -3153,7 +3281,8 @@
         "chicken stock",
         "low sodium chicken broth",
         "chicken broth carton",
-        "bone broth"
+        "bone broth",
+        "kitchen basics chicken stock"
       ],
       "packs": {
         "sams": {
@@ -3176,10 +3305,15 @@
           },
           "name": {
             "size": 4,
-            "price": 2.99,
-            "label": "Swanson chicken broth, 32 oz carton"
+            "price": 3.99,
+            "label": "Kitchen Basics Original Chicken Stock, 32 oz (the family’s usual)"
           }
         }
+      },
+      "brand": "Kitchen Basics",
+      "usual": {
+        "store": "jewel",
+        "tier": "name"
       }
     },
     "pineapple": {
@@ -3929,8 +4063,8 @@
         "sams": {
           "generic": {
             "size": 3,
-            "price": 1.58,
-            "label": "Bananas, ~3 lb bunch"
+            "price": 2.16,
+            "label": "Organic bananas, 3 lb (the family’s usual)"
           },
           "name": {
             "size": 3,
@@ -3951,7 +4085,11 @@
           }
         }
       },
-      "extra": true
+      "extra": true,
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      }
     },
     "grapes": {
       "name": "Seedless grapes",
@@ -4167,7 +4305,7 @@
       "extra": true
     },
     "cheeseSlices": {
-      "name": "Sliced cheese (American or cheddar)",
+      "name": "Sliced cheese (Tillamook)",
       "unit": "slices",
       "aisle": "Dairy & Eggs",
       "storage": "fridge",
@@ -4179,7 +4317,9 @@
         "cheese slices",
         "sliced cheddar",
         "singles",
-        "colby jack slices"
+        "colby jack slices",
+        "tillamook slices",
+        "smoked cheddar slices"
       ],
       "packs": {
         "sams": {
@@ -4201,13 +4341,18 @@
             "label": "Lucerne American cheese slices, 16 ct"
           },
           "name": {
-            "size": 16,
-            "price": 4.29,
-            "label": "Kraft Singles American, 16 ct"
+            "size": 10,
+            "price": 4.99,
+            "label": "Tillamook Smoked Cheddar or Colby Jack slices, 6 oz (~10 slices) (the family’s usual)"
           }
         }
       },
-      "extra": true
+      "extra": true,
+      "brand": "Tillamook",
+      "usual": {
+        "store": "jewel",
+        "tier": "name"
+      }
     },
     "stringCheese": {
       "name": "String cheese",
@@ -4606,12 +4751,12 @@
       "packs": {
         "jewel": {
           "generic": {
-            "size": 1.0,
+            "size": 1,
             "price": 13.99,
             "label": "Boar's Head SmokeMaster Beechwood Smoked Black Forest Uncured Ham, sliced at the Jewel deli, per lb (est. regular; deli sales often ~$9.99/lb) (Boar's Head both tiers — Knox's pick)"
           },
           "name": {
-            "size": 1.0,
+            "size": 1,
             "price": 13.99,
             "label": "Boar's Head SmokeMaster Beechwood Smoked Black Forest Uncured Ham, sliced at the Jewel deli, per lb (est. regular; deli sales often ~$9.99/lb)"
           }
@@ -4637,12 +4782,12 @@
       "packs": {
         "jewel": {
           "generic": {
-            "size": 1.0,
+            "size": 1,
             "price": 5.99,
             "label": "Boar's Head Uncured Genoa Salame & Picante Provolone Cheese snack ('Take Along' / To Go), 4 oz tray — 360 cal, 28 g protein (est. price; $5.99 at a Kroger-family store) (same product both tiers)"
           },
           "name": {
-            "size": 1.0,
+            "size": 1,
             "price": 5.99,
             "label": "Boar's Head Uncured Genoa Salame & Picante Provolone Cheese snack ('Take Along' / To Go), 4 oz tray — 360 cal, 28 g protein (est. price; $5.99 at a Kroger-family store)"
           }
@@ -4668,24 +4813,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 30.0,
+            "size": 30,
             "price": 18.48,
             "label": "Doritos Mix Variety Pack, 30 snack bags (regular $18.48; $16.48 instant savings seen 11/14). Sam's page doesn't list counts; this pack elsewhere holds ~8 Cool Ranch + Nacho, Spicy Nacho, Flamin' Hot, Spicy Sweet Chili"
           },
           "name": {
-            "size": 30.0,
+            "size": 30,
             "price": 18.48,
             "label": "Frito-Lay Premiere Mix Variety Pack, 30 bags (6 Doritos Cool Ranch, 8 Ruffles Cheddar & Sour Cream, 6 Cheetos Puffs, 5 Funyuns, 5 Fritos Twists)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 8.0,
+            "size": 8,
             "price": 5.99,
             "label": "Doritos Cool Ranch snack-size multipack, ~1 oz bags (est.; count varies by pack)"
           },
           "name": {
-            "size": 8.0,
+            "size": 8,
             "price": 5.99,
             "label": "Doritos Cool Ranch snack-size multipack, ~1 oz bags (est.)"
           }
@@ -4749,24 +4894,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 30.0,
+            "size": 30,
             "price": 18.48,
             "label": "Frito-Lay Baked Mix Variety Pack, 30 bags (9 Baked Lay's, 9 Baked Cheetos, 7 Baked Lay's BBQ, 5 Baked Ruffles; 37.1 oz total) (no Member's Mark version seen online, so both tiers use this brand)"
           },
           "name": {
-            "size": 30.0,
+            "size": 30,
             "price": 18.48,
             "label": "Frito-Lay Baked Mix Variety Pack, 30 bags (9 Baked Lay's, 9 Baked Cheetos, 7 Baked Lay's BBQ, 5 Baked Ruffles; 37.1 oz total)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 8.0,
+            "size": 8,
             "price": 5.99,
             "label": "Baked Lay's Original snack bags, ~1 oz × 8 (est.)"
           },
           "name": {
-            "size": 8.0,
+            "size": 8,
             "price": 5.99,
             "label": "Baked Lay's Original snack bags, ~1 oz × 8 (est.)"
           }
@@ -4792,24 +4937,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 40.0,
+            "size": 40,
             "price": 12.98,
             "label": "Nabisco Classic Mix Cookie & Cracker Variety Pack, 1 oz × 40 (10 Oreo Mini, 10 Chips Ahoy! mini, 10 Ritz Bits Cheese, 6 Teddy Grahams Honey, 4 Nutter Butter Bites) (no Member's Mark version seen online, so both tiers use this brand)"
           },
           "name": {
-            "size": 40.0,
+            "size": 40,
             "price": 12.98,
             "label": "Nabisco Classic Mix Cookie & Cracker Variety Pack, 1 oz × 40 (10 Oreo Mini, 10 Chips Ahoy! mini, 10 Ritz Bits Cheese, 6 Teddy Grahams Honey, 4 Nutter Butter Bites)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 12.0,
+            "size": 12,
             "price": 6.99,
             "label": "Nabisco snack-pack variety (Oreo Mini / Chips Ahoy! / Ritz Bits), 12 ct (est.)"
           },
           "name": {
-            "size": 12.0,
+            "size": 12,
             "price": 6.99,
             "label": "Nabisco snack-pack variety, 12 ct (est.)"
           }
@@ -4833,24 +4978,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 40.0,
+            "size": 40,
             "price": 12.98,
             "label": "Yoo-hoo Chocolate Drink, 6.5 fl oz × 40 (product on samsclub.com shows a members-only price; estimate)"
           },
           "name": {
-            "size": 40.0,
+            "size": 40,
             "price": 12.98,
             "label": "Yoo-hoo Chocolate Drink, 6.5 fl oz × 40 (product on samsclub.com shows a members-only price; estimate)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 10.0,
+            "size": 10,
             "price": 4.99,
             "label": "Yoo-hoo Chocolate Drink, 6.5 fl oz × 10 (est.)"
           },
           "name": {
-            "size": 10.0,
+            "size": 10,
             "price": 4.99,
             "label": "Yoo-hoo Chocolate Drink, 6.5 fl oz × 10 (est.)"
           }
@@ -4874,24 +5019,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 40.0,
+            "size": 40,
             "price": 10.48,
             "label": "Capri Sun Variety Pack, 6 fl oz × 40 — 20 Fruit Punch + 10 Strawberry Kiwi + 10 Pacific Cooler (no Fruit Punch-only pack seen at Sam's) (no Member's Mark version seen online, so both tiers use this brand)"
           },
           "name": {
-            "size": 40.0,
+            "size": 40,
             "price": 10.48,
             "label": "Capri Sun Variety Pack, 6 fl oz × 40 — 20 Fruit Punch + 10 Strawberry Kiwi + 10 Pacific Cooler (no Fruit Punch-only pack seen at Sam's)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 10.0,
+            "size": 10,
             "price": 3.99,
             "label": "Capri Sun Fruit Punch, 6 fl oz × 10 (all Fruit Punch) (est.)"
           },
           "name": {
-            "size": 10.0,
+            "size": 10,
             "price": 3.99,
             "label": "Capri Sun Fruit Punch, 6 fl oz × 10 (est.)"
           }
@@ -4915,12 +5060,12 @@
       "packs": {
         "jewel": {
           "generic": {
-            "size": 6.0,
+            "size": 6,
             "price": 8.99,
             "label": "BODYARMOR Orange Mango sports drink, 16 fl oz × 6 (est.; singles ≈ $2.49). 110 cal, 25 g sugar a bottle (same product both tiers)"
           },
           "name": {
-            "size": 6.0,
+            "size": 6,
             "price": 8.99,
             "label": "BODYARMOR Orange Mango sports drink, 16 fl oz × 6 (est.; singles ≈ $2.49). 110 cal, 25 g sugar a bottle"
           }
@@ -4944,24 +5089,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 24.0,
+            "size": 24,
             "price": 16.48,
             "label": "BODYARMOR LYTE Variety Pack, 12 fl oz × 24 (6 each Peach Mango, Strawberry Banana, Blueberry Pomegranate, Dragonfruit Berry — no orange flavor)"
           },
           "name": {
-            "size": 24.0,
+            "size": 24,
             "price": 16.48,
             "label": "BODYARMOR LYTE Variety Pack, 12 fl oz × 24 (same product both tiers)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 1.0,
+            "size": 1,
             "price": 2.29,
             "label": "BODYARMOR LYTE Orange Clementine, 16 fl oz — closest LYTE to Orange Mango (no Orange Mango LYTE exists); 20 cal (est. price)"
           },
           "name": {
-            "size": 1.0,
+            "size": 1,
             "price": 2.29,
             "label": "BODYARMOR LYTE Orange Clementine, 16 fl oz (est. price)"
           }
@@ -4985,12 +5130,12 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 33.0,
+            "size": 33,
             "price": 10.88,
             "label": "Member's Mark Cobb Salad with Grilled Chicken and Avocado Ranch, deli case, priced per lb ($5.28/lb; avg tray ~2.06 lb ≈ 33 oz) (Sam's online shows no national brand for this; same item as store brand)"
           },
           "name": {
-            "size": 33.0,
+            "size": 33,
             "price": 10.88,
             "label": "Member's Mark Cobb Salad with Grilled Chicken and Avocado Ranch, deli case, priced per lb ($5.28/lb; avg tray ~2.06 lb ≈ 33 oz)"
           }
@@ -5014,12 +5159,12 @@
       "packs": {
         "jewel": {
           "generic": {
-            "size": 1.0,
+            "size": 1,
             "price": 4.99,
             "label": "Taylor Farms Ranch Salad with Chicken & Bacon, single-serve bowl, 5.8 oz (360 cal, 14 g protein) (est. price) (same product both tiers)"
           },
           "name": {
-            "size": 1.0,
+            "size": 1,
             "price": 4.99,
             "label": "Taylor Farms Ranch Salad with Chicken & Bacon, single-serve bowl, 5.8 oz (360 cal, 14 g protein) (est. price)"
           }
@@ -5042,12 +5187,12 @@
       "packs": {
         "jewel": {
           "generic": {
-            "size": 1.0,
+            "size": 1,
             "price": 4.99,
             "label": "Taylor Farms BLT Salad with Chicken, single-serve bowl with avocado ranch, 6.8 oz (310 cal, 13 g protein) (est. price) (same product both tiers)"
           },
           "name": {
-            "size": 1.0,
+            "size": 1,
             "price": 4.99,
             "label": "Taylor Farms BLT Salad with Chicken, single-serve bowl with avocado ranch, 6.8 oz (310 cal, 13 g protein) (est. price)"
           }
@@ -5072,24 +5217,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 32.0,
+            "size": 32,
             "price": 2.97,
             "label": "Garden Salad, 2 lb bag"
           },
           "name": {
-            "size": 32.0,
+            "size": 32,
             "price": 2.97,
             "label": "Garden Salad, 2 lb bag (unbranded produce: same item both tiers)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 12.0,
+            "size": 12,
             "price": 2.49,
             "label": "Signature Farms garden/American salad blend, 12 oz (est.)"
           },
           "name": {
-            "size": 12.0,
+            "size": 12,
             "price": 2.99,
             "label": "Fresh Express Garden salad, 12 oz (est.)"
           }
@@ -5113,24 +5258,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 24.0,
+            "size": 24,
             "price": 14.98,
             "label": "Member's Mark Fire Grilled Chicken Breasts, fresh, 6 ct (~1.5 lb at $9.99/lb)"
           },
           "name": {
-            "size": 48.0,
+            "size": 48,
             "price": 16.98,
             "label": "Member's Mark Grilled Chicken Bites, frozen, 3 lb (no national-brand plain grilled chicken seen)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 9.0,
+            "size": 9,
             "price": 5.99,
             "label": "Signature Select fully cooked grilled chicken breast strips, ~9 oz (est.)"
           },
           "name": {
-            "size": 22.0,
+            "size": 22,
             "price": 12.99,
             "label": "Tyson Grilled & Ready Chicken Breast Strips, frozen, 22 oz (est.)"
           }
@@ -5153,24 +5298,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 160.0,
+            "size": 160,
             "price": 12.48,
             "label": "Hidden Valley Light Ranch, 40 fl oz × 2 (= 160 tbsp) (no Member's Mark version seen online, so both tiers use this brand)"
           },
           "name": {
-            "size": 160.0,
+            "size": 160,
             "price": 12.48,
             "label": "Hidden Valley Light Ranch, 40 fl oz × 2 (= 160 tbsp)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 32.0,
+            "size": 32,
             "price": 2.89,
             "label": "Signature Select Light Ranch, 16 fl oz (= 32 tbsp) (est.)"
           },
           "name": {
-            "size": 32.0,
+            "size": 32,
             "price": 4.49,
             "label": "Hidden Valley Light Ranch, 16 fl oz (= 32 tbsp) (est.)"
           }
@@ -5194,12 +5339,12 @@
       "packs": {
         "jewel": {
           "generic": {
-            "size": 8.0,
+            "size": 8,
             "price": 3.99,
             "label": "Hidden Valley Original Ranch To Go cups, 1.5 fl oz × 8 (est.) (same product both tiers)"
           },
           "name": {
-            "size": 8.0,
+            "size": 8,
             "price": 3.99,
             "label": "Hidden Valley Original Ranch To Go cups, 1.5 fl oz × 8 (est.)"
           }
@@ -5224,24 +5369,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 5.0,
+            "size": 5,
             "price": 7.52,
             "label": "Clementine Mandarins, 5 lb bag (~30 fruit)"
           },
           "name": {
-            "size": 5.0,
+            "size": 5,
             "price": 7.52,
             "label": "Clementine Mandarins, 5 lb bag (unbranded produce: same item both tiers)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 3.0,
+            "size": 3,
             "price": 5.99,
             "label": "Clementines, 3 lb bag (est.)"
           },
           "name": {
-            "size": 3.0,
+            "size": 3,
             "price": 5.99,
             "label": "Clementines, 3 lb bag (est.) (unbranded produce: same item both tiers)"
           }
@@ -5265,24 +5410,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 3.0,
+            "size": 3,
             "price": 4.62,
             "label": "Organic Sweet Petite Baby Carrots, 3 lb"
           },
           "name": {
-            "size": 3.0,
+            "size": 3,
             "price": 4.62,
             "label": "Organic Sweet Petite Baby Carrots, 3 lb (unbranded produce: same item both tiers)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 1.0,
+            "size": 1,
             "price": 2.49,
             "label": "Signature Select Peeled Baby-Cut Carrots, 1 lb (DoorDash Jewel-Osco listing, Nov 2026 (size not shown; size assumed; delivery-app prices can run above in-store))"
           },
           "name": {
-            "size": 1.0,
+            "size": 1,
             "price": 2.49,
             "label": "Signature Select Peeled Baby-Cut Carrots, 1 lb (unbranded produce: same item both tiers)"
           }
@@ -5307,24 +5452,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 16.0,
+            "size": 16,
             "price": 12.87,
             "label": "Chobani Nonfat Greek Yogurt Fruit on the Bottom Variety, 5.3 oz × 16"
           },
           "name": {
-            "size": 18.0,
+            "size": 18,
             "price": 14.76,
             "label": "Oikos Triple Zero Nonfat Greek Yogurt Variety, 5.3 oz × 18 (no added sugar)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 4.0,
+            "size": 4,
             "price": 3.99,
             "label": "Lucerne Nonfat Greek Yogurt cups, 5.3 oz × 4 (est.)"
           },
           "name": {
-            "size": 4.0,
+            "size": 4,
             "price": 5.49,
             "label": "Chobani Nonfat Greek Yogurt, 5.3 oz × 4 (est.)"
           }
@@ -5349,24 +5494,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 20.0,
+            "size": 20,
             "price": 11.98,
             "label": "Dole No Sugar Added Fruit Bowls in Water, 4 oz × 20 (peaches, cherry mixed fruit, mandarins; regular $11.98, $9.48 on sale) (no Member's Mark version seen online, so both tiers use this brand)"
           },
           "name": {
-            "size": 20.0,
+            "size": 20,
             "price": 11.98,
             "label": "Dole No Sugar Added Fruit Bowls in Water, 4 oz × 20 (peaches, cherry mixed fruit, mandarins; regular $11.98, $9.48 on sale)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 4.0,
+            "size": 4,
             "price": 2.49,
             "label": "Signature Select fruit cups in 100% juice, 4 oz × 4 (est.)"
           },
           "name": {
-            "size": 4.0,
+            "size": 4,
             "price": 3.99,
             "label": "Dole Fruit Bowls No Sugar Added, 4 oz × 4 (est.)"
           }
@@ -5390,24 +5535,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 16.0,
+            "size": 16,
             "price": 5.58,
             "label": "Member's Mark Classic Hummus Singles, 2.5 oz × 16"
           },
           "name": {
-            "size": 16.0,
+            "size": 16,
             "price": 5.58,
             "label": "Member's Mark Classic Hummus Singles, 2.5 oz × 16 (Sam's online shows no national brand for this; same item as store brand)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 6.0,
+            "size": 6,
             "price": 5.49,
             "label": "Sabra Classic Hummus Singles, 2 oz × 6 (est.)"
           },
           "name": {
-            "size": 6.0,
+            "size": 6,
             "price": 5.49,
             "label": "Sabra Classic Hummus Singles, 2 oz × 6 (est.)"
           }
@@ -5431,24 +5576,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 12.0,
+            "size": 12,
             "price": 5.98,
             "label": "Great Day Farms Cage-Free Hard Boiled Eggs, 12 pk (product seen on samsclub.com; price not captured — estimate)"
           },
           "name": {
-            "size": 12.0,
+            "size": 12,
             "price": 5.98,
             "label": "Great Day Farms Cage-Free Hard Boiled Eggs, 12 pk (estimate)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 6.0,
+            "size": 6,
             "price": 3.99,
             "label": "Eggland's Best Hard-Cooked Peeled Eggs, 6 ct (est.)"
           },
           "name": {
-            "size": 6.0,
+            "size": 6,
             "price": 3.99,
             "label": "Eggland's Best Hard-Cooked Peeled Eggs, 6 ct (est.)"
           }
@@ -5472,24 +5617,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 30.0,
+            "size": 30,
             "price": 14.98,
             "label": "Nature Valley Peanut Butter Dark Chocolate Protein Chewy Bars, 30 ct"
           },
           "name": {
-            "size": 14.0,
+            "size": 14,
             "price": 18.48,
             "label": "KIND Protein Dark Chocolate Nut & Crunchy Peanut Butter, 14 ct"
           }
         },
         "jewel": {
           "generic": {
-            "size": 5.0,
+            "size": 5,
             "price": 4.99,
             "label": "Nature Valley Protein Chewy Bars, 5 ct (est.)"
           },
           "name": {
-            "size": 4.0,
+            "size": 4,
             "price": 6.49,
             "label": "KIND Protein bars, 4 ct (est.)"
           }
@@ -5513,19 +5658,19 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 34.0,
+            "size": 34,
             "price": 8.98,
             "label": "Triscuit Original Whole Grain Crackers, 8.5 oz × 4 (no Member's Mark version seen online, so both tiers use this brand)"
           },
           "name": {
-            "size": 34.0,
+            "size": 34,
             "price": 8.98,
             "label": "Triscuit Original Whole Grain Crackers, 8.5 oz × 4"
           }
         },
         "jewel": {
           "generic": {
-            "size": 9.0,
+            "size": 9,
             "price": 2.49,
             "label": "Signature Select Woven Wheat crackers, ~9 oz (est.)"
           },
@@ -5554,24 +5699,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 6.0,
+            "size": 6,
             "price": 12.56,
             "label": "Member's Mark Premium Chunk Chicken Breast, 12.5 oz × 6 cans (regular $12.56; $11.98 instant savings seen)"
           },
           "name": {
-            "size": 6.0,
+            "size": 6,
             "price": 12.56,
             "label": "Member's Mark Premium Chunk Chicken Breast, 12.5 oz × 6 cans (regular $12.56; $11.98 instant savings seen) (Sam's online shows no national brand for this; same item as store brand)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 1.0,
+            "size": 1,
             "price": 3.99,
             "label": "Signature Select Chunk Chicken Breast in Water, 12.5 oz (est.)"
           },
           "name": {
-            "size": 1.0,
+            "size": 1,
             "price": 4.99,
             "label": "Swanson Premium White Chunk Chicken, 12.5 oz (est.)"
           }
@@ -5595,24 +5740,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 28.0,
+            "size": 28,
             "price": 13.98,
             "label": "SkinnyPop Original Popcorn snack bags, 0.65 oz × 28 (no Member's Mark version seen online, so both tiers use this brand)"
           },
           "name": {
-            "size": 28.0,
+            "size": 28,
             "price": 13.98,
             "label": "SkinnyPop Original Popcorn snack bags, 0.65 oz × 28"
           }
         },
         "jewel": {
           "generic": {
-            "size": 6.0,
+            "size": 6,
             "price": 4.99,
             "label": "SkinnyPop Original, 0.65 oz × 6 (est.)"
           },
           "name": {
-            "size": 6.0,
+            "size": 6,
             "price": 4.99,
             "label": "SkinnyPop Original, 0.65 oz × 6 (est.)"
           }
@@ -5637,24 +5782,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 24.0,
+            "size": 24,
             "price": 10.48,
             "label": "LaCroix Sparkling Water Variety (12 lime, 6 lemon, 6 grapefruit), 12 fl oz × 24 (no Member's Mark version seen online, so both tiers use this brand)"
           },
           "name": {
-            "size": 24.0,
+            "size": 24,
             "price": 10.48,
             "label": "LaCroix Sparkling Water Variety (12 lime, 6 lemon, 6 grapefruit), 12 fl oz × 24"
           }
         },
         "jewel": {
           "generic": {
-            "size": 12.0,
+            "size": 12,
             "price": 3.49,
             "label": "Signature Select Refreshe sparkling water, 12 fl oz × 12 (est.)"
           },
           "name": {
-            "size": 8.0,
+            "size": 8,
             "price": 4.99,
             "label": "LaCroix, 12 fl oz × 8 (est.)"
           }
@@ -5678,24 +5823,24 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 18.0,
+            "size": 18,
             "price": 19.98,
             "label": "Horizon Organic Whole Milk boxes, shelf-stable, 8 fl oz × 18 (no Member's Mark version seen online, so both tiers use this brand)"
           },
           "name": {
-            "size": 18.0,
+            "size": 18,
             "price": 19.98,
             "label": "Horizon Organic Whole Milk boxes, shelf-stable, 8 fl oz × 18"
           }
         },
         "jewel": {
           "generic": {
-            "size": 6.0,
+            "size": 6,
             "price": 7.99,
             "label": "Horizon Organic 1% Lowfat Milk boxes, 8 fl oz × 6 (est.)"
           },
           "name": {
-            "size": 6.0,
+            "size": 6,
             "price": 7.99,
             "label": "Horizon Organic 1% Lowfat Milk boxes, 8 fl oz × 6 (est.)"
           }
@@ -5719,30 +5864,562 @@
       "packs": {
         "sams": {
           "generic": {
-            "size": 40.0,
+            "size": 40,
             "price": 4.28,
             "label": "Member's Mark Purified Water, 16.9 fl oz × 40 (Addison club grocery page)"
           },
           "name": {
-            "size": 40.0,
+            "size": 40,
             "price": 5.48,
             "label": "Pure Life Purified Water, 16.9 fl oz × 40 (Addison club grocery page)"
           }
         },
         "jewel": {
           "generic": {
-            "size": 24.0,
+            "size": 24,
             "price": 4.99,
             "label": "Signature Select Refreshe Purified Water, 16.9 fl oz × 24 (est.; $5.79 on DoorDash)"
           },
           "name": {
-            "size": 24.0,
+            "size": 24,
             "price": 5.99,
             "label": "Pure Life Purified Water, 16.9 fl oz × 24 (est.)"
           }
         }
       },
       "lunch": true
+    },
+    "beefPatties": {
+      "name": "Ground sirloin beef patties, ⅓ lb (frozen, 85/15)",
+      "unit": "patties",
+      "aisle": "Meat",
+      "storage": "freezer",
+      "kind": "measured",
+      "defaultStore": "sams",
+      "aliases": [
+        "beef patties",
+        "hamburger patties",
+        "burger patties",
+        "frozen burgers",
+        "ground sirloin patties",
+        "1/3 lb patties"
+      ],
+      "brand": "Member's Mark",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      },
+      "meat": true,
+      "lbPerUnit": 0.3333,
+      "packs": {
+        "sams": {
+          "generic": {
+            "size": 18,
+            "price": 35.47,
+            "label": "Member's Mark 85/15 Ground Sirloin Beef Patties, ⅓ lb, frozen, 18 ct ($34.97–35.97) (the family’s usual)"
+          },
+          "name": {
+            "size": 18,
+            "price": 35.47,
+            "label": "Member's Mark 85/15 Ground Sirloin Beef Patties, 18 ct (no national brand at Sam's)"
+          }
+        },
+        "jewel": {
+          "generic": {
+            "size": 8,
+            "price": 15.99,
+            "label": "Signature Select frozen ⅓ lb beef patties, 8 ct (est.)"
+          },
+          "name": {
+            "size": 8,
+            "price": 18.99,
+            "label": "Certified Angus Beef ⅓ lb patties, 8 ct (est.)"
+          }
+        }
+      }
+    },
+    "cookedBacon": {
+      "name": "Fully cooked bacon (Hormel Black Label)",
+      "unit": "slices",
+      "aisle": "Meat",
+      "storage": "pantry",
+      "kind": "measured",
+      "defaultStore": "sams",
+      "aliases": [
+        "fully cooked bacon",
+        "precooked bacon",
+        "ready bacon",
+        "microwave bacon",
+        "hormel black label bacon"
+      ],
+      "brand": "Hormel Black Label",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      },
+      "meat": true,
+      "cooked": true,
+      "packs": {
+        "sams": {
+          "generic": {
+            "size": 72,
+            "price": 15.87,
+            "label": "Hormel Black Label Fully Cooked Bacon, 72 slices (the family’s usual)"
+          },
+          "name": {
+            "size": 72,
+            "price": 15.87,
+            "label": "Hormel Black Label Fully Cooked Bacon, 72 slices"
+          }
+        },
+        "jewel": {
+          "generic": {
+            "size": 15,
+            "price": 5.49,
+            "label": "Hormel Black Label Fully Cooked Bacon, 2.52 oz (~15 slices) (est.)"
+          },
+          "name": {
+            "size": 15,
+            "price": 5.49,
+            "label": "Hormel Black Label Fully Cooked Bacon, ~15 slices (est.)"
+          }
+        }
+      }
+    },
+    "smokedSausage": {
+      "name": "Smoked sausage (hardwood smoked, fully cooked)",
+      "unit": "lb",
+      "aisle": "Meat",
+      "storage": "fridge",
+      "kind": "measured",
+      "defaultStore": "sams",
+      "aliases": [
+        "smoked sausage",
+        "smoked sausage rope",
+        "polish sausage",
+        "kielbasa",
+        "beef smoked sausage",
+        "eckrich smoked sausage"
+      ],
+      "brand": "Eckrich",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      },
+      "meat": true,
+      "cooked": true,
+      "packs": {
+        "sams": {
+          "generic": {
+            "size": 2.625,
+            "price": 6.98,
+            "label": "Eckrich Hardwood Smoked Sausage, 3 × 14 oz (42 oz) (the family’s usual)"
+          },
+          "name": {
+            "size": 3,
+            "price": 11.28,
+            "label": "Hillshire Farm Beef Smoked Sausage, 48 oz (also bought)"
+          }
+        },
+        "jewel": {
+          "generic": {
+            "size": 0.875,
+            "price": 3.49,
+            "label": "Eckrich Smoked Sausage rope, 14 oz (est.)"
+          },
+          "name": {
+            "size": 0.875,
+            "price": 4.99,
+            "label": "Hillshire Farm Smoked Sausage rope, 14 oz (est.)"
+          }
+        }
+      }
+    },
+    "fajitaChicken": {
+      "name": "Seasoned fajita chicken (raw, Buena Mesa)",
+      "unit": "lb",
+      "aisle": "Meat",
+      "storage": "freezer",
+      "kind": "measured",
+      "defaultStore": "sams",
+      "aliases": [
+        "fajita chicken",
+        "seasoned fajita chicken",
+        "marinated chicken strips",
+        "buena mesa fajita chicken",
+        "chicken fajita strips"
+      ],
+      "brand": "Buena Mesa",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      },
+      "meat": true,
+      "packs": {
+        "sams": {
+          "generic": {
+            "size": 3.9,
+            "price": 18.56,
+            "label": "Buena Mesa Authentically Seasoned Fajita Chicken, raw, ~3.9 lb ($4.76/lb) (the family’s usual)"
+          },
+          "name": {
+            "size": 3.9,
+            "price": 18.56,
+            "label": "Buena Mesa Authentically Seasoned Fajita Chicken, ~3.9 lb"
+          }
+        },
+        "jewel": {
+          "generic": {
+            "size": 1.5,
+            "price": 8.99,
+            "label": "Signature Farms fajita-seasoned chicken strips, ~1.5 lb (est.)"
+          },
+          "name": {
+            "size": 1.5,
+            "price": 8.99,
+            "label": "Fajita-seasoned chicken strips, ~1.5 lb (est.)"
+          }
+        }
+      }
+    },
+    "pulledChicken": {
+      "name": "Seasoned pulled chicken (fully cooked)",
+      "unit": "lb",
+      "aisle": "Meat",
+      "storage": "fridge",
+      "kind": "measured",
+      "defaultStore": "sams",
+      "aliases": [
+        "pulled chicken",
+        "shredded chicken",
+        "seasoned pulled chicken",
+        "cooked shredded chicken"
+      ],
+      "brand": "Member's Mark",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      },
+      "meat": true,
+      "cooked": true,
+      "packs": {
+        "sams": {
+          "generic": {
+            "size": 2,
+            "price": 15.86,
+            "label": "Member's Mark Seasoned Pulled Chicken, 2 lb (the family’s usual)"
+          },
+          "name": {
+            "size": 2,
+            "price": 15.86,
+            "label": "Member's Mark Seasoned Pulled Chicken, 2 lb"
+          }
+        },
+        "jewel": {
+          "generic": {
+            "size": 1,
+            "price": 8.99,
+            "label": "Fully cooked pulled chicken, 16 oz (est.)"
+          },
+          "name": {
+            "size": 1,
+            "price": 8.99,
+            "label": "Fully cooked pulled chicken, 16 oz (est.)"
+          }
+        }
+      }
+    },
+    "pulledPork": {
+      "name": "BBQ pulled pork (fully cooked, sauced)",
+      "unit": "lb",
+      "aisle": "Meat",
+      "storage": "fridge",
+      "kind": "measured",
+      "defaultStore": "sams",
+      "aliases": [
+        "pulled pork",
+        "bbq pulled pork",
+        "jack daniel's pulled pork",
+        "shredded pork"
+      ],
+      "brand": "Jack Daniel's",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      },
+      "meat": true,
+      "cooked": true,
+      "packs": {
+        "sams": {
+          "generic": {
+            "size": 3,
+            "price": 15.98,
+            "label": "Jack Daniel's Pulled Pork with BBQ sauce, 3 lb (the family’s usual)"
+          },
+          "name": {
+            "size": 3,
+            "price": 15.98,
+            "label": "Jack Daniel's Pulled Pork, 3 lb"
+          }
+        },
+        "jewel": {
+          "generic": {
+            "size": 1,
+            "price": 7.99,
+            "label": "Jack Daniel's Pulled Pork, 16 oz (est.)"
+          },
+          "name": {
+            "size": 1,
+            "price": 7.99,
+            "label": "Jack Daniel's Pulled Pork, 16 oz (est.)"
+          }
+        }
+      }
+    },
+    "chickenAlfredoDeli": {
+      "name": "Chicken Alfredo (Member's Mark deli, heat & serve)",
+      "unit": "lb",
+      "aisle": "Meat",
+      "storage": "fridge",
+      "kind": "measured",
+      "defaultStore": "sams",
+      "aliases": [
+        "chicken alfredo",
+        "chicken fettuccine alfredo",
+        "deli chicken alfredo",
+        "alfredo tray"
+      ],
+      "brand": "Member's Mark",
+      "usual": {
+        "store": "sams",
+        "tier": "generic"
+      },
+      "meat": true,
+      "cooked": true,
+      "prepared": true,
+      "packs": {
+        "sams": {
+          "generic": {
+            "size": 3.4,
+            "price": 13.53,
+            "label": "Member's Mark Chicken Alfredo, deli heat-and-serve tray, ~3.4 lb ($3.98/lb) (the family’s usual)"
+          },
+          "name": {
+            "size": 3.4,
+            "price": 13.53,
+            "label": "Member's Mark Chicken Alfredo deli tray (no national brand)"
+          }
+        }
+      }
+    },
+    "fajitaSauce": {
+      "name": "Fajita sauce (Cholula)",
+      "unit": "oz",
+      "aisle": "Condiments & Sauces",
+      "storage": "pantry",
+      "kind": "measured",
+      "defaultStore": "jewel",
+      "aliases": [
+        "fajita sauce",
+        "cholula fajita sauce",
+        "fajita marinade"
+      ],
+      "brand": "Cholula",
+      "usual": {
+        "store": "jewel",
+        "tier": "generic"
+      },
+      "packs": {
+        "jewel": {
+          "generic": {
+            "size": 12,
+            "price": 4.99,
+            "label": "Cholula Fajita Sauce, 12 fl oz (the family’s usual)"
+          },
+          "name": {
+            "size": 12,
+            "price": 4.99,
+            "label": "Cholula Fajita Sauce, 12 fl oz"
+          }
+        }
+      }
+    },
+    "cajunPotatoes": {
+      "name": "Cajun-style diced potatoes, 14.5 oz cans",
+      "unit": "cans",
+      "aisle": "Canned & Jarred",
+      "storage": "pantry",
+      "kind": "measured",
+      "defaultStore": "jewel",
+      "aliases": [
+        "cajun potatoes",
+        "cajun style diced potatoes",
+        "canned diced potatoes",
+        "seasoned diced potatoes"
+      ],
+      "brand": "Del Monte",
+      "usual": {
+        "store": "jewel",
+        "tier": "generic"
+      },
+      "packs": {
+        "jewel": {
+          "generic": {
+            "size": 1,
+            "price": 2.99,
+            "label": "Del Monte Cajun Style Diced Potatoes, 14.5 oz (the family’s usual)"
+          },
+          "name": {
+            "size": 1,
+            "price": 2.99,
+            "label": "Del Monte Cajun Style Diced Potatoes, 14.5 oz"
+          }
+        }
+      }
+    },
+    "chiliBeans": {
+      "name": "Chili beans in chili sauce, 16 oz cans",
+      "unit": "cans",
+      "aisle": "Canned & Jarred",
+      "storage": "pantry",
+      "kind": "measured",
+      "defaultStore": "jewel",
+      "aliases": [
+        "chili beans",
+        "bush's chili beans",
+        "beans in chili sauce",
+        "mild chili beans"
+      ],
+      "brand": "Bush's",
+      "usual": {
+        "store": "jewel",
+        "tier": "generic"
+      },
+      "packs": {
+        "jewel": {
+          "generic": {
+            "size": 1,
+            "price": 1.67,
+            "label": "Bush's Chili Beans (mild), 16 oz (the family’s usual)"
+          },
+          "name": {
+            "size": 1,
+            "price": 1.67,
+            "label": "Bush's Chili Beans, 16 oz"
+          }
+        },
+        "sams": {
+          "generic": {
+            "size": 8,
+            "price": 9.98,
+            "label": "Bush's Chili Beans, 16 oz × 8 (est.)"
+          },
+          "name": {
+            "size": 8,
+            "price": 9.98,
+            "label": "Bush's Chili Beans, 16 oz × 8 (est.)"
+          }
+        }
+      }
+    },
+    "knorrTeriyaki": {
+      "name": "Teriyaki noodles side mix (Knorr Asian Sides)",
+      "unit": "pouches",
+      "aisle": "Pasta & Grains",
+      "storage": "pantry",
+      "kind": "measured",
+      "defaultStore": "jewel",
+      "aliases": [
+        "knorr teriyaki noodles",
+        "teriyaki noodles",
+        "asian sides teriyaki",
+        "knorr asian sides"
+      ],
+      "brand": "Knorr",
+      "usual": {
+        "store": "jewel",
+        "tier": "generic"
+      },
+      "packs": {
+        "jewel": {
+          "generic": {
+            "size": 1,
+            "price": 1.19,
+            "label": "Knorr Asian Sides Teriyaki Noodles, 4.6 oz pouch (the family’s usual)"
+          },
+          "name": {
+            "size": 1,
+            "price": 1.19,
+            "label": "Knorr Asian Sides Teriyaki Noodles, 4.6 oz pouch"
+          }
+        }
+      }
+    },
+    "streetTacoFlour": {
+      "name": "Street taco flour tortillas (Mission)",
+      "unit": "tortillas",
+      "aisle": "Bakery",
+      "storage": "pantry",
+      "kind": "measured",
+      "defaultStore": "jewel",
+      "aliases": [
+        "street taco tortillas",
+        "street taco flour tortillas",
+        "mini flour tortillas",
+        "mission street taco"
+      ],
+      "brand": "Mission",
+      "usual": {
+        "store": "jewel",
+        "tier": "generic"
+      },
+      "packs": {
+        "jewel": {
+          "generic": {
+            "size": 12,
+            "price": 3.49,
+            "label": "Mission Street Taco Flour Tortillas, 12 ct (the family’s usual)"
+          },
+          "name": {
+            "size": 12,
+            "price": 3.49,
+            "label": "Mission Street Taco Flour Tortillas, 12 ct"
+          }
+        }
+      }
+    },
+    "streetTacoCorn": {
+      "name": "Street taco white corn tortillas (Mission)",
+      "unit": "tortillas",
+      "aisle": "Bakery",
+      "storage": "pantry",
+      "kind": "measured",
+      "defaultStore": "jewel",
+      "aliases": [
+        "street taco corn tortillas",
+        "mini corn tortillas",
+        "white corn street taco",
+        "mission street taco corn"
+      ],
+      "brand": "Mission",
+      "usual": {
+        "store": "jewel",
+        "tier": "generic"
+      },
+      "packs": {
+        "jewel": {
+          "generic": {
+            "size": 20,
+            "price": 1.99,
+            "label": "Mission Street Taco White Corn Tortillas, ~20 ct (count est.) (the family’s usual)"
+          },
+          "name": {
+            "size": 20,
+            "price": 1.99,
+            "label": "Mission Street Taco White Corn Tortillas, ~20 ct (count est.)"
+          }
+        }
+      }
     }
   }
 }

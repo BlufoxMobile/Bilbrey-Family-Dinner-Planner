@@ -4,7 +4,7 @@ import { html, ic, when, openSheet, closeSheet, renderSheet, avatar, photo, swit
 import { FAMILY, PARENTS } from '../config.js';
 import { addDays, dateRange, money, rangeLabel, shortDate, startOfWeek, weekday, weekdayName, diffDays, dayWord } from '../util.js';
 import {
-  lunchPeople, personConfig, lunchFor, lunchLibrary, lunchSlots, lunchItem, isKid, SKIP_REASONS, hasLunchDay,
+  lunchPeople, personConfig, lunchFor, lunchLibrary, lunchSlots, lunchItem, isKid, SKIP_REASONS, hasLunchDay, lunchVote,
 } from '../lunch.js';
 import { lunchNutrition, lunchItemNutrition, lunchSwaps, fmtKcal } from '../nutrition.js';
 import { lunchFoodCost } from '../shopping.js';
@@ -12,7 +12,7 @@ import {
   skipLunchOps, unskipLunchOps, pickLunchOps, resetLunchPickOps, toggleLunchItemOps, toggleLunchDayOps, setLunchEnabledOps,
   applyLunchSwapOps, addCustomLunchOps,
 } from '../actions.js';
-import { nutri, showNutrition, lighterChip, isDismissed } from './common.js';
+import { nutri, showNutrition, lighterChip, isDismissed, thumbs } from './common.js';
 
 export const title = () => 'Lunch';
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -168,7 +168,7 @@ function openEditor(app, name) {
               return html`<li><button type="button" class="ed-item ${pos >= 0 ? 'is-on' : ''}" aria-pressed="${tf(pos >= 0)}" data-action="lunch:toggle" data-who="${name}" data-slot="${sl.id}" data-id="${it.id}">
                 <span class="ed-pos" aria-hidden="true">${pos >= 0 ? pos + 1 : ''}</span>
                 ${lunchPhoto(app, it, sl.id)}
-                <span class="ed-main"><b>${it.title}</b><small>${[it.subtitle, showNutrition(app) && n ? `${fmtKcal(n.kcal)} cal, ${Math.round(n.protein)} g protein` : '', it.custom ? 'Added by the family' : ''].filter(Boolean).join(' ')}</small></span>
+                <span class="ed-main"><b>${it.title}</b><small>${[lunchVote(app.state, it.id, name) === -1 ? `${name} gave it a thumbs down. Tap to put it back.` : '', it.subtitle, showNutrition(app) && n ? `${fmtKcal(n.kcal)} cal, ${Math.round(n.protein)} g protein` : '', it.custom ? 'Added by the family' : ''].filter(Boolean).join(' ')}</small></span>
               </button></li>`;
             })}</ul>
           </section>`;
@@ -194,8 +194,10 @@ function openSlot(app, name, date, slot) {
     render: () => {
       const l = lunchFor(app.db, app.state, name, date);
       const cur = l?.slots.find((s) => s.slot === slot);
-      const lib = lunchLibrary(app.db, app.state, slot);
+      const lib = lunchLibrary(app.db, app.state, slot).filter((it) => lunchVote(app.state, it.id, name) !== -1 || it.id === cur?.id);
       return html`
+        ${when(cur?.item, () => html`<div class="rate-row rate-row-lunch"><span class="rate-name"><small>Does ${name} like it?</small><b>${cur.item.title}</b></span>${thumbs(app, { kind: 'lunch', id: cur.id, person: name, label: cur.item.title })}</div>
+          <p class="muted small">A thumbs down takes it out of ${name}’s lunches for good (it’s still in the library to add back).</p>`)}
         <ul class="pick-list">${lib.map((it) => {
           const n = lunchItemNutrition(app.db, it);
           const on = cur?.id === it.id;

@@ -1,10 +1,10 @@
 // TONIGHT: tonight's dinner on its index card, quick actions, then the week ahead.
 import { html, ic, when, emptyState } from '../ui.js';
-import { addDays, dateRange, longDay, money, relativeDay, rangeLabel, fmtQty, listJoin } from '../util.js';
+import { addDays, dateRange, longDay, money, relativeDay, rangeLabel, fmtQty, listJoin, hourIn, weekdayName } from '../util.js';
 import { dinnerById, periodRange } from '../planner.js';
 import { buildList } from '../shopping.js';
 import { generateOps, markCookedOps, awayBlock } from '../actions.js';
-import { sidesFor, dinnerPhoto, equipment, favoriteBadge, awayReason, dayStamp, nutri, showNutrition, lighterChip } from './common.js';
+import { sidesFor, dinnerPhoto, equipment, favoriteBadge, awayReason, dayStamp, nutri, showNutrition, lighterChip, rateList, isDismissed, replacedText } from './common.js';
 import { plateNutrition, dayNutrition, lighterSide, fmtKcal } from '../nutrition.js';
 import { openPick, openAway, openNight } from './sheets.js';
 import { defaultAnchor } from './plan.js';
@@ -54,6 +54,7 @@ function hero(app, today) {
       <h1 class="hero-title">${d.title}</h1>
       ${when(d.subtitle, () => html`<p class="hero-sub">${d.subtitle}</p>`)}
       ${when(sides.length, () => html`<p class="hero-sides">with ${sides.map((s, i) => html`${i ? (i === sides.length - 1 ? ' and ' : ', ') : ''}<button type="button" class="link-side" data-action="side:sub" data-date="${today}" data-dinner="${d.id}" data-slot="${s.slot}" aria-label="${s.info?.title}. Substitute this side">${s.info?.title}</button>`)}</p>`)}
+      ${sides.filter((x) => x.replaced).map((x) => html`<p class="hero-replaced">${x.info?.title}: ${replacedText(app, x).replace(/^In/, 'in')}.</p>`)}
       <div class="hero-meta">${equipment(d)}${favoriteBadge(app, d)}</div>
       ${when(showNutrition(app), () => html`<p class="hero-nutri">${nutri(app, plateNutrition(app.db, app.state, d.id, e), { suffix: 'a plate' })}</p>`)}
       ${when(!cooked, () => {
@@ -68,6 +69,10 @@ function hero(app, today) {
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="#/cook/${today}">${ic('flame', { size: 20 })}Start cooking</a>
       </div>
+      ${when(!(cooked && howWasDate(app) === today), () => html`<div class="hero-rate">
+        <p class="rate-h">Thumbs up keeps it coming. One thumbs down from anyone takes it off the menu.</p>
+        ${rateList(app, d, sides)}
+      </div>`)}
       <div class="quick" role="group" aria-label="Tonight’s options">
         <button type="button" class="quick-btn" data-action="night:pick" data-date="${today}" ${cooked ? 'disabled' : ''}>${ic('swap')}<span>Swap</span></button>
         <button type="button" class="quick-btn" data-action="night:away" data-date="${today}" ${cooked ? 'disabled' : ''}>${ic('away')}<span>Not eating at home</span></button>
@@ -146,13 +151,46 @@ function todayLine(app, today) {
   return html`<p class="today-nutri">Today for ${who}: about <b>${fmtKcal(n.kcal)}</b> calories and <b>${Math.round(n.protein)} g</b> protein from ${from}.<small>Breakfast and snacks aren’t counted.${n.complete ? '' : ' A few ingredients have no calorie data yet.'}</small></p>`;
 }
 
+/**
+ * "How was dinner?" (SPEC §9.2): the evening a night is marked cooked, and the next morning,
+ * for the phone's person, until they wave it off. → the date it's about, or null.
+ */
+export function howWasDate(app, now = new Date()) {
+  const who = app.who();
+  if (!who) return null;
+  const today = app.today();
+  const plan = app.state.plan || {};
+  const yesterday = addDays(today, -1);
+  const pick = plan[today]?.status === 'cooked' ? today : plan[yesterday]?.status === 'cooked' && hourIn(now) < 12 ? yesterday : null;
+  if (!pick || !plan[pick]?.dinner || !dinnerById(app.db, app.state, plan[pick].dinner)) return null;
+  return isDismissed(app, `howwas:${pick}`) ? null : pick;
+}
+
+function howWas(app, today) {
+  const date = howWasDate(app);
+  if (!date) return '';
+  const e = app.state.plan[date];
+  const d = dinnerById(app.db, app.state, e.dinner);
+  const sides = sidesFor(app, d.id, e);
+  return html`<section class="howwas" aria-labelledby="hw-h">
+    <div class="howwas-head">
+      ${dinnerPhoto(app, d, { size: 'thumb' })}
+      <div><h2 id="hw-h" class="section-title">How was dinner?</h2>
+        <p class="muted small">${d.title}, ${date === today ? 'tonight' : `last night (${weekdayName(date)})`}. Thumbs up keeps it coming; one thumbs down and it’s off the menu.</p></div>
+    </div>
+    ${rateList(app, d, sides)}
+    <div class="howwas-actions"><button type="button" class="btn btn-secondary btn-small" data-action="lighter:dismiss" data-key="howwas:${date}">Done</button></div>
+  </section>`;
+}
+
 export function render(app) {
   const today = app.today();
   return html`<div class="page page-tonight">
     <p class="dateline">${longDay(today)}</p>
+    ${when(howWasDate(app) !== today, () => howWas(app, today))}
     ${todayLine(app, today)}
     <div class="tonight-grid">
-      <div class="tonight-main">${hero(app, today)}</div>
+      <div class="tonight-main">${hero(app, today)}${when(howWasDate(app) === today, () => howWas(app, today))}</div>
       <div class="tonight-side">${weekAhead(app, today)}${glance(app)}</div>
     </div>
   </div>`;

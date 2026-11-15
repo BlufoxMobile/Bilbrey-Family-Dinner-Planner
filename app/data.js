@@ -66,10 +66,13 @@ export function normalizeIngredient(id, raw) {
     aisle: String(raw?.aisle || 'Snacks & Extras'),
     storage: ['freezer', 'fridge', 'pantry', 'counter'].includes(raw?.storage) ? raw.storage : 'pantry',
     kind: raw?.kind === 'staple' ? 'staple' : 'measured',
-    defaultStore: STORES.includes(raw?.defaultStore) ? raw.defaultStore : (packs.sams && !packs.jewel ? 'sams' : 'jewel'),
+    defaultStore: STORES.includes(raw?.usual?.store) ? raw.usual.store : STORES.includes(raw?.defaultStore) ? raw.defaultStore : (packs.sams && !packs.jewel ? 'sams' : 'jewel'),
     aliases: Array.isArray(raw?.aliases) ? raw.aliases.map(String) : [],
     extra: !!raw?.extra,
     meat: !!raw?.meat,
+    // The exact pack the family buys, from their receipts: the default store and brand tier.
+    ...(typeof raw?.brand === 'string' && raw.brand.trim() ? { brand: raw.brand.trim() } : {}),
+    ...(raw?.usual && STORES.includes(raw.usual.store) ? { usual: { store: raw.usual.store, tier: BRANDS.includes(raw.usual.tier) ? raw.usual.tier : 'generic' } } : {}),
     packs,
   };
 }
@@ -171,7 +174,7 @@ export function normalizeStores(raw) {
       website: pickStr(s.website, s.url, s.web, links.web, links.website, links.storePage, links.shop, out[id].website),
       orderUrl: pickStr(s.orderUrl, s.listUrl, s.handoff?.url, s.handoff?.link, links.shopThisStore, links.groceryPage, links.list, links.order, links.shop, s.website, s.url, out[id].orderUrl),
       appUrl: pickStr(s.appUrl, s.apps?.ios?.url, links.app, links.ios, links.appStore),
-      searchTemplate: pickStr(links.searchTemplate, s.searchTemplate),
+      searchTemplate: searchTemplateFrom(s, links),
       storeName: pickStr(s.storeName),
       handoff: handoff && handoff.length ? handoff : out[id].handoff,
       notes: pickStr(s.notes, s.note),
@@ -179,6 +182,13 @@ export function normalizeStores(raw) {
     };
   }
   return out;
+}
+
+/** stores.json `search.{web}` (SPEC §9.5, `{q}`) or the older `links.searchTemplate` (`{query}`). */
+function searchTemplateFrom(s, links) {
+  const sr = s?.search;
+  const t = pickStr(typeof sr === 'string' ? sr : '', sr?.web, sr?.url, sr?.template, links?.searchTemplate, s?.searchTemplate);
+  return /^https:\/\//.test(t) && /\{q\}|\{query\}/.test(t) ? t : '';
 }
 
 /** stores.json `coupons` may be a URL string or { url, label, note|how|steps }. */
@@ -259,8 +269,35 @@ export function normalizeNutrition(raw) {
   return { per, updated: typeof raw.updated === 'string' ? raw.updated.slice(0, 10) : null, notes: typeof raw.notes === 'string' ? raw.notes : '' };
 }
 
+/**
+ * data/products.json (§9.6) → { updated, byId: { id: { sams: [option], jewel: [option] } } }.
+ * option: { name, brand, size, packSize (catalog unit), price, url, tier: 'store'|'name' }.
+ */
+export function normalizeProducts(raw) {
+  const byId = {};
+  const src = raw && typeof raw === 'object' ? (raw.products || {}) : {};
+  for (const [id, per] of Object.entries(src)) {
+    if (!per || typeof per !== 'object') continue;
+    for (const st of STORES) {
+      const list = (Array.isArray(per[st]) ? per[st] : []).map((o) => {
+        if (!o || typeof o !== 'object' || !pickStr(o.name)) return null;
+        const packSize = num(o.packSize);
+        const price = num(o.price);
+        const url = pickStr(o.url);
+        return {
+          name: pickStr(o.name), brand: pickStr(o.brand), size: pickStr(o.size),
+          packSize: packSize > 0 ? packSize : null, price: price >= 0 ? price : null,
+          url: /^https:\/\//.test(url) ? url : '', tier: o.tier === 'name' ? 'name' : 'store',
+        };
+      }).filter(Boolean);
+      if (list.length) (byId[id] ||= {})[st] = list;
+    }
+  }
+  return { updated: typeof raw?.updated === 'string' ? raw.updated.slice(0, 10) : null, byId };
+}
+
 /** Pure: builds the normalized db from raw JSON documents. */
-export function buildDb({ catalog, recipes, prices = null, stores = null, photos = null, lunches = null, nutrition = null }) {
+export function buildDb({ catalog, recipes, prices = null, stores = null, photos = null, lunches = null, nutrition = null, products = null }) {
   const ingredients = {};
   for (const [id, raw] of Object.entries(catalog?.ingredients || {})) ingredients[id] = normalizeIngredient(id, raw);
 
@@ -324,6 +361,7 @@ export function buildDb({ catalog, recipes, prices = null, stores = null, photos
     hasPrices: !!pricesUpdated,
     lunch: normalizeLunches(lunches),
     nutrition: normalizeNutrition(nutrition),
+    products: normalizeProducts(products),
   };
 }
 
@@ -344,7 +382,7 @@ async function getJSON(fetchFn, url, required) {
 /** Fetches the data files relative to the app's base URL. */
 export async function loadDb({ base = './', fetchFn = globalThis.fetch.bind(globalThis) } = {}) {
   const u = (p) => new URL(p, new URL(base, globalThis.location?.href || 'http://localhost/')).href;
-  const [catalog, recipes, prices, stores, photos, lunches, nutrition] = await Promise.all([
+  const [catalog, recipes, prices, stores, photos, lunches, nutrition, products] = await Promise.all([
     getJSON(fetchFn, u('data/catalog.json'), true),
     getJSON(fetchFn, u('data/recipes.json'), true),
     getJSON(fetchFn, u('data/prices.json'), false),
@@ -352,6 +390,7 @@ export async function loadDb({ base = './', fetchFn = globalThis.fetch.bind(glob
     getJSON(fetchFn, u('img/photos.json'), false),
     getJSON(fetchFn, u('data/lunches.json'), false),
     getJSON(fetchFn, u('data/nutrition.json'), false),
+    getJSON(fetchFn, u('data/products.json'), false),
   ]);
-  return buildDb({ catalog, recipes, prices, stores, photos, lunches, nutrition });
+  return buildDb({ catalog, recipes, prices, stores, photos, lunches, nutrition, products });
 }

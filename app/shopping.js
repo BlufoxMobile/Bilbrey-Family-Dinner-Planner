@@ -9,6 +9,7 @@ import {
   brandFor, canBuyAt, dinnerById, itemsForNight, kindOf, packFor, storeFor, rotationList, unitPrice,
 } from './planner.js';
 import { lunchNeeds, lunchesIn } from './lunch.js';
+import { shownProduct, productLabel } from './products.js';
 
 export const OTHER = { sams: 'jewel', jewel: 'sams' };
 
@@ -79,8 +80,9 @@ export function singular(unit) {
   return unit.endsWith('es') && /(ches|shes|xes|ses)$/.test(unit) ? unit.slice(0, -2) : unit.endsWith('s') ? unit.slice(0, -1) : unit;
 }
 
+/** "2 cups", "1 cup", "½ cup" (a fraction of one takes the singular too). */
 export function unitText(n, unit) {
-  return `${fmtQty(n)} ${Math.abs(n - 1) < 1e-9 ? singular(unit) : unit}`.trim();
+  return `${fmtQty(n)} ${n > 0 && n < 1 + 1e-9 ? singular(unit) : unit}`.trim();
 }
 
 function containerWord({ aisle, name = '' }) {
@@ -174,7 +176,7 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
       continue;
     }
     const { store, fallback } = listStore(db, state, id, planStore);
-    const brand = brandFor(state, id);
+    const brand = brandFor(state, id, db);
     const pack = packFor(db, state, id, store, brand);
     let packs = 0;
     if (pack) {
@@ -203,6 +205,8 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
       need, have, stocked, low, shortfall, extraPacks: xp,
       store, storeFallback: fallback, brand: pack?.brand || brand, brandFallback: !!pack?.brandFallback,
       pack, packs, bought, leftover, cost,
+      // The exact product (the family's own, or the estimate's researched pack) — SPEC §9.5.
+      product: shownProduct(state, store, id, pack, db),
       // The share of the cost the planned meals actually use (the rest is leftovers for later).
       usedCost: pack ? round2(usedTotal) : null,
       usedDinner: pack ? round2(usedTotal * (1 - lunchShare)) : null,
@@ -281,6 +285,17 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
   };
 }
 
+/**
+ * What to call a list item in Copy & open and "Find each item": the family's chosen product by
+ * its exact name, else the product they usually buy there (read off their receipts), else the
+ * ingredient — so the store's search finds that one.
+ */
+export function productName(i) {
+  if (i?.product?.chosen) return productLabel(i.product);
+  if (i?.pack?.confidence === 'paid' && i.product?.label) return i.product.label;
+  return i?.name || '';
+}
+
 /** Clean, store-formatted text to paste into the store's app. */
 export function formatStoreList(db, list, store, { includeChecked = false, title = '' } = {}) {
   const s = list.stores[store];
@@ -291,7 +306,8 @@ export function formatStoreList(db, list, store, { includeChecked = false, title
   lines.push(title || `${name} list${list.dates.length ? ` for ${rangeLabel(list.dates[0], list.dates[list.dates.length - 1])}` : ''}`);
   lines.push('');
   for (const i of use) {
-    const label = i.freeText ? `${i.name}${i.qty ? ` — ${unitText(i.qty, i.unit || 'each')}` : ''}` : `${i.name} — ${formatPackQty(i)}`;
+    const name = productName(i);
+    const label = i.freeText ? `${i.name}${i.qty ? ` — ${unitText(i.qty, i.unit || 'each')}` : ''}` : `${name} — ${formatPackQty(i)}`;
     lines.push(label);
   }
   return lines.join('\n');
@@ -349,7 +365,7 @@ export function extrasPerMonth(db, state) {
     let each = null;
     if (x.item && db.ingredients[x.item]) {
       const store = x.store === 'sams' || x.store === 'jewel' ? x.store : storeFor(db, state, x.item);
-      const p = packFor(db, state, x.item, store, brandFor(state, x.item)) || packFor(db, state, x.item, OTHER[store], brandFor(state, x.item));
+      const p = packFor(db, state, x.item, store, brandFor(state, x.item, db)) || packFor(db, state, x.item, OTHER[store], brandFor(state, x.item, db));
       each = p ? p.price : null;
     } else if (Number.isFinite(Number(x.price))) each = Number(x.price);
     if (each == null) { unpriced++; continue; }

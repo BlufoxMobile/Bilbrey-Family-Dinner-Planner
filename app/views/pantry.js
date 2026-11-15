@@ -1,6 +1,7 @@
 // PANTRY: scan shelves with the camera (AI suggests, the family confirms), add by hand,
 // staples "stocked until low", measured items by amount, "running low" back to the list.
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, switchToggle, confirmSheet } from '../ui.js';
+import { resizeImage, LIMITS } from '../images.js';
 import { STORAGE, AISLES } from '../config.js';
 import { fmtQty, round2 } from '../util.js';
 import { setPantryOps, removePantryOps, customItemOps, undoFor } from '../actions.js';
@@ -101,24 +102,7 @@ function results(app) {
 
 // ---------------------------------------------------------------- scanning
 
-async function resize(file, max = 1280, quality = 0.82) {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = url; });
-    const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-    const w = Math.max(1, Math.round(img.naturalWidth * scale));
-    const h = Math.max(1, Math.round(img.naturalHeight * scale));
-    const c = document.createElement('canvas');
-    c.width = w; c.height = h;
-    c.getContext('2d').drawImage(img, 0, 0, w, h);
-    let q = quality;
-    let data = c.toDataURL('image/jpeg', q);
-    while (data.length > 1.45 * 1024 * 1024 * 1.33 && q > 0.4) { q -= 0.12; data = c.toDataURL('image/jpeg', q); }
-    return data;
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
+const resize = (file) => resizeImage(file, LIMITS.pantry);
 
 function knownList(app) {
   const out = Object.values(app.db.ingredients).map((i) => ({ id: i.id, name: i.name, aliases: i.aliases || [] }));

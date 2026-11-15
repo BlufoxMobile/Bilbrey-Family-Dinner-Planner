@@ -16,12 +16,15 @@ import * as budgetView from './views/budget.js';
 import * as familyView from './views/family.js';
 import * as cookView from './views/cook.js';
 import * as lunchView from './views/lunch.js';
+import * as receiptsView from './views/receipts.js';
+import * as productsView from './views/products.js';
+import { importReceipts } from './receipts.js';
 import * as onboarding from './views/onboarding.js';
 import * as sheets from './views/sheets.js';
 
 const VIEWS = {
   tonight, plan: planView, list: listView, pantry: pantryView, recipes: recipesView, recipe: recipeView,
-  budget: budgetView, family: familyView, cook: cookView, lunch: lunchView,
+  budget: budgetView, family: familyView, cook: cookView, lunch: lunchView, receipts: receiptsView, products: productsView,
 };
 // Phone: five tabs. Recipes live under Plan there; the desktop sidebar lists everything.
 const TABS = [
@@ -43,7 +46,7 @@ for (const m of [...Object.values(VIEWS), onboarding, sheets]) Object.assign(ACT
 export const app = {
   db: null,
   store: null,
-  ui: { anchor: null, swapPick: null, swapMode: false, recipeQuery: '', recipeFilters: {}, recipeTab: 'rotation', pantryQuery: '', listFilter: 'all', lunchWho: null, lunchAnchor: null },
+  ui: { anchor: null, swapPick: null, swapMode: false, recipeQuery: '', recipeFilters: {}, recipeTab: 'rotation', pantryQuery: '', listFilter: 'all', lunchWho: null, lunchAnchor: null, productsStore: 'sams', productsQuery: '' },
   route: { view: 'tonight', params: [] },
   get state() { return this.store.state; },
   get settings() { return settingsOf(this.store.state); },
@@ -95,7 +98,7 @@ function syncPill() {
 
 function shell() {
   const who = app.who();
-  const active = app.route.view === 'recipe' ? 'recipes' : app.route.view;
+  const active = { recipe: 'recipes', products: 'list', receipts: 'budget' }[app.route.view] || app.route.view;
   const tabActive = active === 'recipes' ? 'plan' : active;
   return html`
     <a class="skip" href="#view">Skip to content</a>
@@ -222,6 +225,55 @@ function delegate() {
 }
 
 ACTIONS['sheet:close'] = () => closeSheet();
+
+/**
+ * A small console door for importing past purchase history (SPEC §9.4). Each receipt goes
+ * through the same importReceipt() as a scanned one and then the normal op queue and sync,
+ * so it's deduped (store + date + total) and never counted twice. Harmless to leave in.
+ *   bfdp.importReceipts([{ store: 'sams', date: '2026-10-03', total: 212.4, lines: [...] }])
+ *   bfdp.importReceipts(list, { dryRun: true })   // see what would happen, change nothing
+ */
+function installConsoleHelpers() {
+  const STATE_LIMIT = 950_000; // the Worker refuses a family state over 1 MB; leave headroom
+  window.bfdp = Object.freeze({
+    version: VERSION,
+    /**
+     * → { receipts, lines, matched, productsSet, skippedDuplicates, errors, ops, stateBytes, dryRun, results }
+     * receipts: receipts saved now; lines/matched: their lines and the lines matched to an
+     * ingredient; productsSet: store/ingredient products set; skippedDuplicates: already saved.
+     */
+    importReceipts(list, { dryRun = false, by = null, source = 'import' } = {}) {
+      if (!app.db || !app.store) throw new Error('The planner is still loading.');
+      const arr = Array.isArray(list) ? list : [list];
+      const { ops, results, state } = importReceipts(app.store.state, arr, {
+        db: app.db, by: by || app.who() || 'Family', source, today: app.today(),
+      });
+      const ok = results.filter((r) => !r.duplicate && !r.error);
+      const productKeys = new Set(ok.flatMap((r) => r.products || []));
+      const stateBytes = new TextEncoder().encode(JSON.stringify(state)).length;
+      const summary = {
+        receipts: ok.length,
+        lines: ok.reduce((t, r) => t + (r.lines || 0), 0),
+        matched: ok.reduce((t, r) => t + (r.matched || 0), 0),
+        productsSet: productKeys.size,
+        skippedDuplicates: results.filter((r) => r.duplicate).length,
+        countedInBudget: ok.filter((r) => r.counted).length,
+        errors: results.filter((r) => r.error).map((r) => `${r.store || '?'} ${r.date || '?'}: ${r.error}`),
+        ops: ops.length,
+        requests: Math.ceil(ops.length / 200),
+        stateBytes,
+        dryRun,
+        results,
+      };
+      if (stateBytes > STATE_LIMIT) {
+        return { ...summary, saved: false, error: `That would make the family data ${Math.round(stateBytes / 1024)} KB; the limit is 1 MB. Nothing was saved. Import fewer receipts at a time.` };
+      }
+      if (!dryRun && ops.length) app.store.commit(ops);
+      return { ...summary, saved: !dryRun && ops.length > 0 };
+    },
+    status: () => ({ status: app.store?.status, pending: app.store?.pending.length || 0, revision: app.store?.server.revision }),
+  });
+}
 ACTIONS.nav = (a, el) => a.navigate(el.dataset.href);
 
 async function boot() {
@@ -260,6 +312,7 @@ async function boot() {
   setInterval(() => { const t = app.today(); if (t !== day) { day = t; scheduleRender(); } }, 60000);
   if ('serviceWorker' in navigator && location.protocol !== 'file:') watchForUpdates();
   document.documentElement.dataset.version = VERSION;
+  installConsoleHelpers();
 }
 
 /**

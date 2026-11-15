@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "updated": "2026-11-14",
-  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer and microwave only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit.",
+  "updated": "2026-11-15",
+  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer and microwave only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases.",
   "dinners": [
     {
       "id": "smashburgers",
       "title": "Blackstone smashburgers",
-      "subtitle": "Two crispy-edged smashed patties, melted cheddar and dill pickles on a toasted bun.",
+      "subtitle": "Two crispy-edged smashed patties, melted cheese and dill pickles on a toasted bun.",
       "category": "Burgers",
       "protein": "beef",
       "minutes": 30,
@@ -21,7 +21,7 @@
       "items": {
         "beef": 2.5,
         "buns": 5,
-        "cheese": 5,
+        "cheeseSlices": 5,
         "pickles": 5,
         "mustard": 3,
         "ketchup": 3,
@@ -30,7 +30,7 @@
       },
       "steps": [
         "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
-        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip. Lay cheddar on five of the patties.",
+        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip. Lay a cheese slice on five of the patties.",
         "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
         "Spread the buns with mustard and ketchup, stack a plain patty on each cheese patty, add pickles and serve two patties per bun."
       ],
@@ -43,7 +43,7 @@
     {
       "id": "onion-burgers",
       "title": "Griddled onion burgers",
-      "subtitle": "Paper-thin onions smashed into double beef patties and caramelized under melted cheddar.",
+      "subtitle": "Paper-thin onions smashed into double beef patties and caramelized under melted cheese.",
       "category": "Burgers",
       "protein": "beef",
       "minutes": 30,
@@ -58,7 +58,7 @@
         "beef": 2.5,
         "buns": 5,
         "onions": 0.75,
-        "cheese": 5,
+        "cheeseSlices": 5,
         "mustard": 3,
         "pickles": 5,
         "salt": 1,
@@ -67,7 +67,7 @@
       "steps": [
         "Slice the onions as thin as you can. Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
         "Set the balls on the griddle, pile a handful of onions on each and smash hard so the onions press into the meat. Season with the salt and pepper.",
-        "Cook until the bottoms are deeply browned, 2–3 minutes, then flip so the onions are underneath and let them caramelize. Lay cheddar on five patties.",
+        "Cook until the bottoms are deeply browned, 2–3 minutes, then flip so the onions are underneath and let them caramelize. Lay a cheese slice on five patties.",
         "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
         "Spread the buns with mustard and stack two onion patties (cheese patty on the bottom) and pickles on each."
       ],
@@ -80,10 +80,10 @@
     {
       "id": "green-chile-burgers",
       "title": "Green chile cheeseburgers",
-      "subtitle": "Double patties with melted cheddar, pickled jalapeños and a cool lime-yogurt spread.",
+      "subtitle": "Thick sirloin burgers with melted cheese, pickled jalapeños and a cool lime-yogurt spread.",
       "category": "Burgers",
       "protein": "beef",
-      "minutes": 30,
+      "minutes": 25,
       "equipment": [
         "blackstone"
       ],
@@ -92,35 +92,34 @@
       ],
       "rotation": "core",
       "items": {
-        "beef": 2.5,
-        "buns": 5,
-        "cheese": 5,
-        "jalapenos": 3,
-        "yogurt": 4,
-        "limes": 1,
-        "salt": 1,
-        "pepper": 0.5
+        "beefPatties": 8,
+        "buns": 8,
+        "cheeseSlices": 8,
+        "salt": 0.5,
+        "pepper": 0.5,
+        "jalapenos": 4,
+        "yogurt": 5,
+        "limes": 1
       },
       "steps": [
         "Stir the yogurt with the zest and juice of the lime and a pinch of the salt; chill. Chop the jalapeños (use fewer for milder burgers).",
-        "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
-        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip. Lay cheddar on five of the patties.",
-        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
-        "Spread the buns with the lime yogurt, stack two patties on each and finish with the jalapeños."
+        "Heat the Blackstone over medium-high. Season the frozen patties with the salt and pepper and cook them straight from the freezer (no thawing), 5–6 minutes per side, until a thermometer slid in from the side reads 160°F.",
+        "Lay a cheese slice on each patty for the last minute and toast the cut buns on a clean part of the griddle.",
+        "Spread the buns with the lime yogurt, add a patty and top with jalapeños. Eight burgers: one each, plus three for the hungriest."
       ],
       "sides": [
         "jewel-fries"
       ],
       "sideSlots": 1,
-      "photo": "A double cheeseburger with melted cheddar and bright green pickled jalapeño slices over a creamy white spread on a toasted bun, plated with french fries."
+      "photo": "A thick grilled sirloin burger with melted cheese, bright green pickled jalapeño slices and a creamy white spread on a toasted bun, plated with french fries."
     },
     {
       "id": "mushroom-burgers",
       "title": "Mushroom melt burgers",
-      "subtitle": "Garlicky browned mushrooms and melted cheddar over double griddled patties.",
+      "subtitle": "Thick sirloin burgers under garlicky browned mushrooms and melted cheese.",
       "category": "Burgers",
       "protein": "beef",
-      "minutes": 35,
+      "minutes": 30,
       "equipment": [
         "blackstone"
       ],
@@ -129,36 +128,34 @@
       ],
       "rotation": "core",
       "items": {
-        "beef": 2.5,
-        "buns": 5,
+        "beefPatties": 8,
+        "buns": 8,
+        "cheeseSlices": 8,
+        "salt": 0.5,
+        "pepper": 0.5,
         "mushrooms": 8,
-        "cheese": 5,
         "butter": 1,
         "garlic": 2,
-        "mustard": 3,
-        "salt": 1,
-        "pepper": 0.5
+        "mustard": 3
       },
       "steps": [
-        "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
-        "Melt the butter on one side of the griddle and cook the mushrooms, stirring, until browned and their liquid cooks off, 6–8 minutes. Add the minced garlic for the last minute and move them to a cool corner.",
-        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip. Pile the mushrooms on five patties and top with the cheddar.",
-        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
-        "Spread the buns with mustard and stack a plain patty under each mushroom-cheese patty."
+        "Heat the Blackstone over medium-high. Season the frozen patties with the salt and pepper and cook them straight from the freezer (no thawing), 5–6 minutes per side, until a thermometer slid in from the side reads 160°F.",
+        "While the patties cook, melt the butter on another zone and cook the mushrooms, stirring, until browned and their liquid cooks off, 6–8 minutes, adding the minced garlic for the last minute. Pile them on the patties, top each with a cheese slice for the last minute, and toast the cut buns on a clean part of the griddle.",
+        "Spread the buns with mustard and add a mushroom-cheese patty. Eight burgers: one each, plus three for the hungriest."
       ],
       "sides": [
         "jewel-fries"
       ],
       "sideSlots": 1,
-      "photo": "A double beef burger smothered in browned sliced mushrooms and melted cheddar on a toasted bun, plated with french fries."
+      "photo": "A thick sirloin burger smothered in browned sliced mushrooms and melted cheese on a toasted bun, plated with french fries."
     },
     {
       "id": "bbq-slaw-burgers",
       "title": "BBQ slaw burgers",
-      "subtitle": "Double patties brushed with barbecue sauce and topped with crunchy, tangy slaw.",
+      "subtitle": "Thick sirloin burgers brushed with barbecue sauce under smoky cheese and crunchy, tangy slaw.",
       "category": "Burgers",
       "protein": "beef",
-      "minutes": 30,
+      "minutes": 25,
       "equipment": [
         "blackstone"
       ],
@@ -167,35 +164,35 @@
       ],
       "rotation": "core",
       "items": {
-        "beef": 2.5,
-        "buns": 5,
+        "beefPatties": 8,
+        "buns": 8,
+        "cheeseSlices": 8,
+        "salt": 0.5,
+        "pepper": 0.5,
         "slaw": 8,
         "yogurt": 2,
         "ciderVinegar": 1,
-        "bbq": 6,
-        "salt": 1,
-        "pepper": 0.5
+        "bbq": 8
       },
       "steps": [
         "Toss the coleslaw mix with the yogurt, cider vinegar and 1 tablespoon of the barbecue sauce; chill.",
-        "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
-        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip. Brush the tops with the remaining barbecue sauce.",
-        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
-        "Stack two saucy patties on each bun and pile on the slaw."
+        "Heat the Blackstone over medium-high. Season the frozen patties with the salt and pepper and cook them straight from the freezer (no thawing), 5–6 minutes per side, until a thermometer slid in from the side reads 160°F.",
+        "Brush the patties with the remaining barbecue sauce during the last 2 minutes, lay a cheese slice on each, and toast the cut buns on a clean part of the griddle.",
+        "Fill each bun with a saucy patty and a pile of slaw. Eight burgers: one each, plus three for the hungriest."
       ],
       "sides": [
         "jewel-fries"
       ],
       "sideSlots": 1,
-      "photo": "A double beef burger glazed with dark barbecue sauce and piled with creamy crunchy coleslaw on a toasted bun, plated with french fries."
+      "photo": "A thick sirloin burger glazed with dark barbecue sauce, melted cheese and creamy crunchy coleslaw on a toasted bun, plated with french fries."
     },
     {
       "id": "mustard-pickle-burgers",
       "title": "Dill pickle burgers",
-      "subtitle": "Double patties with a tangy chopped-pickle mustard sauce and extra pickle chips.",
+      "subtitle": "Thick sirloin burgers with a tangy chopped-pickle mustard sauce and extra pickles.",
       "category": "Burgers",
       "protein": "beef",
-      "minutes": 30,
+      "minutes": 25,
       "equipment": [
         "blackstone"
       ],
@@ -204,26 +201,26 @@
       ],
       "rotation": "core",
       "items": {
-        "beef": 2.5,
-        "buns": 5,
-        "pickles": 8,
+        "beefPatties": 8,
+        "buns": 8,
+        "cheeseSlices": 8,
+        "salt": 0.5,
+        "pepper": 0.5,
+        "pickles": 10,
         "mustard": 3,
-        "yogurt": 4,
-        "salt": 1,
-        "pepper": 0.5
+        "yogurt": 4
       },
       "steps": [
         "Finely chop half the pickles and stir them into the yogurt and mustard.",
-        "Heat the Blackstone over medium-high for about 10 minutes. Divide the beef into 10 loose balls (about 4 oz each), handling it as little as possible.",
-        "Set the balls on the hot griddle a few inches apart, smash each one thin with a sturdy spatula and season with the salt and pepper. Cook until the edges are deep brown and crispy, 2–3 minutes, then scrape under each patty and flip.",
-        "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Meanwhile, toast the cut sides of the buns on a clean part of the griddle.",
-        "Spread the buns with the pickle sauce and fill each with two patties and the remaining pickle chips."
+        "Heat the Blackstone over medium-high. Season the frozen patties with the salt and pepper and cook them straight from the freezer (no thawing), 5–6 minutes per side, until a thermometer slid in from the side reads 160°F.",
+        "Lay a cheese slice on each patty for the last minute and toast the cut buns on a clean part of the griddle.",
+        "Spread the buns with the pickle sauce and add a patty and the remaining pickles. Eight burgers: one each, plus three for the hungriest."
       ],
       "sides": [
         "jewel-fries"
       ],
       "sideSlots": 1,
-      "photo": "A double beef burger layered with dill pickle chips and a creamy chopped-pickle mustard sauce on a toasted bun, plated with french fries."
+      "photo": "A thick sirloin burger with melted cheese, dill pickles and a creamy chopped-pickle mustard sauce on a toasted bun, plated with french fries."
     },
     {
       "id": "orange-chicken",
@@ -269,10 +266,10 @@
     {
       "id": "tikka-masala",
       "title": "Chicken tikka masala",
-      "subtitle": "Browned chicken thighs simmered in a creamy spiced tomato sauce with wilted spinach.",
+      "subtitle": "Browned chicken thighs simmered in a creamy, mild tikka masala sauce.",
       "category": "Asian-inspired",
       "protein": "chicken",
-      "minutes": 35,
+      "minutes": 30,
       "equipment": [
         "stovetop"
       ],
@@ -282,30 +279,22 @@
       "rotation": "core",
       "items": {
         "chickenThighs": 2.25,
-        "tikka": 15,
-        "tomatoes": 1,
-        "garlic": 3,
-        "ginger": 0.5,
-        "cumin": 1,
-        "paprika": 1,
-        "spinach": 5,
-        "yogurt": 8,
+        "tikka": 25,
         "oil": 1,
         "salt": 0.5
       },
       "steps": [
         "Cut the chicken into 1½-inch pieces, pat dry and season with the salt.",
-        "Heat the oil in a large, deep skillet over medium-high. Brown the chicken in two batches, 2–3 minutes per side (it finishes cooking in the sauce), and move it to a plate.",
-        "Lower the heat to medium. Add the minced garlic, grated ginger, cumin and smoked paprika to the pan and stir 30 seconds until fragrant. Add the diced tomatoes with their juice and simmer 5 minutes, scraping up the browned bits.",
-        "Stir in the jar of tikka masala sauce and return the chicken. Cover and simmer gently, stirring now and then, until the thickest pieces read 165°F, about 10 minutes.",
-        "Stir in the spinach a handful at a time until wilted. Take the pan off the heat, then stir in the yogurt (adding it off the heat keeps the sauce silky)."
+        "Heat the oil in a large, deep skillet over medium-high. Brown the chicken in two batches, 2–3 minutes per side (it finishes cooking in the sauce), then return all of it to the pan.",
+        "Pour in both jars of Maya Kaimal tikka masala — it’s fully seasoned, so nothing else goes in. Swirl ¼ cup water in the jars and add it.",
+        "Cover and simmer gently, stirring now and then, until the thickest pieces read 165°F, about 10 minutes."
       ],
       "sides": [
         "warm-naan",
         "buttered-peas"
       ],
       "sideSlots": 2,
-      "photo": "Chunks of chicken in a rich orange-red creamy tikka masala sauce with wilted spinach in a shallow bowl, a swirl of yogurt on top and torn naan alongside."
+      "photo": "Chunks of chicken in a rich orange, creamy tikka masala sauce in a shallow bowl with warm naan alongside."
     },
     {
       "id": "chicken-lo-mein",
@@ -827,10 +816,10 @@
     {
       "id": "classic-spaghetti",
       "title": "Classic spaghetti with meat sauce",
-      "subtitle": "Spaghetti under a hearty beef-and-Italian-sausage tomato sauce with Parmesan.",
+      "subtitle": "Spaghetti under a hearty beef-and-marinara meat sauce with Parmesan.",
       "category": "Pasta",
-      "protein": "mixed",
-      "minutes": 45,
+      "protein": "beef",
+      "minutes": 35,
       "equipment": [
         "stovetop"
       ],
@@ -839,21 +828,16 @@
       ],
       "rotation": "core",
       "items": {
-        "beef": 1,
-        "italianSausage": 1.25,
+        "beef": 2.25,
         "spaghetti": 20,
-        "marinara": 24,
-        "tomatoes": 1,
-        "onions": 0.5,
-        "garlic": 3,
-        "oregano": 1,
+        "marinara": 44,
         "parm": 2,
         "salt": 3
       },
       "steps": [
-        "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt.",
-        "Dice the onion. In a large, deep skillet over medium-high, brown the beef and the sausage (squeezed out of its casings) with the onion, breaking it up, until it reads 160°F, 10–12 minutes. Spoon off the excess fat and stir in the minced garlic and oregano.",
-        "Pour in the marinara and the diced tomatoes with their juice and simmer gently, stirring now and then, 10 minutes.",
+        "Bring a large pot of water (about 6 quarts) to a boil and add the salt.",
+        "Brown the beef in a large, deep skillet over medium-high, breaking it up, until it reads 160°F, 8–10 minutes. Spoon off any fat.",
+        "Pour in both jars of Rao’s marinara — it’s fully seasoned, so nothing else goes in — and simmer gently, stirring now and then, 10 minutes.",
         "Cook the spaghetti until al dente, 9–11 minutes. Save 1 cup of the pasta water and drain.",
         "Toss the spaghetti with about a third of the sauce (loosen with pasta water if needed), divide among plates, spoon the rest over the top and finish with Parmesan."
       ],
@@ -919,11 +903,9 @@
         "chicken": 2.25,
         "penne": 20,
         "spinach": 5,
-        "marinara": 24,
-        "tomatoes": 1,
+        "marinara": 22,
         "yogurt": 6,
         "parm": 2,
-        "garlic": 2,
         "oil": 1,
         "salt": 4
       },
@@ -931,7 +913,7 @@
         "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt.",
         "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and season with the remaining 1 teaspoon salt. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
         "Cook the penne until al dente, 10–12 minutes. Save 1 cup of the pasta water and drain.",
-        "Meanwhile simmer the marinara, the diced tomatoes with their juice and the minced garlic in a large, deep skillet for 5 minutes. Stir in the spinach a handful at a time until wilted.",
+        "Meanwhile warm the jar of Rao’s marinara in a large, deep skillet — it’s fully seasoned, so it needs nothing added. Stir in the spinach a handful at a time until wilted.",
         "Take the sauce off the heat and stir in the yogurt until creamy. Toss with the penne, loosening with pasta water, and top with the chicken and Parmesan."
       ],
       "sides": [
@@ -944,7 +926,7 @@
     {
       "id": "chickpea-pepper-pasta",
       "title": "Charred pepper & sausage penne",
-      "subtitle": "Italian sausage and blistered bell peppers in a garlicky oregano tomato sauce.",
+      "subtitle": "Italian sausage and blistered bell peppers in a rich marinara with Parmesan.",
       "category": "Pasta",
       "protein": "sausage",
       "minutes": 40,
@@ -958,22 +940,20 @@
         "penne": 20,
         "peppers": 2,
         "onions": 0.5,
-        "marinara": 24,
-        "garlic": 4,
+        "marinara": 22,
         "oil": 1,
-        "oregano": 1,
         "parm": 2,
         "salt": 3
       },
       "steps": [
         "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt. Cook the penne until al dente, 10–12 minutes (check the box). Scoop out 1 cup of the pasta water, then drain.",
         "Meanwhile slice the peppers and onion into strips. Heat the oil in a large, deep skillet over medium-high and cook them without stirring too often until blistered and charred in spots, 6–8 minutes. Move to a plate.",
-        "In the same skillet brown the sausage (squeezed out of its casings), breaking it up, until it reads 160°F, 8–10 minutes. Spoon off the excess fat and stir in the minced garlic and oregano.",
-        "Add the marinara and peppers, simmer 5 minutes, then fold in the penne with a splash of pasta water. Finish with the Parmesan."
+        "In the same skillet brown the sausage (squeezed out of its casings), breaking it up, until it reads 160°F, 8–10 minutes. Spoon off the excess fat.",
+        "Add the jar of Rao’s marinara (fully seasoned — no garlic or herbs needed) and the peppers, simmer 5 minutes, then fold in the penne with a splash of pasta water. Finish with the Parmesan."
       ],
       "sides": [
         "romaine-salad",
-        "garlic-toast"
+        "canned-green-beans"
       ],
       "sideSlots": 2,
       "photo": "Penne in a chunky tomato sauce with browned crumbled sausage and charred red and green bell pepper strips, topped with Parmesan."
@@ -994,7 +974,7 @@
         "beef": 2.25,
         "penne": 20,
         "cheese": 6,
-        "marinara": 16,
+        "marinara": 22,
         "milk": 1.5,
         "mustard": 1,
         "ketchup": 1,
@@ -1054,7 +1034,7 @@
     {
       "id": "chicken-parm-penne",
       "title": "Chicken Parmesan penne",
-      "subtitle": "Oregano-grilled chicken over penne, marinara and spinach under melted mozzarella and Parmesan.",
+      "subtitle": "Grilled chicken over penne, marinara and spinach under melted mozzarella and Parmesan.",
       "category": "Pasta",
       "protein": "chicken",
       "minutes": 40,
@@ -1068,18 +1048,18 @@
         "chicken": 2.25,
         "penne": 20,
         "spinach": 5,
-        "marinara": 24,
+        "marinara": 22,
         "mozzarella": 6,
         "parm": 2,
-        "oregano": 1,
         "oil": 1,
-        "salt": 4
+        "salt": 4,
+        "pepper": 0.5
       },
       "steps": [
         "Bring a large pot of water (about 6 quarts) to a boil and add 1 tablespoon of the salt.",
-        "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and season with the oregano and remaining 1 teaspoon salt. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
+        "Pound the chicken breasts to an even ¾-inch thickness. Rub with the oil and season with the remaining 1 teaspoon salt and the pepper. Grill on the preheated electric grill over medium-high, turning once, until the thickest part reads 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
         "Cook the penne until al dente, 10–12 minutes, and drain.",
-        "Warm the marinara in a large, deep skillet, stir in the spinach until wilted, then fold in the penne.",
+        "Warm the jar of Rao’s marinara in a large, deep skillet (it’s fully seasoned, so nothing else goes in), stir in the spinach until wilted, then fold in the penne.",
         "Lay the sliced chicken over the top, scatter with the mozzarella and Parmesan, cover and cook over low heat until the cheese melts, 3–4 minutes."
       ],
       "sides": [
@@ -1355,10 +1335,10 @@
     {
       "id": "beef-tacos",
       "title": "Seasoned beef tacos",
-      "subtitle": "Taco-seasoned beef and black beans in warm corn tortillas with lettuce, cheddar, salsa and lime.",
+      "subtitle": "Taco-seasoned beef in warm street-taco corn tortillas with lettuce, cheddar and salsa.",
       "category": "Tex-Mex",
       "protein": "beef",
-      "minutes": 30,
+      "minutes": 25,
       "equipment": [
         "stovetop"
       ],
@@ -1367,36 +1347,33 @@
       ],
       "rotation": "core",
       "items": {
-        "beef": 2,
-        "cornwrap": 15,
-        "beans": 1,
-        "taco": 2.5,
-        "onions": 0.5,
+        "beef": 2.25,
+        "streetTacoCorn": 15,
+        "taco": 6,
         "salsa": 8,
         "lettuce": 1,
-        "cheese": 5,
-        "limes": 1
+        "cheese": 5
       },
       "steps": [
-        "Dice the onion. Brown the beef and onion in a large skillet over medium-high, breaking the meat up, until it reads 160°F, 8–10 minutes. Spoon off the excess fat.",
-        "Stir in the taco seasoning, the drained and rinsed black beans and ½ cup water. Simmer until saucy, 3–4 minutes.",
+        "Brown the beef in a large skillet over medium-high, breaking it up, until it reads 160°F, 8–10 minutes. Spoon off any fat.",
+        "Stir in the two packets of La Preferida taco seasoning — they carry all the spices — with about 1 cup water. Simmer until saucy, 3–5 minutes.",
         "Warm the tortillas one or two at a time in a dry skillet over medium-high, 20–30 seconds per side, and stack them in a clean towel to stay soft.",
-        "Shred the lettuce and cheese and cut the lime into wedges. Fill three tortillas per person and pass the lettuce, cheese, salsa and lime."
+        "Shred the lettuce and cheese. Fill three tortillas per person and pass the lettuce, cheese and salsa."
       ],
       "sides": [
-        "canned-corn",
-        "lime-slaw"
+        "black-beans",
+        "canned-corn"
       ],
       "sideSlots": 2,
-      "photo": "Three soft corn tortilla tacos filled with seasoned ground beef and black beans, topped with shredded lettuce, cheddar and salsa, with lime wedges on a plate."
+      "photo": "Three small street-taco corn tortillas filled with seasoned ground beef and topped with shredded lettuce, cheddar and salsa, on a plate."
     },
     {
       "id": "chicken-fajitas",
       "title": "Sizzling chicken fajitas",
-      "subtitle": "Taco-spiced chicken thighs with charred peppers and onions, lime and warm flour tortillas.",
+      "subtitle": "Pre-seasoned fajita chicken seared with charred peppers and onions, tucked into warm street-taco tortillas.",
       "category": "Tex-Mex",
       "protein": "chicken",
-      "minutes": 35,
+      "minutes": 30,
       "equipment": [
         "blackstone"
       ],
@@ -1405,32 +1382,30 @@
       ],
       "rotation": "core",
       "items": {
-        "chickenThighs": 2.25,
+        "fajitaChicken": 2.25,
         "peppers": 3,
         "onions": 1,
-        "tortillas": 15,
-        "taco": 2.5,
-        "limes": 2,
-        "yogurt": 6,
-        "oil": 2
+        "streetTacoFlour": 15,
+        "oil": 1,
+        "yogurt": 4
       },
       "steps": [
-        "Slice the chicken into thin strips and toss with 1 tablespoon of the oil, the taco seasoning and the juice of 1 lime. Slice the peppers and onions into strips.",
-        "Heat the Blackstone over medium-high. Cook the peppers and onions with the remaining oil on one zone, tossing, until tender and charred at the edges, 8–10 minutes.",
-        "Sear the chicken on another zone in a single layer, turning, until the thickest strips read 165°F, 6–8 minutes. Toss with the vegetables and squeeze over the second lime.",
-        "Warm the tortillas on a clean part of the griddle, about 15 seconds per side. Serve three per person with the fajita filling and yogurt."
+        "Slice the peppers and onions into strips. Slice the chicken into strips if it isn’t already — Buena Mesa fajita chicken comes seasoned, so it needs nothing else.",
+        "Heat the Blackstone over medium-high. Cook the peppers and onions with the oil on one zone, tossing, until tender and charred at the edges, 8–10 minutes.",
+        "Sear the chicken on another zone in a single layer, turning, until the thickest strips read 165°F, 6–8 minutes, then toss with the vegetables.",
+        "Warm the tortillas on a clean part of the griddle, about 15 seconds per side. Serve three per person with the fajita filling and a spoonful of yogurt."
       ],
       "sides": [
         "black-beans",
         "canned-corn"
       ],
       "sideSlots": 2,
-      "photo": "Sizzling strips of seasoned chicken with charred red, green and yellow pepper strips and onions beside warm flour tortillas, lime wedges and a dollop of white cream."
+      "photo": "Sizzling strips of seasoned chicken with charred red, green and yellow pepper strips and onions beside small warm flour tortillas and a dollop of white cream."
     },
     {
       "id": "bean-cheddar-quesadillas",
       "title": "Chicken & black bean quesadillas",
-      "subtitle": "Crispy griddled tortillas stuffed with taco-spiced chicken, black beans and melted cheddar.",
+      "subtitle": "Crispy griddled tortillas stuffed with fajita-sauced chicken, black beans and melted cheddar.",
       "category": "Tex-Mex",
       "protein": "chicken",
       "minutes": 35,
@@ -1445,13 +1420,13 @@
         "tortillas": 10,
         "cheese": 8,
         "salsa": 8,
-        "taco": 2,
+        "fajitaSauce": 4,
         "oil": 2,
         "yogurt": 4
       },
       "steps": [
-        "Dice the chicken thighs small and toss with the taco seasoning and 1 tablespoon of the oil. Heat the Blackstone over medium-high and cook the chicken, turning, until the thickest pieces read 165°F, 6–8 minutes.",
-        "Mash the drained beans with 4 tablespoons of the salsa and fold into the chicken.",
+        "Dice the chicken thighs small. Heat the Blackstone over medium-high with 1 tablespoon of the oil and cook the chicken, turning, until the thickest pieces read 165°F, 6–8 minutes. Toss it with the Cholula fajita sauce — it brings all the seasoning.",
+        "Mash the drained beans with 4 tablespoons of the salsa and fold into the sauced chicken.",
         "Lower the griddle to medium and brush with the remaining oil. Lay down the tortillas, spread the filling and shredded cheddar over half of each and fold shut.",
         "Toast until golden, 2–3 minutes per side, pressing gently, until the cheese melts. Cut into wedges and serve with the remaining salsa and the yogurt."
       ],
@@ -1482,7 +1457,7 @@
         "beans": 1,
         "corn": 0.75,
         "salsa": 8,
-        "taco": 2,
+        "taco": 6,
         "lettuce": 1,
         "cheese": 4,
         "limes": 1,
@@ -1504,7 +1479,7 @@
     {
       "id": "sweet-potato-tacos",
       "title": "Turkey & sweet potato tacos",
-      "subtitle": "Taco-spiced ground turkey and crispy air-fried sweet potato cubes in warm corn tortillas.",
+      "subtitle": "Taco-seasoned ground turkey and crispy air-fried sweet potato cubes in warm street-taco corn tortillas.",
       "category": "Tex-Mex",
       "protein": "turkey",
       "minutes": 45,
@@ -1520,18 +1495,17 @@
       "items": {
         "groundTurkey": 2.25,
         "sweet": 1.5,
-        "cornwrap": 15,
-        "taco": 3,
+        "streetTacoCorn": 15,
+        "taco": 6,
         "oil": 2,
         "salsa": 8,
-        "limes": 1,
         "yogurt": 4
       },
       "steps": [
         "Dice the sweet potatoes into ½-inch cubes and toss with 1 tablespoon of the oil and 1 tablespoon of the taco seasoning. Air-fry at 400°F in batches, shaking halfway, until tender and golden, 15–18 minutes per batch.",
-        "Heat the remaining oil in a large skillet over medium-high. Brown the turkey, breaking it up, until it reads 165°F, 8–10 minutes. Stir in the remaining taco seasoning and ½ cup water and simmer until saucy.",
+        "Heat the remaining oil in a large skillet over medium-high. Brown the turkey, breaking it up, until it reads 165°F, 8–10 minutes. Stir in the rest of the taco seasoning (the packets carry all the spices) and about 1 cup water and simmer until saucy.",
         "Warm the tortillas one or two at a time in a dry skillet over medium-high, 20–30 seconds per side, and stack them in a clean towel to stay soft.",
-        "Fill three tortillas per person with turkey and sweet potatoes and top with salsa, yogurt and a squeeze of lime."
+        "Fill three tortillas per person with turkey and sweet potatoes and top with salsa and yogurt."
       ],
       "sides": [
         "black-beans",
@@ -1602,7 +1576,7 @@
         "onions": 0.5,
         "cheese": 6,
         "salsa": 8,
-        "taco": 2.5,
+        "taco": 6,
         "oil": 2,
         "salt": 1
       },
@@ -1697,10 +1671,10 @@
     {
       "id": "chili-jacket-potatoes",
       "title": "Chili-stuffed potatoes",
-      "subtitle": "Fluffy split potatoes piled with turkey and black bean chili, melted cheddar and a cool dollop of yogurt.",
+      "subtitle": "Fluffy split potatoes piled with turkey chili, melted cheddar and a cool dollop of yogurt.",
       "category": "Comfort",
       "protein": "turkey",
-      "minutes": 45,
+      "minutes": 40,
       "equipment": [
         "microwave",
         "stovetop"
@@ -1712,18 +1686,15 @@
       "items": {
         "groundTurkey": 2,
         "potatoes": 3,
-        "beans": 1,
-        "tomatoes": 1,
-        "taco": 2.5,
-        "cumin": 1,
-        "onions": 0.5,
+        "chiliBeans": 2,
         "cheese": 4,
-        "yogurt": 4
+        "yogurt": 4,
+        "salt": 0.5
       },
       "steps": [
         "Scrub the potatoes and pierce each several times. Microwave in batches, turning halfway, until a knife slides easily into the centers, 8–15 minutes per batch.",
-        "Meanwhile chop the onion and brown it with the turkey in a large, deep skillet over medium-high, breaking it up, until the turkey reads 165°F, 8–10 minutes.",
-        "Stir in the taco seasoning, cumin, drained beans and the tomatoes with their juice. Simmer, stirring now and then, until thick, 10 minutes.",
+        "Meanwhile brown the turkey with the salt in a large, deep skillet over medium-high, breaking it up, until it reads 165°F, 8–10 minutes.",
+        "Stir in the Bush’s chili beans with their sauce — it’s already chili-seasoned, so no spices are needed — and simmer, stirring now and then, until thick, 8–10 minutes.",
         "Split the potatoes, fluff the insides, spoon on the chili and finish with shredded cheddar and yogurt."
       ],
       "sides": [
@@ -1753,18 +1724,18 @@
         "eggs": 10,
         "potatoes": 1.5,
         "peppers": 1,
-        "tortillas": 15,
         "cheese": 5,
         "salsa": 8,
         "oil": 2,
-        "salt": 1
+        "salt": 1,
+        "streetTacoFlour": 15
       },
       "steps": [
         "Dice the potatoes into ½-inch cubes and microwave in a covered, vented dish with 2 tablespoons water, stirring halfway, until just tender, 6–8 minutes. Drain.",
         "Heat the Blackstone over medium-high. Brown the sausage (squeezed out of its casings), breaking it up, until it reads 160°F, 8–10 minutes, and move it to a cooler zone.",
         "Spread the oil on the hot zone and fry the potatoes and diced pepper with the salt until golden, 6–8 minutes.",
         "Lower the heat to medium, pour the beaten eggs onto a clean zone and gently scramble until just set. Fold in the sausage, potatoes and shredded cheddar.",
-        "Warm the tortillas on the griddle and fill three per person, with salsa on top."
+        "Warm the street-taco tortillas on the griddle and fill three per person, with salsa on top."
       ],
       "sides": [
         "canned-corn",
@@ -1776,7 +1747,7 @@
     {
       "id": "tomato-soup-melts",
       "title": "Chicken cheddar melts",
-      "subtitle": "Golden skillet-toasted sandwiches packed with sliced grilled chicken and melted cheddar.",
+      "subtitle": "Golden skillet-toasted sandwiches packed with sliced grilled chicken and melted cheese.",
       "category": "Comfort",
       "protein": "chicken",
       "minutes": 40,
@@ -1791,14 +1762,14 @@
       "items": {
         "chickenThighs": 2.25,
         "bread": 10,
-        "cheese": 8,
         "butter": 4,
         "garlicPowder": 0.5,
-        "salt": 0.5
+        "salt": 0.5,
+        "cheeseSlices": 10
       },
       "steps": [
         "Season the chicken thighs with the garlic powder and salt. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice thin.",
-        "Butter one side of each bread slice. Build five sandwiches with the buttered sides out, layering cheddar, chicken and more cheddar.",
+        "Butter one side of each bread slice. Build five sandwiches with the buttered sides out, layering a cheese slice, chicken and another cheese slice.",
         "Toast in a large skillet over medium-low, two at a time, until deep golden and the cheese melts, 3–4 minutes per side. Cut in half."
       ],
       "sides": [
@@ -1806,7 +1777,7 @@
         "carrot-sticks"
       ],
       "sideSlots": 2,
-      "photo": "Golden buttery grilled cheese sandwiches stuffed with sliced chicken and melted cheddar, cut diagonally and stacked to show the gooey center."
+      "photo": "Golden buttery grilled cheese sandwiches stuffed with sliced chicken and melted cheese, cut diagonally and stacked to show the gooey center."
     },
     {
       "id": "griddle-sloppy-joes",
@@ -1920,6 +1891,173 @@
       ],
       "sideSlots": 2,
       "photo": "Split fluffy golden potatoes loaded with steamed broccoli florets, diced grilled chicken and gooey melted cheddar."
+    },
+    {
+      "id": "jd-pulled-pork-sandwiches",
+      "title": "BBQ pulled pork sandwiches",
+      "subtitle": "Smoky barbecue pulled pork warmed through and piled on toasted buns with dill pickles.",
+      "category": "Comfort",
+      "protein": "pork",
+      "minutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "family usual",
+        "sandwiches"
+      ],
+      "rotation": "core",
+      "items": {
+        "pulledPork": 3,
+        "buns": 8,
+        "pickles": 4
+      },
+      "steps": [
+        "Empty the pulled pork into a large saucepan. It comes sauced and seasoned (Jack Daniel’s), so nothing else goes in.",
+        "Cover and warm over medium-low, stirring every few minutes, until steaming and it reads 165°F, 10–12 minutes. Add a splash of water if it gets thick.",
+        "Toast the cut sides of the buns in a dry skillet.",
+        "Pile the pork on the buns and top with pickles. Eight sandwiches: one each, plus three for the hungriest."
+      ],
+      "sides": [
+        "lime-slaw",
+        "jewel-fries"
+      ],
+      "sideSlots": 2,
+      "photo": "A toasted bun piled high with saucy shredded barbecue pulled pork and dill pickles, with french fries and creamy coleslaw on the plate."
+    },
+    {
+      "id": "sausage-cajun-potatoes",
+      "title": "Smoked sausage & Cajun potato skillet",
+      "subtitle": "Browned smoked sausage coins with peppers, onion and Cajun-seasoned potatoes in one big skillet.",
+      "category": "Comfort",
+      "protein": "sausage",
+      "minutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "family usual"
+      ],
+      "rotation": "core",
+      "items": {
+        "smokedSausage": 1.75,
+        "cajunPotatoes": 3,
+        "peppers": 1,
+        "onions": 0.5,
+        "oil": 1
+      },
+      "steps": [
+        "Slice two ropes of smoked sausage into ½-inch coins and the pepper and onion into strips. Drain the canned potatoes well.",
+        "Heat the oil in your largest skillet over medium-high. Brown the sausage, turning, 5–6 minutes, then push it to one side.",
+        "Add the pepper and onion and cook until softened and browned at the edges, about 5 minutes.",
+        "Add the Del Monte Cajun-style potatoes — they’re already seasoned, so no spices are needed — and cook, stirring now and then, until golden in spots and everything reads 165°F, 6–8 minutes."
+      ],
+      "sides": [
+        "canned-green-beans",
+        "applesauce-cups"
+      ],
+      "sideSlots": 2,
+      "photo": "A big skillet of browned smoked sausage coins with golden diced potatoes and strips of green bell pepper and onion, flecked with Cajun spice."
+    },
+    {
+      "id": "chicken-alfredo-night",
+      "title": "Chicken Alfredo night",
+      "subtitle": "Creamy heat-and-serve chicken Alfredo with garlic toast and a crisp salad, on the table in 20 minutes.",
+      "category": "Pasta",
+      "protein": "chicken",
+      "minutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "family usual"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenAlfredoDeli": 3.4,
+        "milk": 0.25
+      },
+      "steps": [
+        "Spoon the chicken Alfredo from its tray into a large, deep skillet and add the milk. It comes fully seasoned from the Member’s Mark deli, so nothing else goes in.",
+        "Cover and warm over medium-low, stirring gently every few minutes, until hot all the way through and it reads 165°F, 10–12 minutes. Add another splash of milk if the sauce tightens.",
+        "Divide among five plates."
+      ],
+      "sides": [
+        "garlic-toast",
+        "romaine-salad"
+      ],
+      "sideSlots": 2,
+      "photo": "A plate of creamy fettuccine chicken Alfredo with tender chicken pieces in a glossy white sauce, topped with cracked black pepper."
+    },
+    {
+      "id": "bbq-chicken-naan-pizzas",
+      "title": "BBQ chicken naan pizzas",
+      "subtitle": "Warm naan topped with barbecue pulled chicken, red onion and melted mozzarella, crisped on the griddle.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 25,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "family usual",
+        "pizza"
+      ],
+      "rotation": "core",
+      "items": {
+        "pulledChicken": 2,
+        "naan": 5,
+        "bbq": 6,
+        "mozzarella": 8,
+        "onions": 0.25
+      },
+      "steps": [
+        "Toss the pulled chicken with 4 tablespoons of the barbecue sauce; it comes seasoned, so it needs nothing else. Slice the onion paper-thin.",
+        "Heat the Blackstone over medium-low. Spread the remaining barbecue sauce thinly over the naan, then top with the chicken, onion and mozzarella.",
+        "Set the naan on the griddle, cover with a dome or a sheet of foil and cook until the bottoms are crisp, the cheese melts and the chicken reads 165°F, 4–6 minutes. Cut into wedges."
+      ],
+      "sides": [
+        "romaine-salad",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden naan flatbread pizzas topped with barbecue pulled chicken, thin red onion and bubbly melted mozzarella, cut into wedges on a board."
+    },
+    {
+      "id": "teriyaki-chicken-noodles",
+      "title": "Teriyaki chicken & noodles",
+      "subtitle": "Seared chicken and stir-fry vegetables tossed with sweet-savory teriyaki noodles.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "family usual",
+        "noodle night"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "knorrTeriyaki": 3,
+        "vegetables": 1,
+        "butter": 3,
+        "oil": 1,
+        "salt": 0.5
+      },
+      "steps": [
+        "Cut the chicken into 1-inch pieces and season with the salt.",
+        "Heat the oil in a large, wide pot over medium-high and cook the chicken in two batches, stirring, until browned and the thickest pieces read 165°F, 6–8 minutes. Move it to a plate.",
+        "In the same pot bring the water the noodle packages call for (about 2 cups per pouch) and the butter to a boil. Stir in all three Knorr teriyaki pouches and the frozen vegetables — the Knorr seasoning makes the whole sauce, so nothing else goes in.",
+        "Simmer, stirring now and then, until the noodles are tender and the sauce thickens, about 8 minutes. Fold the chicken back in and serve."
+      ],
+      "sides": [
+        "steamed-broccoli",
+        "pineapple-chunks"
+      ],
+      "sideSlots": 2,
+      "photo": "A bowl of glossy teriyaki noodles tossed with seared chicken pieces, broccoli, carrots and peas."
     },
     {
       "id": "teriyaki-chicken-bowls",
@@ -2243,9 +2381,9 @@
         "onions": 1,
         "salt": 1.5,
         "oil": 2,
-        "cornwrap": 15,
         "salsa": 8,
-        "cilantro": 1
+        "cilantro": 1,
+        "streetTacoCorn": 15
       },
       "steps": [
         "Cut the pork into 1-inch cubes and put them in a large, deep skillet with the juice of the orange and 2 limes, the cumin, oregano, smashed garlic, salt, half the onion in chunks and 1 cup water.",
@@ -2474,7 +2612,6 @@
       "rotation": "bench",
       "items": {
         "chickenThighs": 2.25,
-        "bacon": 0.5,
         "eggs": 5,
         "lettuce": 3,
         "tomato": 0.5,
@@ -2482,11 +2619,12 @@
         "ranch": 10,
         "oil": 1,
         "salt": 1,
-        "pepper": 0.5
+        "pepper": 0.5,
+        "cookedBacon": 10
       },
       "steps": [
         "Put the eggs in a saucepan, cover with cold water by an inch and bring to a boil. Cover, turn off the heat and let stand 11 minutes, then cool in ice water, peel and quarter.",
-        "Cook the bacon in a large skillet over medium, turning, until crisp, 8–10 minutes. Drain on paper towels and crumble.",
+        "Warm the fully cooked bacon in a dry skillet over medium until crisp, about 1 minute per side, and crumble.",
         "Rub the chicken thighs with the oil, salt and pepper and grill on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes. Rest 5 minutes and slice.",
         "Chop the romaine and divide among five big bowls. Arrange rows of chicken, bacon, egg, diced tomato and shredded cheddar on top and serve with ranch."
       ],
@@ -2582,10 +2720,10 @@
     {
       "id": "turkey-chili",
       "title": "Turkey & black bean chili",
-      "subtitle": "A big pot of hearty turkey chili with black beans, peppers and tomatoes, topped with cheddar and sour cream.",
+      "subtitle": "A big pot of hearty turkey chili with chili beans and tomatoes, topped with cheddar and sour cream.",
       "category": "Comfort",
       "protein": "turkey",
-      "minutes": 45,
+      "minutes": 40,
       "equipment": [
         "stovetop"
       ],
@@ -2595,24 +2733,19 @@
       "rotation": "bench",
       "items": {
         "groundTurkey": 2,
-        "beans": 2,
-        "tomatoes": 2,
+        "chiliBeans": 3,
+        "tomatoes": 1,
         "onions": 1,
-        "peppers": 1,
-        "garlic": 3,
         "taco": 3,
-        "cumin": 2,
-        "chickenBroth": 1,
         "cheese": 4,
         "sourCream": 8,
-        "oil": 1,
-        "salt": 0.5
+        "oil": 1
       },
       "steps": [
-        "Dice the onion and pepper. Heat the oil in a large pot over medium-high and cook them until softened, 5 minutes.",
-        "Add the turkey and brown, breaking it up, until it reads 165°F, 8–10 minutes. Stir in the minced garlic, taco seasoning, cumin and salt for 1 minute.",
-        "Add the drained beans, the tomatoes with their juice and the chicken broth. Simmer, partly covered and stirring now and then, until thick, 20 minutes.",
-        "Ladle into bowls and top with shredded cheddar and sour cream."
+        "Dice the onion. Heat the oil in a large pot over medium-high and cook the onion until softened, 5 minutes.",
+        "Add the turkey and brown, breaking it up, until it reads 165°F, 8–10 minutes.",
+        "Stir in the packet of taco seasoning, the Bush’s chili beans with their sauce and the tomatoes with their juice — between the packet and the beans the pot is fully seasoned.",
+        "Simmer, partly covered and stirring now and then, until thick, 15–20 minutes. Ladle into bowls and top with shredded cheddar and sour cream."
       ],
       "sides": [
         "garlic-toast",
@@ -2663,7 +2796,7 @@
     {
       "id": "bacon-smashburgers",
       "title": "Bacon cheeseburger smashburgers",
-      "subtitle": "Double smashed patties with crispy bacon, melted cheddar and a tangy burger sauce.",
+      "subtitle": "Double smashed patties with crispy bacon, melted cheese and a tangy burger sauce.",
       "category": "Burgers",
       "protein": "beef",
       "minutes": 35,
@@ -2676,9 +2809,9 @@
       "rotation": "bench",
       "items": {
         "beef": 2.5,
-        "bacon": 0.5,
+        "cookedBacon": 10,
         "buns": 5,
-        "cheese": 5,
+        "cheeseSlices": 5,
         "mayo": 3,
         "ketchup": 2,
         "pickles": 4,
@@ -2686,9 +2819,9 @@
         "pepper": 0.5
       },
       "steps": [
-        "Heat the Blackstone over medium. Cook the bacon, turning, until crisp, 6–8 minutes, and drain on paper towels. Scrape the griddle and turn it up to medium-high.",
+        "Heat the Blackstone over medium-high. Crisp the fully cooked bacon on the griddle, about 30 seconds per side, and set it aside.",
         "Stir the mayo and ketchup with 1 tablespoon finely chopped pickles for burger sauce. Divide the beef into 10 loose balls.",
-        "Smash the balls thin on the hot griddle and season with the salt and pepper. Cook until the edges are crispy, 2–3 minutes, flip and lay cheddar on five patties.",
+        "Smash the balls thin on the hot griddle and season with the salt and pepper. Cook until the edges are crispy, 2–3 minutes, flip and lay a cheese slice on five patties.",
         "Cook 1–2 minutes more, until a thermometer slid in from the side reads 160°F. Toast the cut buns on a clean part of the griddle.",
         "Spread the buns with burger sauce and stack two patties, bacon and pickles on each."
       ],
@@ -2741,18 +2874,18 @@
   "sides": [
     {
       "id": "jewel-fries",
-      "title": "Air-fryer French fries",
+      "title": "Air-fryer fries",
       "kind": "starch",
       "minutes": 25,
       "equipment": [
         "air fryer"
       ],
       "items": {
-        "fries": 32,
+        "fries": 26,
         "salt": 0.5
       },
       "steps": [
-        "Use one 32 oz bag of frozen fries, picking a bag that has air-fryer directions on the package.",
+        "Use one 26 oz bag of frozen fries (fast-food style, shoestring or curly all work), picking a bag with air-fryer directions on the package.",
         "Air-fry from frozen at the package temperature (usually 400°F) in single layers, shaking the basket halfway, until crisp and golden, about 12–18 minutes per batch.",
         "Toss with the salt while hot. Tent finished batches loosely with foil while the rest cook, then serve right away."
       ],
@@ -3152,14 +3285,13 @@
         "stovetop"
       ],
       "items": {
-        "marinara": 24,
+        "marinara": 22,
         "chickenBroth": 2,
         "milk": 1,
-        "butter": 1,
-        "oregano": 0.5
+        "butter": 1
       },
       "steps": [
-        "Combine the marinara, chicken broth and oregano in a saucepan and bring to a simmer over medium heat, stirring.",
+        "Combine the jar of Rao’s marinara (already fully seasoned — no herbs needed) and the chicken stock in a saucepan and bring to a simmer over medium heat, stirring.",
         "Simmer gently 10 minutes so the flavors blend.",
         "Lower the heat, stir in the milk and butter and heat until steaming (don’t let it boil). Ladle into five mugs or bowls."
       ],

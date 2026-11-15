@@ -7,6 +7,9 @@ import { monthBudget } from '../shopping.js';
 import { addReceiptOps, removeReceiptOps, settingOps } from '../actions.js';
 import { segmented } from '../ui.js';
 import { MEAT_OPTS, actions as familyActions } from './family.js';
+import { receiptList, deleteReceiptOps } from '../receipts.js';
+import { undoFor } from '../actions.js';
+import { receiptDetails } from './receipts.js';
 
 export const title = () => 'Budget';
 const NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco', other: 'Other' };
@@ -69,7 +72,17 @@ export function render(app) {
 
     <section class="receipts" aria-labelledby="r-h">
       <h2 id="r-h" class="section-title">Receipts this month</h2>
+      <div class="rcpt-cta">
+        <button type="button" class="btn btn-primary" data-action="rcpt:scan">${ic('camera', { size: 20 })}Scan a receipt</button>
+        <p class="muted small">A photo of the paper receipt or screenshots of the store app’s receipt. It counts here, and the list learns what you paid.</p>
+      </div>
+      ${(() => {
+        const scanned = receiptList(app.state).filter((r) => r.date.slice(0, 7) === b.month);
+        return scanned.length ? html`<div class="rcpt-list">${scanned.map((r) => receiptDetails(app, r))}</div>` : '';
+      })()}
+      ${when(receiptList(app.state).length, () => html`<a class="text-link" href="#/receipts">All saved receipts (${receiptList(app.state).length})</a>`)}
       <form class="form form-inline-card" data-submit="bud:receipt">
+        <p class="field-label">Or log a total by hand</p>
         <div class="field-row">
           <label class="field"><span class="field-label">Date</span><input class="input" type="date" name="date" value="${today}" max="${today}" required></label>
           <label class="field field-money"><span class="field-label">Total</span><span class="prefix" aria-hidden="true">$</span><input class="input" type="number" name="amount" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" required></label>
@@ -80,12 +93,12 @@ export function render(app) {
         <label class="field"><span class="field-label">Note <small>(optional)</small></span><input class="input" name="note" maxlength="60" placeholder="Big Sam’s run"></label>
         <button type="submit" class="btn btn-primary btn-block">${ic('receipt', { size: 20 })}Log receipt</button>
       </form>
-      ${b.receipts.length ? html`<ul class="receipt-list">${b.receipts.map((r) => html`<li class="receipt-row">
+      ${b.receipts.filter((r) => !r.receiptId || !app.state.receiptLog?.[r.receiptId]).length ? html`<ul class="receipt-list">${b.receipts.filter((r) => !r.receiptId || !app.state.receiptLog?.[r.receiptId]).map((r) => html`<li class="receipt-row">
           <span><b>${NAMES[r.store] || r.store}</b><small>${shortDate(r.date)}${r.note ? `, ${r.note}` : ''}${r.by ? `, by ${r.by}` : ''}</small></span>
           <span class="receipt-amt">${money(Number(r.amount))}</span>
           ${when(r.id, () => html`<button type="button" class="icon-btn" data-action="bud:remove" data-id="${r.id}" aria-label="Remove receipt">${ic('trash', { size: 20 })}</button>`)}
         </li>`)}</ul>`
-        : html`<p class="muted small">No receipts logged for ${month} yet.</p>`}
+        : b.receipts.length ? '' : html`<p class="muted small">No receipts logged for ${month} yet.</p>`}
     </section>
   </div>`;
 }
