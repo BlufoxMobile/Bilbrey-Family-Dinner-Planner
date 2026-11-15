@@ -1255,6 +1255,27 @@
       "unit": "oz",
       "basis": "1 oz kettle-cooked potato chips",
       "source": "Package label (typical): Miss Vickie's, 1 oz ≈ 150 kcal & 2 g protein"
+    },
+    "bonduelleQuesoBowl": {
+      "kcal": 300,
+      "protein": 14,
+      "unit": "bowls",
+      "basis": "one bowl with its dressing",
+      "source": "Estimate from similar Bonduelle Bistro Bowls (230–260 cal, 9–12 g protein) plus queso fresco; replace with the label"
+    },
+    "bonduelleSantaFeBowl": {
+      "kcal": 290,
+      "protein": 12,
+      "unit": "bowls",
+      "basis": "one bowl with its dressing",
+      "source": "Estimate from similar Bonduelle Bistro Bowls; replace with the label"
+    },
+    "bhSalsalitoTurkey": {
+      "kcal": 480,
+      "protein": 96,
+      "unit": "lb",
+      "basis": "1 lb deli-sliced turkey breast",
+      "source": "Estimate from Boar's Head turkey breast labels: 2 oz ≈ 60 kcal & 12 g protein"
     }
   }
 }

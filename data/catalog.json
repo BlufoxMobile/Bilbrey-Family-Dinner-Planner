@@ -7254,6 +7254,94 @@
      }
     }
    }
+  },
+  "bonduelleQuesoBowl": {
+   "name": "Bonduelle Bistro Bowl, Chicken Queso Fresco",
+   "unit": "bowls",
+   "aisle": "Produce",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "lunch": true,
+   "aliases": [
+    "bonduelle chicken queso fresco",
+    "bistro bowl chicken queso fresco",
+    "chicken queso fresco salad bowl"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Chicken Queso Fresco (Jewel, $4.99; $3 on sale Nov 15)"
+     },
+     "name": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Chicken Queso Fresco (Jewel, $4.99; $3 on sale Nov 15)"
+     }
+    }
+   }
+  },
+  "bonduelleSantaFeBowl": {
+   "name": "Bonduelle Bistro Bowl, Santa Fe Style",
+   "unit": "bowls",
+   "aisle": "Produce",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "lunch": true,
+   "aliases": [
+    "bonduelle santa fe",
+    "bistro bowl santa fe",
+    "santa fe salad bowl"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Santa Fe Style (Jewel, $4.99; $3 on sale Nov 15)"
+     },
+     "name": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Bonduelle Bistro Bowl Santa Fe Style (Jewel, $4.99; $3 on sale Nov 15)"
+     }
+    }
+   }
+  },
+  "bhSalsalitoTurkey": {
+   "name": "Boar's Head Bold Salsalito turkey (deli-sliced)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "lunch": true,
+   "meat": true,
+   "aliases": [
+    "boar's head salsalito turkey",
+    "bold salsalito turkey",
+    "salsalito turkey",
+    "boars head bold salsalito turkey"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 0.5,
+      "price": 6.0,
+      "label": "Boar's Head Bold Salsalito Turkey, sliced at the Jewel deli: ask for ½ lb ($11.99 a lb on the Nov 15 receipt)",
+      "confidence": "paid"
+     },
+     "name": {
+      "size": 0.5,
+      "price": 6.0,
+      "label": "Boar's Head Bold Salsalito Turkey, sliced at the Jewel deli: ask for ½ lb ($11.99 a lb on the Nov 15 receipt)",
+      "confidence": "paid"
+     }
+    }
+   }
   }
  }
 }

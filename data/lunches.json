@@ -644,6 +644,57 @@
    ],
    "prep": "Layer about 4 oz of the chicken on two slices of bread with dill pickle chips and a spoonful of hot giardiniera. Bag a handful (1½ oz) of Miss Vickie’s on the side.",
    "photo": "A deli sandwich on soft white bakery bread stacked with sliced buffalo chicken breast, dill pickle chips and spicy Chicago giardiniera, with kettle chips beside it."
+  },
+  {
+   "id": "bonduelle-chicken-queso-fresco",
+   "slot": "main",
+   "title": "Bonduelle Chicken Queso Fresco salad bowl",
+   "subtitle": "Chicken and queso fresco over greens, dressing inside. A no-prep store salad.",
+   "items": {
+    "bonduelleQuesoBowl": 1
+   },
+   "tags": [
+    "healthy",
+    "salad",
+    "no-prep"
+   ],
+   "prep": "Grab one from the fridge: the fork and dressing are inside. For a lighter lunch, use half the dressing.",
+   "photo": "A clear single-serve salad bowl with greens, grilled chicken, crumbled queso fresco and a dressing cup on top."
+  },
+  {
+   "id": "bonduelle-santa-fe",
+   "slot": "main",
+   "title": "Bonduelle Santa Fe salad bowl",
+   "subtitle": "Southwest-style salad with chicken, dressing inside. A no-prep store salad.",
+   "items": {
+    "bonduelleSantaFeBowl": 1
+   },
+   "tags": [
+    "healthy",
+    "salad",
+    "no-prep"
+   ],
+   "prep": "Grab one from the fridge: the fork and dressing are inside.",
+   "photo": "A clear single-serve salad bowl with greens, chicken, black beans, corn and tortilla strips, a dressing cup on top."
+  },
+  {
+   "id": "bh-salsalito-turkey-sandwich",
+   "slot": "main",
+   "title": "Boar's Head Salsalito turkey sandwich with pickles, hot giardiniera and chips",
+   "subtitle": "Bold Salsalito turkey on Dave's Killer Bread with dill chips and Buona hot giardiniera, chips on the side. About 550 cal and 35 g protein.",
+   "items": {
+    "bhSalsalitoTurkey": 0.25,
+    "bread": 2,
+    "pickles": 1,
+    "giardiniera": 1,
+    "kettleChips": 1.5
+   },
+   "tags": [
+    "high protein",
+    "jeff favorite"
+   ],
+   "prep": "Layer about 4 oz of the turkey on two slices of bread with dill pickle chips and a spoonful of hot giardiniera. Bag a handful (1½ oz) of chips on the side.",
+   "photo": "A deli sandwich on seeded whole-grain bread stacked with sliced spiced turkey breast, dill pickle chips and spicy Chicago giardiniera, with chips beside it."
   }
  ],
  "defaults": {
@@ -684,10 +735,10 @@
    ],
    "slots": {
     "main": [
-     "bonduelle-chicken-blt",
-     "bh-buffalo-chicken-sandwich",
-     "bonduelle-chef-turkey-ham",
-     "bh-buffalo-chicken-sandwich",
+     "bonduelle-chicken-queso-fresco",
+     "bh-salsalito-turkey-sandwich",
+     "bonduelle-santa-fe",
+     "bh-salsalito-turkey-sandwich",
      "bonduelle-bbq-chicken"
     ],
     "drink": [
