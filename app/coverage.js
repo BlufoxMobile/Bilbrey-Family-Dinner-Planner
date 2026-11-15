@@ -11,9 +11,13 @@ import { round2 } from './util.js';
 /** Within 5% counts as enough: a can's worth of rounding shouldn't call a dinner short. */
 export const ENOUGH = 0.95;
 
+/** Every kitchen has these; recipes assume them unless the family marks one running low. */
+export const BASICS = ['salt', 'pepper', 'oil'];
+
 /** id → amount on hand (Infinity for stocked staples). Items marked running low don't count. */
 export function onHand(db, state) {
   const rem = {};
+  for (const id of BASICS) if (!state?.pantry?.[id]) rem[id] = Infinity;
   for (const [id, p] of Object.entries(state?.pantry || {})) {
     if (!p || p.low) continue;
     if (kindOf(db, state, id) === 'staple' || (p.stocked && p.qty == null)) {
@@ -82,5 +86,6 @@ export function pantryCoverage(db, state, { dates }) {
     for (const [id, need] of Object.entries(items)) take(rem, id, need);
     extra.push({ id: d.id, title: d.title });
   }
-  return { rows, ready: rows.filter((r) => r.ready).length, total: rows.length, shortIds: [...short], extra, backups: backups(db, state) };
+  const assumed = BASICS.filter((id) => !state?.pantry?.[id]).map((id) => itemMeta(db, state, id).name);
+  return { rows, ready: rows.filter((r) => r.ready).length, total: rows.length, shortIds: [...short], extra, backups: backups(db, state), assumed };
 }

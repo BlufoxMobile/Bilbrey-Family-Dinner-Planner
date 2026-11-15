@@ -90,6 +90,7 @@ function coverageCard(app) {
         <ul class="cover-list">${cov.rows.map((r) => html`<li class="${r.ready ? 'is-ready' : ''}"><span class="cover-day">${r.date === today ? 'Tonight' : `${shortWeekday(r.date)} ${shortDate(r.date)}`}</span><span class="cover-what"><b>${r.title}</b><small>${r.ready ? 'Everything’s here' : `Needs ${listJoin(r.missing.map((m) => m.name.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()))}`}</small></span></li>`)}</ul>
       </details>
       ${when(short.length, () => html`<p class="small">To make the other ${short.length}, the list buys ${toBuy.length} ${toBuy.length === 1 ? 'item' : 'items'}, about ${money(list.dinnerCost)} for dinners. <a href="#/list">See the list</a></p>`)}` : html`<p class="small">Nothing planned yet. <a href="#/plan">Plan dinners</a> and this shows which ones the pantry already covers.</p>`}
+    ${when(cov.assumed?.length, () => html`<p class="muted small">Counts ${listJoin(cov.assumed.map((n) => n.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()))} as in the house. Add them to the pantry, or mark one running low, to change that.</p>`)}
     ${when(cov.extra.length, () => html`<p class="small"><b>The leftovers could also make:</b> ${listJoin(cov.extra.slice(0, 6).map((x) => x.title))}.</p>`)}
     ${when(cov.backups.length, () => html`<p class="small"><b>Quick backups on the shelf:</b> ${listJoin(cov.backups.slice(0, 8).map((b) => `${b.name.replace(/\s*\(.*?\)\s*/g, ' ').trim()} (${fmtQty(b.qty)})`))}.</p>`)}
   </section>`;

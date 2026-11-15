@@ -268,7 +268,10 @@ export function buildList(db, state, { dates, listKey = '', store: tripStore = n
     const u = (uses[id] || []).slice().sort((a, b) => a.date.localeCompare(b.date));
     const coveredUses = [];
     for (const x of u) { if (left + 1e-9 >= x.qty) { left -= x.qty; coveredUses.push(x); } else break; }
-    freezer.push({
+    // Skipped this trip to make do with what's in the freezer: it covers its dinners, stretched.
+    const stretch = skips[id]?.reason === 'stretch' && pantryQty > 0;
+    if (stretch) { coveredUses.length = 0; coveredUses.push(...u); left = 0; }
+    freezer.push({ stretch,
       id, name: meta.name, unit: meta.unit, have: round2(pantryQty), buying: round2(buying), packs: it?.packs || 0, packSize: it?.pack?.size || null,
       store: it?.store || null, label: it?.pack?.label || '', uses: u, covers: coveredUses.length, dinners: u.length,
       leftover: round2(Math.max(0, total - u.reduce((t, x) => t + x.qty, 0))),

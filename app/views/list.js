@@ -85,7 +85,7 @@ function skippedSection(app, list, listKey) {
   return html`<section class="skipped" aria-labelledby="sk-h">
     <h2 id="sk-h" class="section-title">Not buying this trip (${list.skipped.length})</h2>
     <ul class="skip-list">${list.skipped.map((i) => html`<li class="skip-row">
-      <span><b>${i.name}</b><small>${[SKIP_WHY[i.skip?.reason] || 'Skipped', i.skip?.note || `${unitText(i.shortfall, i.unit)} short`].filter(Boolean).join(': ')}${i.cost != null ? ` (saves ${money(i.cost)})` : ''}</small></span>
+      <span><b>${i.name}</b><small>${[SKIP_WHY[i.skip?.reason] || 'Skipped', i.skip?.note || `${unitText(i.shortfall, i.unit)} short`].filter(Boolean).join('. ')}${i.cost != null ? ` (saves ${money(i.cost)})` : ''}</small></span>
       <button type="button" class="btn btn-small btn-quiet" data-action="list:unskip" data-key="${i.id}" data-list="${listKey}">Put back</button>
     </li>`)}</ul>
   </section>`;
@@ -212,7 +212,7 @@ function fzRow(f, today) {
       f.buying > 0 ? `buying ${f.packs} × ${f.packSize ? `${fmtQty(f.packSize)} ${f.unit}` : ''} ${f.store ? `at ${f.store === 'sams' ? "Sam's" : 'Jewel'}` : ''}`.replace(/\s+/g, ' ').trim() : '',
     ].filter(Boolean).join(', ')}</small></span>
     <span class="fz-meter" aria-hidden="true">${f.uses.map((u, k) => html`<span class="fz-pip ${k < f.covers ? 'is-on' : ''}" title="${relativeDay(u.date, today)}"></span>`)}</span>
-    <span class="fz-what">${f.covers === f.dinners ? `Covers ${f.dinners} ${f.dinners === 1 ? 'dinner' : 'dinners'}` : `Covers ${f.covers} of ${f.dinners}`}${f.leftover > 0 ? html`<small>${fmtQty(f.leftover)} ${f.unit} left for next time</small>` : ''}</span>
+    <span class="fz-what">${f.stretch ? `Stretched over ${f.dinners} ${f.dinners === 1 ? 'dinner' : 'dinners'}` : f.covers === f.dinners ? `Covers ${f.dinners} ${f.dinners === 1 ? 'dinner' : 'dinners'}` : `Covers ${f.covers} of ${f.dinners}`}${f.leftover > 0 && !f.stretch ? html`<small>${fmtQty(f.leftover)} ${f.unit} left for next time</small>` : ''}</span>
   </li>`;
 }
 
