@@ -22,6 +22,8 @@ export function html(strings, ...vals) {
 }
 export const ic = (name, opts) => raw(icon(name, opts));
 export const when = (cond, fn) => (cond ? fn() : '');
+/** ARIA true/false: the html`` template renders bare booleans as nothing. */
+export const tf = (v) => (v ? 'true' : 'false');
 
 export function setHTML(el, safe) {
   el.innerHTML = safe instanceof Safe ? safe.s : esc(safe);
@@ -44,13 +46,13 @@ export function avatar(name, { size = 'md', cls = '' } = {}) {
  * photos agent produced one) sits on top and removes itself if it fails to load.
  */
 export function photo(db, kind, id, { category = 'Comfort', size = 'card', alt = '', eager = false, sideKind = '' } = {}) {
-  const p = db?.photos?.[kind === 'side' ? 'sides' : 'dinners']?.[id];
-  const cat = kind === 'side' ? (sideKind === 'shelf' ? 'shelf' : 'side') : category;
-  const tone = kind === 'side' ? `side-${sideKind || 'vegetable'}` : `cat-${String(category).toLowerCase().replace(/[^a-z]+/g, '-')}`;
+  const p = db?.photos?.[kind === 'side' ? 'sides' : kind === 'lunch' ? 'lunches' : 'dinners']?.[id];
+  const cat = kind === 'lunch' ? `lunch-${sideKind || 'main'}` : kind === 'side' ? (sideKind === 'shelf' ? 'shelf' : 'side') : category;
+  const tone = kind === 'lunch' ? `lunch-${sideKind || 'main'}` : kind === 'side' ? `side-${sideKind || 'vegetable'}` : `cat-${String(category).toLowerCase().replace(/[^a-z]+/g, '-')}`;
   const glyphSize = size === 'hero' ? 84 : size === 'thumb' ? 30 : 52;
   let img = '';
   if (p?.src) {
-    const small = p.small || (kind === 'side' ? null : p.src.replace(/\.webp$/, '-640.webp'));
+    const small = p.small || (kind === 'dinner' ? p.src.replace(/\.webp$/, '-640.webp') : null);
     const sizes = size === 'hero' ? '(min-width: 960px) 640px, 100vw' : size === 'thumb' ? '96px' : '(min-width: 960px) 320px, 50vw';
     const srcset = small && small !== p.src ? `${small} 640w, ${p.src} 1280w` : '';
     img = `<img src="${escapeHtml(p.src)}" ${srcset ? `srcset="${escapeHtml(srcset)}" sizes="${sizes}"` : ''} alt="${escapeHtml(alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" data-photo>`;

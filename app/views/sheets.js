@@ -1,6 +1,6 @@
 // Sheets shared by Tonight, Plan and Recipes: a night's actions, picking a dinner,
 // moving/swapping, not eating at home, substituting sides, who's on this phone, sync.
-import { html, ic, when, openSheet, closeSheet, toast, avatar, renderSheet, confirmSheet, stepper, sheetId } from '../ui.js';
+import { html, ic, when, openSheet, closeSheet, toast, avatar, renderSheet, confirmSheet, stepper, sheetId, tf } from '../ui.js';
 import { AWAY_REASONS, FAMILY } from '../config.js';
 import {
   addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate,
@@ -11,9 +11,10 @@ import {
 } from '../planner.js';
 import {
   placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps,
-  resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName,
+  resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName, awayBlock, bringBackTripOps,
 } from '../actions.js';
-import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason } from './common.js';
+import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip } from './common.js';
+import { plateNutrition, sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
 import { waitText } from '../state.js';
 
 const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
@@ -37,6 +38,7 @@ function nightBody(app, date) {
   const past = date < today;
   if (e?.status === 'away') {
     const r = awayReason(e);
+    const trip = awayBlock(app.state, date).filter((x) => x >= today);
     return html`
       <div class="away-card away-card-sheet">
         <span class="away-ic">${ic('moon', { size: 26 })}</span>
@@ -44,6 +46,7 @@ function nightBody(app, date) {
       </div>
       ${when(d, () => html`<p class="sheet-text">${d.title} was planned. Its groceries are off the list while you’re away.</p>`)}
       <div class="action-list">
+        ${when(trip.length > 1, () => html`<button type="button" class="action-row" data-action="night:back-trip" data-date="${date}">${ic('home')}<span><b>Bring the whole trip home</b><small>All ${trip.length} nights, ${shortDate(trip[0])} – ${shortDate(trip[trip.length - 1])}, go back on the plan.</small></span></button>`)}
         <button type="button" class="action-row" data-action="night:back" data-date="${date}">${ic('home')}<span><b>${d ? `Bring back ${d.title}` : 'We’re home after all'}</b><small>${d ? 'Its groceries go back on the list.' : 'Then pick a dinner for the night.'}</small></span></button>
         <button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('edit')}<span><b>Change the reason</b></span></button>
       </div>`;
@@ -67,6 +70,7 @@ function nightBody(app, date) {
         <p class="night-title">${d.title}</p>
         ${equipment(d, { compact: true })}
         ${favoriteBadge(app, d)}
+        ${when(showNutrition(app), () => html`<p class="night-nutri">${nutri(app, plateNutrition(app.db, app.state, d.id, e), { suffix: 'a plate', compact: true })}</p>`)}
       </div>
     </div>
     ${when(cooked, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked${e.cookedBy ? ` by ${e.cookedBy}` : ''}.</p>`)}
@@ -74,10 +78,19 @@ function nightBody(app, date) {
     <ul class="side-rows">
       ${sides.map((s) => html`<li class="side-row">
         ${sidePhoto(app, s, { size: 'thumb' })}
-        <span class="side-name">${s.info?.title}${when(s.remembered, () => html`<small class="remembered">${ic('check', { size: 14 })}Remembered for ${d.title}</small>`)}</span>
+        <span class="side-name">${s.info?.title}${when(s.remembered, () => html`<small class="remembered">${ic('check', { size: 14 })}Remembered for ${d.title}</small>`)}${when(showNutrition(app), () => { const sn = sideNutrition(app.db, app.state, s.parsed); return html`<small class="side-kcal">${sn ? `${fmtKcal(sn.kcal)} cal a plate` : '—'}</small>`; })}</span>
         ${when(!cooked, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="${s.slot}">Substitute</button>`)}
       </li>`)}
     </ul>
+ ${when(!cooked, () => {
+      const idea = lighterSide(app.db, app.state, d.id, e);
+      return idea ? lighterChip(app, {
+        key: `side:${d.id}:${idea.slot}:${idea.to.id}`,
+        text: `${idea.to.title} instead of ${idea.from.title}.`,
+        why: showNutrition(app) ? `About ${fmtKcal(idea.saves)} fewer calories a plate.` : '',
+        action: 'lighter:side', data: { dinner: d.id, slot: idea.slot, ref: idea.to.id }, label: 'Swap it',
+      }) : '';
+    })}
     ${when(!cooked && slots === 1 && sides.length < 2, () => html`<button type="button" class="btn btn-quiet btn-small add-side" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="1">${ic('plus', { size: 18 })}Add a side</button>`)}
     <div class="action-list">
       <a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>Big steps for the dinner and both sides.</small></span></a>
@@ -225,8 +238,8 @@ export function openAway(app, date) {
     render: () => html`
       <form class="form" data-submit="away:save" data-date="${date}">
         <div class="seg" role="radiogroup" aria-label="How many nights">
-          <button type="button" role="radio" class="seg-opt ${st.mode === 'one' ? 'is-on' : ''}" aria-checked="${st.mode === 'one'}" data-away-mode="one">Just this night</button>
-          <button type="button" role="radio" class="seg-opt ${st.mode === 'range' ? 'is-on' : ''}" aria-checked="${st.mode === 'range'}" data-away-mode="range">A few nights (trip)</button>
+          <button type="button" role="radio" class="seg-opt ${st.mode === 'one' ? 'is-on' : ''}" aria-checked="${tf(st.mode === 'one')}" data-away-mode="one">Just this night</button>
+          <button type="button" role="radio" class="seg-opt ${st.mode === 'range' ? 'is-on' : ''}" aria-checked="${tf(st.mode === 'range')}" data-away-mode="range">A few nights (trip)</button>
         </div>
         ${when(st.mode === 'range', () => html`<div class="field-row">
           <label class="field"><span class="field-label">From</span><input class="input" type="date" name="from" value="${st.from}" min="${today}" required></label>
@@ -322,8 +335,8 @@ function subBody(app, d, slot, st, date) {
       ${when(remembered, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:reset" data-dinner="${d.id}" data-slot="${slot}">${slot >= sideSlotsFor(d) ? 'Remove' : 'Reset to the recipe’s side'}</button>`)}
     </div>`)}
     <div class="seg" role="tablist" aria-label="Where the side comes from">
-      <button type="button" role="tab" aria-selected="${st.tab === 'box'}" class="seg-opt ${st.tab === 'box' ? 'is-on' : ''}" data-sub-tab="box">Recipe box</button>
-      <button type="button" role="tab" aria-selected="${st.tab === 'shelf'}" class="seg-opt ${st.tab === 'shelf' ? 'is-on' : ''}" data-sub-tab="shelf">On the shelf</button>
+      <button type="button" role="tab" aria-selected="${tf(st.tab === 'box')}" class="seg-opt ${st.tab === 'box' ? 'is-on' : ''}" data-sub-tab="box">Recipe box</button>
+      <button type="button" role="tab" aria-selected="${tf(st.tab === 'shelf')}" class="seg-opt ${st.tab === 'shelf' ? 'is-on' : ''}" data-sub-tab="shelf">On the shelf</button>
     </div>
     ${st.tab === 'box'
       ? html`<ul class="pick-list">${sides.map((s) => html`<li><button type="button" class="pick-row" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-ref="${s.id}">
@@ -356,7 +369,7 @@ export function openWho(app, { onDone } = {}) {
     id: 'who',
     title: 'Who’s using this phone?',
     subtitle: 'Votes and changes show your name.',
-    render: () => html`<div class="who-grid">${FAMILY.map((n) => html`<button type="button" class="who-pick ${app.who() === n ? 'is-on' : ''}" data-action="who:set" data-who="${n}" aria-pressed="${app.who() === n}">${avatar(n, { size: 'lg' })}<span>${n}</span></button>`)}</div>`,
+    render: () => html`<div class="who-grid">${FAMILY.map((n) => html`<button type="button" class="who-pick ${app.who() === n ? 'is-on' : ''}" data-action="who:set" data-who="${n}" aria-pressed="${tf(app.who() === n)}">${avatar(n, { size: 'lg' })}<span>${n}</span></button>`)}</div>`,
   });
   openWho.onDone = onDone;
 }
@@ -403,6 +416,10 @@ export const actions = {
   'night:tonight': (app, el) => {
     const e = app.state.plan?.[el.dataset.date];
     if (e?.dinner) place(app, { dinnerId: e.dinner, date: app.today(), fromDate: el.dataset.date });
+  },
+  'night:back-trip': (app, el) => {
+    app.commit(bringBackTripOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() }));
+    closeSheet();
   },
   'night:back': (app, el) => {
     const res = bringBackOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() });
@@ -472,6 +489,15 @@ export const actions = {
     if (!app.store.health && !app.store.device.localOnly) app.store.connect();
   },
   'sheet:who': (app) => openWho(app),
+  'lighter:dismiss': (app, el) => {
+    const list = [...new Set([...(app.store.device.dismissed || []), el.dataset.key])].slice(-60);
+    app.store.setDevice({ dismissed: list });
+    renderSheet();
+  },
+  'lighter:side': (app, el) => {
+    app.commit(substituteOps(app.db, app.state, { dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot), ref: el.dataset.ref }));
+    renderSheet();
+  },
   'sheet:sync': (app) => openSync(app),
   'sync:now': (app) => app.store.sync(),
   'sync:retry': (app) => app.store.connect(),

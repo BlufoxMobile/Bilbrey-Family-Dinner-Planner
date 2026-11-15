@@ -15,21 +15,24 @@ import * as recipeView from './views/recipe.js';
 import * as budgetView from './views/budget.js';
 import * as familyView from './views/family.js';
 import * as cookView from './views/cook.js';
+import * as lunchView from './views/lunch.js';
 import * as onboarding from './views/onboarding.js';
 import * as sheets from './views/sheets.js';
 
 const VIEWS = {
   tonight, plan: planView, list: listView, pantry: pantryView, recipes: recipesView, recipe: recipeView,
-  budget: budgetView, family: familyView, cook: cookView,
+  budget: budgetView, family: familyView, cook: cookView, lunch: lunchView,
 };
+// Phone: five tabs. Recipes live under Plan there; the desktop sidebar lists everything.
 const TABS = [
   { id: 'tonight', label: 'Tonight', icon: 'tonight' },
   { id: 'plan', label: 'Plan', icon: 'plan' },
+  { id: 'lunch', label: 'Lunch', icon: 'lunch' },
   { id: 'list', label: 'List', icon: 'list' },
   { id: 'pantry', label: 'Pantry', icon: 'pantry' },
-  { id: 'recipes', label: 'Recipes', icon: 'recipes' },
 ];
 const MORE = [
+  { id: 'recipes', label: 'Recipes', icon: 'recipes' },
   { id: 'budget', label: 'Budget', icon: 'budget' },
   { id: 'family', label: 'Family & settings', icon: 'family' },
 ];
@@ -40,7 +43,7 @@ for (const m of [...Object.values(VIEWS), onboarding, sheets]) Object.assign(ACT
 export const app = {
   db: null,
   store: null,
-  ui: { anchor: null, swapPick: null, swapMode: false, recipeQuery: '', recipeFilters: {}, recipeTab: 'rotation', pantryQuery: '' },
+  ui: { anchor: null, swapPick: null, swapMode: false, recipeQuery: '', recipeFilters: {}, recipeTab: 'rotation', pantryQuery: '', listFilter: 'all', lunchWho: null, lunchAnchor: null },
   route: { view: 'tonight', params: [] },
   get state() { return this.store.state; },
   get settings() { return settingsOf(this.store.state); },
@@ -93,6 +96,7 @@ function syncPill() {
 function shell() {
   const who = app.who();
   const active = app.route.view === 'recipe' ? 'recipes' : app.route.view;
+  const tabActive = active === 'recipes' ? 'plan' : active;
   return html`
     <a class="skip" href="#view">Skip to content</a>
     <aside class="rail" aria-label="Sections">
@@ -114,7 +118,7 @@ function shell() {
     </header>
     <main id="view" class="view view-${app.route.view}" tabindex="-1"></main>
     <nav class="tabbar" aria-label="Sections">
-      ${TABS.map((t) => html`<a class="tab ${active === t.id ? 'is-on' : ''}" href="#/${t.id}" ${active === t.id ? html`aria-current="page"` : ''}>${ic(t.icon, { size: 24 })}<span>${t.label}</span></a>`)}
+      ${TABS.map((t) => html`<a class="tab ${tabActive === t.id ? 'is-on' : ''}" href="#/${t.id}" ${tabActive === t.id ? html`aria-current="page"` : ''}>${ic(t.icon, { size: 24 })}<span>${t.label}</span></a>`)}
     </nav>`;
 }
 
@@ -254,10 +258,38 @@ async function boot() {
   // Re-render at midnight Chicago time so "tonight" moves on.
   let day = app.today();
   setInterval(() => { const t = app.today(); if (t !== day) { day = t; scheduleRender(); } }, 60000);
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => { /* offline support is a bonus */ });
-  }
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') watchForUpdates();
   document.documentElement.dataset.version = VERSION;
+}
+
+/**
+ * Updates reach every phone without anyone reinstalling. The service worker takes over as
+ * soon as a new version is installed; when that happens under a page an older version was
+ * serving (that page may be mixing new code with the old version's cached recipes), reload
+ * into the new one, or offer a Refresh if someone is in the middle of something.
+ * A home-screen app can stay open for days, so look for updates whenever it comes back.
+ */
+function watchForUpdates() {
+  const sw = navigator.serviceWorker;
+  let controlled = !!sw.controller;
+  let reg = null;
+  sw.register('./sw.js', { scope: './' }).then((r) => { reg = r; }).catch(() => { /* offline support is a bonus */ });
+  let lastCheck = Date.now();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !reg || Date.now() - lastCheck < 30 * 60000) return;
+    lastCheck = Date.now();
+    reg.update().catch(() => { /* offline: try again next time */ });
+  });
+  let handled = false;
+  sw.addEventListener('controllerchange', () => {
+    // The very first install taking over this page: it's already current. Any later change is an update.
+    if (!controlled) { controlled = true; return; }
+    if (handled) return;
+    handled = true;
+    const busy = sheetOpen() || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '');
+    if (!busy) { location.reload(); return; }
+    toast('The planner was just updated.', { action: { label: 'Refresh', fn: () => location.reload() }, duration: 120000 });
+  });
 }
 
 boot();

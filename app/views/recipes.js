@@ -1,5 +1,5 @@
 // RECIPES: the recipe box — rotation, bench and voted-out dinners, search and filters.
-import { html, ic, when } from '../ui.js';
+import { html, ic, when, tf } from '../ui.js';
 import { CATEGORIES, PROTEINS } from '../config.js';
 import { allDinners, inRotation, isRetired, isPromoted, isFavorite, isHealthier, voteInfo } from '../planner.js';
 import { dinnerPhoto } from './common.js';
@@ -62,7 +62,7 @@ export function render(app) {
   return html`<div class="page page-recipes">
     <header class="page-head"><h1 class="page-title">Recipes</h1></header>
     <div class="tabs" role="tablist" aria-label="Which dinners">
-      ${TABS.map((t) => html`<button type="button" role="tab" class="tab-opt ${app.ui.recipeTab === t.id ? 'is-on' : ''}" aria-selected="${app.ui.recipeTab === t.id}" data-action="rec:tab" data-tab="${t.id}">${t.label}<small>${counts[t.id]}</small></button>`)}
+      ${TABS.map((t) => html`<button type="button" role="tab" class="tab-opt ${app.ui.recipeTab === t.id ? 'is-on' : ''}" aria-selected="${tf(app.ui.recipeTab === t.id)}" data-action="rec:tab" data-tab="${t.id}">${t.label}<small>${counts[t.id]}</small></button>`)}
     </div>
     <label class="search">${ic('search', { size: 20 })}<input type="search" id="recipe-search" placeholder="Search tikka, burgers, noodles…" value="${app.ui.recipeQuery}" data-input="rec:search" aria-label="Search recipes" autocomplete="off"></label>
     <div class="filters" role="group" aria-label="Filters">

@@ -8,14 +8,30 @@ export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const read = (p) => JSON.parse(readFileSync(path.join(ROOT, p), 'utf8'));
 const maybe = (p) => (existsSync(path.join(ROOT, p)) ? read(p) : null);
 
+/** lunches.json / nutrition.json: the real files once they land, else the small test fixtures. */
+export const lunchesDoc = () => maybe('data/lunches.json') || read('tests/fixtures/lunches.json');
+export const nutritionDoc = () => maybe('data/nutrition.json') || read('tests/fixtures/nutrition.json');
+export const usingRealLunches = () => existsSync(path.join(ROOT, 'data/lunches.json'));
+export const usingRealNutrition = () => existsSync(path.join(ROOT, 'data/nutrition.json'));
+
 /** The real data files when the recipes agent has written them, else the v1 adapter. */
-export function realDb() {
+export function realDb({ lunches = true, nutrition = true } = {}) {
   const haveReal = existsSync(path.join(ROOT, 'data/catalog.json')) && existsSync(path.join(ROOT, 'data/recipes.json'));
   const { catalog, recipes } = haveReal ? { catalog: read('data/catalog.json'), recipes: read('data/recipes.json') } : loadAdapted();
-  return buildDb({ catalog, recipes, prices: maybe('data/prices.json'), stores: maybe('data/stores.json'), photos: maybe('img/photos.json') });
+  return buildDb({
+    catalog, recipes, prices: maybe('data/prices.json'), stores: maybe('data/stores.json'), photos: maybe('img/photos.json'),
+    lunches: lunches ? lunchesDoc() : null, nutrition: nutrition ? nutritionDoc() : null,
+  });
 }
 
 export const usingRealData = () => existsSync(path.join(ROOT, 'data/catalog.json')) && existsSync(path.join(ROOT, 'data/recipes.json'));
+
+/** The real catalog with the small lunch + nutrition fixtures, for exact, stable assertions. */
+export function fixtureDb() {
+  const haveReal = existsSync(path.join(ROOT, 'data/catalog.json')) && existsSync(path.join(ROOT, 'data/recipes.json'));
+  const { catalog, recipes } = haveReal ? { catalog: read('data/catalog.json'), recipes: read('data/recipes.json') } : loadAdapted();
+  return buildDb({ catalog, recipes, prices: maybe('data/prices.json'), lunches: read('tests/fixtures/lunches.json'), nutrition: read('tests/fixtures/nutrition.json') });
+}
 
 /** A tiny hand-made db for exact math. */
 export function tinyDb() {
@@ -52,5 +68,5 @@ export function tinyDb() {
       { id: 'naan-side', title: 'Warm naan', kind: 'bread', items: { samsOnly: 5 }, steps: ['Warm.'] },
     ],
   };
-  return buildDb({ catalog, recipes });
+  return buildDb({ catalog, recipes, nutrition: JSON.parse(readFileSync(path.join(ROOT, 'tests/fixtures/nutrition.json'), 'utf8')) });
 }

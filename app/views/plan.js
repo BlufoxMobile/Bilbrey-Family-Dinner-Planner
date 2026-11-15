@@ -6,7 +6,8 @@ import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, s
 import { listJoin } from '../util.js';
 import { buildList } from '../shopping.js';
 import { generateOps, swapNightsOps, settingOps } from '../actions.js';
-import { sidesFor, dinnerPhoto, awayReason, dayStamp } from './common.js';
+import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition } from './common.js';
+import { plateNutrition, fmtKcal } from '../nutrition.js';
 import { openNight } from './sheets.js';
 
 export const title = () => 'Plan';
@@ -56,6 +57,7 @@ function dayCard(app, date, { compact = false } = {}) {
       ${dayStamp(date, today)}
       ${away ? html`<span class="day-ph day-ph-away">${ic('moon', { size: compact ? 20 : 26 })}</span>` : d ? dinnerPhoto(app, d, { size: compact ? 'thumb' : 'card' }) : html`<span class="day-ph">${ic('plus', { size: 22 })}</span>`}
       <span class="day-title">${label}</span>
+      ${when(d && !away && !compact && showNutrition(app), () => { const n = plateNutrition(app.db, app.state, d.id, e); return n ? html`<span class="day-kcal">≈ ${fmtKcal(n.kcal)} cal, ${Math.round(n.protein)} g protein</span>` : ''; })}
       ${when(away && e.away?.note, () => html`<span class="day-note">${e.away.note}</span>`)}
       ${when(!d && !away && !past, () => html`<span class="day-note">${type === 'burger' ? 'Burger night' : type === 'pizza' ? 'Pizza night' : 'Open'}</span>`)}
       ${when(cooked, () => html`<span class="day-status">${ic('checkCircle', { size: 16 })}Cooked</span>`)}
@@ -111,7 +113,7 @@ export function render(app) {
   const away = range.dates.filter((d) => plan[d]?.status === 'away').length;
   return html`<div class="page page-plan">
     <header class="page-head">
-      <h1 class="page-title">Plan</h1>
+      <div class="title-row"><h1 class="page-title">Plan</h1><a class="btn btn-small btn-secondary recipes-link" href="#/recipes">${ic('recipes', { size: 18 })}Recipes</a></div>
       ${segmented('period', PERIODS.map((p) => ({ id: p.id, label: p.label })), s.period, { label: 'How long to plan', action: 'plan:period' })}
     </header>
     ${periodNav(app, range)}

@@ -5,6 +5,33 @@ import { EQUIPMENT_ICON } from '../icons.js';
 import { dinnerById, effectiveSides, sideInfo, isFavorite } from '../planner.js';
 import { listJoin, relativeDay, shortWeekday } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
+import { fmtKcal, hasNutrition } from '../nutrition.js';
+
+/** Calories are shown when nutrition.json is there and this phone hasn't hidden them. */
+export const showNutrition = (app) => hasNutrition(app.db) && !app.store?.device?.hideNutrition;
+
+/** "≈ 720 cal  48 g protein" — or "—" when there's no data for it. */
+export function nutri(app, n, { suffix = '', compact = false } = {}) {
+  if (!showNutrition(app)) return '';
+  if (!n) return html`<span class="nutri nutri-none" title="No calorie data for this">—</span>`;
+  return html`<span class="nutri ${compact ? 'nutri-compact' : ''}"><span><b>≈ ${fmtKcal(n.kcal)}</b> cal</span><span><b>${Math.round(n.protein)} g</b> protein</span>${suffix ? html`<span class="nutri-suffix">${suffix}</span>` : ''}${n.complete === false ? html`<span class="nutri-suffix">some items not counted</span>` : ''}</span>`;
+}
+
+export const isDismissed = (app, key) => (app.store?.device?.dismissed || []).includes(key);
+
+/** A small, kind suggestion. Never more than one sentence, always easy to wave off. */
+export function lighterChip(app, { key, text, why = '', action, data = {}, label = 'Use it', kind = 'Lighter idea' }) {
+  if (isDismissed(app, key)) return '';
+  const attrs = Object.entries(data).map(([k, v]) => `data-${k}="${String(v).replace(/"/g, '&quot;')}"`).join(' ');
+  return html`<div class="lighter" role="note">
+    <span class="lighter-ic" aria-hidden="true">${ic('leaf', { size: 18 })}</span>
+    <p class="lighter-text"><b>${kind}:</b> ${text}${why ? html` <span class="lighter-why">${why}</span>` : ''}</p>
+    <span class="lighter-actions">
+      <button type="button" class="btn btn-small btn-secondary" data-action="${action}" ${raw(attrs)}>${label}</button>
+      <button type="button" class="icon-btn" data-action="lighter:dismiss" data-key="${key}" aria-label="Not now">${ic('close', { size: 18 })}</button>
+    </span>
+  </div>`;
+}
 
 export function sidesFor(app, dinnerId, entry) {
   return effectiveSides(app.db, app.state, dinnerId, entry).map((s) => ({ ...s, info: sideInfo(app.db, app.state, s.parsed) }));

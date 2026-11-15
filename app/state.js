@@ -127,7 +127,12 @@ export class Store {
     this.autoSync = autoSync;
     this.listeners = new Set();
     const dev = storage.get(K.device) || {};
-    this.device = { who: dev.who || null, key: dev.key || null, localOnly: !!dev.localOnly, clientId: dev.clientId || uid('c'), dismissedGate: !!dev.dismissedGate, theme: dev.theme || 'auto' };
+    this.device = {
+      who: dev.who || null, key: dev.key || null, localOnly: !!dev.localOnly, clientId: dev.clientId || uid('c'), dismissedGate: !!dev.dismissedGate, theme: dev.theme || 'auto',
+      // Per-phone preferences (SPEC §8.4: they live on the device, not in the family's state).
+      hideNutrition: !!dev.hideNutrition,
+      dismissed: Array.isArray(dev.dismissed) ? dev.dismissed.filter((x) => typeof x === 'string').slice(-60) : [],
+    };
     const srv = storage.get(K.server);
     this.server = srv && typeof srv === 'object' ? { revision: Number(srv.revision) || 0, state: srv.state || {}, updatedAt: srv.updatedAt || null } : { revision: 0, state: {}, updatedAt: null };
     this.pending = Array.isArray(storage.get(K.pending)) ? storage.get(K.pending).filter(validOp) : [];
@@ -385,7 +390,7 @@ export class Store {
     this.inflight = null;
     if (!keepDevice) {
       this.storage.remove(K.device);
-      this.device = { who: null, key: null, localOnly: false, clientId: uid('c'), dismissedGate: false, theme: 'auto' };
+      this.device = { who: null, key: null, localOnly: false, clientId: uid('c'), dismissedGate: false, theme: 'auto', hideNutrition: false, dismissed: [] };
       this.saveDevice();
     }
     this.recompute();

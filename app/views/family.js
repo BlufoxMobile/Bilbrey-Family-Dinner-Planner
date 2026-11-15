@@ -1,5 +1,5 @@
 // FAMILY & SETTINGS: this phone, family sync + passcode, planner rules, stores, data.
-import { html, ic, when, toast, avatar, confirmSheet, segmented, stepper } from '../ui.js';
+import { html, ic, when, toast, avatar, confirmSheet, segmented, stepper, switchToggle, tf } from '../ui.js';
 import { PARENTS, VERSION } from '../config.js';
 import { mediumDate } from '../util.js';
 import { settingOps } from '../actions.js';
@@ -73,7 +73,7 @@ function rules(app) {
   return html`<section class="set-sec" aria-labelledby="rules-h">
     <h2 id="rules-h" class="section-title">Planner rules</h2>
     <div class="set-row set-col"><span class="set-label">Burger nights<small>Fries by default, with an option to add a side.</small></span>
-      <div class="chip-grid days-pick">${DAYS.map((d, i) => html`<button type="button" class="chip ${s.burgerNights.includes(i) ? 'is-on' : ''}" aria-pressed="${s.burgerNights.includes(i)}" data-action="fam:burger" data-day="${i}">${d}</button>`)}</div></div>
+      <div class="chip-grid days-pick">${DAYS.map((d, i) => html`<button type="button" class="chip ${s.burgerNights.includes(i) ? 'is-on' : ''}" aria-pressed="${tf(s.burgerNights.includes(i))}" data-action="fam:burger" data-day="${i}">${d}</button>`)}</div></div>
     <div class="set-row"><span class="set-label">Frozen pizza nights a month<small>On Saturdays.</small></span>${stepper({ value: s.pizzaPerMonth, step: 1, min: 0, action: 'fam:num', data: { key: 'pizzaPerMonth', max: 4 }, label: 'Pizza nights a month' })}</div>
     <div class="set-row"><span class="set-label">Rice dinners a week, at most<small>Candi’s rule.</small></span>${stepper({ value: s.riceMaxPerWeek, step: 1, min: 0, action: 'fam:num', data: { key: 'riceMaxPerWeek', max: 3 }, label: 'Rice dinners a week' })}</div>
     <div class="set-row set-col"><span class="set-label">Meat per dinner<small>Lighter trims every meat amount by 15% to save money.</small></span>${segmented('meatScale', MEAT_OPTS, String(s.meatScale), { label: 'Meat per dinner', action: 'fam:meat', small: true })}</div>
@@ -111,6 +111,7 @@ export function render(app) {
       <h2 id="me-h" class="sr-only">This phone</h2>
       <div class="me-row">${avatar(who, { size: 'lg' })}<span><b>${who ? `${who}’s phone` : 'Whose phone is this?'}</b><small>Votes and changes from this phone say ${who || 'nobody yet'}.</small></span>
         <button type="button" class="btn btn-small btn-secondary" data-action="sheet:who">Change</button></div>
+      <div class="set-row"><span class="set-label">Show calories and protein<small>On this phone only. Lunches and dinners; breakfast and snacks aren’t tracked.</small></span>${switchToggle({ on: !app.store.device.hideNutrition, action: 'fam:nutrition', label: 'Show calories and protein on this phone' })}</div>
       <div class="set-row set-col"><span class="set-label">Appearance</span>${segmented('theme', [{ id: 'auto', label: 'Match phone' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }], theme, { label: 'Appearance', action: 'fam:theme', small: true })}</div>
     </section>
     ${syncSection(app)}
@@ -189,6 +190,7 @@ export const actions = {
     if (ok) { app.store.useLocalOnly(); toast('Using the planner on this phone only.'); }
   },
   'fam:theme': (app, el) => app.store.setDevice({ theme: el.dataset.value }),
+  'fam:nutrition': (app) => app.store.setDevice({ hideNutrition: !app.store.device.hideNutrition }),
   'fam:burger': (app, el) => {
     const i = Number(el.dataset.day);
     const cur = app.settings.burgerNights;

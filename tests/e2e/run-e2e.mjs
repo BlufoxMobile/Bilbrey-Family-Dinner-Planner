@@ -55,6 +55,7 @@ const noOverflow = (p) => p.evaluate(() => document.documentElement.scrollWidth 
 const shot = (p, name, full = false) => p.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: full });
 const go = async (p, hash, sel) => { await p.goto(`${base}${hash}`); await p.waitForSelector(sel); await p.waitForTimeout(150); };
 const listTotal = async (p) => { await go(p, '#/list', '.page-list'); const t = await p.textContent('.total-num').catch(() => '$0'); return Number(String(t).replace(/[^0-9.]/g, '')) || 0; };
+const lunchCost = async (p) => { await go(p, '#/list', '.page-list'); const t = await p.textContent('.cost-lines li:nth-child(2) b').catch(() => '$0'); return Number(String(t).replace(/[^0-9.]/g, '')) || 0; };
 const listNames = async (p) => { await go(p, '#/list', '.page-list'); return p.$$eval('.item-name', (els) => els.map((e) => e.textContent.trim())); };
 
 before(async () => {
@@ -99,7 +100,8 @@ test('every tab renders cleanly at 390×844 and 1280×800', async () => {
   const { state } = await familyState(page);
   const someDinner = state.plan[TODAY].dinner;
   const routes = [['#/tonight', '.page-tonight'], ['#/plan', '.page-plan'], ['#/list', '.page-list'], ['#/pantry', '.page-pantry'],
-    ['#/recipes', '.page-recipes'], [`#/recipe/${someDinner}`, '.page-recipe'], ['#/budget', '.page-budget'], ['#/family', '.page-family'], [`#/cook/${TODAY}`, '.cook']];
+    ['#/recipes', '.page-recipes'], [`#/recipe/${someDinner}`, '.page-recipe'], ['#/budget', '.page-budget'], ['#/family', '.page-family'], [`#/cook/${TODAY}`, '.cook'],
+    ['#/lunch', '.page-lunch']];
   for (const vp of [PHONE, DESKTOP]) {
     const p = await newPage(ctx, vp);
     for (const [hash, sel] of routes) {
@@ -115,6 +117,8 @@ test('every tab renders cleanly at 390×844 and 1280×800', async () => {
     await shot(p, `e2e-04-plan-${vp.width}`);
     await go(p, '#/tonight', '.page-tonight');
     await shot(p, `e2e-05-tonight-${vp.width}`);
+    await go(p, '#/lunch', '.page-lunch');
+    await shot(p, `e2e-20-lunch-${vp.width}`, vp.width > 400);
     await p.close();
   }
   // Month view and the 360px small phone.
@@ -124,6 +128,8 @@ test('every tab renders cleanly at 390×844 and 1280×800', async () => {
   await small.waitForSelector('.month');
   assert.ok(await noOverflow(small), 'month view fits 360px');
   for (const [hash, sel] of routes) { await go(small, hash, sel); assert.ok(await noOverflow(small), `${hash} fits 360px`); }
+  await go(small, '#/lunch', '.page-lunch');
+  await shot(small, 'e2e-21-lunch-360');
   await small.close();
   const desk = await newPage(ctx, DESKTOP);
   await go(desk, '#/plan', '.page-plan');
@@ -321,6 +327,92 @@ test('budget: log a receipt, switch meat to lighter, the projection follows', as
   await page.click('[data-action="fam:meat"][data-value="1"]');
 });
 
+test('lunch: edit Knox’s lunches, swap a drink for a day, skip a day, and the list follows', async () => {
+  await go(page, '#/lunch', '.page-lunch');
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  // Grown-ups get one idea at a time on the week page, honestly labeled; kids get none there.
+  await page.click('[data-action="lunch:who"][data-who="Jeff"]');
+  await page.waitForSelector('.person.is-on:has-text("Jeff")');
+  assert.ok((await page.$$('.page-lunch .lighter')).length <= 1, 'at most one idea on the page');
+  for (const t of await page.$$eval('.page-lunch .lighter-text', (els) => els.map((e) => e.textContent))) {
+    if (/plus|extra grilled chicken/i.test(t)) assert.doesNotMatch(t, /^\s*Lighter idea/, 'adding chicken is not called lighter');
+  }
+  await page.click('[data-action="lunch:who"][data-who="Knox"]');
+  await page.waitForSelector('.person.is-on:has-text("Knox")');
+  assert.equal((await page.$$('.page-lunch .lighter')).length, 0, 'no ideas on a kid’s week');
+  await page.waitForSelector('.person.is-on:has-text("Knox")');
+  assert.ok((await page.$$('.lunch-day')).length >= 5, 'Mon–Fri');
+  // The editor: add a snack to the rotation.
+  await page.click('[data-action="lunch:edit"][data-who="Knox"]');
+  await page.waitForSelector('dialog[open] .ed-item');
+  const addId = await page.getAttribute('dialog[open] .ed-item[data-slot="snack"][aria-pressed="false"]', 'data-id');
+  await page.locator(`dialog[open] .ed-item[data-slot="snack"][data-id="${addId}"]`).click();
+  await waitFor(async () => (await familyState(page)).state.lunch?.people?.Knox?.slots?.snack?.includes(addId));
+  await page.waitForSelector(`dialog[open] .ed-item[data-id="${addId}"][aria-pressed="true"]`);
+  await page.waitForTimeout(300);
+  await shot(page, 'e2e-22-lunch-editor');
+  await page.keyboard.press('Escape');
+  // Swap Thursday's drink for just that day.
+  await page.click('.lunch-day[data-date="2026-11-19"] .ld-slot[data-slot="drink"]');
+  await page.waitForSelector('dialog[open] .pick-row');
+  const otherId = await page.getAttribute('dialog[open] .pick-row:not(.is-current)', 'data-id');
+  await page.locator(`dialog[open] .pick-row[data-id="${otherId}"]`).click();
+  await toastMatch(page, /that day/);
+  let s = (await familyState(page)).state;
+  assert.equal(s.lunch.days['2026-11-19'].Knox.picks.drink, otherId);
+  // Skip Wednesday: its groceries leave the list.
+  const before = await lunchCost(page);
+  await go(page, '#/lunch', '.page-lunch');
+  await page.click('[data-action="lunch:who"][data-who="Knox"]');
+  await page.click('.lunch-day[data-date="2026-11-18"] [data-action="lunch:skip"]');
+  await page.click('dialog[open] [data-action="lunch:skip-save"][data-reason="No school"]');
+  await toastMatch(page, /won’t need a packed lunch/);
+  s = (await familyState(page)).state;
+  assert.equal(s.lunch.days['2026-11-18'].Knox.skip, true);
+  await page.waitForSelector('.lunch-day.is-skipped[data-date="2026-11-18"]');
+  const after = await lunchCost(page);
+  assert.ok(after < before, `lunch groceries went down (${before} → ${after})`);
+  // The Lunches filter shows only lunch items.
+  await page.click('[data-action="list:filter"][data-value="lunches"]');
+  await page.waitForSelector('[data-action="list:filter"][data-value="lunches"].is-on');
+  const tags = await page.$$eval('.store-sec .item', (els) => els.map((e) => !!e.querySelector('.tag-lunch')));
+  assert.ok(tags.length > 0 && tags.every(Boolean), 'only lunch-tagged items');
+  await shot(page, 'e2e-23-list-lunches');
+  await page.click('[data-action="list:filter"][data-value="all"]');
+});
+
+test('calories and protein: today’s line on Tonight, and a per-phone switch to hide them', async () => {
+  await go(page, '#/tonight', '.page-tonight');
+  await page.waitForSelector('.today-nutri');
+  assert.match(await page.textContent('.today-nutri'), /Today for Jeff: about [\d,]+ calories and \d+ g protein/);
+  assert.match(await page.textContent('.today-nutri'), /Breakfast and snacks aren’t counted/);
+  await go(page, '#/family', '.page-family');
+  await page.click('[data-action="fam:nutrition"]');
+  await go(page, '#/tonight', '.page-tonight');
+  assert.equal(await page.$('.today-nutri'), null, 'hidden on this phone');
+  await go(page, '#/family', '.page-family');
+  await page.click('[data-action="fam:nutrition"]');
+  await go(page, '#/tonight', '.page-tonight');
+  await page.waitForSelector('.today-nutri');
+});
+
+test('coupons: Clip Jewel coupons and Sam’s Instant Savings, honestly explained', async () => {
+  await go(page, '#/list', '.page-list');
+  await page.click('[data-action="list:coupons"][data-store="jewel"]');
+  await page.waitForSelector('dialog[open] a[data-coupons="jewel"]');
+  assert.match(await page.getAttribute('dialog[open] a[data-coupons="jewel"]', 'href'), /^https:\/\/www\.jewelosco\.com\//);
+  assert.match(await page.getAttribute('dialog[open] a[data-coupons="sams"]', 'href'), /^https:\/\/www\.samsclub\.com\//);
+  const text = await page.textContent('dialog[open]');
+  assert.match(text, /clipped/i);
+  assert.match(text, /automatically/i);
+  await page.waitForTimeout(350);
+  await shot(page, 'e2e-24-coupons');
+  await page.keyboard.press('Escape');
+  await page.click('[data-action="list:handoff"][data-store="jewel"]');
+  await page.waitForSelector('dialog[open] .hint a[href*="jewelosco"]');
+  await page.keyboard.press('Escape');
+});
+
 test('two-tap swap on the planner trades two nights', async () => {
   const { state } = await familyState(page);
   const a = state.plan['2026-11-21'].dinner;
@@ -355,6 +447,23 @@ test('offline: changes are saved on the phone and sync when the connection retur
   server = await (await fetch(`${apiBase}/__mock/state`)).json();
   assert.equal(server.state.votes[d].Jeff, 1, 'the queued vote reached the family');
   await waitFor(async () => /Synced/.test(await page.textContent('.topbar .sync')));
+});
+
+test('a whole trip comes home in one tap', async () => {
+  await go(page, '#/plan', '.page-plan');
+  await page.click('[data-action="plan:tap"][data-date="2026-11-19"]');
+  await page.click('dialog[open] [data-action="night:away"]');
+  await page.click('dialog[open] [data-away-mode="range"]');
+  await page.fill('dialog[open] input[name="from"]', '2026-11-19');
+  await page.fill('dialog[open] input[name="to"]', '2026-11-21');
+  await page.click('dialog[open] .chip-radio:has(input[value="Out of town"])');
+  await page.click('dialog[open] form[data-submit="away:save"] button[type=submit]');
+  await toastMatch(page, /3 nights/);
+  await page.click('[data-action="plan:tap"][data-date="2026-11-20"]');
+  await page.click('dialog[open] [data-action="night:back-trip"]');
+  await toastMatch(page, /3 nights are back/);
+  const s = (await familyState(page)).state;
+  for (const d of ['2026-11-19', '2026-11-20', '2026-11-21']) assert.notEqual(s.plan[d]?.status, 'away', `${d} is home`);
 });
 
 test('cook mode: big steps, check off, mark cooked', async () => {
@@ -422,5 +531,40 @@ test('installable PWA: the service worker caches the app so it opens offline', a
   await p.waitForSelector('.r-card');
   await shot(p, 'e2e-19-offline-recipes');
   await swCtx.close();
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('an update reaches a phone with the app open: it reloads into the new version, or offers Refresh mid-task', async () => {
+  const swCtx = await browser.newContext({ serviceWorkers: 'allow', storageState: await ctx.storageState() });
+  const p = await swCtx.newPage();
+  p.on('pageerror', (e) => errors.push(String(e)));
+  await p.goto(`${base}#/plan`);
+  await p.waitForSelector('.page-plan');
+  await waitFor(() => p.evaluate(() => !!navigator.serviceWorker.controller) || p.reload().then(() => false), { timeout: 15000, step: 500 });
+  let loads = 0;
+  p.on('load', () => { loads++; });
+  const publish = async (tag) => {
+    staticSrv.swSuffix = `// ${tag}`;
+    await p.evaluate(async () => { await (await navigator.serviceWorker.getRegistration()).update(); });
+  };
+  try {
+    // Idle: the new service worker takes over and the page reloads into it on its own.
+    await publish('release A');
+    await waitFor(async () => loads >= 1, { timeout: 15000 });
+    await p.waitForSelector('.page-plan');
+    assert.match(p.url(), /#\/plan$/, 'stays on the same screen');
+    // Mid-task (a sheet is open): no surprise reload, a Refresh offer instead.
+    await p.click('[data-action="plan:tap"]');
+    await p.waitForSelector('dialog[open]');
+    const before = loads;
+    await publish('release B');
+    await waitFor(async () => /just updated/.test((await p.textContent('.toast-root .toast-msg').catch(() => '')) || ''), { timeout: 15000 });
+    assert.equal(loads, before, 'did not reload under an open sheet');
+    await p.click('.toast-root .toast-btn');
+    await waitFor(async () => loads > before, { timeout: 10000 });
+  } finally {
+    staticSrv.swSuffix = '';
+    await swCtx.close();
+  }
   assert.equal(errors.length, 0, errors.join('\n'));
 });

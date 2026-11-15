@@ -8,6 +8,7 @@ import { settingsOf } from './state.js';
 import {
   brandFor, canBuyAt, dinnerById, itemsForNight, kindOf, packFor, storeFor, rotationList, unitPrice,
 } from './planner.js';
+import { lunchNeeds, lunchesIn } from './lunch.js';
 
 export const OTHER = { sams: 'jewel', jewel: 'sams' };
 
@@ -36,12 +37,20 @@ export function needsFor(db, state, dates) {
   return { needs, uses, nights };
 }
 
+/** "bhBlackForestHam" / "custom-rotel-2" → "Bh black forest ham" / "Rotel 2": words, never an id. */
+export function readableId(id) {
+  const words = String(id || '').replace(/^custom-/, '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[-_]+/g, ' ').trim().toLowerCase();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : 'Item';
+}
+
 export function itemMeta(db, state, id) {
   const ing = db.ingredients[id];
   if (ing) return { ...ing, custom: false };
   const c = state?.custom?.[id];
-  if (c) return { id, name: c.name || id, unit: c.unit || 'each', aisle: c.aisle || 'Snacks & Extras', storage: c.storage || 'pantry', kind: c.kind === 'staple' ? 'staple' : 'measured', defaultStore: c.store || 'jewel', packs: {}, custom: true, aliases: [] };
-  return { id, name: id, unit: 'each', aisle: 'Snacks & Extras', storage: 'pantry', kind: 'measured', defaultStore: 'jewel', packs: {}, custom: true, unknown: true, aliases: [] };
+  if (c) return { id, name: c.name || readableId(id), unit: c.unit || 'each', aisle: c.aisle || 'Snacks & Extras', storage: c.storage || 'pantry', kind: c.kind === 'staple' ? 'staple' : 'measured', defaultStore: c.store || 'jewel', packs: {}, custom: true, aliases: [] };
+  // Not in this phone's copy of the catalog (e.g. a moment after an update): never show the raw id.
+  const lunchUse = db.lunch?.itemList?.find((x) => x.items?.[id] != null);
+  return { id, name: lunchUse?.title || readableId(id), unit: 'each', aisle: 'Snacks & Extras', storage: 'pantry', kind: 'measured', defaultStore: 'jewel', packs: {}, custom: true, unknown: true, aliases: [] };
 }
 
 function listStore(db, state, id, planStore) {
@@ -55,7 +64,8 @@ function listStore(db, state, id, planStore) {
 
 const COUNT_UNITS = new Set(['eggs', 'buns', 'slices', 'tortillas', 'pieces', 'cans', 'peppers', 'hearts', 'cucumbers', 'oranges', 'lemons',
   'limes', 'cloves', 'pizzas', 'each', 'count', 'heads', 'bunches', 'packages', 'jars', 'bottles', 'bags', 'boxes', 'loaves', 'avocados', 'bananas',
-  'snack cups', 'yogurt cups', 'rolls', 'ears', 'potstickers', 'waffles', 'sticks', 'bars']);
+  'snack cups', 'yogurt cups', 'rolls', 'ears', 'potstickers', 'waffles', 'sticks', 'bars',
+  'bowls', 'pouches', 'packs', 'trays', 'dip cups', 'containers', 'cartons', 'clementines', 'singles', 'kits', 'wraps']);
 const WEIGHT_UNITS = new Set(['lb', 'oz', 'g', 'kg']);
 
 export function singular(unit) {
@@ -64,6 +74,7 @@ export function singular(unit) {
   if (unit === 'boxes') return 'box';
   if (unit === 'bunches') return 'bunch';
   if (unit === 'pieces') return 'piece';
+  if (unit === 'pouches') return 'pouch';
   if (unit === 'slices') return 'slice';
   return unit.endsWith('es') && /(ches|shes|xes|ses)$/.test(unit) ? unit.slice(0, -2) : unit.endsWith('s') ? unit.slice(0, -1) : unit;
 }
@@ -109,7 +120,12 @@ const aisleIndex = (a) => { const i = AISLES.indexOf(a); return i < 0 ? AISLES.l
 export function buildList(db, state, { dates, listKey = '' } = {}) {
   const st = settingsOf(state);
   const planStore = st.planStore;
-  const { needs, uses, nights } = needsFor(db, state, dates);
+  const dinner = needsFor(db, state, dates);
+  const lunch = lunchNeeds(db, state, dates);
+  const { uses, nights } = dinner;
+  const { lunches } = lunch;
+  const needs = { ...dinner.needs };
+  for (const [id, q] of Object.entries(lunch.needs)) needs[id] = (needs[id] || 0) + q;
   const weeks = Math.max(1, Math.round(dates.length / 7));
   const checked = state?.checked?.[listKey] || {};
   const pantry = state?.pantry || {};
@@ -129,7 +145,7 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
       freeExtras.push({
         key, id: key, name: x.name || 'Extra item', unit: x.unit || '', aisle: 'Snacks & Extras', kind: 'extra', freeText: true,
         store, qty, every: x.every || 'trip', pack: null, packs: qty, cost: Number.isFinite(price) && price >= 0 ? round2(price * qty) : null,
-        checked: !!checked[key], reasons: ['extra'], uses: [],
+        checked: !!checked[key], reasons: ['extra'], uses: [], lunchUses: [], dinnerNeed: 0, lunchNeed: 0,
       });
     }
   }
@@ -168,18 +184,34 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
     }
     const bought = pack ? packs * pack.size : 0;
     const leftover = pack ? Math.max(0, bought - shortfall) : 0;
+    const dinnerNeed = dinner.needs[id] || 0;
+    const lunchNeed = lunch.needs[id] || 0;
     const reasons = [];
-    if (shortfall > 1e-9) reasons.push('dinners');
+    if (shortfall > 1e-9 && dinnerNeed > 0) reasons.push('dinners');
+    if (shortfall > 1e-9 && lunchNeed > 0) reasons.push('lunches');
     if (xp) reasons.push('extra');
     if (low) reasons.push('low');
+    const cost = pack ? round2(packs * pack.price) : null;
+    // Money split three ways for the budget: extras' own packs, then the rest by how much
+    // the dinners and the lunches each need.
+    const extrasPart = pack && xp ? xp * pack.price : 0;
+    const mealPart = Math.max(0, (cost || 0) - extrasPart);
+    const lunchShare = need > 0 ? lunchNeed / need : 0;
+    const usedTotal = pack ? pack.price * Math.min(packs, shortfall / pack.size) : 0;
     items.push({
       key: id, id, name: meta.name, unit: meta.unit, aisle: meta.aisle, storage: meta.storage, kind, custom: meta.custom, unknown: !!meta.unknown,
       need, have, stocked, low, shortfall, extraPacks: xp,
       store, storeFallback: fallback, brand: pack?.brand || brand, brandFallback: !!pack?.brandFallback,
-      pack, packs, bought, leftover, cost: pack ? round2(packs * pack.price) : null,
-      // The share of the cost the planned dinners actually use (the rest is leftovers for later).
-      usedCost: pack ? round2(pack.price * Math.min(packs, shortfall / pack.size)) : null,
+      pack, packs, bought, leftover, cost,
+      // The share of the cost the planned meals actually use (the rest is leftovers for later).
+      usedCost: pack ? round2(usedTotal) : null,
+      usedDinner: pack ? round2(usedTotal * (1 - lunchShare)) : null,
+      usedLunch: pack ? round2(usedTotal * lunchShare) : null,
+      dinnerNeed, lunchNeed,
+      costLunch: round2(mealPart * lunchShare),
+      costExtras: round2(extrasPart),
       uses: (uses[id] || []).slice().sort((a, b) => a.date.localeCompare(b.date)),
+      lunchUses: (lunch.uses[id] || []).slice().sort((a, b) => a.date.localeCompare(b.date)),
       reasons, checked: !!checked[id],
     });
   }
@@ -204,8 +236,9 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
     };
   }
 
+  const meal = (i) => i.reasons.includes('dinners') || i.reasons.includes('lunches');
   const leftovers = items
-    .filter((i) => i.pack && i.kind !== 'staple' && i.leftover > 1e-6 && i.reasons.includes('dinners'))
+    .filter((i) => i.pack && i.kind !== 'staple' && i.leftover > 1e-6 && meal(i))
     .map((i) => ({ id: i.id, name: i.name, unit: i.unit, qty: round2(i.leftover), storage: i.storage }));
 
   const freezer = [];
@@ -229,15 +262,20 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
   freezer.sort((a, b) => b.dinners - a.dinners || a.name.localeCompare(b.name));
 
   const total = round2(stores.sams.subtotal + stores.jewel.subtotal);
-  const usedByDinners = round2(items.filter((i) => i.reasons.includes('dinners')).reduce((t, i) => t + (i.usedCost || 0), 0));
-  const leftoverValue = round2(items.filter((i) => i.reasons.includes('dinners')).reduce((t, i) => t + Math.max(0, (i.cost || 0) - (i.usedCost || 0) - (i.extraPacks && i.pack ? i.extraPacks * i.pack.price : 0)), 0));
+  const usedByDinners = round2(items.reduce((t, i) => t + (i.usedDinner || 0), 0));
+  const usedByLunches = round2(items.reduce((t, i) => t + (i.usedLunch || 0), 0));
+  const leftoverValue = round2(items.filter(meal).reduce((t, i) => t + Math.max(0, (i.cost || 0) - (i.usedCost || 0) - (i.costExtras || 0)), 0));
+  // Everyday extras: free-text lines plus the extra packs added to catalog items.
+  const extrasCost = round2(items.reduce((t, i) => t + (i.freeText ? (i.cost || 0) : (i.costExtras || 0)), 0));
+  const lunchCost = round2(items.reduce((t, i) => t + (i.costLunch || 0), 0));
   return {
-    listKey, dates, nights, items, covered, stores, leftovers, freezer, total,
-    usedByDinners, leftoverValue,
-    // Everyday extras: free-text lines plus the extra packs added to catalog items.
-    extrasCost: round2(items.reduce((t, i) => t + (i.freeText ? (i.cost || 0) : (i.extraPacks && i.pack ? i.extraPacks * i.pack.price : 0)), 0)),
+    listKey, dates, nights, lunches, items, covered, stores, leftovers, freezer, total,
+    usedByDinners, usedByLunches, leftoverValue, extrasCost, lunchCost,
+    // Dinners get the rest, so the three lines always add up to the total.
+    dinnerCost: round2(total - extrasCost - lunchCost),
     // What one dinner costs in food it actually uses (pack leftovers excluded).
     perDinner: nights.length ? round2(usedByDinners / nights.length) : 0,
+    perLunch: lunches.length ? round2(usedByLunches / lunches.length) : 0,
     weeks, planStore, pricesUpdated: db.pricesUpdated,
     unpriced: items.filter((i) => i.cost == null).length,
   };
@@ -284,6 +322,13 @@ export function dinnerFoodCost(db, state, dinnerId, entry = null) {
   const items = itemsForNight(db, state, dinnerId, entry);
   let t = 0;
   for (const [id, q] of Object.entries(items)) t += q * unitPrice(db, state, id, settingsOf(state).planStore);
+  return round2(t);
+}
+
+/** Food a packed lunch uses, priced per unit. */
+export function lunchFoodCost(db, state, lunch) {
+  let t = 0;
+  for (const [id, q] of Object.entries(lunch?.items || {})) t += q * unitPrice(db, state, id, settingsOf(state).planStore);
   return round2(t);
 }
 
@@ -341,16 +386,24 @@ export function monthBudget(db, state, today, { baseline = 1000 } = {}) {
   const away = all.filter((d) => state?.plan?.[d]?.status === 'away').length;
   const cooked = all.filter((d) => state?.plan?.[d]?.status === 'cooked').length;
   const extras = list.extrasCost || 0;
+  const lunchesToBuy = list.lunchCost || 0;
   const projected = round2(spent + stillToBuy);
+  const monthLunches = lunchesIn(db, state, all);
+  const lunchesMonth = round2(monthLunches.reduce((t, l) => t + lunchFoodCost(db, state, l), 0));
   const average = rotationAverage(db, state);
   const ifPlanned = round2(projected + average * unplanned);
   const nights = all.length;
   const ex = extrasPerMonth(db, state);
-  const typical = { perDinner: average, nights, dinners: round2(average * nights), extras: ex.total, extrasUnpriced: ex.unpriced, total: round2(average * nights + ex.total) };
+  const typical = {
+    perDinner: average, nights, dinners: round2(average * nights), extras: ex.total, extrasUnpriced: ex.unpriced,
+    lunches: lunchesMonth, lunchCount: monthLunches.length,
+    total: round2(average * nights + ex.total + lunchesMonth),
+  };
   const target = st.monthlyTarget;
   return {
     month, start, end, target, receipts, spent, stillToBuy, plannedRemaining, unplanned, away, cooked,
-    perDinner: list.perDinner, average, typical, projected, ifPlanned, extras, dinnersToBuy: round2(stillToBuy - extras), meatScale: st.meatScale,
+    perDinner: list.perDinner, average, typical, projected, ifPlanned, extras, lunchesToBuy, lunchesRemaining: list.lunches.length,
+    dinnersToBuy: round2(stillToBuy - extras - lunchesToBuy), meatScale: st.meatScale,
     left: round2(target - projected), leftIfPlanned: round2(target - ifPlanned), baseline,
     // Compared with a whole $1,000 month, so it counts the not-yet-planned nights at the rotation's
     // average; comparing a half-planned month against a full one would overstate the savings.

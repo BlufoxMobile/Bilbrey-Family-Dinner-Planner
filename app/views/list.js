@@ -1,7 +1,7 @@
 // LIST: the shopping list for the selected period — by store, then aisle — with
 // per-item store/brand/price, check-off, the freezer panel, extras, and the store handoff.
 import { html, ic, when, openSheet, closeSheet, toast, copyText, confirmSheet, segmented, renderSheet } from '../ui.js';
-import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate } from '../util.js';
+import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate, round2 } from '../util.js';
 import { listKeyFor, dinnerById } from '../planner.js';
 import { buildList, formatPackQty, formatStoreList, formatFullList, unitText, OTHER } from '../shopping.js';
 import {
@@ -28,14 +28,16 @@ function usesText(app, item) {
 function detail(app, i) {
   if (i.freeText) return `${i.every === 'week' ? 'Every week' : 'Every trip'}${i.cost == null ? ', add a price to count it in the budget' : ''}`;
   const parts = [];
-  if (i.reasons.includes('dinners')) {
-    let t = `${unitText(i.shortfall, i.unit)} needed ${usesText(app, i)}`.trim();
+  if (i.reasons.includes('dinners') || i.reasons.includes('lunches')) {
+    const who = [...new Set((i.lunchUses || []).map((u) => u.person))];
+    const forWhat = [i.reasons.includes('dinners') ? usesText(app, i) : '', who.length ? `${listJoin(who)}’s lunches` : ''].filter(Boolean);
+    let t = `${unitText(i.shortfall, i.unit)} needed ${forWhat.length ? (i.reasons.includes('dinners') ? forWhat.join(' and ') : `for ${forWhat.join(' and ')}`) : ''}`.trim();
     if (i.have > 0) t += `, ${fmtQty(i.have)} on hand`;
     parts.push(t);
   }
   if (i.extraPacks) parts.push(`${i.extraPacks} for everyday`);
   if (i.reasons.includes('low')) parts.push('running low');
-  if (i.leftover > 0.01 && i.kind !== 'staple' && i.reasons.includes('dinners')) parts.push(`${unitText(i.leftover, i.unit)} left over`);
+  if (i.leftover > 0.01 && i.kind !== 'staple' && (i.reasons.includes('dinners') || i.reasons.includes('lunches'))) parts.push(`${unitText(i.leftover, i.unit)} left over`);
   if (i.storeFallback) parts.push(`not at ${NAMES[OTHER[i.store]]}`);
   if (i.brandFallback) parts.push(i.brand === 'name' ? 'only name brand listed' : 'only store brand listed');
   return parts.join('; ');
@@ -47,24 +49,49 @@ function itemRow(app, i, listKey) {
     <button type="button" class="check" role="checkbox" aria-checked="${i.checked ? 'true' : 'false'}" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-label="${i.name}${i.checked ? ', in the cart' : ''}"><span class="check-box">${ic('check', { size: 18 })}</span></button>
     <button type="button" class="item-main" data-action="list:item" data-key="${i.key}">
       <span class="item-name">${i.name}</span>
-      <span class="item-qty">${qty}${i.pack?.source === 'family' ? html` <span class="tag">family price</span>` : ''}${i.brand === 'name' && !i.freeText ? html` <span class="tag">name brand</span>` : ''}</span>
+      <span class="item-qty">${qty}${i.reasons.includes('lunches') ? html` <span class="tag tag-lunch">Lunch</span>` : ''}${i.pack?.source === 'family' ? html` <span class="tag">family price</span>` : ''}${i.brand === 'name' && !i.freeText ? html` <span class="tag">name brand</span>` : ''}</span>
       <span class="item-detail">${detail(app, i)}</span>
     </button>
     <span class="item-price">${i.cost == null ? html`<span class="muted">add price</span>` : html`${money(i.cost)}${i.pack?.source !== 'family' && i.pack?.confidence !== 'listed' ? html`<small class="est" title="Estimated price">est.</small>` : ''}`}</span>
   </li>`;
 }
 
+const FILTERS = [{ id: 'all', label: 'Everything' }, { id: 'dinners', label: 'Dinners' }, { id: 'lunches', label: 'Lunches' }];
+/** The filter only applies while there are lunches to filter (else a leftover "Lunches" would hide everything). */
+export function activeFilter(app, list) {
+  const f = app.ui.listFilter || 'all';
+  return list.lunches.length && FILTERS.some((x) => x.id === f) ? f : 'all';
+}
+function shown(f, i) {
+  if (f === 'lunches') return i.reasons.includes('lunches');
+  if (f === 'dinners') return i.reasons.includes('dinners') || i.reasons.includes('low');
+  return true;
+}
+/** What a line costs for the filtered meals (a pack both dinners and lunches use is split by need). */
+export function filterShare(f, i) {
+  if (f === 'lunches') return i.costLunch || 0;
+  if (f === 'dinners') return Math.max(0, (i.cost || 0) - (i.costLunch || 0) - (i.costExtras || 0));
+  return i.cost || 0;
+}
+
 function storeSection(app, list, store, listKey) {
   const s = list.stores[store];
   if (!s.items.length) return '';
   const info = app.db.stores[store];
+  const f = activeFilter(app, list);
+  const aisles = s.aisles.map((a) => ({ ...a, items: a.items.filter((i) => shown(f, i)) })).filter((a) => a.items.length);
+  if (!aisles.length) return '';
+  const visible = aisles.reduce((n, a) => n + a.items.length, 0);
+  const share = round2(aisles.reduce((t, a) => t + a.items.reduce((u, i) => u + filterShare(f, i), 0), 0));
   return html`<section class="store-sec store-${store}" aria-labelledby="sec-${store}">
     <header class="store-head">
       <h2 id="sec-${store}" class="store-name">${info?.name || NAMES[store]}</h2>
-      <p class="store-total"><b>${money(s.subtotal)}</b><small>${s.items.length} ${s.items.length === 1 ? 'item' : 'items'}${s.remaining < s.items.length ? `, ${s.remaining} left` : ''}</small></p>
+      ${f === 'all'
+        ? html`<p class="store-total"><b>${money(s.subtotal)}</b><small>${s.items.length} ${s.items.length === 1 ? 'item' : 'items'}${s.remaining < s.items.length ? `, ${s.remaining} left` : ''}</small></p>`
+        : html`<p class="store-total"><b>${money(share)}</b><small>for ${f}: ${visible} of ${s.items.length} ${s.items.length === 1 ? 'item' : 'items'}</small></p>`}
     </header>
     <button type="button" class="btn btn-secondary btn-block store-handoff" data-action="list:handoff" data-store="${store}">${ic('copy', { size: 20 })}Copy & open ${info?.name || NAMES[store]}</button>
-    ${s.aisles.map((a) => html`<div class="aisle"><h3 class="aisle-h">${a.aisle}</h3><ul class="items">${a.items.map((i) => itemRow(app, i, listKey))}</ul></div>`)}
+    ${aisles.map((a) => html`<div class="aisle"><h3 class="aisle-h">${a.aisle}</h3><ul class="items">${a.items.map((i) => itemRow(app, i, listKey))}</ul></div>`)}
   </section>`;
 }
 
@@ -89,6 +116,38 @@ function freezerPanel(app, list) {
     <ul class="fz-list">${rows.slice(0, 4).map((f) => fzRow(f, today))}</ul>
     ${when(rows.length > 4, () => html`<details class="fz-more"><summary>${rows.length - 4} more from the freezer</summary><ul class="fz-list">${rows.slice(4).map((f) => fzRow(f, today))}</ul></details>`)}
   </section>`;
+}
+
+/** Coupons can't be clipped by the app (no store API, no store passwords here): this opens the right pages. */
+function couponsCard(app) {
+  const j = app.db.stores.jewel.coupons;
+  const sm = app.db.stores.sams.coupons;
+  return html`<section class="coupons" aria-label="Coupons">
+    <button type="button" class="btn btn-secondary" data-action="list:coupons" data-store="jewel">${ic('receipt', { size: 20 })}${j?.label || 'Clip Jewel coupons'}</button>
+    <button type="button" class="btn btn-quiet" data-action="list:coupons" data-store="sams">${sm?.label || "Sam's Instant Savings"} (automatic)</button>
+  </section>`;
+}
+
+function openCoupons(app, focus) {
+  const j = app.db.stores.jewel;
+  const sm = app.db.stores.sams;
+  openSheet({
+    id: 'coupons',
+    title: 'Coupons and savings',
+    subtitle: 'The planner can’t clip coupons for you: there’s no store API, and it never holds a store password. This opens the right page.',
+    render: () => html`
+      <section class="coupon-store ${focus === 'jewel' ? 'is-focus' : ''}">
+        <h3 class="sheet-h">${j.name}: clip before you shop</h3>
+        <p class="sheet-text">${j.coupons.clipAll ? 'Sign in, then Clip All.' : 'Takes a minute or two: sign in to Jewel-Osco (for U) and tap Clip on each coupon you’ll use. There’s no Clip All button.'} Coupons only count once they’re clipped.</p>
+        ${when(j.coupons.steps?.length, () => html`<ol class="steps-small">${j.coupons.steps.map((x) => html`<li>${x}</li>`)}</ol>`)}
+        <a class="btn btn-primary btn-block" href="${j.coupons.url}" target="_blank" rel="noopener" data-coupons="jewel">${ic('receipt', { size: 20 })}Clip Jewel coupons</a>
+      </section>
+      <section class="coupon-store ${focus === 'sams' ? 'is-focus' : ''}">
+        <h3 class="sheet-h">${sm.name}: nothing to clip</h3>
+        <p class="sheet-text">Instant Savings come off automatically for members, online and in the club, so the price on Sam’s site or shelf already includes them. The planner’s estimates use Sam’s regular prices, so a sale only makes the trip a little cheaper.</p>
+        <a class="btn btn-secondary btn-block" href="${sm.coupons.url}" target="_blank" rel="noopener" data-coupons="sams">See this month’s Instant Savings</a>
+      </section>`,
+  });
 }
 
 function extrasSection(app) {
@@ -133,23 +192,33 @@ export function render(app) {
       </div>
     </header>
     ${periodNav(app, range, { compact: true })}
-    ${noNights && !list.items.length ? html`<div class="empty">
+    ${noNights && !list.lunches.length && !list.items.length ? html`<div class="empty">
         <span class="empty-ic">${ic('list', { size: 28 })}</span>
-        <h3 class="empty-title">No dinners planned for ${rangeLabel(range.start, range.end)}</h3>
+        <h3 class="empty-title">Nothing planned for ${rangeLabel(range.start, range.end)}</h3>
         <p class="empty-body">Plan these nights and the list fills itself: every ingredient for five, minus what’s already in the pantry.</p>
         <div class="empty-actions"><a class="btn btn-primary" href="#/plan">Go to the planner</a></div>
       </div>` : html`
       <section class="totals" aria-label="Estimated cost">
-        <p class="total-big"><span class="total-num">${money(list.total)}</span><span class="total-label">estimated for ${list.nights.length} ${list.nights.length === 1 ? 'dinner' : 'dinners'}${Object.keys(app.state.extras || {}).length ? ' plus extras' : ''}</span></p>
+        <p class="total-big"><span class="total-num">${money(list.total)}</span><span class="total-label">estimated for ${listJoin([
+          list.nights.length ? `${list.nights.length} ${list.nights.length === 1 ? 'dinner' : 'dinners'}` : '',
+          list.lunches.length ? `${list.lunches.length} packed ${list.lunches.length === 1 ? 'lunch' : 'lunches'}` : '',
+          Object.keys(app.state.extras || {}).length ? 'everyday extras' : '',
+        ].filter(Boolean))}</span></p>
+        ${when(list.lunches.length, () => html`<ul class="cost-lines"><li><span>Dinners</span><b>${money(list.dinnerCost)}</b></li><li><span>Lunches</span><b>${money(list.lunchCost)}</b></li>${when(list.extrasCost, () => html`<li><span>Extras</span><b>${money(list.extrasCost)}</b></li>`)}</ul>`)}
         <div class="total-split">
           ${['sams', 'jewel'].map((s) => html`<p><span>${NAMES[s]}</span><b>${money(list.stores[s].subtotal)}</b></p>`)}
         </div>
-        ${when(list.nights.length && list.leftoverValue > 1, () => html`<p class="total-used">${money(list.usedByDinners)} of it goes into these ${list.nights.length} dinners (${money(list.perDinner)} each). ${money(list.leftoverValue)} is bulk packs and staples left over for later.</p>`)}
+        ${when((list.nights.length || list.lunches.length) && list.leftoverValue > 1, () => html`<p class="total-used">${listJoin([
+          list.nights.length ? `${money(list.usedByDinners)} goes into these ${list.nights.length} dinners (${money(list.perDinner)} each)` : '',
+          list.lunches.length ? `${money(list.usedByLunches)} into the lunches` : '',
+        ].filter(Boolean))}. ${money(list.leftoverValue)} is bulk packs and staples left over for later.</p>`)}
         <p class="muted small">${pricesNote} Sam’s prices were read from samsclub.com; prices marked est. are estimates and can be off by about 15%. ${list.unpriced ? `${list.unpriced} ${list.unpriced === 1 ? 'item has' : 'items have'} no price yet.` : ''} Tap any item to fix its price; the family sees your correction.</p>
         ${when(list.items.length, () => html`<div class="progress" role="img" aria-label="${checked} of ${list.items.length} in the cart"><span style="width:${Math.round((checked / list.items.length) * 100)}%"></span></div>
           <p class="muted small">${checked} of ${list.items.length} in the cart</p>`)}
       </section>
+      ${couponsCard(app)}
       ${freezerPanel(app, list)}
+      ${when(list.lunches.length, () => html`<div class="list-filter">${segmented('listFilter', FILTERS, activeFilter(app, list), { label: 'Show', action: 'list:filter', small: true })}</div>`)}
       ${storeSection(app, list, 'sams', listKey)}
       ${storeSection(app, list, 'jewel', listKey)}
       ${when(list.leftovers.length, () => {
@@ -236,6 +305,9 @@ function handoff(app, store) {
       title: ok ? `${info.name} list copied` : `Copy the ${info.name} list`,
       subtitle: `${list.stores[store].items.filter((i) => !i.checked).length || list.stores[store].items.length} items, about ${money(list.stores[store].subtotal)}`,
       render: () => html`
+        ${store === 'jewel'
+          ? html`<p class="hint">${ic('receipt', { size: 18 })}<span>Clip coupons first: sign in to Jewel-Osco and tap Clip on each one you’ll use (there’s no Clip All). <a href="${info.coupons.url}" target="_blank" rel="noopener">Clip Jewel coupons</a></span></p>`
+          : html`<p class="hint">${ic('receipt', { size: 18 })}<span>Sam’s Instant Savings come off automatically at checkout for members. <a href="${info.coupons.url}" target="_blank" rel="noopener">See Instant Savings</a></span></p>`}
         <ol class="steps-small">${info.handoff.filter((s, k) => !(k === 0 && /^tap copy/i.test(s))).map((s) => html`<li>${s}</li>`)}</ol>
         ${when(info.handoffMethod, () => html`<p class="muted small">${info.handoffMethod}</p>`)}
         <a class="btn btn-primary btn-block" href="${info.orderUrl || info.website}" target="_blank" rel="noopener">${ic('store', { size: 20 })}Open ${info.name}</a>
@@ -255,6 +327,8 @@ export const actions = {
   'list:check': (app, el) => app.commit(toggleCheckOps(app.state, { listKey: el.dataset.list, key: el.dataset.key }), { quiet: true }),
   'list:item': (app, el) => itemSheet(app, el.dataset.key),
   'list:handoff': (app, el) => handoff(app, el.dataset.store),
+  'list:coupons': (app, el) => openCoupons(app, el.dataset.store),
+  'list:filter': (app, el) => { app.ui.listFilter = el.dataset.value; app.render(); },
   'list:copy-again': async (app, el) => {
     const { list } = current(app);
     const ok = await copyText(formatStoreList(app.db, list, el.dataset.store));

@@ -3,8 +3,9 @@ import { html, ic, when, emptyState } from '../ui.js';
 import { addDays, dateRange, longDay, money, relativeDay, rangeLabel, fmtQty, listJoin } from '../util.js';
 import { dinnerById, periodRange } from '../planner.js';
 import { buildList } from '../shopping.js';
-import { generateOps, markCookedOps } from '../actions.js';
-import { sidesFor, dinnerPhoto, equipment, favoriteBadge, awayReason, dayStamp } from './common.js';
+import { generateOps, markCookedOps, awayBlock } from '../actions.js';
+import { sidesFor, dinnerPhoto, equipment, favoriteBadge, awayReason, dayStamp, nutri, showNutrition, lighterChip } from './common.js';
+import { plateNutrition, dayNutrition, lighterSide, fmtKcal } from '../nutrition.js';
 import { openPick, openAway, openNight } from './sheets.js';
 import { defaultAnchor } from './plan.js';
 
@@ -15,6 +16,7 @@ function hero(app, today) {
   const d = e?.dinner ? dinnerById(app.db, app.state, e.dinner) : null;
   if (e?.status === 'away') {
     const r = awayReason(e);
+    const trip = awayBlock(app.state, today).filter((x) => x >= today);
     return html`<article class="hero hero-away">
       <div class="away-card away-card-hero">
         <span class="away-ic">${ic('moon', { size: 34 })}</span>
@@ -22,7 +24,10 @@ function hero(app, today) {
         <h1 class="hero-title">${r.label}</h1>
         <p class="hero-sub">${e.away?.note || r.note} No dinner to cook at home${d ? `, and ${d.title.toLowerCase()} is off the list` : ''}.</p>
         <div class="hero-actions">
-          <button type="button" class="btn btn-on-dusk" data-action="night:back" data-date="${today}">${ic('home', { size: 20 })}${d ? `Bring back ${d.title}` : 'We’re home after all'}</button>
+          ${trip.length > 1
+            ? html`<button type="button" class="btn btn-on-dusk" data-action="night:back-trip" data-date="${today}">${ic('home', { size: 20 })}We’re home: bring back all ${trip.length} nights</button>
+              <button type="button" class="btn btn-quiet btn-on-dusk-quiet" data-action="night:back" data-date="${today}">Just tonight</button>`
+            : html`<button type="button" class="btn btn-on-dusk" data-action="night:back" data-date="${today}">${ic('home', { size: 20 })}${d ? `Bring back ${d.title}` : 'We’re home after all'}</button>`}
         </div>
       </div>
     </article>`;
@@ -50,6 +55,16 @@ function hero(app, today) {
       ${when(d.subtitle, () => html`<p class="hero-sub">${d.subtitle}</p>`)}
       ${when(sides.length, () => html`<p class="hero-sides">with ${sides.map((s, i) => html`${i ? (i === sides.length - 1 ? ' and ' : ', ') : ''}<button type="button" class="link-side" data-action="side:sub" data-date="${today}" data-dinner="${d.id}" data-slot="${s.slot}" aria-label="${s.info?.title}. Substitute this side">${s.info?.title}</button>`)}</p>`)}
       <div class="hero-meta">${equipment(d)}${favoriteBadge(app, d)}</div>
+      ${when(showNutrition(app), () => html`<p class="hero-nutri">${nutri(app, plateNutrition(app.db, app.state, d.id, e), { suffix: 'a plate' })}</p>`)}
+      ${when(!cooked, () => {
+        const idea = lighterSide(app.db, app.state, d.id, e);
+        return idea ? lighterChip(app, {
+          key: `side:${d.id}:${idea.slot}:${idea.to.id}`,
+          text: `${idea.to.title} instead of ${idea.from.title}.`,
+          why: showNutrition(app) ? `About ${fmtKcal(idea.saves)} fewer calories a plate, and it’s remembered for ${d.title}.` : `It’s remembered for ${d.title}.`,
+          action: 'lighter:side', data: { dinner: d.id, slot: idea.slot, ref: idea.to.id }, label: 'Swap it',
+        }) : '';
+      })}
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="#/cook/${today}">${ic('flame', { size: 20 })}Start cooking</a>
       </div>
@@ -122,10 +137,20 @@ export function freezerNote(f) {
   return `${f.name}: ${what} ${verb} ${which}${f.leftover > 0 ? `, with ${fmtQty(f.leftover)} ${f.unit} left over` : ''}.`;
 }
 
+function todayLine(app, today) {
+  const who = app.who();
+  if (!who || !showNutrition(app)) return '';
+  const n = dayNutrition(app.db, app.state, who, today);
+  if (!n) return '';
+  const from = n.lunch && n.dinner ? 'lunch and dinner' : n.lunch ? 'lunch' : 'dinner';
+  return html`<p class="today-nutri">Today for ${who}: about <b>${fmtKcal(n.kcal)}</b> calories and <b>${Math.round(n.protein)} g</b> protein from ${from}.<small>Breakfast and snacks aren’t counted.${n.complete ? '' : ' A few ingredients have no calorie data yet.'}</small></p>`;
+}
+
 export function render(app) {
   const today = app.today();
   return html`<div class="page page-tonight">
     <p class="dateline">${longDay(today)}</p>
+    ${todayLine(app, today)}
     <div class="tonight-grid">
       <div class="tonight-main">${hero(app, today)}</div>
       <div class="tonight-side">${weekAhead(app, today)}${glance(app)}</div>

@@ -31,6 +31,12 @@ export function startStatic({ port = 8080, adapter = true, quiet = false } = {})
       if (p.endsWith('/')) p += 'index.html';
       const file = path.join(ROOT, p);
       if (!file.startsWith(ROOT) || /node_modules|\/\.git\//.test(file)) { res.writeHead(403); return res.end(); }
+      // Until the lunch and nutrition agents land their files, serve the small test fixtures.
+      if (adapter && (p === '/data/lunches.json' || p === '/data/nutrition.json') && !existsSync(file)) {
+        const body = await readFile(path.join(ROOT, 'tests', 'fixtures', path.basename(p)));
+        res.writeHead(200, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-store', 'X-Dev-Fixture': '1' });
+        return res.end(body);
+      }
       if (adapter && (p === '/data/catalog.json' || p === '/data/recipes.json') && !existsSync(file)) {
         adapted ||= loadAdapted();
         const body = JSON.stringify(p.endsWith('catalog.json') ? adapted.catalog : adapted.recipes);
@@ -39,7 +45,9 @@ export function startStatic({ port = 8080, adapter = true, quiet = false } = {})
       }
       const st = await stat(file).catch(() => null);
       if (!st || !st.isFile()) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
-      const body = await readFile(file);
+      let body = await readFile(file);
+      // Tests can publish a "new version" of the service worker without touching the repo.
+      if (p === '/sw.js' && server.swSuffix) body = Buffer.concat([body, Buffer.from(`\n${server.swSuffix}\n`)]);
       res.writeHead(200, {
         'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream',
         'Cache-Control': 'no-store',

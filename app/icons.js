@@ -56,6 +56,7 @@ const P = {
   drag: '<path d="M9 6h.01"/><path d="M15 6h.01"/><path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M9 18h.01"/><path d="M15 18h.01"/>',
   link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   bowl: '<path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20.5h8"/>',
+  lunch: '<path d="M4.5 9.5h15v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2z"/><path d="M9 9.5V7a3 3 0 0 1 6 0v2.5"/><path d="M4.5 13.5h15"/><path d="M11 13.5v2h2v-2"/>',
   textSize: '<path d="M4 18L8.5 6 13 18"/><path d="M5.6 14h5.8"/><path d="M15 18l2.8-7.5 2.7 7.5"/><path d="M15.9 15.8h3.8"/>',
 };
 
@@ -69,6 +70,10 @@ const G = {
   Comfort: '<path d="M8 20h32v12a8 8 0 0 1-8 8H16a8 8 0 0 1-8-8z"/><path d="M4 20h4"/><path d="M40 20h4"/><path d="M8 20c0-3 7-5 16-5s16 2 16 5"/><path d="M18 10c0-2.5 2-2.5 2-5"/><path d="M27 10c0-2.5 2-2.5 2-5"/>',
   Salads: '<path d="M5 24h38a19 19 0 0 1-38 0z"/><path d="M14 24c-2-6 2-12 8-12 0 6-4 10-8 12z"/><path d="M24 24c0-7 5-12 12-12-1 7-5 11-12 12z"/><path d="M30 24c2-3 5-4 8-4"/>',
   Pizza: '<path d="M24 44L6 10c11-6 25-6 36 0z"/><path d="M9 16c10-5 20-5 30 0"/><circle cx="20" cy="22" r="2.5"/><circle cx="28" cy="27" r="2.5"/><circle cx="23" cy="33" r="2"/>',
+  'lunch-main': '<path d="M6 22c0-8 8-13 18-13s18 5 18 13z"/><path d="M6 26h36"/><path d="M7 26c2 3 5 2 7 0s5-2 7 0 5 2 7 0 5-2 7 0 4 2 6 0"/><path d="M6 31h36v5a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z"/>',
+  'lunch-side': '<path d="M12 8h24l-2 6 3 26H11l3-26z"/><path d="M14 14h20"/><path d="M19 24l4 4 6-7"/>',
+  'lunch-snack': '<circle cx="24" cy="24" r="16"/><circle cx="18" cy="19" r="1.8"/><circle cx="28" cy="17" r="1.8"/><circle cx="30" cy="27" r="1.8"/><circle cx="20" cy="30" r="1.8"/>',
+  'lunch-drink': '<path d="M16 10h16l-2 32H18z"/><path d="M15 18h18"/><path d="M26 10l4-6h6"/>',
   side: '<path d="M5 26h38a19 19 0 0 1-38 0z"/><path d="M17 20c0-4 3-7 7-7s7 3 7 7"/><path d="M14 43h20"/>',
   shelf: '<path d="M14 8h20"/><path d="M15 8v4c-3 1.5-4 3.6-4 6.3V38a4 4 0 0 0 4 4h18a4 4 0 0 0 4-4V18.3c0-2.7-1-4.8-4-6.3V8"/><path d="M11 22h26"/><path d="M11 32h26"/>',
 };

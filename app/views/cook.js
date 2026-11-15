@@ -1,6 +1,6 @@
 // COOK MODE: big readable steps for the dinner and both sides, tap to check off,
 // screen stays awake while it's open.
-import { html, ic, when } from '../ui.js';
+import { html, ic, when, tf } from '../ui.js';
 import { fmtQty, isISODate, relativeDay } from '../util.js';
 import { dinnerById, scaleItems } from '../planner.js';
 import { markCookedOps } from '../actions.js';
@@ -92,7 +92,7 @@ export function render(app) {
         <h2 id="cs-${s.id}" class="cook-sec-h">${s.lead ? 'The dinner' : s.title}</h2>
         <ol class="cook-steps">${s.steps.map((step, k) => {
           const on = !!checks[`${s.id}:${k}`];
-          return html`<li><button type="button" class="cook-step ${on ? 'is-done' : ''}" role="checkbox" aria-checked="${on}" data-action="cook:check" data-k="${s.id}:${k}">
+          return html`<li><button type="button" class="cook-step ${on ? 'is-done' : ''}" role="checkbox" aria-checked="${tf(on)}" data-action="cook:check" data-k="${s.id}:${k}">
             <span class="cook-num" aria-hidden="true">${on ? ic('check', { size: 22 }) : k + 1}</span><span class="cook-text">${step}</span>
           </button></li>`;
         })}</ol>

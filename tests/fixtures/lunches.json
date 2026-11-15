@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "updated": "2026-11-14",
+  "notes": "TEST FIXTURE ONLY (frontend). Uses catalog ids that already exist so the app can be built before data/lunches.json lands.",
+  "slots": [
+    { "id": "main", "label": "Main" },
+    { "id": "side", "label": "Side" },
+    { "id": "snack", "label": "Snack" },
+    { "id": "drink", "label": "Drink" }
+  ],
+  "items": [
+    { "id": "turkey-cheese-sandwich", "slot": "main", "title": "Turkey and cheese sandwich", "subtitle": "Sliced turkey and cheese on whole-grain bread.", "items": { "deliTurkey": 3, "bread": 2, "cheeseSlices": 1 }, "tags": ["kid favorite"], "prep": "Build it in the morning and wrap it tight." },
+    { "id": "turkey-salad-bowl", "slot": "main", "title": "Turkey salad with ranch", "subtitle": "Romaine, sliced turkey and ranch.", "items": { "deliTurkey": 3, "lettuce": 1, "ranch": 2 }, "tags": ["healthy", "high protein"], "prep": "Pack the ranch on the side." },
+    { "id": "turkey-salad-light", "slot": "main", "title": "Turkey salad with light ranch", "subtitle": "Same salad, half the dressing.", "items": { "deliTurkey": 3, "lettuce": 1, "ranch": 1 }, "tags": ["healthy", "high protein"], "prep": "Pack the ranch on the side." },
+    { "id": "tortilla-chips-bag", "slot": "side", "title": "Tortilla chips", "subtitle": "A small bag of chips.", "items": { "tortillaChips": 1 }, "tags": ["kid favorite"], "prep": "Portion into a snack bag." },
+    { "id": "apple-slices-bag", "slot": "side", "title": "Apple slices", "subtitle": "Crisp apple slices.", "items": { "apples": 0.4 }, "tags": ["healthy"], "prep": "Slice and squeeze a little lemon on them." },
+    { "id": "granola-bar", "slot": "snack", "title": "Granola bar", "subtitle": "One chewy bar.", "items": { "granolaBars": 1 }, "tags": ["no-prep"], "prep": "Toss one in." },
+    { "id": "string-cheese", "slot": "snack", "title": "String cheese", "subtitle": "One stick.", "items": { "stringCheese": 1 }, "tags": ["high protein"], "prep": "Keep it cold." },
+    { "id": "yogurt-cup", "slot": "snack", "title": "Yogurt cup", "subtitle": "One cup.", "items": { "yogurtCups": 1 }, "tags": ["healthy"], "prep": "Pack with an ice pack." },
+    { "id": "milk-box", "slot": "drink", "title": "Milk", "subtitle": "One cup of milk.", "items": { "milk": 1 }, "tags": ["kid favorite"], "prep": "Pour into a cold thermos." },
+    { "id": "orange-juice", "slot": "drink", "title": "Orange juice", "subtitle": "Eight ounces.", "items": { "juice": 8 }, "tags": [], "prep": "Pour into a cold thermos." },
+    { "id": "water-bottle", "slot": "drink", "title": "Water", "subtitle": "From the tap.", "items": {}, "tags": ["healthy"], "prep": "Fill a bottle." }
+  ],
+  "defaults": {
+    "Knox": { "enabled": true, "days": [1, 2, 3, 4, 5], "slots": { "main": ["turkey-cheese-sandwich"], "side": ["tortilla-chips-bag"], "snack": ["granola-bar"], "drink": ["milk-box", "orange-juice"] } },
+    "Jeff": { "enabled": true, "days": [1, 2, 3, 4, 5], "slots": { "main": ["turkey-salad-bowl"], "drink": ["water-bottle"] } },
+    "Candi": { "enabled": false, "days": [1, 2, 3, 4, 5], "slots": {} },
+    "Jordan": { "enabled": false, "days": [1, 2, 3, 4, 5], "slots": {} },
+    "Jackson": { "enabled": false, "days": [1, 2, 3, 4, 5], "slots": {} }
+  },
+  "swaps": [
+    { "from": "turkey-salad-bowl", "to": "turkey-salad-light", "why": "Same salad with half the ranch." },
+    { "from": "orange-juice", "to": "water-bottle", "why": "Saves the juice calories." }
+  ]
+}

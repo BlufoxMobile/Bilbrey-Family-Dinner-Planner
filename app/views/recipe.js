@@ -1,13 +1,14 @@
 // RECIPE: one dinner — photo, ingredients for five, sides, steps, family votes,
 // make tonight / add to plan / start cooking, and retire/restore for Jeff and Candi.
-import { html, ic, when, openSheet, avatar } from '../ui.js';
+import { html, ic, when, openSheet, avatar, tf } from '../ui.js';
 import { FAMILY, PARENTS } from '../config.js';
 import { fmtQty, addDays, datesBetween, relativeDay, shortDate, dayWord, dayAndDate } from '../util.js';
 import { dinnerById, isRetired, isPromoted, isFavorite, voteInfo, findInPlan, inRotation, scaleItems } from '../planner.js';
 import { settingsOf } from '../state.js';
 import { voteOps, retireOps, restoreOps, promoteOps } from '../actions.js';
 import { itemMeta, singular } from '../shopping.js';
-import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason } from './common.js';
+import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip } from './common.js';
+import { plateNutrition, entreeNutrition, sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
 import { place, openWho } from './sheets.js';
 
 export const title = (app) => dinnerById(app.db, app.state, app.route.params[0])?.title || 'Recipe';
@@ -40,8 +41,8 @@ function votes(app, d) {
       </li>`;
     })}</ul>
     ${me ? html`<div class="vote-mine" role="group" aria-label="Your vote, ${me}">
-        <button type="button" class="btn vote-btn ${mine === 1 ? 'is-on' : ''}" aria-pressed="${mine === 1}" data-action="rec:vote" data-dinner="${d.id}" data-value="1">${ic('up_vote', { size: 20 })}Keep it</button>
-        <button type="button" class="btn vote-btn vote-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${mine === -1}" data-action="rec:vote" data-dinner="${d.id}" data-value="-1">${ic('down_vote', { size: 20 })}Skip it</button>
+        <button type="button" class="btn vote-btn ${mine === 1 ? 'is-on' : ''}" aria-pressed="${tf(mine === 1)}" data-action="rec:vote" data-dinner="${d.id}" data-value="1">${ic('up_vote', { size: 20 })}Keep it</button>
+        <button type="button" class="btn vote-btn vote-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="rec:vote" data-dinner="${d.id}" data-value="-1">${ic('down_vote', { size: 20 })}Skip it</button>
       </div>
       <p class="muted small">Voting as ${me}. Three thumbs-down retire a dinner and bring in one from the bench; three thumbs-up make it a family favorite.</p>`
       : html`<button type="button" class="btn btn-secondary" data-action="sheet:who">Pick who’s using this phone to vote</button>`}
@@ -70,6 +71,16 @@ export function render(app) {
         <h1 class="recipe-title">${d.title}</h1>
         ${when(d.subtitle, () => html`<p class="recipe-sub">${d.subtitle}</p>`)}
         ${equipment(d)}
+        ${when(showNutrition(app), () => html`<p class="recipe-nutri">${nutri(app, plateNutrition(app.db, app.state, d.id, null), { suffix: 'a plate with both sides' })}</p>`)}
+        ${(() => {
+          const idea = lighterSide(app.db, app.state, d.id, null);
+          return idea ? lighterChip(app, {
+            key: `side:${d.id}:${idea.slot}:${idea.to.id}`,
+            text: `${idea.to.title} instead of ${idea.from.title}.`,
+            why: showNutrition(app) ? `About ${fmtKcal(idea.saves)} fewer calories a plate, remembered for this dinner.` : 'Remembered for this dinner.',
+            action: 'lighter:side', data: { dinner: d.id, slot: idea.slot, ref: idea.to.id }, label: 'Swap it',
+          }) : '';
+        })()}
         <div class="badges">
           ${favoriteBadge(app, d)}
           ${when(retired, () => html`<span class="badge badge-out">Voted out</span>`)}
@@ -91,7 +102,7 @@ export function render(app) {
         ${ingredients(app, d.items)}
         <h3 class="sub-title">Sides</h3>
         ${sides.length ? sides.map((s) => html`<details class="side-detail">
-          <summary>${sidePhoto(app, s, { size: 'thumb' })}<span><b>${s.info?.title}</b>${when(s.remembered, () => html`<small>Remembered substitute</small>`)}</span></summary>
+          <summary>${sidePhoto(app, s, { size: 'thumb' })}<span><b>${s.info?.title}</b>${when(s.remembered, () => html`<small>Remembered substitute</small>`)}${when(showNutrition(app), () => { const sn = sideNutrition(app.db, app.state, s.parsed); return html`<small class="side-kcal">${sn ? `${fmtKcal(sn.kcal)} cal a plate` : '—'}</small>`; })}</span></summary>
           ${ingredients(app, s.info?.items || {})}
           <ol class="steps steps-small">${(s.info?.steps || []).map((t) => html`<li>${t}</li>`)}</ol>
         </details>`) : html`<p class="muted">No sides.</p>`}

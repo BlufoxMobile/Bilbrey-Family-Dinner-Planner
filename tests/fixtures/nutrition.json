@@ -1,0 +1,26 @@
+{
+  "updated": "2026-11-14",
+  "notes": "TEST FIXTURE ONLY (frontend). Round numbers per ONE catalog unit.",
+  "per": {
+    "deliTurkey": { "kcal": 30, "protein": 5, "unit": "oz" },
+    "bread": { "kcal": 80, "protein": 4, "unit": "slices" },
+    "cheeseSlices": { "kcal": 70, "protein": 4, "unit": "slices" },
+    "lettuce": { "kcal": 20, "protein": 1.5, "unit": "hearts" },
+    "ranch": { "kcal": 70, "protein": 0, "unit": "tbsp" },
+    "tortillaChips": { "kcal": 140, "protein": 2, "unit": "oz" },
+    "apples": { "kcal": 236, "protein": 1.2, "unit": "lb" },
+    "granolaBars": { "kcal": 100, "protein": 2, "unit": "bars" },
+    "stringCheese": { "kcal": 80, "protein": 7, "unit": "sticks" },
+    "yogurtCups": { "kcal": 100, "protein": 5, "unit": "yogurt cups" },
+    "milk": { "kcal": 150, "protein": 8, "unit": "cups" },
+    "juice": { "kcal": 14, "protein": 0.2, "unit": "oz" },
+    "chicken": { "kcal": 545, "protein": 102, "unit": "lb" },
+    "beef": { "kcal": 1000, "protein": 90, "unit": "lb" },
+    "pasta": { "kcal": 100, "protein": 3.5, "unit": "oz" },
+    "salt": { "kcal": 0, "protein": 0, "unit": "tsp" },
+    "broccoli": { "kcal": 150, "protein": 12, "unit": "lb" },
+    "greenBeans": { "kcal": 70, "protein": 4, "unit": "cans" },
+    "fries": { "kcal": 45, "protein": 0.6, "unit": "oz" },
+    "buns": { "kcal": 140, "protein": 5, "unit": "buns" }
+  }
+}

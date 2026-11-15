@@ -9,7 +9,9 @@ import {
   bestBenchFor, dinnerById, effectiveSides, findInPlan, generatePlan, itemsForNight, sideInfo, parseSideRef, kindOf,
   voteInfo, isRetired, isPromoted,
 } from './planner.js';
-import { boughtToPantry } from './shopping.js';
+import { boughtToPantry, readableId } from './shopping.js';
+import { personConfig, lunchItem, swappedConfig } from './lunch.js';
+import { addDays } from './util.js';
 
 function getPath(obj, path) {
   let o = obj;
@@ -165,6 +167,36 @@ export function bringBackOps(db, state, { date, who, at, today }) {
   const next = { ...clone(e), status: 'planned', manual: true, ...stamp(who, at) };
   delete next.away;
   return result(state, [set(['plan', date], next)], `${titleOf(db, state, e.dinner)} is back on for ${nightName(date, today)}.`);
+}
+
+/** The run of consecutive away nights around `date` with the same reason (a trip). */
+export function awayBlock(state, date) {
+  const e = state?.plan?.[date];
+  if (e?.status !== 'away') return [];
+  const same = (d) => { const x = state?.plan?.[d]; return x?.status === 'away' && (x.away?.reason || '') === (e.away?.reason || '') && (x.away?.note || '') === (e.away?.note || ''); };
+  let start = date;
+  while (same(addDays(start, -1))) start = addDays(start, -1);
+  const out = [];
+  for (let d = start; same(d); d = addDays(d, 1)) out.push(d);
+  return out;
+}
+
+/** One tap brings a whole trip home: every night of the block goes back to planned (or open). */
+export function bringBackTripOps(db, state, { date, who, at, today }) {
+  const dates = awayBlock(state, date).filter((d) => !today || d >= today);
+  if (dates.length < 2) return bringBackOps(db, state, { date, who, at, today });
+  const s = stamp(who, at);
+  const ops = [];
+  let open = 0;
+  for (const d of dates) {
+    const e = state.plan[d];
+    if (!e.dinner) { ops.push(del(['plan', d])); open++; continue; }
+    const next = { ...clone(e), status: 'planned', manual: true, ...s };
+    delete next.away;
+    ops.push(set(['plan', d], next));
+  }
+  const n = dates.length;
+  return result(state, ops, `Welcome home. ${n} nights are back on the plan${open ? `; ${open} ${open === 1 ? 'is' : 'are'} open for a dinner` : ''}.`, { count: n });
 }
 
 // ---------------------------------------------------------------- cooked
@@ -396,7 +428,76 @@ export function cookedPreview(db, state, date) {
   const items = itemsForNight(db, state, e.dinner, e);
   return Object.entries(items)
     .filter(([id]) => typeof state?.pantry?.[id]?.qty === 'number' && kindOf(db, state, id) !== 'staple')
-    .map(([id, need]) => ({ id, need, name: db.ingredients[id]?.name || state?.custom?.[id]?.name || id }));
+    .map(([id, need]) => ({ id, need, name: db.ingredients[id]?.name || state?.custom?.[id]?.name || readableId(id) }));
+}
+
+// ---------------------------------------------------------------- lunches (§8)
+
+// Each lunch edit writes only the field it changes (see personConfig), so edits from two
+// phones to different parts of the same person's lunches merge instead of overwriting.
+const lunchPath = (name, ...rest) => ['lunch', 'people', name, ...rest];
+
+export function setLunchEnabledOps(db, state, { name, enabled }) {
+  return result(state, [set(lunchPath(name, 'enabled'), !!enabled)], enabled ? `${name}’s lunches are on.` : `${name}’s lunches are off. Their groceries are off the list.`);
+}
+
+export function toggleLunchDayOps(db, state, { name, day }) {
+  const cfg = personConfig(db, state, name);
+  const days = cfg.days.includes(day) ? cfg.days.filter((d) => d !== day) : [...cfg.days, day].sort();
+  return result(state, [set(lunchPath(name, 'days'), days)], '');
+}
+
+/** Tap an item in the editor: adds it to the end of that slot's rotation, or takes it out. */
+export function toggleLunchItemOps(db, state, { name, slot, id }) {
+  const cfg = personConfig(db, state, name);
+  const list = cfg.slots[slot] || [];
+  const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+  return result(state, [set(lunchPath(name, 'slots', slot), next)], '');
+}
+
+export function skipLunchOps(db, state, { name, date, reason = 'Other', today }) {
+  const ops = [set(['lunch', 'days', date, name, 'skip'], true), set(['lunch', 'days', date, name, 'reason'], reason)];
+  return result(state, ops, `${name} won’t need a packed lunch ${date === today ? 'today' : `on ${weekdayName(date)}`}. Its groceries are off the list.`);
+}
+
+export function unskipLunchOps(db, state, { name, date }) {
+  const ops = [del(['lunch', 'days', date, name, 'skip']), del(['lunch', 'days', date, name, 'reason'])];
+  return result(state, ops, `${name}’s lunch is back on.`);
+}
+
+/** Swap one slot for one day (id null = leave it out that day). */
+export function pickLunchOps(db, state, { name, date, slot, id }) {
+  const item = id ? lunchItem(db, state, id) : null;
+  return result(state, [set(['lunch', 'days', date, name, 'picks', slot], id || null)], item ? `${item.title} for ${name} that day.` : `Nothing in that spot for ${name} that day.`);
+}
+
+export function resetLunchPickOps(db, state, { name, date, slot }) {
+  return result(state, [del(['lunch', 'days', date, name, 'picks', slot])], 'Back to the usual rotation.');
+}
+
+/** Apply a lighter lunch swap to the person's rotation (remembered for every day). */
+export function applyLunchSwapOps(db, state, { name, from, to }) {
+  const cfg = swappedConfig(db, state, name, from, to);
+  const slot = lunchItem(db, state, from)?.slot;
+  if (!cfg || !slot) return result(state, [], "That swap doesn't apply any more.", { error: true });
+  const t = lunchItem(db, state, to)?.title || 'the lighter pick';
+  return result(state, [set(lunchPath(name, 'slots', slot), cfg.slots[slot])], `${name}’s lunches now use ${t}.`);
+}
+
+/** A family-made lunch item: a shelf item to buy (priced later on the list) plus the lunch entry. */
+export function addCustomLunchOps(db, state, { title, slot, name }) {
+  const clean = String(title || '').trim();
+  if (!clean) return result(state, [], 'Give it a name first.', { error: true });
+  const shelf = customItemOps(state, { name: clean, unit: 'each', aisle: 'Snacks & Extras', kind: 'measured', storage: 'pantry' });
+  let id = `lunch-${slugify(clean)}`;
+  let n = 2;
+  while (state?.lunch?.custom?.[id] || db?.lunch?.items?.[id]) id = `lunch-${slugify(clean)}-${n++}`;
+  const ops = [...shelf.ops, set(['lunch', 'custom', id], { slot, title: clean, items: { [shelf.id]: 1 }, tags: ['family'] })];
+  if (name) {
+    const cfg = personConfig(db, state, name);
+    ops.push(set(lunchPath(name, 'slots', slot), [...(cfg.slots[slot] || []), id]));
+  }
+  return result(state, ops, `${clean} added${name ? ` to ${name}’s lunches` : ''}. Add its price on the shopping list.`, { id });
 }
 
 export { listJoin };

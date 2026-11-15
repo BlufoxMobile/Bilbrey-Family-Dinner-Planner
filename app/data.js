@@ -10,6 +10,10 @@ export const STORE_DEFAULTS = {
   sams: {
     id: 'sams', name: "Sam's Club", short: "Sam's", address: 'Addison, IL', phone: '', hours: '',
     website: 'https://www.samsclub.com', orderUrl: 'https://www.samsclub.com',
+    coupons: {
+      url: 'https://www.samsclub.com/', label: "Sam's Instant Savings", automatic: true,
+      note: "Instant Savings come off automatically at checkout for members. There's nothing to clip.", steps: [],
+    },
     handoff: [
       'Your list is on the clipboard.',
       "Open the Sam's Club app (or samsclub.com) and go to Lists.",
@@ -20,6 +24,10 @@ export const STORE_DEFAULTS = {
   jewel: {
     id: 'jewel', name: 'Jewel-Osco', short: 'Jewel', address: '599 E. Roosevelt Road, Glen Ellyn, IL', phone: '', hours: '',
     website: 'https://www.jewelosco.com', orderUrl: 'https://www.jewelosco.com',
+    coupons: {
+      url: 'https://www.jewelosco.com/foru/coupons-deals.html', label: 'Clip Jewel coupons', automatic: false,
+      note: 'Digital coupons only count once they’re clipped in Jewel-Osco’s site or app while you’re signed in. The planner can’t clip them for you.', steps: [],
+    },
     handoff: [
       'Your list is on the clipboard.',
       'Open the Jewel-Osco app (or jewelosco.com) and go to your shopping list.',
@@ -167,13 +175,92 @@ export function normalizeStores(raw) {
       storeName: pickStr(s.storeName),
       handoff: handoff && handoff.length ? handoff : out[id].handoff,
       notes: pickStr(s.notes, s.note),
+      coupons: couponsFrom(s.coupons ?? links.coupons, out[id].coupons),
     };
   }
   return out;
 }
 
+/** stores.json `coupons` may be a URL string or { url, label, note|how|steps }. */
+function couponsFrom(c, fallback) {
+  if (!c) return fallback;
+  if (typeof c === 'string') return /^https?:\/\//.test(c) ? { ...fallback, url: c } : fallback;
+  if (typeof c !== 'object') return fallback;
+  const url = pickStr(c.url, c.link, c.page, c.href, c.web);
+  const steps = stepsFrom(c.steps || c.appSteps || c.how);
+  return {
+    ...fallback,
+    url: /^https?:\/\//.test(url) ? url : fallback.url,
+    label: pickStr(c.label, c.name, fallback.label),
+    note: pickStr(c.note, c.notes, typeof c.how === 'string' ? c.how : '', fallback.note),
+    steps: steps && steps.length ? steps : fallback.steps || [],
+    automatic: typeof c.automatic === 'boolean' ? c.automatic : fallback.automatic,
+    clipAll: c.clipAll === true,
+  };
+}
+
+export const LUNCH_SLOTS = [
+  { id: 'main', label: 'Main' },
+  { id: 'side', label: 'Side' },
+  { id: 'snack', label: 'Snack' },
+  { id: 'drink', label: 'Drink' },
+];
+
+export function normalizeLunchItem(raw, extra = {}) {
+  if (!raw || !raw.id) return null;
+  return {
+    id: String(raw.id),
+    slot: String(raw.slot || 'main'),
+    title: String(raw.title || raw.name || 'Lunch item'),
+    subtitle: raw.subtitle ? String(raw.subtitle) : '',
+    items: cleanItems(raw.items),
+    tags: Array.isArray(raw.tags) ? raw.tags.map((t) => String(t).toLowerCase()) : [],
+    prep: raw.prep ? String(raw.prep) : '',
+    ...extra,
+  };
+}
+
+const DAY_NUMS = [0, 1, 2, 3, 4, 5, 6];
+export function normalizeLunchPerson(raw, slots = LUNCH_SLOTS) {
+  const days = Array.isArray(raw?.days) ? [...new Set(raw.days.map(Number).filter((d) => DAY_NUMS.includes(d)))].sort() : [1, 2, 3, 4, 5];
+  const out = { enabled: !!raw?.enabled, days, slots: {} };
+  for (const sl of slots) {
+    const list = raw?.slots?.[sl.id];
+    out.slots[sl.id] = Array.isArray(list) ? list.filter((x) => typeof x === 'string' && x) : [];
+  }
+  return out;
+}
+
+/** data/lunches.json (§8.2) → { slots, items, itemList, defaults, swaps, updated }; empty when missing. */
+export function normalizeLunches(raw) {
+  const slots = Array.isArray(raw?.slots) && raw.slots.length
+    ? raw.slots.filter((x) => x && x.id).map((x) => ({ id: String(x.id), label: String(x.label || x.id) }))
+    : LUNCH_SLOTS;
+  const itemList = (Array.isArray(raw?.items) ? raw.items : []).map((x) => normalizeLunchItem(x)).filter(Boolean);
+  const items = Object.fromEntries(itemList.map((x) => [x.id, x]));
+  const defaults = {};
+  for (const [name, d] of Object.entries(raw?.defaults || {})) defaults[name] = normalizeLunchPerson(d, slots);
+  const swaps = (Array.isArray(raw?.swaps) ? raw.swaps : [])
+    .filter((x) => x && items[x.from] && items[x.to] && x.from !== x.to)
+    .map((x) => ({ from: String(x.from), to: String(x.to), why: x.why ? String(x.why) : '' }));
+  return { available: itemList.length > 0, slots, items, itemList, defaults, swaps, updated: typeof raw?.updated === 'string' ? raw.updated.slice(0, 10) : null };
+}
+
+/** data/nutrition.json (§8.3) → { per: { id: { kcal, protein } } } or null when missing. */
+export function normalizeNutrition(raw) {
+  if (!raw || typeof raw !== 'object' || !raw.per || typeof raw.per !== 'object') return null;
+  const per = {};
+  for (const [id, v] of Object.entries(raw.per)) {
+    const kcal = num(v?.kcal);
+    const protein = num(v?.protein);
+    if (kcal == null || kcal < 0) continue;
+    per[id] = { kcal, protein: protein != null && protein >= 0 ? protein : 0 };
+  }
+  return { per, updated: typeof raw.updated === 'string' ? raw.updated.slice(0, 10) : null, notes: typeof raw.notes === 'string' ? raw.notes : '' };
+}
+
 /** Pure: builds the normalized db from raw JSON documents. */
-export function buildDb({ catalog, recipes, prices = null, stores = null, photos = null }) {
+export function buildDb({ catalog, recipes, prices = null, stores = null, photos = null, lunches = null, nutrition = null }) {
   const ingredients = {};
   for (const [id, raw] of Object.entries(catalog?.ingredients || {})) ingredients[id] = normalizeIngredient(id, raw);
 
@@ -210,10 +297,11 @@ export function buildDb({ catalog, recipes, prices = null, stores = null, photos
   const dinners = Object.fromEntries(dinnerList.map((d) => [d.id, d]));
   const sides = Object.fromEntries(sideList.map((s) => [s.id, s]));
 
-  const ph = { dinners: {}, sides: {} };
+  const ph = { dinners: {}, sides: {}, lunches: {} };
   if (photos && typeof photos === 'object') {
-    for (const k of ['dinners', 'sides']) {
-      for (const [id, v] of Object.entries(photos[k] || {})) {
+    // Lunch photos arrive under `lunch` (SPEC §8); `lunches` is accepted too.
+    for (const [k, from] of [['dinners', 'dinners'], ['sides', 'sides'], ['lunches', 'lunches'], ['lunches', 'lunch']]) {
+      for (const [id, v] of Object.entries(photos[from] || {})) {
         const src = typeof v === 'string' ? v : v?.src || v?.path || v?.full;
         if (typeof src === 'string' && src) {
           const small = typeof v === 'object' ? v.small || v['640'] || v.thumb : null;
@@ -234,6 +322,8 @@ export function buildDb({ catalog, recipes, prices = null, stores = null, photos
     pricesUpdated,
     pricesNotes,
     hasPrices: !!pricesUpdated,
+    lunch: normalizeLunches(lunches),
+    nutrition: normalizeNutrition(nutrition),
   };
 }
 
@@ -254,12 +344,14 @@ async function getJSON(fetchFn, url, required) {
 /** Fetches the data files relative to the app's base URL. */
 export async function loadDb({ base = './', fetchFn = globalThis.fetch.bind(globalThis) } = {}) {
   const u = (p) => new URL(p, new URL(base, globalThis.location?.href || 'http://localhost/')).href;
-  const [catalog, recipes, prices, stores, photos] = await Promise.all([
+  const [catalog, recipes, prices, stores, photos, lunches, nutrition] = await Promise.all([
     getJSON(fetchFn, u('data/catalog.json'), true),
     getJSON(fetchFn, u('data/recipes.json'), true),
     getJSON(fetchFn, u('data/prices.json'), false),
     getJSON(fetchFn, u('data/stores.json'), false),
     getJSON(fetchFn, u('img/photos.json'), false),
+    getJSON(fetchFn, u('data/lunches.json'), false),
+    getJSON(fetchFn, u('data/nutrition.json'), false),
   ]);
-  return buildDb({ catalog, recipes, prices, stores, photos });
+  return buildDb({ catalog, recipes, prices, stores, photos, lunches, nutrition });
 }

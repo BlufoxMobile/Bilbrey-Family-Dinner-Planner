@@ -1,8 +1,9 @@
 // The Bilbrey Family Dinner Planner — service worker.
-// App shell: precached, served network-first (cache when offline). Data JSON: stale-while-revalidate.
+// App shell and data JSON: precached, served network-first (cache when offline or slow), revalidated so
+// GitHub Pages' 10-minute HTTP cache can't mix an old file into a new version.
 // Photos, fonts, icons: cache-first.
 // The family API (/api/*) is never cached. Bump CACHE_VERSION with app/config.js VERSION.
-const CACHE_VERSION = 'v2.0.1';
+const CACHE_VERSION = 'v2.1.1';
 const SHELL = `bfdp-shell-${CACHE_VERSION}`;
 const DATA = `bfdp-data-${CACHE_VERSION}`;
 const IMAGES = 'bfdp-images-v1';
@@ -22,6 +23,8 @@ const SHELL_FILES = [
   'app/planner.js',
   'app/shopping.js',
   'app/actions.js',
+  'app/lunch.js',
+  'app/nutrition.js',
   'app/ui.js',
   'app/icons.js',
   'app/views/common.js',
@@ -36,6 +39,7 @@ const SHELL_FILES = [
   'app/views/family.js',
   'app/views/cook.js',
   'app/views/onboarding.js',
+  'app/views/lunch.js',
   'fonts/young-serif-400.woff2',
   'fonts/atkinson-next-400.woff2',
   'fonts/atkinson-next-400-italic.woff2',
@@ -47,7 +51,7 @@ const SHELL_FILES = [
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
 ];
-const DATA_FILES = ['data/catalog.json', 'data/recipes.json', 'data/prices.json', 'data/stores.json', 'img/photos.json'];
+const DATA_FILES = ['data/catalog.json', 'data/recipes.json', 'data/prices.json', 'data/stores.json', 'data/lunches.json', 'data/nutrition.json', 'img/photos.json'];
 
 const scopeURL = new URL('./', self.location);
 const abs = (p) => new URL(p, scopeURL).href;
@@ -73,12 +77,27 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-async function staleWhileRevalidate(req) {
-  const cache = await caches.open(DATA);
-  const cached = await cache.match(req, { ignoreSearch: true });
-  const network = fetch(req).then((res) => { if (res.ok) cache.put(req, res.clone()); return res; }).catch(() => null);
-  return cached || (await network) || new Response('{}', { status: 504, headers: { 'Content-Type': 'application/json' } });
+/** Fresh from the network (revalidated, never a stale HTTP-cache copy); the cached copy when offline or slow. */
+async function fresh(req, cacheName, fallback) {
+  const cache = await caches.open(cacheName);
+  try {
+    const res = await Promise.race([
+      fetch(req, { cache: 'no-cache' }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('slow')), 4000)),
+    ]);
+    if (res.ok) cache.put(req, res.clone());
+    return res;
+  } catch {
+    return (await cache.match(req, { ignoreSearch: true })) || fallback();
+  }
 }
+
+/**
+ * Recipe/price/lunch data goes with the code that reads it, so it's network-first like the app
+ * code. (Stale-while-revalidate let new code run against last version's catalog for a whole
+ * session after an update: lunch items showed up with no names or prices.)
+ */
+const dataFirst = (req) => fresh(req, DATA, () => new Response('{}', { status: 504, headers: { 'Content-Type': 'application/json' } }));
 
 async function cacheFirst(req) {
   const cache = await caches.open(IMAGES);
@@ -94,20 +113,7 @@ async function cacheFirst(req) {
 }
 
 /** App code: fresh from the network when online (so an update never mixes old and new files), cache when offline. */
-async function networkFirst(req) {
-  const cache = await caches.open(SHELL);
-  try {
-    const res = await Promise.race([
-      fetch(req),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('slow')), 4000)),
-    ]);
-    if (res.ok) cache.put(req, res.clone());
-    return res;
-  } catch {
-    const cached = await cache.match(req, { ignoreSearch: true });
-    return cached || new Response('', { status: 504 });
-  }
-}
+const networkFirst = (req) => fresh(req, SHELL, () => new Response('', { status: 504 }));
 
 /** Fonts and icons rarely change: cache first. */
 async function assetFirst(req) {
@@ -142,7 +148,7 @@ self.addEventListener('fetch', (event) => {
     })());
     return;
   }
-  if (path.startsWith('data/') || path === 'img/photos.json') { event.respondWith(staleWhileRevalidate(req)); return; }
+  if (path.startsWith('data/') || path === 'img/photos.json') { event.respondWith(dataFirst(req)); return; }
   if (path.startsWith('img/')) { event.respondWith(cacheFirst(req)); return; }
   if (path.startsWith('fonts/') || path.startsWith('icons/')) { event.respondWith(assetFirst(req)); return; }
   event.respondWith(networkFirst(req));
