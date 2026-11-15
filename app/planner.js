@@ -324,23 +324,39 @@ class Ledger {
     }
   }
 
+  /**
+   * Money view of one more dinner: `cost` = food it uses that isn't already on hand,
+   * `reuse` = value of leftovers/pantry it uses up, `waste` = value of new pack it would leave unused.
+   */
   evaluate(items) {
     let cost = 0;
     let reuse = 0;
+    let waste = 0;
     for (const [id, need] of Object.entries(items)) {
       const kind = kindOf(this.db, this.state, id);
+      const up = unitPrice(this.db, this.state, id, this.planStore);
       if (kind === 'staple') {
-        if (!pantryCovers(this.db, this.state, id, need)) cost += need * unitPrice(this.db, this.state, id, this.planStore);
+        if (!pantryCovers(this.db, this.state, id, need)) cost += need * up;
         continue;
       }
       const have = this.rem[id] || 0;
-      if (have >= need - 1e-9) {
-        reuse += this.db.ingredients[id]?.aisle === 'Meat' ? 0.9 : 0.3;
-      } else {
-        cost += (need - have) * unitPrice(this.db, this.state, id, this.planStore);
+      const fromHave = Math.min(have, need);
+      reuse += fromHave * up;
+      const short = need - fromHave;
+      if (short > 1e-9) {
+        cost += short * up;
+        const store = storeFor(this.db, this.state, id, this.planStore);
+        const p = packFor(this.db, this.state, id, store, brandFor(this.state, id));
+        if (p) {
+          // Frozen and shelf-stable leftovers keep for next week; fresh ones are the real waste.
+          const storage = this.db.ingredients[id]?.storage || this.state?.custom?.[id]?.storage || 'pantry';
+          const perish = { freezer: 0.2, pantry: 0.15, fridge: 0.7, counter: 0.8 }[storage] ?? 0.5;
+          const packs = Math.ceil(short / p.size - 1e-9);
+          waste += (packs * p.size - short) * up * perish;
+        }
       }
     }
-    return { cost, reuse: Math.min(reuse, 1.6) };
+    return { cost, reuse, waste };
   }
 
   consume(items) {
@@ -446,18 +462,23 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
     for (const c of candidates) {
       const { d } = c;
       const items = itemsForNight(db, state, d.id, { sides: c.sides });
-      const { cost, reuse } = ledger.evaluate(items);
+      const { cost, reuse, waste } = ledger.evaluate(items);
       const v = voteInfo(state, d.id);
       let score = seeded(`${seed}|${planStore}|${date}|${d.id}`) * 0.8;
       if (isFavorite(state, d)) score += 1.0;
       score += 0.25 * v.up - 0.35 * v.down;
       if (isHealthier(d)) score += 0.25;
-      score += reuse;
+      // Bulk packs: favor dinners that use up what's open or in the pantry; avoid opening a big pack for a little.
+      score += (reuse / 14) * 1.1;
       score -= cost / 14;
+      score -= (waste / 14) * 0.9;
       if (type === 'regular' && isAsian(d) && asianCount < 2) score += 0.6;
-      if (prevD && prevD.category === d.category) score -= 0.5;
-      if (prev2D && prev2D.category === d.category) score -= 0.2;
-      if (prevD && prevD.protein === d.protein) score -= 0.25;
+      if (prevD && prevD.category === d.category) score -= 0.8;
+      if (prev2D && prev2D.category === d.category) score -= 0.3;
+      if (prevD && prevD.protein === d.protein && !isBurger(d)) score -= 0.5;
+      // Keep the week varied: burgers count half toward the beef tally.
+      const sameProteinWeek = weekDinners.reduce((n, x) => n + (x.protein === d.protein ? (isBurger(x) ? 0.5 : 1) : 0), 0);
+      if (!isBurger(d) && sameProteinWeek > 1) score -= 0.45 * (sameProteinWeek - 1);
       if (monIndex(date) < 4 && d.minutes > 45) score -= 0.3;
       if (lastUse(d.id, date, 28) !== null) score -= 0.6;
       if (!best || score > best.score + 1e-9 || (Math.abs(score - best.score) <= 1e-9 && d.id < best.c.d.id)) best = { score, c };

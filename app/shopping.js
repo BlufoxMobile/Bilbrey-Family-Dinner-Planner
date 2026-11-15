@@ -172,6 +172,8 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
       need, have, stocked, low, shortfall, extraPacks: xp,
       store, storeFallback: fallback, brand: pack?.brand || brand, brandFallback: !!pack?.brandFallback,
       pack, packs, bought, leftover, cost: pack ? round2(packs * pack.price) : null,
+      // The share of the cost the planned dinners actually use (the rest is leftovers for later).
+      usedCost: pack ? round2(pack.price * Math.min(packs, shortfall / pack.size)) : null,
       uses: (uses[id] || []).slice().sort((a, b) => a.date.localeCompare(b.date)),
       reasons, checked: !!checked[id],
     });
@@ -222,10 +224,13 @@ export function buildList(db, state, { dates, listKey = '' } = {}) {
   freezer.sort((a, b) => b.dinners - a.dinners || a.name.localeCompare(b.name));
 
   const total = round2(stores.sams.subtotal + stores.jewel.subtotal);
-  const dinnerCost = round2(items.filter((i) => i.reasons.includes('dinners')).reduce((t, i) => t + (i.cost || 0), 0));
+  const usedByDinners = round2(items.filter((i) => i.reasons.includes('dinners')).reduce((t, i) => t + (i.usedCost || 0), 0));
+  const leftoverValue = round2(items.filter((i) => i.reasons.includes('dinners')).reduce((t, i) => t + Math.max(0, (i.cost || 0) - (i.usedCost || 0) - (i.extraPacks && i.pack ? i.extraPacks * i.pack.price : 0)), 0));
   return {
     listKey, dates, nights, items, covered, stores, leftovers, freezer, total,
-    perDinner: nights.length ? round2(dinnerCost / nights.length) : 0,
+    usedByDinners, leftoverValue,
+    // What one dinner costs in food it actually uses (pack leftovers excluded).
+    perDinner: nights.length ? round2(usedByDinners / nights.length) : 0,
     weeks, planStore, pricesUpdated: db.pricesUpdated,
     unpriced: items.filter((i) => i.cost == null).length,
   };

@@ -123,7 +123,12 @@ function hoursStr(h) {
   if (!h) return '';
   if (typeof h === 'string') return h;
   if (Array.isArray(h)) return h.map((x) => (typeof x === 'string' ? x : [x.days || x.day, x.hours || x.time].filter(Boolean).join(' '))).join('; ');
-  if (typeof h === 'object') return Object.entries(h).map(([k, v]) => `${k} ${v}`).join('; ');
+  if (typeof h === 'object') {
+    const main = h.store || h.club || h.hours || h.open;
+    if (typeof main === 'string') return main;
+    const v = Object.entries(h).find(([k, x]) => typeof x === 'string' && !['source', 'note', 'notes'].includes(k) && !/^https?:/.test(x));
+    return v ? v[1] : '';
+  }
   return '';
 }
 
@@ -153,11 +158,12 @@ export function normalizeStores(raw) {
       address: pickStr(addressStr(s.address), out[id].address),
       phone: pickStr(s.phone, out[id].phone),
       hours: pickStr(hoursStr(s.hours), out[id].hours),
-      website: pickStr(s.website, s.url, s.web, links.web, links.website, out[id].website),
-      orderUrl: pickStr(s.orderUrl, s.listUrl, s.handoff?.url, s.handoff?.link, links.list, links.order, links.shop, s.website, s.url, out[id].orderUrl),
-      appUrl: pickStr(s.appUrl, links.app, links.ios, links.appStore),
+      website: pickStr(s.website, s.url, s.web, links.web, links.website, links.storePage, links.shop, out[id].website),
+      orderUrl: pickStr(s.orderUrl, s.listUrl, s.handoff?.url, s.handoff?.link, links.shopThisStore, links.groceryPage, links.list, links.order, links.shop, s.website, s.url, out[id].orderUrl),
+      appUrl: pickStr(s.appUrl, s.apps?.ios?.url, links.app, links.ios, links.appStore),
+      searchTemplate: pickStr(links.searchTemplate, s.searchTemplate),
+      storeName: pickStr(s.storeName),
       handoff: handoff && handoff.length ? handoff : out[id].handoff,
-      handoffMethod: pickStr(s.handoff?.method, s.handoffMethod, s.method),
       notes: pickStr(s.notes, s.note),
     };
   }
@@ -184,6 +190,15 @@ export function buildDb({ catalog, recipes, prices = null, stores = null, photos
           const base = ing.packs?.[s]?.[b];
           (ing.packs[s] ||= {})[b] = { ...(base || {}), ...p, label: p.label || base?.label };
         }
+      }
+    }
+    // A store doesn't carry an id when prices.json has no entry for that store and it's listed in notSeenAt.
+    for (const s of STORES) {
+      const ids = Array.isArray(prices.notSeenAt?.[s]) ? prices.notSeenAt[s] : [];
+      for (const id of ids) {
+        const ing = ingredients[id];
+        const priced = prices.prices?.[id]?.[s] && (prices.prices[id][s].generic || prices.prices[id][s].name);
+        if (ing && !priced) delete ing.packs[s];
       }
     }
   }
