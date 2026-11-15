@@ -373,7 +373,7 @@
         "Spread the remaining oil and the butter on the hot zone, add the rice and minced garlic and let it sizzle untouched for a minute to toast. Fold in the chicken, vegetables, eggs, soy sauce and sesame oil, tossing until hot throughout."
       ],
       "sides": [
-        "sesame-cucumber",
+        "steamed-broccoli",
         "orange-wedges"
       ],
       "sideSlots": 2,
@@ -414,7 +414,7 @@
       ],
       "sides": [
         "carrot-sticks",
-        "sesame-cucumber"
+        "edamame"
       ],
       "sideSlots": 2,
       "photo": "Noodles tossed with browned ground beef crumbles and bright green broccoli florets in a glossy dark soy-ginger glaze, in a wide bowl."
@@ -534,7 +534,7 @@
       ],
       "sides": [
         "canned-green-beans",
-        "sesame-cucumber"
+        "steamed-broccoli"
       ],
       "sideSlots": 2,
       "photo": "Noodles tossed with golden chicken pieces and red and yellow bell pepper strips in a sticky honey-ginger glaze, in a large shallow bowl."
@@ -573,7 +573,7 @@
         "Add the rice to the hot zone and toss everything together with the remaining soy sauce and the sesame oil until steaming hot throughout."
       ],
       "sides": [
-        "sesame-cucumber",
+        "edamame",
         "steamed-broccoli"
       ],
       "sideSlots": 2,
@@ -615,7 +615,7 @@
         "Whisk the remaining soy sauce, sesame oil, honey, rice vinegar, remaining oil and minced garlic. Toss with the hot noodles and vegetables and top with the crispy chicken."
       ],
       "sides": [
-        "cucumber-spears",
+        "steamed-broccoli",
         "orange-wedges"
       ],
       "sideSlots": 2,
@@ -691,7 +691,7 @@
         "Add the noodles and sauce and toss everything together with the pork until glossy and hot."
       ],
       "sides": [
-        "cucumber-spears",
+        "edamame",
         "canned-carrots"
       ],
       "sideSlots": 2,
@@ -770,7 +770,7 @@
         "Build bowls of rice, chicken and broccoli and spoon the orange sauce over the top."
       ],
       "sides": [
-        "sesame-cucumber",
+        "edamame",
         "carrot-sticks"
       ],
       "sideSlots": 2,
@@ -1027,7 +1027,7 @@
       ],
       "sides": [
         "buttered-peas",
-        "tomato-cucumber"
+        "romaine-salad"
       ],
       "sideSlots": 2,
       "photo": "Spaghetti glossy with lemon butter and Parmesan, flecked with lemon zest and black pepper, topped with sliced grilled chicken and a lemon wedge."
@@ -1073,7 +1073,7 @@
     {
       "id": "greek-chicken-pitas",
       "title": "Lemon-oregano chicken flatbreads",
-      "subtitle": "Grilled lemon-oregano chicken on warm naan with tomato, cucumber and garlicky yogurt sauce.",
+      "subtitle": "Grilled lemon-oregano chicken on warm naan with a garlicky yogurt sauce.",
       "category": "Grill",
       "protein": "chicken",
       "minutes": 35,
@@ -1087,8 +1087,6 @@
       "items": {
         "chickenThighs": 2.25,
         "naan": 5,
-        "cucumber": 1,
-        "tomato": 0.75,
         "yogurt": 8,
         "lemons": 2,
         "oregano": 2,
@@ -1098,16 +1096,16 @@
       },
       "steps": [
         "Toss the chicken thighs with 1 tablespoon of the oil, the oregano, the zest and juice of 1 lemon, half the minced garlic and the salt. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
-        "Dice the cucumber and tomato. Stir half the cucumber into the yogurt with the remaining garlic and the juice of the second lemon.",
+        "Stir the remaining garlic and the juice of the second lemon into the yogurt.",
         "Brush the naan with the remaining oil and warm on the grill, about 1 minute per side.",
-        "Top each naan with chicken, tomato, the remaining cucumber and plenty of yogurt sauce, and fold to eat."
+        "Top each naan with chicken and plenty of yogurt sauce, and fold to eat."
       ],
       "sides": [
         "lemon-chickpeas",
         "carrot-sticks"
       ],
       "sideSlots": 2,
-      "photo": "Warm naan flatbreads topped with sliced grilled lemon-oregano chicken, diced tomato and cucumber and a drizzle of white garlic yogurt sauce, on a board."
+      "photo": "Warm naan flatbreads topped with sliced grilled lemon-oregano chicken and a drizzle of white garlic yogurt sauce, on a board."
     },
     {
       "id": "paprika-chicken-wedges",
@@ -1288,7 +1286,7 @@
         "Spread each naan with hummus, top with the spiced beef and drizzle with lemon yogurt. Cut into wedges."
       ],
       "sides": [
-        "cucumber-spears",
+        "garlic-green-beans",
         "carrot-sticks"
       ],
       "sideSlots": 2,
@@ -1297,7 +1295,7 @@
     {
       "id": "hummus-grill-plates",
       "title": "Lemon chicken chopped salad",
-      "subtitle": "Lemon-dressed romaine, cucumber and tomato topped with grilled chicken and a scoop of hummus.",
+      "subtitle": "Lemon-dressed romaine and carrots topped with grilled chicken and a scoop of hummus.",
       "category": "Salads",
       "protein": "chicken",
       "minutes": 30,
@@ -1312,18 +1310,17 @@
       "items": {
         "chickenThighs": 2.25,
         "lettuce": 3,
-        "cucumber": 1,
-        "tomato": 0.5,
         "hummus": 10,
         "oil": 3,
         "lemons": 2,
         "paprika": 1,
         "oregano": 1,
-        "salt": 1
+        "salt": 1,
+        "carrots": 0.5
       },
       "steps": [
         "Rub the chicken thighs with 1 tablespoon of the oil and season with the paprika, oregano and half the salt. Grill the thighs on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes (6–8 if your grill closes like a press). Rest 5 minutes, then slice.",
-        "Chop the romaine, cucumber and tomato. Whisk the lemon juice with the remaining oil and salt and toss with the vegetables.",
+        "Chop the romaine and shred or thinly slice the carrots. Whisk the lemon juice with the remaining oil and salt and toss with the vegetables.",
         "Divide the salad among five big bowls and top with the sliced chicken and a scoop of hummus."
       ],
       "sides": [
@@ -1331,7 +1328,7 @@
         "carrot-sticks"
       ],
       "sideSlots": 2,
-      "photo": "A big bowl of chopped romaine, cucumber and tomato topped with sliced grilled chicken and a scoop of hummus dusted with paprika, lemon wedges alongside."
+      "photo": "A big bowl of chopped romaine and shredded carrots topped with sliced grilled chicken and a scoop of hummus dusted with paprika, lemon wedges alongside."
     },
     {
       "id": "beef-tacos",
@@ -1472,7 +1469,7 @@
       ],
       "sides": [
         "orange-wedges",
-        "cucumber-spears"
+        "canned-corn"
       ],
       "sideSlots": 2,
       "photo": "A burrito bowl with basmati rice, taco-seasoned ground beef, black beans, corn, shredded lettuce, cheddar and salsa, with a lime wedge."
@@ -1550,7 +1547,7 @@
       ],
       "sides": [
         "canned-corn",
-        "cucumber-spears"
+        "black-beans"
       ],
       "sideSlots": 2,
       "photo": "Three crisp flat corn tostadas layered with mashed black beans, sliced chicken, shredded lettuce, cheddar and salsa, on a plate."
@@ -1994,7 +1991,7 @@
     {
       "id": "bbq-chicken-naan-pizzas",
       "title": "BBQ chicken naan pizzas",
-      "subtitle": "Warm naan topped with barbecue pulled chicken, red onion and melted mozzarella, crisped on the griddle.",
+      "subtitle": "Warm naan topped with barbecue pulled chicken and melted mozzarella, crisped on the griddle.",
       "category": "Comfort",
       "protein": "chicken",
       "minutes": 25,
@@ -2010,12 +2007,11 @@
         "pulledChicken": 2,
         "naan": 5,
         "bbq": 6,
-        "mozzarella": 8,
-        "onions": 0.25
+        "mozzarella": 8
       },
       "steps": [
-        "Toss the pulled chicken with 4 tablespoons of the barbecue sauce; it comes seasoned, so it needs nothing else. Slice the onion paper-thin.",
-        "Heat the Blackstone over medium-low. Spread the remaining barbecue sauce thinly over the naan, then top with the chicken, onion and mozzarella.",
+        "Toss the pulled chicken with 4 tablespoons of the barbecue sauce; it comes seasoned, so it needs nothing else.",
+        "Heat the Blackstone over medium-low. Spread the remaining barbecue sauce thinly over the naan, then top with the chicken and mozzarella.",
         "Set the naan on the griddle, cover with a dome or a sheet of foil and cook until the bottoms are crisp, the cheese melts and the chicken reads 165°F, 4–6 minutes. Cut into wedges."
       ],
       "sides": [
@@ -2023,7 +2019,7 @@
         "carrot-sticks"
       ],
       "sideSlots": 2,
-      "photo": "Golden naan flatbread pizzas topped with barbecue pulled chicken, thin red onion and bubbly melted mozzarella, cut into wedges on a board."
+      "photo": "Golden naan flatbread pizzas topped with barbecue pulled chicken and bubbly melted mozzarella, cut into wedges on a board."
     },
     {
       "id": "teriyaki-chicken-noodles",
@@ -2228,7 +2224,7 @@
       ],
       "sides": [
         "crispy-potstickers",
-        "cucumber-spears"
+        "edamame"
       ],
       "sideSlots": 2,
       "photo": "A bowl of savory stir-fried ground pork with wilted shredded cabbage and carrots, glistening with soy and sesame oil."
@@ -2307,7 +2303,7 @@
         "Spoon over the rice and top with the shredded carrots."
       ],
       "sides": [
-        "sesame-cucumber",
+        "steamed-broccoli",
         "edamame"
       ],
       "sideSlots": 2,
@@ -2353,7 +2349,7 @@
       ],
       "sides": [
         "steamed-broccoli",
-        "cucumber-spears"
+        "carrot-sticks"
       ],
       "sideSlots": 2,
       "photo": "Crispy golden pork bites tossed with pineapple chunks, red and green pepper and onion in a shiny red sweet-and-sour sauce, beside white rice."
@@ -2380,7 +2376,7 @@
         "cumin": 2,
         "oregano": 1,
         "garlic": 4,
-        "onions": 1,
+        "onions": 0.5,
         "salt": 1.5,
         "oil": 2,
         "salsa": 8,
@@ -2388,10 +2384,10 @@
         "streetTacoCorn": 15
       },
       "steps": [
-        "Cut the pork into 1-inch cubes and put them in a large, deep skillet with the juice of the orange and 2 limes, the cumin, oregano, smashed garlic, salt, half the onion in chunks and 1 cup water.",
+        "Cut the pork into 1-inch cubes and put them in a large, deep skillet with the juice of the orange and 2 limes, the cumin, oregano, smashed garlic, salt, the onion in chunks and 1 cup water.",
         "Bring to a boil, then cover and simmer on medium-low until the pork is very tender, about 30 minutes (it will be well past 145°F). Uncover and boil off the remaining liquid, stirring, 5–8 minutes. Rest 3 minutes, then pull the chunks apart with two forks.",
         "Heat the Blackstone over medium-high with the oil. Spread out the pork, press with a spatula and cook without moving until crisp underneath, 3–4 minutes; flip and crisp the other side. Warm the tortillas on the griddle.",
-        "Finely dice the rest of the onion and chop the cilantro. Fill three tortillas per person with pork, onion, cilantro, salsa and a squeeze of the last lime."
+        "Chop the cilantro. Fill three tortillas per person with pork, cilantro, salsa and a squeeze of the last lime."
       ],
       "sides": [
         "black-beans",
@@ -2403,7 +2399,7 @@
     {
       "id": "pork-souvlaki-plates",
       "title": "Pork souvlaki plates",
-      "subtitle": "Lemon-garlic-oregano pork grilled until juicy, with warm naan and a cool cucumber tzatziki.",
+      "subtitle": "Lemon-garlic-oregano pork grilled until juicy, with warm naan and a cool lemon-garlic yogurt sauce.",
       "category": "Grill",
       "protein": "pork",
       "minutes": 40,
@@ -2424,28 +2420,25 @@
         "salt": 1,
         "pepper": 0.5,
         "naan": 5,
-        "yogurt": 8,
-        "cucumber": 1,
-        "tomato": 0.5,
-        "onions": 0.25
+        "yogurt": 8
       },
       "steps": [
         "Cut the pork into ¾-inch-thick slices. Toss with the juice of 1 lemon, 2 tablespoons of the oil, half the minced garlic, the oregano, salt and pepper. Marinate 15 minutes (or up to a day in the fridge).",
-        "For the tzatziki, grate the cucumber, squeeze out the water and stir it into the yogurt with the remaining garlic and the juice of half the second lemon.",
+        "For the yogurt sauce, stir the remaining garlic and the juice of half the second lemon into the yogurt.",
         "Grill the pork on the preheated electric grill over medium-high, turning once, until browned and the center reads 145°F, 8–12 minutes. Rest 3 minutes, then cut into strips.",
-        "Brush the naan with the remaining oil and warm on the grill. Serve the pork on the naan with tzatziki, diced tomato, thin onion slices and the remaining lemon in wedges."
+        "Brush the naan with the remaining oil and warm on the grill. Serve the pork on the naan with the yogurt sauce and the remaining lemon in wedges."
       ],
       "sides": [
         "lemon-chickpeas",
         "steamed-broccoli"
       ],
       "sideSlots": 2,
-      "photo": "Grilled lemon-oregano pork strips with char marks on warm flatbread with creamy cucumber tzatziki, diced tomatoes, sliced onion and lemon wedges."
+      "photo": "Grilled lemon-oregano pork strips with char marks on warm flatbread with a creamy lemon-garlic yogurt sauce and lemon wedges."
     },
     {
       "id": "breaded-pork-sandwiches",
       "title": "Midwest breaded pork sandwiches",
-      "subtitle": "Crispy panko-crusted pork cutlets bigger than the bun, with pickles, mustard, onion and lettuce.",
+      "subtitle": "Crispy panko-crusted pork cutlets bigger than the bun, with pickles, mustard and lettuce.",
       "category": "Comfort",
       "protein": "pork",
       "minutes": 50,
@@ -2469,14 +2462,13 @@
         "pickles": 4,
         "mustard": 3,
         "mayo": 3,
-        "onions": 0.25,
         "lettuce": 1
       },
       "steps": [
         "Cut the pork loin into 5 equal slices and pound each to about ¼ inch thick (they get big). Season with the salt, pepper and garlic powder.",
         "Coat each cutlet in flour, then beaten egg, then panko tossed with the oil, pressing firmly. Throw away leftover coating that touched raw pork.",
         "Air-fry one or two at a time at 390°F, flipping halfway, until deep golden and the center reads 145°F, 8–10 minutes per batch. Rest 3 minutes.",
-        "Toast the buns, spread with mustard and mayo, and stack each with a cutlet, pickles, thin onion slices and lettuce."
+        "Toast the buns, spread with mustard and mayo, and stack each with a cutlet, pickles and lettuce."
       ],
       "sides": [
         "corn-on-the-cob",
@@ -2601,7 +2593,7 @@
     {
       "id": "chicken-cobb-salad",
       "title": "Chicken Cobb salad",
-      "subtitle": "A big chopped salad with grilled chicken, crispy bacon, hard-cooked egg, tomato and cheddar with ranch.",
+      "subtitle": "A big chopped salad with grilled chicken, crispy bacon, hard-cooked egg and cheddar with ranch.",
       "category": "Salads",
       "protein": "chicken",
       "minutes": 35,
@@ -2617,7 +2609,6 @@
         "chickenThighs": 2.25,
         "eggs": 5,
         "lettuce": 3,
-        "tomato": 0.5,
         "cheese": 4,
         "ranch": 10,
         "oil": 1,
@@ -2629,14 +2620,14 @@
         "Put the eggs in a saucepan, cover with cold water by an inch and bring to a boil. Cover, turn off the heat and let stand 11 minutes, then cool in ice water, peel and quarter.",
         "Warm the fully cooked bacon in a dry skillet over medium until crisp, about 1 minute per side, and crumble.",
         "Rub the chicken thighs with the oil, salt and pepper and grill on the preheated electric grill over medium-high, turning once, until they read 165°F, 10–14 minutes. Rest 5 minutes and slice.",
-        "Chop the romaine and divide among five big bowls. Arrange rows of chicken, bacon, egg, diced tomato and shredded cheddar on top and serve with ranch."
+        "Chop the romaine and divide among five big bowls. Arrange rows of chicken, bacon, egg and shredded cheddar on top and serve with ranch."
       ],
       "sides": [
         "garlic-toast",
         "applesauce-cups"
       ],
       "sideSlots": 2,
-      "photo": "A large bowl of chopped romaine with neat rows of sliced grilled chicken, crumbled bacon, quartered hard-cooked eggs, diced tomatoes and shredded cheddar, ranch on the side."
+      "photo": "A large bowl of chopped romaine with neat rows of sliced grilled chicken, crumbled bacon, quartered hard-cooked eggs and shredded cheddar, ranch on the side."
     },
     {
       "id": "turkey-taco-salad",
@@ -3235,27 +3226,6 @@
       "photo": "A bowl of creamy shredded green and purple cabbage slaw with carrot strands and flecks of lime zest."
     },
     {
-      "id": "tomato-cucumber",
-      "title": "Tomato & cucumber salad",
-      "kind": "salad",
-      "minutes": 10,
-      "equipment": [],
-      "items": {
-        "cucumber": 1,
-        "tomato": 0.75,
-        "lemons": 1,
-        "oil": 1,
-        "oregano": 0.5,
-        "salt": 0.5
-      },
-      "steps": [
-        "Dice the cucumber and tomatoes into bite-size pieces and put them in a bowl.",
-        "Whisk the lemon juice with the oil, oregano and salt, pour over the vegetables and toss.",
-        "Let stand 5 minutes so the juices mingle, then toss again and serve."
-      ],
-      "photo": "A bowl of diced red tomatoes and crisp cucumber chunks glistening with lemon-oregano dressing."
-    },
-    {
       "id": "romaine-salad",
       "title": "Chopped romaine salad",
       "kind": "salad",
@@ -3263,54 +3233,17 @@
       "equipment": [],
       "items": {
         "lettuce": 2,
-        "cucumber": 0.5,
         "lemons": 1,
         "oil": 2,
         "salt": 0.25,
         "pepper": 0.25
       },
       "steps": [
-        "Chop the romaine and thinly slice the half cucumber; put them in a large bowl.",
+        "Chop the romaine and put it in a large bowl.",
         "Whisk the lemon juice with the oil, salt and pepper.",
         "Toss the salad with the dressing just before serving."
       ],
-      "photo": "A large bowl of crisp chopped romaine and sliced cucumber tossed in a light lemon vinaigrette."
-    },
-    {
-      "id": "cucumber-spears",
-      "title": "Crunchy cucumber spears",
-      "kind": "vegetable",
-      "minutes": 5,
-      "equipment": [],
-      "items": {
-        "cucumber": 1.5,
-        "salt": 0.25
-      },
-      "steps": [
-        "Wash the cucumbers, trim the ends and cut lengthwise into spears (about 12 from 1½ English cucumbers).",
-        "Sprinkle lightly with the salt and divide among five plates."
-      ],
-      "photo": "Fresh green cucumber spears arranged in a row on a small white plate."
-    },
-    {
-      "id": "sesame-cucumber",
-      "title": "Sesame cucumber salad",
-      "kind": "salad",
-      "minutes": 10,
-      "equipment": [],
-      "items": {
-        "cucumber": 1.5,
-        "sesame": 2,
-        "soy": 1,
-        "riceVinegar": 2,
-        "honey": 0.5
-      },
-      "steps": [
-        "Thinly slice the cucumbers into rounds.",
-        "Whisk the sesame oil, soy sauce, rice vinegar and honey in a bowl.",
-        "Toss the cucumbers in the dressing and chill while the dinner cooks."
-      ],
-      "photo": "A bowl of thin cucumber rounds glossy with a sesame-soy dressing."
+      "photo": "A large bowl of crisp chopped romaine tossed in a light lemon vinaigrette."
     },
     {
       "id": "buttered-peas",

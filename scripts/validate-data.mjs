@@ -207,7 +207,16 @@ function checkEquipment(where, equipment, steps) {
     if (!mentioned && equipment.includes(e)) warn(`${where}: equipment lists ${e} but steps never use it`);
   }
 }
+// Jeff, 2026-11-15: "we don't really eat cucumbers raw... only pickles", and no raw onions or raw
+// tomatoes (Candi eats tomatoes, the rest don't). Cooked onions and tomato sauces are fine.
+const NOT_IN_RECIPES = [
+  [/cucumber|tzatziki/i, 'cucumber'],
+  [/\b(raw|red|thin(ly)?[- ]sliced|diced|chopped) onions?\b(?!.*\b(cook|brown|saut|soft|caramel|griddle|grill|skillet|simmer))/i, 'raw onion'],
+  [/\b(sliced|fresh|cherry|grape|roma|quartered) tomato(es)?\b|\btomato slices\b/i, 'raw tomato'],
+];
 function checkCommonText(where, o) {
+  for (const [re, word] of NOT_IN_RECIPES) for (const t of [o.title, o.subtitle, o.photo, ...(o.steps || [])]) if (typeof t === 'string' && re.test(t)) err(`${where}: no ${word} for this family: ${t.slice(0, 100)}`);
+  for (const id of ['cucumber', 'tomato']) if (o.items && o.items[id]) err(`${where}: uses ${id} (the family doesn't eat raw cucumbers or tomatoes)`);
   for (const f of ['title', 'subtitle', 'photo']) if (o[f] !== undefined) scanText(`${where}.${f}`, o[f]);
   (o.steps || []).forEach((s, i) => scanText(`${where}.steps[${i + 1}]`, s));
   if (!o.photo || o.photo.length < 30) err(`${where}: photo hint missing or too short`);
@@ -299,7 +308,9 @@ if (nBench < MIN_BENCH) err(`expected at least ${MIN_BENCH} bench dinners, found
 // reference ids
 if (ref) {
   for (const r of ref.recipes || []) if (!ids.has(r.id)) err(`reference dinner id "${r.id}" missing`);
-  for (const sid of Object.keys(ref.sides || {})) if (!SIDES[sid]) err(`reference side id "${sid}" missing`);
+  // Removed on purpose (Jeff, 2026-11-15: no raw cucumbers).
+  const REMOVED_SIDES = new Set(['tomato-cucumber', 'cucumber-spears', 'sesame-cucumber']);
+  for (const sid of Object.keys(ref.sides || {})) if (!SIDES[sid] && !REMOVED_SIDES.has(sid)) err(`reference side id "${sid}" missing`);
   for (const r of ref.recipes || []) {
     const d = dinners.find(x => x.id === r.id);
     if (d && d.rotation !== 'core') err(`reference dinner "${r.id}" must stay in the core rotation`);

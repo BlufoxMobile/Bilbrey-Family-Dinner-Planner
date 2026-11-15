@@ -559,6 +559,9 @@ sweet potatoes get cinnamon.
   giardiniera and Miss Vickie's chips, and a BODYARMOR Orange Mango every day. No hot-deli
   sandwiches ("very poor quality food"). Never Caesar anything: the validator rejects the word in
   recipes and lunches, and the Caesar-style side is gone.
+- No raw cucumbers anywhere (pickles only), and no raw onions or raw tomatoes (Candi eats tomatoes; the
+  rest don't). Cooked onions and tomato sauces are fine. The validator enforces it for recipes, and the
+  three cucumber sides are gone (Jeff, 2026-11-15).
 - Seafood stays off the menu, apart from an occasional (every few months) snow crab boil with Old Bay;
   soups now and then. Knox's snacks can be Ritz from the
   pantry box; party-bag chips are split into snack bags once a week.
