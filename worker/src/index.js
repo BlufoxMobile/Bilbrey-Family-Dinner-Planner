@@ -37,7 +37,7 @@ import { handleMcpRequest, mcpTokenMatches, newMcpToken } from "./mcp.js";
 import { storeImageRequest, isStoreImageHost } from "../../app/photos.js";
 
 const SERVICE = "bilbrey-dinner-planner";
-const VERSION = "2.6.0";
+const VERSION = "2.7.0";
 const KITCHEN_NAME = "bilbrey";
 
 // ── CORS (SPEC §5) ────────────────────────────────────────────────────────────────────────────
