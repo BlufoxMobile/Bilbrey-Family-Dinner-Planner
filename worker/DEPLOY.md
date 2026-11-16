@@ -1,5 +1,18 @@
 # Deploying `bilbrey-dinner-planner`
 
+> **Since docs/spec/23 (store product pictures, cheaper Claude scans, backups).** Nothing new to set
+> up: no new bindings, no migration, no new secret. The Durable Object adds its own tables and
+> columns the first time the new code runs (`backups`, `archive`, `auth_ok`; `kind` / `source` on
+> `photos`; cache and scan columns on `ai_usage`). `wrangler.toml` now turns the per-request
+> invocation log off (it records request URLs, and the Claude chat link is its own password); the
+> Worker's own log lines are kept. The Worker now makes outbound requests to three store image
+> hosts (`scene7.samsclub.com`, `i5.samsclubimages.com`, `images.albertsons-media.com`) and nowhere
+> else new. Optional plain-text vars, all with sensible defaults: `RATE_AI` (photos + ideas per 10
+> minutes, default 60), `RATE_PHOTOFETCH` (600), `RATE_MCP` (240), `PHOTO_CLEANUP_GRACE_HOURS` (24).
+> After deploying: `GET /api/storage` without a key answers 401 (404 means old code), and with the
+> family key it shows how full the state document and the picture storage are. Changing the family
+> passcode now also retires the Claude chat link (get a new one in Family & settings).
+
 > **Since 2026-11-15: automatic deploys.** The Worker is connected to GitHub through Cloudflare
 > Workers Builds (Worker → Settings → Builds): repo `BlufoxMobile/Bilbrey-Family-Dinner-Planner`,
 > branch `main`, root directory `/worker`, deploy command `npx wrangler deploy`, build watch path

@@ -309,6 +309,8 @@ export function normalizeProducts(raw) {
           name: pickStr(o.name), brand: pickStr(o.brand), size: pickStr(o.size),
           packSize: packSize > 0 ? packSize : null, price: price >= 0 ? price : null,
           url: /^https:\/\//.test(url) ? url : '', tier: o.tier === 'name' ? 'name' : 'store',
+          // Optional: the store's own picture of the product (an https link on its image host; docs/spec/23).
+          ...(/^https:\/\//.test(pickStr(o.image)) ? { image: pickStr(o.image) } : {}),
         };
       }).filter(Boolean);
       if (list.length) (byId[id] ||= {})[st] = list;

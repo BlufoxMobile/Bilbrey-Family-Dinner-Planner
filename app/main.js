@@ -19,6 +19,7 @@ import * as lunchView from './views/lunch.js';
 import * as receiptsView from './views/receipts.js';
 import * as productsView from './views/products.js';
 import { importReceipts } from './receipts.js';
+import { importStorePhotos, fetchStorePhoto } from './photos.js';
 import * as onboarding from './views/onboarding.js';
 import * as sheets from './views/sheets.js';
 import * as ideasView from './views/ideas.js';
@@ -273,7 +274,68 @@ function installConsoleHelpers() {
       return { ...summary, saved: !dryRun && ops.length > 0 };
     },
     status: () => ({ status: app.store?.status, pending: app.store?.pending.length || 0, revision: app.store?.server.revision }),
+
+    /**
+     * Store product pictures in one go (docs/spec/23): the family server fetches each picture from
+     * the store's own image host and keeps it with the pantry pictures; the list, the pantry and
+     * the product chooser then show it.
+     *   await bilbrey.importStorePhotos([{ itemId: 'chicken', url: 'https://images.albertsons-media.com/is/image/ABS/184070124', store: 'jewel', product: 'Signature Farms Boneless Skinless Chicken Breasts' }])
+     *   await bilbrey.importStorePhotos(list, { dryRun: true })   // check the list, fetch nothing
+     * A bad entry or a failed picture never stops the rest, and running it again is safe: pictures
+     * the server already has aren't fetched twice, and items that already show theirs are untouched.
+     * → { total, saved, unchanged, failed, skipped, refusedHosts, stopped, failures: [{ itemId, error }], results }
+     */
+    async importStorePhotos(list, { dryRun = false, refresh = false, concurrency = 3 } = {}) {
+      if (!app.db || !app.store) throw new Error('The planner is still loading.');
+      if (!dryRun && (app.store.device.localOnly || !app.store.device.key)) {
+        return { total: Array.isArray(list) ? list.length : 1, saved: 0, error: 'Connect this device with the family passcode first: the pictures are kept on the family server.' };
+      }
+      const r = await importStorePhotos(list, {
+        db: app.db, state: () => app.store.state, dryRun, refresh, concurrency,
+        fetchPhoto: (url, o) => fetchStorePhoto(app.store, url, o),
+        commit: (ops) => app.store.commit(ops),
+      });
+      const failures = r.results.filter((x) => x.status === 'failed' || x.status === 'skipped').map((x) => ({ itemId: x.itemId, status: x.status, error: x.error, ...(x.httpStatus ? { httpStatus: x.httpStatus } : {}) }));
+      if (r.saved) app.render();
+      return { ...r, failures };
+    },
+
+    /** How full the family's storage is: the state document, pictures, backups (GET /api/storage). */
+    storage: () => app.store.api('GET', '/api/storage', null, { timeoutMs: 30000 }),
+    /** The server's saved copies of the family state: one a day for two weeks, plus one before each restore or tidy-up. */
+    backups: () => app.store.api('GET', '/api/backups'),
+    /**
+     * Everything needed to start over, as one JSON file (saved to this device unless download: false).
+     *   await bilbrey.exportBackup()            // today's state
+     *   await bilbrey.exportBackup({ backup: 12 })   // one of bilbrey.backups()
+     */
+    async exportBackup({ backup = null, download = true } = {}) {
+      const data = await app.store.api('GET', `/api/export${backup == null ? '' : `?backup=${encodeURIComponent(backup)}`}`, null, { timeoutMs: 60000 });
+      if (download && typeof document !== 'undefined') {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+        a.download = `family-dinner-planner-backup-${app.today()}.json`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      }
+      return data;
+    },
+    /**
+     * Puts a saved copy back for the whole family. Pass a backup id from bilbrey.backups(), or an
+     * export file's contents (or just its state). The state it replaces is kept as a backup first.
+     *   await bilbrey.restoreBackup(12)
+     */
+    async restoreBackup(from) {
+      const body = typeof from === 'number' ? { backup: from } : { state: from && typeof from === 'object' && from.state && typeof from.state === 'object' ? from.state : from };
+      const r = await app.store.api('POST', '/api/restore', { ...body, confirm: 'restore', by: app.who() || 'Family' }, { timeoutMs: 60000 });
+      await app.store.sync();
+      return r;
+    },
+    /** Pictures nothing points to any more (a replaced pantry photo, a product no longer bought). dryRun: true only counts them. */
+    cleanupPhotos: ({ dryRun = true } = {}) => app.store.api('POST', '/api/photo/cleanup', { dryRun }),
   });
+  // The same door under the family's name (the one the docs use from v3 on).
+  window.bilbrey = window.bfdp;
 }
 ACTIONS.nav = (a, el) => a.navigate(el.dataset.href);
 

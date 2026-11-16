@@ -11,8 +11,9 @@ import { set, del } from '../state.js';
 import { budgetPace, offList } from '../health.js';
 import { currentRange, periodNav } from './plan.js';
 import { productLabel, findItUrl, priceSource } from '../products.js';
-import { openProductPicker, productSource } from './products.js';
+import { openProductPicker, productSource, photoImg, hydrateSheetSoon, productPhoto } from './products.js';
 import { openReceiptScan } from './receipts.js';
+import { itemPhoto, hydratePhotos, ensureStorePhotos } from '../photos.js';
 
 export const title = () => 'Shopping list';
 const NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
@@ -263,11 +264,25 @@ function priceTag(i) {
   return html`<small class="est" title="Estimated price">est.</small>`;
 }
 
+/**
+ * True while the list on screen has at least one product picture: then every row keeps a square
+ * for one, so the names line up. (A list with no pictures looks exactly as it did before.)
+ */
+let listHasPhotos = false;
+
+/** The picture of what to pick up: the family's own photo of it, else the store's product picture. */
+function itemThumb(app, i) {
+  if (!listHasPhotos) return '';
+  const ph = i.freeText ? null : itemPhoto(app.state, i.id);
+  return html`<button type="button" class="item-thumb ${ph ? 'has-photo' : ''}" data-action="list:item" data-key="${i.key}" tabindex="-1" aria-hidden="true">${ph ? photoImg(ph) : ''}</button>`;
+}
+
 function itemRow(app, i, listKey) {
   const qty = i.freeText ? (i.qty ? unitText(i.qty, i.unit || 'each') : '') : formatPackQty(i);
   const chosen = i.product?.chosen;
-  return html`<li class="item ${i.checked ? 'is-checked' : ''}">
+  return html`<li class="item ${i.checked ? 'is-checked' : ''} ${listHasPhotos ? 'has-thumb' : ''}">
     <button type="button" class="check" role="checkbox" aria-checked="${i.checked ? 'true' : 'false'}" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-label="${i.name}${i.checked ? ', in the cart' : ''}"><span class="check-box">${ic('check', { size: 18 })}</span></button>
+    ${itemThumb(app, i)}
     <button type="button" class="item-main" data-action="list:item" data-key="${i.key}">
       <span class="item-name">${i.name}</span>
       ${when(!i.freeText && i.product?.label, () => html`<span class="item-product ${chosen ? '' : 'is-usual'}">${i.product.label}</span>`)}
@@ -401,8 +416,15 @@ function extrasSection(app) {
   </section>`;
 }
 
+/** After each render: fill in the pictures, and quietly fetch any the chosen products still lack. */
+export function mount(app, root) {
+  hydratePhotos(root, app.store);
+  ensureStorePhotos(app);
+}
+
 export function render(app) {
   const { range, listKey, list, trip } = current(app);
+  listHasPhotos = list.items.some((i) => !i.freeText && itemPhoto(app.state, i.id));
   const checked = list.items.filter((i) => i.checked).length;
   const paidCount = list.items.filter((i) => priceSource(i.pack).kind === 'paid').length;
   const estNote = app.db.pricesUpdated ? `estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'estimated from the recipe box';
@@ -503,6 +525,7 @@ function itemSheet(app, key) {
         ${when(i.coupon, () => html`<p class="hint">${ic('receipt', { size: 18 })}<span><b>Clip the coupon first:</b> ${i.coupon.text}${i.coupon.expires ? `, ends ${shortDate(i.coupon.expires)}` : ''}.</span></p>`)}
         <p class="sheet-text">${detail(app, i) || 'On the list.'}</p>
         ${when(i.uses.length, () => html`<ul class="uses">${i.uses.map((u) => html`<li><span>${dayAndDate(u.date, app.today())}</span><span>${dinnerById(app.db, app.state, u.dinner)?.title}</span><span>${unitText(u.qty, i.unit)}</span></li>`)}</ul>`)}
+        ${(() => { const ph = productPhoto(app.state, i.store, i.id); if (!ph) return ''; hydrateSheetSoon(app); return photoImg(ph, 'item-sheet-photo', i.product?.label || i.name); })()}
         <div class="product-box">
           <span><small>${i.product?.chosen ? `Your product at ${NAMES[i.store]}` : i.product?.usual ? `What you usually buy at ${NAMES[i.store]}` : `The product at ${NAMES[i.store]}`}</small><b>${i.product?.label || i.name}</b><small>${i.product?.chosen ? productSource(i.product) : i.product?.usual ? 'From your past receipts. Change it any time.' : 'Not bought yet. Scan a receipt, or tap Change to pick yours.'}</small></span>
           <span class="product-box-acts">

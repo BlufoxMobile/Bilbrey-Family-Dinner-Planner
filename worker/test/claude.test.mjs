@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { startWorker, familyKey, claudeReply, PNG_DATA_URL, jpegDataUrl } from "./helpers.mjs";
 import {
   MODELS, costUsd, pickModel, chicagoMonth, chicagoDate, extractJsonObject, imageBlock, callClaude, ClaudeError,
-  validateIdeas, ideaBreaksRule, monthlyCap, ideasUserPrompt,
+  validateIdeas, ideaBreaksRule, monthlyCap, ideasUserPrompt, systemText, cachedSystem, cleanStep, ideasReference, IDEAS_FORMAT_PROMPT, usageOf,
 } from "../src/claude.js";
 
 const TEST_KEY = "sk-ant-test-not-a-real-key";
@@ -16,7 +16,8 @@ const KNOWN = [
   { id: "spaghetti", name: "Spaghetti", aliases: [] },
   { id: "chicken", name: "Boneless skinless chicken breast", aliases: ["chicken breast", "chicken breasts"] },
 ];
-const claudeText = (body) => body.messages[0].content.filter((b) => b.type === "text").map((b) => b.text).join("\n");
+// Everything Claude is told in words: the system prompt (now cached blocks) and the user message.
+const claudeText = (body) => [systemText(body.system), ...body.messages[0].content.filter((b) => b.type === "text").map((b) => b.text)].join("\n");
 const claudeImages = (body) => body.messages[0].content.filter((b) => b.type === "image");
 const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg || ""} expected ${b}, got ${a}`);
 
@@ -206,7 +207,7 @@ describe("claude.js", () => {
     assert.deepEqual(ideas[1].sides, ["corn"]);
     assert.equal(ideas[1].protein, "crab");
     assert.equal(ideas[2].minutes, null);
-    assert.deepEqual(Object.keys(t), ["title", "subtitle", "why", "minutes", "equipment", "protein", "category", "items", "sides", "steps", "usesPantry", "missing"]);
+    assert.deepEqual(Object.keys(t), ["title", "subtitle", "why", "minutes", "prepMinutes", "cookMinutes", "equipment", "protein", "category", "items", "sides", "steps", "stepDetails", "tips", "usesPantry", "missing"]);
     assert.deepEqual(validateIdeas("nonsense", { count: 3 }), { ideas: [], dropped: [] });
     assert.equal(validateIdeas([{ title: "Pork chops", protein: "pork" }], { count: 1 }).ideas.length, 1, "a bare array works");
   });
@@ -305,7 +306,7 @@ describe("Worker with ANTHROPIC_API_KEY", () => {
     assert.equal(headers["anthropic-version"], "2023-06-01");
     assert.equal(body.model, "claude-opus-5-5");
     assert.equal(body.max_tokens, 4000);
-    assert.match(body.system, /kitchen-inventory assistant/);
+    assert.match(systemText(body.system), /kitchen-inventory assistant/);
     const [img] = claudeImages(body);
     assert.deepEqual(img.source, { type: "base64", media_type: "image/png", data: PNG_DATA_URL.split(",")[1] });
     const text = claudeText(body);
@@ -334,7 +335,7 @@ describe("Worker with ANTHROPIC_API_KEY", () => {
     assert.equal(r.json.date, "2026-11-12");
     assert.equal(w.claudeCalls.length, 2);
     assert.equal(w.calls.length, 0);
-    assert.match(w.claudeCalls[0].body.system, /UNTRUSTED/);
+    assert.match(systemText(w.claudeCalls[0].body.system), /UNTRUSTED/);
     assert.equal(w.claudeCalls[0].body.max_tokens, 6000);
     assert.equal(claudeImages(w.claudeCalls[0].body)[0].source.media_type, "image/jpeg");
 
@@ -485,7 +486,7 @@ describe("Worker with ANTHROPIC_API_KEY", () => {
 
     assert.equal(w.claudeCalls.length, 1);
     const sent = w.claudeCalls[0].body;
-    const sys = sent.system;
+    const sys = systemText(sent.system);
     for (const rule of [/NO OVEN/, /No tofu/, /seafood/, /snow-crab boil/, /Caesar/, /raw cucumbers/, /raw onions/, /raw tomatoes/, /five/, /Organic/, /JSON only/, /blackstone/, /air fryer/]) assert.match(sys, rule);
     const content = sent.messages[0].content;
     assert.deepEqual(content.map((b) => b.type), ["image", "image", "text"], "photos first, then the request");
@@ -494,8 +495,8 @@ describe("Worker with ANTHROPIC_API_KEY", () => {
     assert.match(text, /Suggest 3 different dinner ideas/);
     assert.match(text, /Something on the Blackstone tonight/);
     assert.ok(text.indexOf("chicken = Chicken breast") < text.indexOf("groundBeef = Ground beef") && text.indexOf("groundBeef = Ground beef") < text.indexOf("rice = Jasmine rice"), "soonest use-by first");
-    assert.match(text, /broccoli = Steamed broccoli \[vegetable\]/);
-    assert.match(text, /eggs = Eggs \(each\)/);
+    assert.match(sys, /broccoli = Steamed broccoli \[vegetable\]/);
+    assert.match(sys, /eggs = Eggs \(each\)/);
     assert.match(text, /Today is \d{4}-\d{2}-\d{2}/);
     assert.equal(sent.max_tokens, 6000);
   });

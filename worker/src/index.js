@@ -15,6 +15,10 @@
  *   POST /api/ideas  {images?,note?,pantry,sides,catalog,count?} → { ideas:[…], engine:"claude", model }
  *   GET  /api/mcp/link · POST /api/mcp/rotate    → { url }  the Claude chat connector link (SPEC §15)
  *   POST /mcp/<token>                            MCP (JSON-RPC) for the Claude chat connector, in ./mcp.js
+ *   POST /api/photo (raw image) · GET /api/photo?id= · POST /api/photo/delete {id}     the family's pictures
+ *   POST /api/photo/fetch {url}                  → { id }  a store's product picture, fetched by the Worker (docs/spec/23)
+ *   POST /api/photo/cleanup {dryRun?}            → removes pictures nothing in the family state points to
+ *   GET  /api/storage · GET /api/export · GET /api/backups · POST /api/restore · POST /api/compact   (docs/spec/23)
  *
  * State lives in ONE SQLite-backed Durable Object (`Kitchen`, idFromName("bilbrey")), so every
  * read and write is strongly consistent and ops batches apply atomically, in arrival order.
@@ -26,11 +30,14 @@ import { DurableObject } from "cloudflare:workers";
 import {
   MODELS, callClaude, chicagoDate, chicagoMonth, costUsd, hasClaudeKey, imageBlock, monthlyCap, pickModel, textBlock,
   tokenCount, extractJsonObject, validateIdeas, ideasUserPrompt, IDEAS_SYSTEM_PROMPT, ClaudeError,
+  IDEAS_FORMAT_PROMPT, ideasReference, cachedSystem, usageOf,
 } from "./claude.js";
 import { handleMcpRequest, mcpTokenMatches, newMcpToken } from "./mcp.js";
+// The allowlist of store image hosts is shared with the app (one source of truth, pure code).
+import { storeImageRequest, isStoreImageHost } from "../../app/photos.js";
 
 const SERVICE = "bilbrey-dinner-planner";
-const VERSION = "2.6.0";
+const VERSION = "2.7.0";
 const KITCHEN_NAME = "bilbrey";
 
 // ── CORS (SPEC §5) ────────────────────────────────────────────────────────────────────────────
@@ -61,7 +68,24 @@ const LIMITS = {
   maxPhotoBytes: 400 * 1024, // one pantry photo (a resized item picture)
   maxPhotos: 2000, // photos kept for the family
   maxPhotoTotalBytes: 200 * MB,
+  maxStorePhotos: 1200, // of those, store product pictures (so the family's own always have room)
+  maxKnownChars: 60_000, // the known-items list as it goes into a prompt (about 17K tokens)
+  maxScanImages: 4, // photos in one POST /api/scan { images }
+  // The state document (docs/spec/23): tidy up old receipts and nights before the 1 MB wall.
+  compactAtBytes: Math.floor(0.85 * MB),
+  compactTargetBytes: Math.floor(0.7 * MB),
+  receiptDetailDays: 180, // receipts older than this keep their totals; the lines go to the archive
+  planDays: 400, // nights older than this go to the archive
+  listDays: 60, // check-offs and skips of lists that ended longer ago are dropped
+  dailyBackups: 14,
+  otherBackups: 6,
 };
+
+// ── Request rates per family key holder (in memory in the Durable Object; a wrong key has its own
+// backoff below). They stop a stuck client or a runaway chat from burning the Claude budget or
+// hammering a store's image host; ordinary use never comes near them. ─────────────────────────────
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const RATES = { ai: 60, photoFetch: 600, mcp: 240 }; // per RATE_WINDOW_MS
 
 // ── Family-key backoff ────────────────────────────────────────────────────────────────────────
 // 5 wrong keys from one client (IP) inside 10 minutes → that client gets 429 for 10 minutes.
@@ -74,6 +98,8 @@ const BACKOFF = {
   lockMs: 10 * 60 * 1000,
 };
 const GLOBAL_CLIENT = "*";
+// An address that had the right key this recently is not caught by the everyone-lock.
+const TRUSTED_CLIENT_MS = 30 * 24 * 3600 * 1000;
 
 // ── Pantry scan models (Workers AI) ───────────────────────────────────────────────────────────
 // Primary: Gemma 4 26B A4B — vision + OCR-strong, JSON-schema output, thinking can be switched off,
@@ -129,6 +155,14 @@ const ROUTES = {
   "/api/receipt": { POST: handleReceipt },
   "/api/photo": { GET: handleGetPhoto, POST: handlePutPhoto },
   "/api/photo/delete": { POST: handleDeletePhoto },
+  "/api/photo/fetch": { POST: handleFetchStorePhoto },
+  "/api/photo/cleanup": { POST: handlePhotoCleanup },
+  // Backups, storage and tidy-up (docs/spec/23)
+  "/api/storage": { GET: handleStorage },
+  "/api/export": { GET: handleExport },
+  "/api/backups": { GET: handleBackups },
+  "/api/restore": { POST: handleRestore },
+  "/api/compact": { POST: handleCompact },
   // Claude (SPEC §14)
   "/api/ai": { GET: handleAiStatus },
   "/api/ideas": { POST: handleIdeas },
@@ -214,25 +248,82 @@ async function handleOps(request, env, url, origin) {
 }
 
 async function handleScan(request, env, url, origin) {
-  const ai = await aiContext(env, request); // family key + Claude model + this month's Claude spend
+  const ai = await aiContext(env, request, { spend: true }); // family key + Claude model + this month's Claude spend
   if (ai.denied) return fromResult(ai.denied, origin);
   requireSomeAI(env, ai, "Pantry scan isn't available: the Workers AI binding (AI) is not configured on this Worker.");
-  const body = parseJson(await readBodyText(request, LIMITS.maxScanBody));
+  // One photo: { image, known } (2 MB). Several photos of one scan session: { images: [≤4], known }
+  // (5 MB): they are read together and share the cached instructions and known items (docs/spec/23).
+  const raw = await readBodyBytes(request, LIMITS.maxReceiptBody);
+  const body = parseJson(new TextDecoder().decode(raw));
   if (!isPlainObject(body)) throw new HttpError(400, "Body must be a JSON object like { image, known }.");
+  if (body.images !== undefined && body.images !== null) return scanSeveral(env, ai, body, origin);
+  if (raw.byteLength > LIMITS.maxScanBody) throw new HttpError(413, `Request body is too large (limit ${formatBytes(LIMITS.maxScanBody)}).`);
   const image = validateImage(body.image);
   const known = cleanKnown(body.known);
+  return json(200, await scanOne(env, ai, image, known), origin);
+}
+
+/** One photo: Claude when it's on, Workers AI otherwise or when Claude fails. Throws HttpError 502 when nothing could read it. */
+async function scanOne(env, ai, image, known, system = undefined) {
   let claudeError = null;
+  let wasted = null; // a Claude reply that was billed but unusable
   if (ai.useClaude) {
     try {
-      return json(200, await runClaudeScan(env, ai, image, known), origin);
+      return await runClaudeScan(env, ai, image, known, system);
     } catch (err) {
       claudeError = claudeProblem(ai, err);
+      wasted = err && err.usage ? usageSummary(ai, [err.usage]) : null;
       console.error("Scan: Claude failed, using Workers AI:", claudeError);
       if (!hasAI(env)) throw new HttpError(502, "The pantry scan didn't work this time. Try again, or add the items by hand.", { detail: claudeError });
     }
   }
   const result = await runScan(env, image, known, claudeError ? [claudeError] : []);
-  return json(200, { ...result, engine: "workers-ai", ...fallbackNote(ai, claudeError) }, origin);
+  return { ...result, engine: "workers-ai", ...(wasted ? { usage: wasted } : {}), ...fallbackNote(ai, claudeError) };
+}
+
+async function scanSeveral(env, ai, body, origin) {
+  const images = body.images;
+  if (!Array.isArray(images) || images.length === 0) throw new HttpError(400, `images must be a list of 1–${LIMITS.maxScanImages} photos (data URLs).`);
+  if (images.length > LIMITS.maxScanImages) throw new HttpError(400, `Too many photos (${images.length}); send at most ${LIMITS.maxScanImages} at a time.`);
+  const totalChars = images.reduce((n, img) => n + (typeof img === "string" ? img.length : 0), 0);
+  if (totalChars > LIMITS.maxReceiptImagesChars) {
+    throw new HttpError(413, `These photos add up to ${formatBytes(totalChars)}; the limit is 4.5 MB. Resize them to about 1280px JPEG.`);
+  }
+  const validated = images.map((img, i) => {
+    try {
+      return validateImage(img);
+    } catch (err) {
+      if (err instanceof HttpError) throw new HttpError(err.status, `Photo ${i + 1}: ${err.message}`);
+      throw err;
+    }
+  });
+  const known = cleanKnown(body.known);
+  const system = ai.useClaude ? scanSystem(known) : undefined;
+  const read = async (image) => {
+    try {
+      return await scanOne(env, ai, image, known, system);
+    } catch (err) {
+      if (!(err instanceof HttpError)) throw err;
+      return { error: err.message, ...(err.extra || {}) };
+    }
+  };
+  // The first photo goes a few seconds ahead and writes the prompt cache; the rest read it.
+  const photos = await headStart(validated, read, ai.useClaude ? CACHE_HEAD_START_MS : 0);
+  const good = photos.filter((p) => !p.error);
+  if (!good.length) {
+    throw new HttpError(502, "The pantry scan didn't work this time. Try again, or add the items by hand.", { detail: photos.map((p) => p.detail || p.error).join(" | ").slice(0, 500) });
+  }
+  const engines = [...new Set(good.map((p) => p.engine))];
+  const usage = sumUsage(photos.map((p) => p.usage));
+  return json(200, {
+    // Every item says which photo it came from (img: 0-based), so the app can crop its picture.
+    items: photos.flatMap((p, img) => (p.items || []).map((it) => ({ ...it, img }))),
+    photos: photos.map((p) => (p.error ? { error: p.error } : { items: p.items.length, engine: p.engine, model: p.model, ...(p.usage ? { usage: p.usage } : {}), ...(p.claudeError ? { claudeError: p.claudeError } : {}) })),
+    engine: engines.length === 1 ? engines[0] : "mixed",
+    model: [...new Set(good.map((p) => p.model).filter(Boolean))].join(" + "),
+    ...(usage ? { usage } : {}),
+    ...fallbackNote(ai, good.map((p) => p.claudeError).find(Boolean) || null),
+  }, origin);
 }
 
 // ── Pantry photos (v2.5.4): the family's own pictures of what's on the shelf. They live here, in the
@@ -243,14 +334,194 @@ const PHOTO_ID_RE = /^[a-f0-9]{32}$/;
 async function handlePutPhoto(request, env, url, origin) {
   const type = String(request.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase();
   if (!PHOTO_TYPES.has(type)) throw new HttpError(415, "Send the photo as image/webp, image/jpeg or image/png.");
-  const declared = Number(request.headers.get("Content-Length"));
-  if (Number.isFinite(declared) && declared > LIMITS.maxPhotoBytes) {
-    throw new HttpError(413, `That photo is too large (limit ${formatBytes(LIMITS.maxPhotoBytes)}). Resize it first.`);
+  // Read with a cap: a body sent without a Content-Length can't fill the Worker's memory.
+  const bytes = await readBodyBytes(request, LIMITS.maxPhotoBytes, `That photo is too large (limit ${formatBytes(LIMITS.maxPhotoBytes)}). Resize it first.`);
+  if (bytes.byteLength === 0) throw new HttpError(400, "The photo is empty.");
+  // The bytes must be the kind of picture the header says (nothing else is ever served back).
+  const kind = sniffBytes(bytes);
+  if (!kind || !PHOTO_TYPES.has(`image/${kind}`)) throw new HttpError(415, "That file isn't a WebP, JPEG or PNG picture.");
+  return fromResult(await kitchen(env).putPhoto(familyKey(request), clientOf(request), `image/${kind}`, toArrayBuffer(bytes)), origin);
+}
+
+// ── Store product pictures (docs/spec/23) ─────────────────────────────────────────────────────
+// The family server downloads the store's own picture of a product the family buys and keeps it
+// with the pantry pictures. Only https, only the stores' image hosts (app/photos.js), only real
+// JPEG / PNG / WebP bytes up to 400 KB, redirects only within the allowlist. If a host refuses,
+// the answer says so: nothing here pretends to be a browser or routes around a block.
+const STORE_FETCH_TIMEOUT_MS = 15_000;
+const STORE_FETCH_HOPS = 2;
+const REFUSAL_STATUS = new Set([401, 403, 406, 429, 451, 503]);
+
+async function handleFetchStorePhoto(request, env, url, origin) {
+  const key = familyKey(request);
+  const client = clientOf(request);
+  const body = parseJson(await readBodyText(request, LIMITS.maxSmallBody));
+  if (!isPlainObject(body)) throw new HttpError(400, "Body must be a JSON object like { url }.");
+  const req = storeImageRequest(body.url);
+  // The key is checked before anything is said about the link, and before any request leaves here.
+  const begin = await kitchen(env).storePhotoBegin(key, client, req.ok ? req.source : null, body.refresh === true);
+  if (begin.status !== 200) return fromResult(begin, origin);
+  if (!req.ok) throw new HttpError(400, req.error);
+  if (begin.body.existing) return json(200, { ok: true, reused: true, ...begin.body.existing, host: req.host, store: req.store }, origin);
+
+  const picture = await downloadStorePicture(req);
+  const saved = await kitchen(env).putPhoto(key, client, picture.mime, toArrayBuffer(picture.bytes), { kind: "store", source: req.source });
+  if (saved.status !== 201) return fromResult(saved, origin);
+  return json(201, { ...saved.body, reused: false, mime: picture.mime, host: req.host, store: req.store }, origin);
+}
+
+/** → { mime, bytes: Uint8Array }; throws an HttpError that says plainly what the host did. */
+async function downloadStorePicture(req) {
+  let target = req.url;
+  let host = req.host;
+  let res;
+  for (let hop = 0; ; hop++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), STORE_FETCH_TIMEOUT_MS);
+    try {
+      res = await fetch(target, {
+        method: "GET",
+        redirect: "manual",
+        signal: ctrl.signal,
+        headers: { Accept: "image/jpeg,image/webp,image/png", "User-Agent": "family-dinner-planner (product picture for a family's own grocery list)" },
+      });
+    } catch (err) {
+      throw new HttpError(504, `Couldn't reach ${host} for that picture. Try again in a minute.`, { host, unreachable: true });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (res.status < 300 || res.status >= 400) break;
+    // A redirect: followed only to https on one of the stores' image hosts, and only twice.
+    let next = null;
+    try {
+      next = new URL(res.headers.get("Location") || "", target);
+    } catch {}
+    await discard(res);
+    if (!next || next.protocol !== "https:" || !isStoreImageHost(next.hostname) || next.username || next.password || (next.port && next.port !== "443")) {
+      throw new HttpError(502, `${host} sent the request somewhere that isn't one of the stores' image hosts, so the picture wasn't fetched.`, { host, redirected: true });
+    }
+    if (hop >= STORE_FETCH_HOPS) throw new HttpError(502, `${host} keeps redirecting, so the picture wasn't fetched.`, { host, redirected: true });
+    target = next.href;
+    host = next.hostname.toLowerCase();
   }
-  const buf = await request.arrayBuffer();
-  if (buf.byteLength === 0) throw new HttpError(400, "The photo is empty.");
-  if (buf.byteLength > LIMITS.maxPhotoBytes) throw new HttpError(413, `That photo is too large (limit ${formatBytes(LIMITS.maxPhotoBytes)}). Resize it first.`);
-  return fromResult(await kitchen(env).putPhoto(familyKey(request), clientOf(request), type, buf), origin);
+
+  const type = String(res.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase();
+  if (res.status !== 200) {
+    const said = type.startsWith("text/") ? (await readCapped(res, 300).catch(() => null)) : null;
+    await discard(res);
+    const text = said ? new TextDecoder().decode(said) : "";
+    if (res.status === 404 || res.status === 410 || /unable to find image|not found/i.test(text)) {
+      throw new HttpError(404, `${host} has no picture at that address.`, { host, upstream: res.status, notFound: true });
+    }
+    if (REFUSAL_STATUS.has(res.status)) {
+      throw new HttpError(502, `${host} refused the family server (HTTP ${res.status}), so the picture wasn't saved.`, { host, upstream: res.status, refused: true });
+    }
+    throw new HttpError(502, `${host} answered HTTP ${res.status} instead of a picture.`, { host, upstream: res.status });
+  }
+  if (!PHOTO_TYPES.has(type)) {
+    await discard(res);
+    // A web page where a picture should be is how a host says "not for robots".
+    const refused = type === "text/html" || type === "application/json";
+    throw new HttpError(502, `${host} didn't send a picture (it sent ${type || "something with no type"}), so nothing was saved.`, { host, upstream: 200, ...(refused ? { refused: true } : {}) });
+  }
+  const declared = Number(res.headers.get("Content-Length"));
+  const tooBig = () => new HttpError(413, `That picture is larger than ${formatBytes(LIMITS.maxPhotoBytes)} even at about 480 px, so it wasn't saved.`, { host, tooLarge: true });
+  if (Number.isFinite(declared) && declared > LIMITS.maxPhotoBytes) {
+    await discard(res);
+    throw tooBig();
+  }
+  const bytes = await readCapped(res, LIMITS.maxPhotoBytes);
+  if (bytes === null) throw tooBig();
+  const kind = sniffBytes(bytes);
+  if (!kind || !PHOTO_TYPES.has(`image/${kind}`)) {
+    throw new HttpError(502, `${host} sent something that isn't a JPEG, PNG or WebP picture, so nothing was saved.`, { host, upstream: 200 });
+  }
+  return { mime: `image/${kind}`, bytes };
+}
+
+/** A response body as bytes, or null when it is longer than `limit` (the rest is dropped unread). */
+async function readCapped(res, limit) {
+  if (!res.body) return new Uint8Array(0);
+  const reader = res.body.getReader();
+  const chunks = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > limit) {
+      try {
+        await reader.cancel();
+      } catch {}
+      return null;
+    }
+    chunks.push(value);
+  }
+  return concatBytes(chunks, total);
+}
+
+async function discard(res) {
+  try {
+    if (res.body) await res.body.cancel();
+  } catch {}
+}
+
+function concatBytes(chunks, total) {
+  const buf = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    buf.set(c, offset);
+    offset += c.byteLength;
+  }
+  return buf;
+}
+
+/** Exactly these bytes as an ArrayBuffer (a chunk can be a window onto a larger buffer). */
+function toArrayBuffer(bytes) {
+  return bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength ? bytes.buffer : bytes.slice().buffer;
+}
+
+/** "jpeg" | "png" | "webp" | "gif" from a file's first bytes, else null. */
+function sniffBytes(bytes) {
+  let head = "";
+  for (let i = 0; i < Math.min(16, bytes.byteLength); i++) head += String.fromCharCode(bytes[i]);
+  return sniffImage(head);
+}
+
+async function handlePhotoCleanup(request, env, url, origin) {
+  const text = await readBodyText(request, LIMITS.maxSmallBody);
+  const body = text.trim() ? parseJson(text) : {};
+  const dryRun = isPlainObject(body) && body.dryRun === true;
+  return fromResult(await kitchen(env).cleanupPhotos(familyKey(request), clientOf(request), dryRun), origin);
+}
+
+// ── Backups, storage and tidy-up (docs/spec/23) ───────────────────────────────────────────────
+async function handleStorage(request, env, url, origin) {
+  return fromResult(await kitchen(env).storage(familyKey(request), clientOf(request)), origin);
+}
+
+async function handleBackups(request, env, url, origin) {
+  return fromResult(await kitchen(env).listBackups(familyKey(request), clientOf(request)), origin);
+}
+
+async function handleExport(request, env, url, origin) {
+  const raw = url.searchParams.get("backup");
+  if (raw !== null && !/^\d{1,12}$/.test(raw)) throw new HttpError(400, "backup must be a backup id from GET /api/backups.");
+  const res = await kitchen(env).exportAll(familyKey(request), clientOf(request), raw === null ? null : Number(raw));
+  if (res.status !== 200) return fromResult(res, origin);
+  return json(200, res.body, origin, { "Content-Disposition": `attachment; filename="family-dinner-planner-backup-${chicagoDate()}.json"` });
+}
+
+async function handleRestore(request, env, url, origin) {
+  const text = await readBodyText(request, LIMITS.maxOpsBody);
+  return fromResult(await kitchen(env).restore(familyKey(request), clientOf(request), text), origin);
+}
+
+async function handleCompact(request, env, url, origin) {
+  const text = await readBodyText(request, LIMITS.maxSmallBody);
+  const body = text.trim() ? parseJson(text) : {};
+  const dryRun = isPlainObject(body) && body.dryRun === true;
+  return fromResult(await kitchen(env).compact(familyKey(request), clientOf(request), dryRun), origin);
 }
 
 async function handleGetPhoto(request, env, url, origin) {
@@ -277,7 +548,7 @@ async function handleDeletePhoto(request, env, url, origin) {
 }
 
 async function handleReceipt(request, env, url, origin) {
-  const ai = await aiContext(env, request);
+  const ai = await aiContext(env, request, { spend: true });
   if (ai.denied) return fromResult(ai.denied, origin);
   requireSomeAI(env, ai, "Receipt scanning isn't available: the Workers AI binding (AI) is not configured on this Worker.");
   const body = parseJson(await readBodyText(request, LIMITS.maxReceiptBody));
@@ -327,8 +598,14 @@ async function handleMcpRotate(request, env, url, origin) {
   return json(200, { ok: true, rotated: true, url: `${url.origin}/mcp/${res.body.token}` }, origin);
 }
 
+const MCP_HEADERS = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex" };
+
 async function handleMcp(request, env, path, method) {
   const token = path.slice("/mcp/".length);
+  // Anything that can't be a link is turned away here, before the body is read or storage is touched.
+  if (!/^[0-9a-f]{32}$/.test(token)) {
+    return new Response(JSON.stringify({ error: "Not found." }), { status: 404, headers: { "Content-Type": "application/json; charset=utf-8", ...MCP_HEADERS } });
+  }
   const body = method === "POST" ? await readBodyText(request, MCP_MAX_BODY) : "";
   const res = await kitchen(env).mcp(token, method, body, request.headers.get("MCP-Protocol-Version"));
   const text = res.body === null || res.body === undefined ? null : typeof res.body === "string" ? res.body : JSON.stringify(res.body);
@@ -336,8 +613,7 @@ async function handleMcp(request, env, path, method) {
     status: res.status,
     headers: {
       ...(text === null ? {} : { "Content-Type": "application/json; charset=utf-8" }),
-      "Cache-Control": "no-store",
-      "X-Content-Type-Options": "nosniff",
+      ...MCP_HEADERS,
       ...(res.headers || {}),
     },
   });
@@ -397,8 +673,73 @@ export class Kitchen extends DurableObject {
       token TEXT NOT NULL,
       created_at TEXT NOT NULL
     )`);
+    // docs/spec/23 ── later additions. Columns are added to the tables above (never a new CREATE),
+    // so a kitchen made by an older version and a brand-new one end up with the same shape.
+    this.#addColumn("photos", "kind", "TEXT"); // 'store' = a store's product picture; NULL = the family's own
+    this.#addColumn("photos", "source", "TEXT"); // where a store picture came from (its address, no query)
+    this.sql.exec("CREATE INDEX IF NOT EXISTS photos_source ON photos (source)");
+    this.#addColumn("ai_usage", "cache_write_tokens", "INTEGER NOT NULL DEFAULT 0");
+    this.#addColumn("ai_usage", "cache_read_tokens", "INTEGER NOT NULL DEFAULT 0");
+    this.#addColumn("ai_usage", "calls", "INTEGER NOT NULL DEFAULT 0");
+    this.#addColumn("ai_usage", "scan_calls", "INTEGER NOT NULL DEFAULT 0"); // pantry photos read by Claude
+    this.#addColumn("ai_usage", "scan_usd", "REAL NOT NULL DEFAULT 0");
+    // Clients (IPs) that showed the right key lately: a flood of wrong keys from elsewhere can't lock them out.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS auth_ok (
+      client TEXT PRIMARY KEY,
+      at INTEGER NOT NULL
+    )`);
+    // Whole copies of the state: one a day before the day's first change, and one before every
+    // restore or tidy-up. What a tidy-up removes from the state goes to `archive`, never away.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS backups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      at TEXT NOT NULL,
+      day TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      revision INTEGER NOT NULL,
+      bytes INTEGER NOT NULL,
+      state TEXT NOT NULL
+    )`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS archive (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      at TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      key TEXT NOT NULL,
+      value TEXT NOT NULL
+    )`);
     this.doc = null; // in-memory cache of the doc row (this object is the only writer)
     this.authRow = undefined; // undefined = not loaded, null = no passcode yet
+    this.rates = new Map(); // bucket → recent request times (in memory: see RATES)
+    this.backupDay = null; // the Chicago day the last daily backup was checked for
+  }
+
+  #addColumn(table, column, decl) {
+    try {
+      const has = this.sql.exec(`SELECT 1 AS x FROM pragma_table_info('${table}') WHERE name = ?`, column).toArray().length > 0;
+      if (!has) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+    } catch (err) {
+      // pragma_table_info unavailable: add it blind; "duplicate column" means it's already there.
+      try {
+        this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+      } catch {}
+    }
+  }
+
+  /** 0 when this request may go ahead, else the seconds until the next one may. */
+  #rate(bucket, limit) {
+    const now = Date.now();
+    const recent = (this.rates.get(bucket) || []).filter((t) => now - t < RATE_WINDOW_MS);
+    if (recent.length >= limit) {
+      this.rates.set(bucket, recent);
+      return Math.max(1, Math.ceil((RATE_WINDOW_MS - (now - recent[0])) / 1000));
+    }
+    recent.push(now);
+    this.rates.set(bucket, recent);
+    return 0;
+  }
+
+  #rateLimit(name) {
+    const override = Number(this.env && this.env[`RATE_${name.toUpperCase()}`]);
+    return Number.isFinite(override) && override > 0 ? Math.floor(override) : RATES[name];
   }
 
   // ── Claude chat connector (SPEC §15) ──
@@ -425,6 +766,8 @@ export class Kitchen extends DurableObject {
     if (method !== "POST") {
       return failure(405, "This MCP endpoint takes JSON-RPC 2.0 over POST.", undefined, { Allow: "POST" });
     }
+    const waitSec = this.#rate("mcp", this.#rateLimit("mcp"));
+    if (waitSec) return failure(429, `Too many requests from the Claude chat at once. Try again in ${waitSec} seconds.`, { retryAfter: waitSec }, { "Retry-After": String(waitSec) });
     return handleMcpRequest(bodyText, {
       version: VERSION,
       env: this.env,
@@ -482,19 +825,99 @@ export class Kitchen extends DurableObject {
     );
     this.authRow = undefined;
     this.sql.exec("DELETE FROM auth_failures");
-    return { status: 200, body: { ok: true } };
+    this.sql.exec("DELETE FROM auth_ok");
+    // Whoever knew the old passcode could have copied the Claude chat link, and that link opens the
+    // same planner: a new passcode retires it too. The next GET /api/mcp/link makes a new one.
+    const hadLink = this.sql.exec("SELECT 1 AS x FROM mcp_link WHERE id = 1").toArray().length > 0;
+    if (hadLink) this.sql.exec("DELETE FROM mcp_link");
+    return { status: 200, body: { ok: true, ...(hadLink ? { mcpLinkReset: true } : {}) } };
   }
 
-  async putPhoto(key, client, mime, data) {
+  /**
+   * Saves one picture. opts.kind 'store' + opts.source: a store's product picture (it replaces an
+   * older copy from the same address). When storage is full, pictures nothing points to any more
+   * are cleared out once before giving up.
+   */
+  async putPhoto(key, client, mime, data, opts = undefined) {
     const denied = await this.#check(key, client);
     if (denied) return denied;
-    const totals = this.sql.exec("SELECT COUNT(*) AS n, COALESCE(SUM(bytes), 0) AS b FROM photos").toArray()[0];
-    if (totals.n >= LIMITS.maxPhotos || totals.b + data.byteLength > LIMITS.maxPhotoTotalBytes) {
-      return failure(507, "The family photo storage is full. Remove some pantry photos first.");
+    const kind = opts && opts.kind === "store" ? "store" : null;
+    const source = kind && typeof opts.source === "string" ? opts.source.slice(0, 500) : null;
+    for (let pass = 0; ; pass++) {
+      const full = this.#photoQuota(kind, data.byteLength);
+      if (!full) break;
+      if (pass === 0 && this.#cleanupPhotos(false).removed > 0) continue;
+      return failure(507, full);
     }
     const id = crypto.randomUUID().replace(/-/g, "");
-    this.sql.exec("INSERT INTO photos (id, mime, data, bytes, at) VALUES (?, ?, ?, ?, ?)", id, mime, data, data.byteLength, new Date().toISOString());
+    if (source) this.sql.exec("DELETE FROM photos WHERE source = ?", source);
+    this.sql.exec(
+      "INSERT INTO photos (id, mime, data, bytes, at, kind, source) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      id, mime, data, data.byteLength, new Date().toISOString(), kind, source,
+    );
     return { status: 201, body: { ok: true, id, bytes: data.byteLength } };
+  }
+
+  /** Why a new picture doesn't fit (a sentence), or null when it does. */
+  #photoQuota(kind, bytes) {
+    const t = this.sql
+      .exec("SELECT COUNT(*) AS n, COALESCE(SUM(bytes), 0) AS b, COALESCE(SUM(CASE WHEN kind = 'store' THEN 1 ELSE 0 END), 0) AS s FROM photos")
+      .toArray()[0];
+    if (Number(t.n) >= LIMITS.maxPhotos || Number(t.b) + bytes > LIMITS.maxPhotoTotalBytes) {
+      return "The family photo storage is full. Remove some pantry photos first.";
+    }
+    if (kind === "store" && Number(t.s) >= LIMITS.maxStorePhotos) {
+      return `The family server already keeps ${LIMITS.maxStorePhotos} store product pictures, which is the most it holds.`;
+    }
+    return null;
+  }
+
+  /**
+   * Before the Worker fetches a store picture: the family key, the request rate, and whether the
+   * picture from this address is already here (then it's reused, unless a fresh copy was asked for).
+   */
+  async storePhotoBegin(key, client, source, refresh) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    if (!source) return { status: 200, body: { existing: null } };
+    if (!refresh) {
+      const row = this.sql.exec("SELECT id, bytes, mime FROM photos WHERE source = ? ORDER BY at DESC LIMIT 1", source).toArray()[0];
+      if (row) return { status: 200, body: { existing: { id: row.id, bytes: Number(row.bytes), mime: row.mime } } };
+    }
+    const waitSec = this.#rate("photoFetch", this.#rateLimit("photoFetch"));
+    if (waitSec) return failure(429, `Too many pictures at once. Try again in ${waitSec} seconds.`, { retryAfter: waitSec }, { "Retry-After": String(waitSec) });
+    const full = this.#photoQuota("store", 0);
+    if (full && this.#cleanupPhotos(false).removed === 0) return failure(507, full);
+    return { status: 200, body: { existing: null } };
+  }
+
+  /**
+   * Removes pictures nothing in the family state points to (a replaced or removed pantry picture,
+   * a product the family no longer buys). A picture is "pointed to" when its id appears anywhere
+   * in the state, and nothing younger than a day is touched: its op may still be on a phone.
+   */
+  async cleanupPhotos(key, client, dryRun) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    return { status: 200, body: { ok: true, dryRun: !!dryRun, ...this.#cleanupPhotos(!!dryRun) } };
+  }
+
+  #cleanupPhotos(dryRun) {
+    const used = new Set();
+    for (const m of this.#doc().json.matchAll(/"([a-f0-9]{32})"/g)) used.add(m[1]);
+    // A day's grace by default (PHOTO_CLEANUP_GRACE_HOURS, a plain-text var, changes it; the tests use 0).
+    const hours = Number(this.env && this.env.PHOTO_CLEANUP_GRACE_HOURS);
+    const cutoff = new Date(Date.now() - (Number.isFinite(hours) && hours >= 0 && String(this.env.PHOTO_CLEANUP_GRACE_HOURS).trim() !== "" ? hours : 24) * 3600 * 1000).toISOString();
+    const rows = this.sql.exec("SELECT id, bytes, at FROM photos").toArray();
+    let removed = 0;
+    let bytesFreed = 0;
+    for (const r of rows) {
+      if (used.has(r.id) || String(r.at) > cutoff) continue;
+      removed++;
+      bytesFreed += Number(r.bytes);
+      if (!dryRun) this.sql.exec("DELETE FROM photos WHERE id = ?", r.id);
+    }
+    return { removed, bytesFreed, kept: rows.length - removed };
   }
 
   async getPhoto(key, client, id) {
@@ -572,6 +995,18 @@ export class Kitchen extends DurableObject {
    * POST /api/ops and the Claude chat connector.
    */
   #commit(ops, by, clientId) {
+    let refused = this.#apply(ops, by, clientId);
+    // At the 1 MB wall: put old receipts' lines and old nights in the archive, then try once more.
+    if (refused && refused.status === 413 && this.#compact("auto").changed) refused = this.#apply(ops, by, clientId);
+    // Getting close to it: tidy up now, while every change still fits. (When there was nothing old
+    // enough to archive, don't look again on every change: once an hour is plenty.)
+    else if (!refused && this.doc.bytes > LIMITS.compactAtBytes && Date.now() - (this.tidiedInVainAt || 0) > 3600_000) {
+      if (!this.#compact("auto").changed) this.tidiedInVainAt = Date.now();
+    }
+    return refused;
+  }
+
+  #apply(ops, by, clientId) {
     const d = this.#doc();
     let state = JSON.parse(d.json);
     if (!isPlainObject(state)) state = {};
@@ -586,8 +1021,13 @@ export class Kitchen extends DurableObject {
     if (bytes > LIMITS.maxStateBytes) {
       return failure(413, `That change would make the family data ${formatBytes(bytes)}; the limit is 1 MB. Nothing was saved.`);
     }
+    this.#dailyBackup(d);
+    this.#writeDoc(stateJson, bytes, by, clientId);
+    return null;
+  }
 
-    const revision = d.revision + 1;
+  #writeDoc(stateJson, bytes, by, clientId) {
+    const revision = this.#doc().revision + 1;
     const updatedAt = new Date().toISOString();
     this.sql.exec(
       `INSERT INTO doc (id, state, revision, updated_at, updated_by, client_id) VALUES (1, ?, ?, ?, ?, ?)
@@ -595,35 +1035,285 @@ export class Kitchen extends DurableObject {
          updated_at = excluded.updated_at, updated_by = excluded.updated_by, client_id = excluded.client_id`,
       stateJson, revision, updatedAt, by, clientId,
     );
-    this.doc = { json: stateJson, revision, updatedAt, updatedBy: by };
-    return null;
+    this.doc = { json: stateJson, revision, updatedAt, updatedBy: by, bytes };
+  }
+
+  // ── Backups (docs/spec/23) ──
+  /** Before the first change of each Chicago day, keep a copy of the state as it was. */
+  #dailyBackup(d) {
+    const day = chicagoDate();
+    if (this.backupDay === day || d.revision === 0) return;
+    const has = this.sql.exec("SELECT 1 AS x FROM backups WHERE day = ? AND reason = 'daily' LIMIT 1", day).toArray().length > 0;
+    if (!has) this.#backup("daily", d);
+    this.backupDay = day;
+  }
+
+  #backup(reason, d = this.#doc()) {
+    this.sql.exec(
+      "INSERT INTO backups (at, day, reason, revision, bytes, state) VALUES (?, ?, ?, ?, ?, ?)",
+      new Date().toISOString(), chicagoDate(), reason, d.revision, utf8Bytes(d.json), d.json,
+    );
+    // Two weeks of daily copies, and the last few made before a restore or a tidy-up.
+    this.sql.exec(
+      "DELETE FROM backups WHERE reason = 'daily' AND id NOT IN (SELECT id FROM backups WHERE reason = 'daily' ORDER BY id DESC LIMIT ?)",
+      LIMITS.dailyBackups,
+    );
+    this.sql.exec(
+      "DELETE FROM backups WHERE reason <> 'daily' AND id NOT IN (SELECT id FROM backups WHERE reason <> 'daily' ORDER BY id DESC LIMIT ?)",
+      LIMITS.otherBackups,
+    );
+  }
+
+  #backupList() {
+    return this.sql
+      .exec("SELECT id, at, day, reason, revision, bytes FROM backups ORDER BY id DESC")
+      .toArray()
+      .map((r) => ({ id: Number(r.id), at: r.at, day: r.day, reason: r.reason, revision: Number(r.revision), bytes: Number(r.bytes) }));
+  }
+
+  async listBackups(key, client) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    return { status: 200, body: { ok: true, backups: this.#backupList() } };
+  }
+
+  /**
+   * Everything the family would need to start over: the state (or one backup of it), what tidy-ups
+   * moved to the archive, and the list of pictures (the pictures themselves come from GET /api/photo).
+   * Never the passcode hash, the Claude key or the chat link.
+   */
+  async exportAll(key, client, backupId) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    const d = this.#doc();
+    let stateJson = d.json;
+    let from = { revision: d.revision, updatedAt: d.updatedAt, updatedBy: d.updatedBy ?? null };
+    if (backupId !== null) {
+      const b = this.sql.exec("SELECT at, reason, revision, state FROM backups WHERE id = ?", backupId).toArray()[0];
+      if (!b) return failure(404, "There's no backup with that id. GET /api/backups lists them.");
+      stateJson = b.state;
+      from = { revision: Number(b.revision), updatedAt: b.at, backup: { id: backupId, reason: b.reason } };
+    }
+    const archive = this.sql.exec("SELECT at, kind, key, value FROM archive ORDER BY id").toArray();
+    const photos = this.sql
+      .exec("SELECT id, mime, bytes, at, kind, source FROM photos ORDER BY at")
+      .toArray()
+      .map((p) => ({ id: p.id, mime: p.mime, bytes: Number(p.bytes), at: p.at, ...(p.kind ? { kind: p.kind } : {}), ...(p.source ? { source: p.source } : {}) }));
+    const aiUsage = this.sql.exec("SELECT * FROM ai_usage ORDER BY month").toArray();
+    const meta = { service: SERVICE, version: VERSION, exportedAt: new Date().toISOString(), ...from, backups: this.#backupList(), photos, aiUsage };
+    // By hand, so the state and the archived values (already JSON) are never parsed or re-encoded.
+    const archived = archive.map((a) => `{"at":${JSON.stringify(a.at)},"kind":${JSON.stringify(a.kind)},"key":${JSON.stringify(a.key)},"value":${a.value}}`).join(",");
+    return { status: 200, body: `${JSON.stringify(meta).slice(0, -1)},"archive":[${archived}],"state":${stateJson}}` };
+  }
+
+  /**
+   * Puts a saved copy back: { backup: id } (one of GET /api/backups) or { state: {…} } (the state
+   * from an export file; the whole file can be sent as it is), with confirm: "restore". The state
+   * it replaces is kept as a backup first, so a restore can itself be undone.
+   */
+  async restore(key, client, bodyText) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    let body;
+    try {
+      body = parseJson(bodyText);
+    } catch (err) {
+      return asFailure(err);
+    }
+    if (!isPlainObject(body)) return failure(400, 'Body must be a JSON object like { backup: 12, confirm: "restore" } or { state: {…}, confirm: "restore" }.');
+    if (body.confirm !== "restore") return failure(400, 'A restore replaces the whole family plan. Send confirm: "restore" to go ahead.');
+    let state;
+    let source;
+    if (body.backup !== undefined && body.backup !== null && typeof body.backup !== "object") {
+      if (!Number.isInteger(body.backup) || body.backup < 0) return failure(400, "backup must be a backup id from GET /api/backups.");
+      const b = this.sql.exec("SELECT state, reason, at FROM backups WHERE id = ?", body.backup).toArray()[0];
+      if (!b) return failure(404, "There's no backup with that id. GET /api/backups lists them.");
+      state = JSON.parse(b.state);
+      source = `the ${b.reason} backup from ${b.at}`;
+    } else {
+      state = body.state;
+      source = "an export file";
+    }
+    if (!isPlainObject(state)) return failure(400, "state must be the family state object from an export file.");
+    try {
+      checkValue(state, 0, 0);
+    } catch {
+      return failure(400, "That state can't be restored: it is nested too deeply or uses a forbidden key.");
+    }
+    const stateJson = JSON.stringify(state);
+    const bytes = utf8Bytes(stateJson);
+    if (bytes > LIMITS.maxStateBytes) return failure(413, `That state is ${formatBytes(bytes)}; the limit is 1 MB. Nothing was changed.`);
+    const before = this.#doc();
+    if (before.revision > 0) this.#backup("restore", before);
+    this.#writeDoc(stateJson, bytes, `Restore (${cleanText(body.by, 40) || "Family"})`, "restore");
+    return { status: 200, body: { ok: true, restoredFrom: source, revision: this.doc.revision, replacedRevision: before.revision, bytes }, headers: { "X-Revision": String(this.doc.revision) } };
+  }
+
+  // ── Storage and tidy-up (docs/spec/23) ──
+  async storage(key, client) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    const d = this.#doc();
+    const bytes = d.bytes ?? utf8Bytes(d.json);
+    let state = {};
+    try {
+      state = JSON.parse(d.json);
+    } catch {}
+    const sections = {};
+    for (const [k, v] of Object.entries(isPlainObject(state) ? state : {})) sections[k] = utf8Bytes(JSON.stringify(v));
+    const p = this.sql
+      .exec("SELECT COUNT(*) AS n, COALESCE(SUM(bytes), 0) AS b, COALESCE(SUM(CASE WHEN kind = 'store' THEN 1 ELSE 0 END), 0) AS s FROM photos")
+      .toArray()[0];
+    const a = this.sql.exec("SELECT COUNT(*) AS n, COALESCE(SUM(LENGTH(value)), 0) AS b FROM archive").toArray()[0];
+    return {
+      status: 200,
+      body: {
+        ok: true,
+        revision: d.revision,
+        state: {
+          bytes, limitBytes: LIMITS.maxStateBytes, pct: Math.round((bytes / LIMITS.maxStateBytes) * 100), tidiesUpAtBytes: LIMITS.compactAtBytes,
+          sections: Object.fromEntries(Object.entries(sections).sort((x, y) => y[1] - x[1])),
+        },
+        photos: {
+          count: Number(p.n), bytes: Number(p.b), store: Number(p.s), own: Number(p.n) - Number(p.s),
+          limitCount: LIMITS.maxPhotos, limitBytes: LIMITS.maxPhotoTotalBytes, limitStore: LIMITS.maxStorePhotos,
+          unused: this.#cleanupPhotos(true).removed,
+        },
+        archive: { entries: Number(a.n), bytes: Number(a.b) },
+        backups: this.#backupList(),
+      },
+    };
+  }
+
+  async compact(key, client, dryRun) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    return { status: 200, body: { ok: true, dryRun: !!dryRun, ...this.#compact("asked", { dryRun: !!dryRun, force: true }) } };
+  }
+
+  /**
+   * Makes room in the state document. Nothing is thrown away: a whole copy is kept as a backup
+   * first, and what leaves the state goes into the archive table (GET /api/export returns it).
+   *  - shopping check-offs and skips of lists that ended over 60 days ago: dropped (nothing reads them);
+   *  - receipts older than 180 days keep their store, date, totals and line count; their lines
+   *    (already learned as products and price history) move to the archive;
+   *  - dinner-plan nights older than 400 days move to the archive.
+   * If that still leaves the document over the target, receipts are trimmed at 90 and then 45 days.
+   * → { changed, beforeBytes, afterBytes, receiptsTrimmed, nightsArchived, listsCleared }
+   */
+  #compact(reason, { dryRun = false, force = false } = {}) {
+    const d = this.#doc();
+    const beforeBytes = d.bytes ?? utf8Bytes(d.json);
+    const none = { changed: false, beforeBytes, afterBytes: beforeBytes, receiptsTrimmed: 0, nightsArchived: 0, listsCleared: 0 };
+    if (!force && beforeBytes <= LIMITS.compactAtBytes && reason !== "auto") return none;
+    let state;
+    try {
+      state = JSON.parse(d.json);
+    } catch {
+      return none;
+    }
+    if (!isPlainObject(state)) return none;
+    const today = chicagoDate();
+    const archived = [];
+    const out = { receiptsTrimmed: 0, nightsArchived: 0, listsCleared: 0 };
+    const ISO_RE = /\d{4}-\d{2}-\d{2}/g;
+
+    const listCutoff = isoDaysAgo(today, LIMITS.listDays);
+    for (const k of ["checked", "skips"]) {
+      if (!isPlainObject(state[k])) continue;
+      for (const listKey of Object.keys(state[k])) {
+        // "2026-11-16+7" (a period: start + nights) or "trip:<start>:<end>:<store>".
+        const dates = listKey.match(ISO_RE);
+        if (!dates) continue;
+        let end = dates[dates.length - 1];
+        const nights = /^\d{4}-\d{2}-\d{2}\+(\d{1,3})$/.exec(listKey);
+        if (nights) end = isoDaysAgo(dates[0], -Number(nights[1]));
+        if (end < listCutoff) {
+          delete state[k][listKey];
+          out.listsCleared++;
+        }
+      }
+    }
+    const planCutoff = isoDaysAgo(today, LIMITS.planDays);
+    if (isPlainObject(state.plan)) {
+      for (const date of Object.keys(state.plan)) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date >= planCutoff) continue;
+        archived.push({ kind: "plan", key: date, value: state.plan[date] });
+        delete state.plan[date];
+        out.nightsArchived++;
+      }
+    }
+    const trimReceipts = (days) => {
+      if (!isPlainObject(state.receiptLog)) return;
+      const cutoff = isoDaysAgo(today, days);
+      for (const [id, r] of Object.entries(state.receiptLog)) {
+        if (!isPlainObject(r) || typeof r.date !== "string" || r.date >= cutoff || !Array.isArray(r.lines) || !r.lines.length) continue;
+        archived.push({ kind: "receipt", key: id, value: r });
+        state.receiptLog[id] = { ...r, lines: [], lineCount: r.lines.length, archived: true };
+        out.receiptsTrimmed++;
+      }
+    };
+    trimReceipts(LIMITS.receiptDetailDays);
+    let stateJson = JSON.stringify(state);
+    for (const days of [90, 45]) {
+      if (utf8Bytes(stateJson) <= LIMITS.compactTargetBytes) break;
+      trimReceipts(days);
+      stateJson = JSON.stringify(state);
+    }
+    const afterBytes = utf8Bytes(stateJson);
+    const changed = out.receiptsTrimmed + out.nightsArchived + out.listsCleared > 0;
+    if (!changed || dryRun) return { changed: changed && !dryRun, beforeBytes, afterBytes, ...out };
+
+    this.#backup("tidy-up", d);
+    const at = new Date().toISOString();
+    for (const a of archived) this.sql.exec("INSERT INTO archive (at, kind, key, value) VALUES (?, ?, ?, ?)", at, a.kind, a.key, JSON.stringify(a.value));
+    this.#writeDoc(stateJson, afterBytes, "Planner tidy-up", "tidy-up");
+    console.log(`State tidy-up (${reason}): ${formatBytes(beforeBytes)} → ${formatBytes(afterBytes)}; ${out.receiptsTrimmed} receipts trimmed, ${out.nightsArchived} nights archived, ${out.listsCleared} old lists cleared`);
+    return { changed: true, beforeBytes, afterBytes, ...out };
   }
 
   // ── AI usage (SPEC §14) ──
   /** Family key check + the family's Claude model + this month's Claude spend, in one round trip. */
-  async aiBegin(key, client) {
+  async aiBegin(key, client, spend = false) {
     const denied = await this.#check(key, client);
     if (denied) return denied;
+    if (spend) {
+      // A request that will call a model: a stuck phone or a loop can't run through the month's budget.
+      const waitSec = this.#rate("ai", this.#rateLimit("ai"));
+      if (waitSec) return failure(429, `Too many photos and ideas at once. Try again in ${waitSec < 90 ? `${waitSec} seconds` : `${Math.ceil(waitSec / 60)} minutes`}.`, { retryAfter: waitSec }, { "Retry-After": String(waitSec) });
+    }
     return { status: 200, body: this.#aiSnapshot() };
   }
 
-  /** Adds one Claude call's tokens and cost to this month's row. Called by the Worker only. */
-  async aiRecord(model, inputTokens, outputTokens) {
-    const input = tokenCount(inputTokens);
-    const output = tokenCount(outputTokens);
-    const usd = costUsd(model, { input_tokens: input, output_tokens: output });
+  /**
+   * Adds one Claude call's tokens and cost to this month's row. Called by the Worker only.
+   * usage: the API's counts (input_tokens = the uncached part of the prompt, plus the cache write
+   * and cache read counts); kind: "scan" | "receipt" | "ideas".
+   */
+  async aiRecord(model, usage, kind = null) {
+    const u = usageOf(usage);
+    const usd = costUsd(model, u);
+    const scan = kind === "scan" ? 1 : 0;
     this.sql.exec(
-      `INSERT INTO ai_usage (month, input_tokens, output_tokens, usd) VALUES (?, ?, ?, ?)
+      `INSERT INTO ai_usage (month, input_tokens, output_tokens, usd, cache_write_tokens, cache_read_tokens, calls, scan_calls, scan_usd)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
        ON CONFLICT(month) DO UPDATE SET input_tokens = input_tokens + excluded.input_tokens,
-         output_tokens = output_tokens + excluded.output_tokens, usd = usd + excluded.usd`,
-      chicagoMonth(), input, output, usd,
+         output_tokens = output_tokens + excluded.output_tokens, usd = usd + excluded.usd,
+         cache_write_tokens = cache_write_tokens + excluded.cache_write_tokens,
+         cache_read_tokens = cache_read_tokens + excluded.cache_read_tokens,
+         calls = calls + 1, scan_calls = scan_calls + excluded.scan_calls, scan_usd = scan_usd + excluded.scan_usd`,
+      // input_tokens here is the whole prompt (uncached + written + read), as it always was.
+      chicagoMonth(), u.input_tokens + u.cache_creation_input_tokens + u.cache_read_input_tokens, u.output_tokens, usd,
+      u.cache_creation_input_tokens, u.cache_read_input_tokens, scan, scan ? usd : 0,
     );
     return this.#aiSnapshot();
   }
 
   #aiSnapshot() {
     const month = chicagoMonth();
-    const row = this.sql.exec("SELECT input_tokens, output_tokens, usd FROM ai_usage WHERE month = ?", month).toArray()[0];
+    const row = this.sql
+      .exec("SELECT input_tokens, output_tokens, usd, cache_write_tokens, cache_read_tokens, calls, scan_calls, scan_usd FROM ai_usage WHERE month = ?", month)
+      .toArray()[0];
     let setting = null;
     try {
       // The family setting state.settings.aiModel, read without parsing the whole state in JS.
@@ -636,6 +1326,12 @@ export class Kitchen extends DurableObject {
       spentUsd: row ? Math.round(Number(row.usd) * 1e6) / 1e6 : 0,
       inputTokens: row ? Number(row.input_tokens) : 0,
       outputTokens: row ? Number(row.output_tokens) : 0,
+      // Of inputTokens: how many were written to the prompt cache, and how many were read back from it.
+      cacheWriteTokens: row ? Number(row.cache_write_tokens) : 0,
+      cacheReadTokens: row ? Number(row.cache_read_tokens) : 0,
+      calls: row ? Number(row.calls) : 0,
+      // Pantry photos Claude read this month and what they cost: the app's "about N¢ a photo" is this, measured.
+      scan: { photos: row ? Number(row.scan_calls) : 0, usd: row ? Math.round(Number(row.scan_usd) * 1e6) / 1e6 : 0 },
     };
   }
 
@@ -643,8 +1339,8 @@ export class Kitchen extends DurableObject {
     if (this.doc) return this.doc;
     const row = this.sql.exec("SELECT state, revision, updated_at, updated_by FROM doc WHERE id = 1").toArray()[0];
     this.doc = row
-      ? { json: row.state, revision: Number(row.revision), updatedAt: row.updated_at, updatedBy: row.updated_by }
-      : { json: "{}", revision: 0, updatedAt: null, updatedBy: null };
+      ? { json: row.state, revision: Number(row.revision), updatedAt: row.updated_at, updatedBy: row.updated_by, bytes: utf8Bytes(row.state) }
+      : { json: "{}", revision: 0, updatedAt: null, updatedBy: null, bytes: 2 };
     return this.doc;
   }
 
@@ -679,16 +1375,45 @@ export class Kitchen extends DurableObject {
       return failure(401, "Wrong family passcode.");
     }
     this.sql.exec("DELETE FROM auth_failures WHERE client = ?", client);
+    this.#rememberClient(client, now);
     return null;
   }
 
+  /**
+   * How long this client is locked out for. Its own lock always counts. The everyone-lock (a flood
+   * of wrong keys from many addresses) doesn't apply to an address that showed the right key in the
+   * last 30 days, so a stranger guessing passcodes can't lock the family out of their own planner.
+   */
   #lockedFor(client, now) {
     const rows = this.sql
-      .exec("SELECT locked_until FROM auth_failures WHERE client IN (?, ?)", client, GLOBAL_CLIENT)
+      .exec("SELECT client, locked_until FROM auth_failures WHERE client IN (?, ?)", client, GLOBAL_CLIENT)
       .toArray();
-    let until = 0;
-    for (const r of rows) until = Math.max(until, Number(r.locked_until) || 0);
+    let own = 0;
+    let everyone = 0;
+    for (const r of rows) {
+      const until = Number(r.locked_until) || 0;
+      if (r.client === GLOBAL_CLIENT && client !== GLOBAL_CLIENT) everyone = Math.max(everyone, until);
+      else own = Math.max(own, until);
+    }
+    if (everyone > now && everyone > own && this.#knownClient(client, now)) everyone = 0;
+    const until = Math.max(own, everyone);
     return until > now ? until - now : 0;
+  }
+
+  #knownClient(client, now) {
+    if (!client || client === "unknown") return false;
+    const row = this.sql.exec("SELECT at FROM auth_ok WHERE client = ?", client).toArray()[0];
+    return Boolean(row) && now - Number(row.at) < TRUSTED_CLIENT_MS;
+  }
+
+  /** Notes (at most once a day per address) that this address had the right key. */
+  #rememberClient(client, now) {
+    if (!client || client === "unknown") return;
+    const row = this.sql.exec("SELECT at FROM auth_ok WHERE client = ?", client).toArray()[0];
+    if (row && now - Number(row.at) < 24 * 3600 * 1000) return;
+    this.sql.exec("INSERT INTO auth_ok (client, at) VALUES (?, ?) ON CONFLICT(client) DO UPDATE SET at = excluded.at", client, now);
+    this.sql.exec("DELETE FROM auth_ok WHERE at < ?", now - TRUSTED_CLIENT_MS);
+    this.sql.exec("DELETE FROM auth_ok WHERE client NOT IN (SELECT client FROM auth_ok ORDER BY at DESC LIMIT 300)");
   }
 
   /** Counts one wrong key; returns how long THIS client is now locked out for (0 = not locked). */
@@ -977,17 +1702,39 @@ function cleanKnown(list) {
   if (!Array.isArray(list)) throw new HttpError(400, "known must be an array of { id, name, aliases }.");
   const out = [];
   const seen = new Set();
+  let chars = 0;
   for (const entry of list.slice(0, LIMITS.maxKnown)) {
     if (!isPlainObject(entry)) continue;
     const id = typeof entry.id === "string" ? entry.id.trim().slice(0, 80) : "";
     if (!id || seen.has(id) || /[\r\n]/.test(id)) continue;
-    seen.add(id);
     const aliases = Array.isArray(entry.aliases)
       ? entry.aliases.map((a) => cleanText(a, 80)).filter(Boolean).slice(0, 12)
       : [];
-    out.push({ id, name: cleanText(entry.name, 120) || id, aliases });
+    const item = { id, name: cleanText(entry.name, 120) || id, aliases };
+    // The list goes into the prompt word for word: a runaway one would be paid for on every photo.
+    chars += knownLine(item).length + 1;
+    if (chars > LIMITS.maxKnownChars) break;
+    seen.add(id);
+    out.push(item);
   }
   return out;
+}
+
+const knownLine = (k) => `${k.id} = ${k.name}${k.aliases.length ? ` (also: ${k.aliases.join(", ")})` : ""}`;
+const KNOWN_HEADING = "KNOWN ITEMS (id = name):";
+
+/**
+ * The known-items list as system blocks for Claude, in two parts so each can be read back from the
+ * prompt cache on its own: the recipe box's items (the same for every photo, for weeks), then the
+ * family's own shelf items (ids starting "custom-", which change a little more often).
+ */
+function knownBlocks(known) {
+  const box = known.filter((k) => !k.id.startsWith("custom-"));
+  const own = known.filter((k) => k.id.startsWith("custom-"));
+  return [
+    `${KNOWN_HEADING}\n${box.length ? box.map(knownLine).join("\n") : "(none)"}`,
+    own.length ? `MORE KNOWN ITEMS, the family's own shelf items (id = name):\n${own.map(knownLine).join("\n")}` : "",
+  ];
 }
 
 const SCAN_SYSTEM_PROMPT =
@@ -995,11 +1742,21 @@ const SCAN_SYSTEM_PROMPT =
   "shelf, fridge, freezer or counter and list the food products in it, reading package labels when they " +
   "are legible. You answer with JSON only — no prose, no markdown.";
 
+/** Workers AI: everything in one user message, the known items last. */
 function scanUserPrompt(known) {
-  const lines = known.map((k) => {
-    const aka = k.aliases.length ? ` (also: ${k.aliases.join(", ")})` : "";
-    return `${k.id} = ${k.name}${aka}`;
-  });
+  return [SCAN_INSTRUCTIONS, "", KNOWN_HEADING, known.length ? known.map(knownLine).join("\n") : "(none)"].join("\n");
+}
+
+/**
+ * Claude: the instructions and the known items are the system prompt (the same from photo to photo,
+ * so photos after the first read them from the prompt cache); the user message is just the photo.
+ */
+function scanSystem(known) {
+  return cachedSystem([`${SCAN_SYSTEM_PROMPT}\n\n${SCAN_INSTRUCTIONS}`, ...knownBlocks(known)]);
+}
+const SCAN_ASK = "List every distinct food or drink product you can see in this photo, following the instructions and the KNOWN ITEMS above. Answer with exactly one JSON object.";
+
+const SCAN_INSTRUCTIONS = (() => {
   return [
     "List every distinct food or drink product you can see in this photo.",
     "",
@@ -1020,11 +1777,8 @@ function scanUserPrompt(known) {
     "- Don't guess at items you can't actually see. If there is no food in the photo, return {\"items\": []}.",
     "",
     'Answer with exactly one JSON object: {"items":[{"name":"Cut green beans, canned","brand":"Del Monte","label":"Cut Green Beans","matchId":null,"qty":3,"unit":"can","confidence":0.9,"box":[120,340,410,620]}]}',
-    "",
-    "KNOWN ITEMS (id = name):",
-    lines.length ? lines.join("\n") : "(none)",
   ].join("\n");
-}
+})();
 
 const SCAN_SCHEMA = {
   type: "object",
@@ -1485,17 +2239,29 @@ const RECEIPT_GLOSSARY =
   "TORT = tortillas; HB = hamburger; GRN BNS = green beans; FF = french fries; OJ = orange juice; MLK = milk; " +
   "LG = large; DZ = dozen; CT = count; PK = pack.";
 
-function receiptUserPrompt({ index, count, storeHint, known }) {
+/** The one line that changes from image to image. */
+function receiptImageLine({ index, count, storeHint }) {
   const where =
     storeHint === "sams" ? " The family says it is from Sam's Club." :
     storeHint === "jewel" ? " The family says it is from Jewel-Osco." : "";
   const multi = count > 1
     ? " Long receipts are split across several screenshots that overlap: transcribe EVERY purchased-item line visible in THIS image, top to bottom, even if it may also appear in another image (the app removes the overlap)."
     : "";
-  const lines = known.map((k) => `${k.id} = ${k.name}${k.aliases.length ? ` (also: ${k.aliases.join(", ")})` : ""}`);
+  return `This is image ${index} of ${count} of ONE grocery receipt.${where}${multi}`;
+}
+
+/** Workers AI: everything in one user message. */
+function receiptUserPrompt({ index, count, storeHint, known }) {
+  return [receiptImageLine({ index, count, storeHint }), "", RECEIPT_INSTRUCTIONS, "", KNOWN_HEADING, known.length ? known.map(knownLine).join("\n") : "(none)"].join("\n");
+}
+
+/** Claude: instructions and known items in the (cached) system prompt; the user message is the image and its one line. */
+function receiptSystem(known) {
+  return cachedSystem([`${RECEIPT_SYSTEM_PROMPT}\n\n${RECEIPT_INSTRUCTIONS}`, ...knownBlocks(known)]);
+}
+
+const RECEIPT_INSTRUCTIONS = (() => {
   return [
-    `This is image ${index} of ${count} of ONE grocery receipt.${where}${multi}`,
-    "",
     "Return:",
     '- "store": "sams" for Sam\'s Club, "jewel" for Jewel-Osco, otherwise "unknown".',
     '- "date": the purchase date as YYYY-MM-DD, or null if this image doesn\'t show it.',
@@ -1518,11 +2284,8 @@ function receiptUserPrompt({ index, count, storeHint, known }) {
     `Common receipt abbreviations: ${RECEIPT_GLOSSARY}`,
     "",
     'Answer with exactly one JSON object, for example: {"store":"sams","date":"2026-11-12","subtotal":null,"tax":null,"total":null,"savings":null,"lines":[{"text":"MM CHKN BRST 6.5LB","product":"Member\'s Mark Boneless Skinless Chicken Breast","brand":"Member\'s Mark","size":"6.5 lb","qty":1,"unitPrice":17.94,"lineTotal":17.94,"discount":0,"matchId":null,"confidence":0.9}]}',
-    "",
-    "KNOWN ITEMS (id = name):",
-    lines.length ? lines.join("\n") : "(none)",
   ].join("\n");
-}
+})();
 
 const RECEIPT_SCHEMA = {
   type: "object",
@@ -1560,32 +2323,35 @@ const RECEIPT_SCHEMA = {
 
 async function runReceipt(env, images, storeHint, known, ai = null) {
   const kIndex = knownIndex(known);
-  const results = await Promise.all(
-    images.map(async (image, i) => {
-      const label = `Receipt image ${i + 1}/${images.length}`;
-      const request = {
-        system: RECEIPT_SYSTEM_PROMPT,
-        text: receiptUserPrompt({ index: i + 1, count: images.length, storeHint, known }),
-        image,
-        schema: RECEIPT_SCHEMA,
-        schemaName: "receipt_page",
-        maxTokens: RECEIPT_MAX_TOKENS,
-      };
-      // Claude first when it's on (SPEC §14); a page Claude can't read falls back on its own.
-      let claudeError = null;
-      if (ai && ai.useClaude) {
-        try {
-          return await readReceiptPageWithClaude(env, ai, request);
-        } catch (err) {
-          claudeError = claudeProblem(ai, err);
-          console.error(`${label}: Claude failed, using Workers AI:`, claudeError);
-          if (!hasAI(env)) return { value: null, model: null, engine: null, problems: [claudeError], claudeError };
-        }
+  const claudeSystem = ai && ai.useClaude ? receiptSystem(known) : null;
+  const readPage = async (image, i) => {
+    const label = `Receipt image ${i + 1}/${images.length}`;
+    const page = { index: i + 1, count: images.length, storeHint };
+    const request = {
+      system: RECEIPT_SYSTEM_PROMPT,
+      text: receiptUserPrompt({ ...page, known }),
+      image,
+      schema: RECEIPT_SCHEMA,
+      schemaName: "receipt_page",
+      maxTokens: RECEIPT_MAX_TOKENS,
+    };
+    // Claude first when it's on (SPEC §14); a page Claude can't read falls back on its own.
+    let claudeError = null;
+    if (claudeSystem) {
+      try {
+        return await readReceiptPageWithClaude(env, ai, { ...request, system: claudeSystem, text: `${receiptImageLine(page)}\nTranscribe it following the instructions and the KNOWN ITEMS above. Answer with exactly one JSON object.` });
+      } catch (err) {
+        claudeError = claudeProblem(ai, err);
+        console.error(`${label}: Claude failed, using Workers AI:`, claudeError);
+        if (!hasAI(env)) return { value: null, model: null, engine: null, problems: [claudeError], claudeError };
       }
-      const r = await visionCall(env, label, request, parseReceiptPage, RECEIPT_TIMEOUTS_MS);
-      return { ...r, engine: "workers-ai", problems: claudeError ? [claudeError, ...r.problems] : r.problems, claudeError };
-    }),
-  );
+    }
+    const r = await visionCall(env, label, request, parseReceiptPage, RECEIPT_TIMEOUTS_MS);
+    return { ...r, engine: "workers-ai", problems: claudeError ? [claudeError, ...r.problems] : r.problems, claudeError };
+  };
+  // With Claude, the first image goes a few seconds ahead: it writes the instructions and the known
+  // items to the prompt cache, and the other images read them back at a fraction of the price.
+  const results = await headStart(images, readPage, claudeSystem ? CACHE_HEAD_START_MS : 0);
 
   const warnings = [];
   const pages = results.map((r, i) => {
@@ -1610,7 +2376,8 @@ async function runReceipt(env, images, storeHint, known, ai = null) {
   const engines = [...new Set(results.filter((r) => r.value).map((r) => r.engine))];
   const engine = engines.length === 1 ? engines[0] : "mixed"; // "mixed": some pages fell back to Workers AI
   const claudeError = results.map((r) => r.claudeError).find(Boolean) || null;
-  return { ...merged, model: models.join(" + "), engine, images: images.length, warnings, ...fallbackNote(ai, claudeError) };
+  const usage = usageSummary(ai, results.map((r) => r.usage));
+  return { ...merged, model: models.join(" + "), engine, images: images.length, warnings, ...(usage ? { usage } : {}), ...fallbackNote(ai, claudeError) };
 }
 
 /** Pulls { store, date, …, lines } out of the model's answer; null when nothing usable came back. */
@@ -2085,8 +2852,8 @@ const IDEAS = {
  * { model, month, spentUsd, inputTokens, outputTokens, keySet, capUsd, capped, useClaude },
  * or { denied } (401 / 429) when the key is wrong.
  */
-async function aiContext(env, request) {
-  const res = await kitchen(env).aiBegin(familyKey(request), clientOf(request));
+async function aiContext(env, request, { spend = false } = {}) {
+  const res = await kitchen(env).aiBegin(familyKey(request), clientOf(request), spend);
   if (res.status !== 200) return { denied: res };
   const keySet = hasClaudeKey(env);
   const capUsd = monthlyCap(env);
@@ -2111,7 +2878,52 @@ function cappedError(ai) {
 
 /** Why Claude didn't answer, for logs and the response's claudeError (never the key or an image). */
 function claudeProblem(ai, err) {
-  return `${ai.model}: ${err && err.message ? err.message : String(err)}`.slice(0, 300);
+  return redact(`${ai.model}: ${err && err.message ? err.message : String(err)}`).slice(0, 300);
+}
+
+// Prompt caching (docs/spec/23): how long the first of several calls runs alone, so that it has
+// written the shared part of the prompt to the cache before the others ask for it. (An entry can be
+// read once the first response has started; a few seconds covers reading a 7K-token prompt.)
+const CACHE_HEAD_START_MS = 4000;
+
+/**
+ * fn(item, index) for every item, all at once, except that the first one gets `ms` to itself.
+ * → the results in order (fn is expected not to reject).
+ */
+async function headStart(items, fn, ms) {
+  if (items.length < 2 || !(ms > 0)) return Promise.all(items.map(fn));
+  const first = fn(items[0], 0);
+  await Promise.race([first.then(() => {}, () => {}), sleep(ms)]);
+  return Promise.all([first, ...items.slice(1).map((item, i) => fn(item, i + 1))]);
+}
+
+/**
+ * What the Claude calls behind one response used, for the app: tokens in (all of the prompt), of
+ * those how many were read from the prompt cache (cheap) or written to it, tokens out, and the cost.
+ * null when Claude wasn't used.
+ */
+function usageSummary(ai, usages) {
+  const list = usages.filter(Boolean);
+  if (!ai || !list.length) return null;
+  const t = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, usd: 0 };
+  for (const raw of list) {
+    const u = usageOf(raw);
+    t.inputTokens += u.input_tokens + u.cache_creation_input_tokens + u.cache_read_input_tokens;
+    t.outputTokens += u.output_tokens;
+    t.cacheReadTokens += u.cache_read_input_tokens;
+    t.cacheWriteTokens += u.cache_creation_input_tokens;
+    t.usd += costUsd(ai.model, u);
+  }
+  return { ...t, usd: Math.round(t.usd * 1e6) / 1e6, cacheHit: t.cacheReadTokens > 0, calls: list.length };
+}
+
+/** Several usageSummary results as one. */
+function sumUsage(summaries) {
+  const list = summaries.filter(Boolean);
+  if (!list.length) return null;
+  const t = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, usd: 0, calls: 0 };
+  for (const u of list) for (const k of Object.keys(t)) t[k] += Number(u[k]) || 0;
+  return { ...t, usd: Math.round(t.usd * 1e6) / 1e6, cacheHit: t.cacheReadTokens > 0 };
 }
 
 /** Extra fields on a scan/receipt answered by Workers AI while Claude is set up. */
@@ -2121,27 +2933,32 @@ function fallbackNote(ai, claudeError) {
 }
 
 /** One Claude call that counts toward this month's spend (tokens are billed even if the reply is unusable). */
-async function claudeCall(env, ai, { system, content, maxTokens, timeoutMs }) {
+async function claudeCall(env, ai, { system, content, maxTokens, timeoutMs, kind = null }) {
   const r = await callClaude(env, { model: ai.model, system, content, maxTokens, timeoutMs });
   try {
-    await kitchen(env).aiRecord(ai.model, r.usage.input_tokens, r.usage.output_tokens);
+    await kitchen(env).aiRecord(ai.model, r.usage, kind);
   } catch (err) {
     console.error("Couldn't record Claude usage:", err && err.message ? err.message : String(err));
   }
   return r;
 }
 
-/** POST /api/scan through Claude: the same prompt as Workers AI, the same parsing and clean-up. */
-async function runClaudeScan(env, ai, image, known) {
+/**
+ * POST /api/scan through Claude: the same instructions and known items as Workers AI gets (in the
+ * system prompt, so the next photo reads them from the cache), the same parsing and clean-up.
+ */
+async function runClaudeScan(env, ai, image, known, system = scanSystem(known)) {
   const r = await claudeCall(env, ai, {
-    system: SCAN_SYSTEM_PROMPT,
-    content: [imageBlock(image), textBlock(scanUserPrompt(known))],
+    system,
+    content: [imageBlock(image), textBlock(SCAN_ASK)],
     maxTokens: SCAN_MAX_TOKENS,
     timeoutMs: CLAUDE_TIMEOUTS_MS.scan,
+    kind: "scan",
   });
   const raw = parseScanItems(r.text);
-  if (!raw) throw new ClaudeError("no usable JSON in the reply");
-  return { items: normalizeScanItems(raw, known), model: ai.model, engine: "claude" };
+  // Billed even though it can't be used: the caller still reports what it cost.
+  if (!raw) throw Object.assign(new ClaudeError("no usable JSON in the reply"), { usage: r.usage });
+  return { items: normalizeScanItems(raw, known), model: ai.model, engine: "claude", usage: usageSummary(ai, [r.usage]) };
 }
 
 /** One receipt image through Claude, in visionCall's result shape. */
@@ -2151,10 +2968,11 @@ async function readReceiptPageWithClaude(env, ai, request) {
     content: [imageBlock(request.image), textBlock(request.text)],
     maxTokens: request.maxTokens,
     timeoutMs: CLAUDE_TIMEOUTS_MS.receipt,
+    kind: "receipt",
   });
   const value = parseReceiptPage(r.text);
   if (!value) throw new ClaudeError("no usable JSON in the reply");
-  return { value, model: ai.model, engine: "claude", problems: [], claudeError: null };
+  return { value, model: ai.model, engine: "claude", problems: [], claudeError: null, usage: r.usage };
 }
 
 async function handleAiStatus(request, env, url, origin) {
@@ -2171,11 +2989,16 @@ async function handleAiStatus(request, env, url, origin) {
     capped: ai.capped,
     inputTokens: ai.inputTokens,
     outputTokens: ai.outputTokens,
+    cacheWriteTokens: ai.cacheWriteTokens,
+    cacheReadTokens: ai.cacheReadTokens,
+    calls: ai.calls,
+    // What a pantry photo has really cost this month (docs/spec/23): the app's hint uses it.
+    scan: { ...ai.scan, avgUsd: ai.scan.photos ? Math.round((ai.scan.usd / ai.scan.photos) * 1e6) / 1e6 : null },
   }, origin);
 }
 
 async function handleIdeas(request, env, url, origin) {
-  const ai = await aiContext(env, request);
+  const ai = await aiContext(env, request, { spend: true });
   if (ai.denied) return fromResult(ai.denied, origin);
   if (!ai.keySet) throw new HttpError(503, "Recipe ideas need Claude, and no Claude API key is set on this Worker yet.");
   if (ai.capped) throw cappedError(ai);
@@ -2183,13 +3006,16 @@ async function handleIdeas(request, env, url, origin) {
   let r;
   try {
     r = await claudeCall(env, ai, {
-      system: IDEAS_SYSTEM_PROMPT,
+      // The rules and the answer format never change, and the sides and catalog rarely do: both are
+      // cached. Only the photos, the note and the pantry are paid for in full each time.
+      system: cachedSystem([`${IDEAS_SYSTEM_PROMPT}\n\n${IDEAS_FORMAT_PROMPT}`, ideasReference(req)]),
       content: [
         ...req.images.map(imageBlock),
         textBlock(ideasUserPrompt({ ...req, imageCount: req.images.length, today: chicagoDate() })),
       ],
       maxTokens: IDEAS.maxTokens,
       timeoutMs: CLAUDE_TIMEOUTS_MS.ideas,
+      kind: "ideas",
     });
   } catch (err) {
     const detail = claudeProblem(ai, err);
@@ -2202,7 +3028,7 @@ async function handleIdeas(request, env, url, origin) {
   }
   const { ideas, dropped } = validateIdeas(parsed, req);
   if (dropped.length) console.log(`Ideas: dropped ${dropped.length} for house rules (${dropped.map((d) => d.rule).join(", ")})`);
-  return json(200, { ideas, engine: "claude", model: ai.model, dropped: dropped.length }, origin);
+  return json(200, { ideas, engine: "claude", model: ai.model, dropped: dropped.length, usage: usageSummary(ai, [r.usage]) }, origin);
 }
 
 function cleanIdeasRequest(body) {
@@ -2253,7 +3079,8 @@ function cleanIdeasRequest(body) {
     }
     count = body.count;
   }
-  return { images: validated, note, pantry, sides, catalog, count };
+  // detail: true = a client that shows prep / cook times and timed steps (and all-day slow cooks).
+  return { images: validated, note, pantry, sides, catalog, count, detail: body.detail === true };
 }
 
 /** A list of { id, … } objects: at most `max` (else 400); bad entries and repeated ids are skipped. */
@@ -2338,11 +3165,14 @@ function clientOf(request) {
 }
 
 async function readBodyText(request, limit) {
+  return new TextDecoder().decode(await readBodyBytes(request, limit));
+}
+
+/** The request body as bytes, never more than `limit` (413 as soon as it is longer, declared or not). */
+async function readBodyBytes(request, limit, message = `Request body is too large (limit ${formatBytes(limit)}).`) {
   const declared = Number(request.headers.get("Content-Length"));
-  if (Number.isFinite(declared) && declared > limit) {
-    throw new HttpError(413, `Request body is too large (limit ${formatBytes(limit)}).`);
-  }
-  if (!request.body) return "";
+  if (Number.isFinite(declared) && declared > limit) throw new HttpError(413, message);
+  if (!request.body) return new Uint8Array(0);
   const reader = request.body.getReader();
   const chunks = [];
   let total = 0;
@@ -2354,17 +3184,19 @@ async function readBodyText(request, limit) {
       try {
         await reader.cancel();
       } catch {}
-      throw new HttpError(413, `Request body is too large (limit ${formatBytes(limit)}).`);
+      throw new HttpError(413, message);
     }
     chunks.push(value);
   }
-  const buf = new Uint8Array(total);
-  let offset = 0;
-  for (const c of chunks) {
-    buf.set(c, offset);
-    offset += c.byteLength;
-  }
-  return new TextDecoder().decode(buf);
+  return chunks.length === 1 ? chunks[0] : concatBytes(chunks, total);
+}
+
+/** Keys, links and tokens never go into an error message, a `detail` field or a log line. */
+function redact(s) {
+  return String(s)
+    .replace(/sk-ant-[A-Za-z0-9_-]{6,}/g, "[api key]")
+    .replace(/\/mcp\/[0-9a-f]{32}/gi, "/mcp/[link]")
+    .replace(/\b[0-9a-f]{64}\b/gi, "[key]");
 }
 
 function parseJson(text) {
@@ -2399,6 +3231,16 @@ function cleanId(v) {
 
 function utf8Bytes(s) {
   return new TextEncoder().encode(s).byteLength;
+}
+
+/** The ISO date `days` before `iso` (a negative number of days is after it). */
+function isoDaysAgo(iso, days) {
+  const t = Date.parse(`${iso}T12:00:00Z`);
+  return Number.isNaN(t) ? iso : new Date(t - days * 86_400_000).toISOString().slice(0, 10);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function formatBytes(n) {

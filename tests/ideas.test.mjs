@@ -80,9 +80,9 @@ test('model names, “Read by …”, the status line and the cost hints', () =>
   assert.equal(capped.spend.pct, 100);
   assert.equal(aiStatus(null).tone, 'unknown');
 
-  assert.equal(photoCostHint({ inUsd: 5, outUsd: 25 }), 'About 5¢ a photo');
-  assert.equal(photoCostHint({ inUsd: 3, outUsd: 15 }), 'About 3¢ a photo');
-  assert.equal(photoCostHint({ inUsd: 1, outUsd: 5 }), 'About 1¢ a photo');
+  assert.equal(photoCostHint({ inUsd: 4, outUsd: 20, cacheWriteUsd: 5, cacheReadUsd: 0.2 }), 'About 2–6¢ a photo', 'Opus: the first photo of a scan stores the list, the rest read it back');
+  assert.equal(photoCostHint({ inUsd: 2, outUsd: 10, cacheWriteUsd: 2.5, cacheReadUsd: 0.1 }), 'About 1–3¢ a photo');
+  assert.equal(photoCostHint({ inUsd: 5, outUsd: 25 }), 'About 3–8¢ a photo', 'an older server without cache prices: the standard 1.25x and 0.1x');
   assert.equal(photoCostHint({ inUsd: 0.1, outUsd: 0.4 }), 'Under 1¢ a photo');
   assert.equal(photoCostHint({}), '', 'no prices from the server, no number');
 });

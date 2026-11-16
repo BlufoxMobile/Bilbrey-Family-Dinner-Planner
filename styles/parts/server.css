@@ -1,0 +1,48 @@
+/* Store product pictures (docs/spec/23): on the shopping list, in the item sheet, in the product
+   chooser and on My products. Product pictures are a package on white, so they are shown whole
+   (contain) on a white tile in both themes; the family's own pantry photos fill the same tile. */
+
+/* Shopping list rows: a picture square between the check box and the name, only while the list
+   has at least one picture (so every name still lines up). */
+.item.has-thumb { grid-template-columns: 48px 52px 1fr auto; }
+.item-thumb {
+  width: 52px; height: 52px; padding: 0; border: 1px solid var(--line); border-radius: var(--r-btn, 12px);
+  background: var(--paper-2, var(--card)); overflow: hidden; display: grid; place-items: center; cursor: pointer;
+}
+.item-thumb.has-photo { background: #fff; }
+.item-thumb:not(.has-photo) { border-style: dashed; }
+.item-thumb img, .product-thumb, .product-photo, .item-sheet-photo { display: block; object-fit: contain; background: #fff; }
+.item-thumb img { width: 100%; height: 100%; }
+.item.is-checked .item-thumb img { opacity: .55; }
+/* A picture that hasn't arrived yet (or can't be fetched offline) leaves a quiet tile, not a broken-image icon. */
+.item-thumb img:not([src]), .product-thumb:not([src]), .product-photo:not([src]), .item-sheet-photo:not([src]) { visibility: hidden; }
+.item-thumb img.is-missing, .product-thumb.is-missing, .product-photo.is-missing, .item-sheet-photo.is-missing { visibility: hidden; }
+
+/* The item sheet: the product, large enough to recognize on the shelf. */
+.item-sheet-photo {
+  width: min(220px, 60%); aspect-ratio: 1; margin: 0 auto var(--s3, 12px);
+  border: 1px solid var(--line); border-radius: var(--r-photo, 14px);
+}
+
+/* The product chooser's "Buying …" box. */
+.current-product.has-photo { grid-template-columns: 72px minmax(0, 1fr); }
+.current-product.has-photo > a { grid-column: 1 / -1; justify-self: start; } /* on a phone the name needs the width */
+@media (min-width: 520px) {
+  .current-product.has-photo { grid-template-columns: 72px minmax(0, 1fr) auto; }
+  .current-product.has-photo > a { grid-column: auto; justify-self: auto; }
+}
+.product-photo { width: 72px; height: 72px; border: 1px solid var(--line); border-radius: var(--r-btn, 12px); }
+
+/* My products rows. */
+.product-row.has-photo { grid-template-columns: 52px minmax(0, 1fr); align-items: center; column-gap: var(--s3, 12px); }
+.product-row.has-photo .product-acts { grid-column: 1 / -1; }
+.product-thumb { width: 52px; height: 52px; border: 1px solid var(--line); border-radius: var(--r-btn, 12px); }
+@media (min-width: 520px) {
+  .product-row.has-photo { grid-template-columns: 52px minmax(0, 1fr) auto; }
+  .product-row.has-photo .product-acts { grid-column: auto; }
+}
+
+@media print {
+  .item.has-thumb { grid-template-columns: 48px 1fr auto; }
+  .item-thumb, .item-sheet-photo { display: none; }
+}

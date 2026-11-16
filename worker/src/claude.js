@@ -12,12 +12,30 @@
 export const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 export const ANTHROPIC_VERSION = "2023-06-01";
 
-/** The models the family can pick (state.settings.aiModel). Prices: USD per million tokens. */
+/**
+ * Prompt caching (docs/spec/23; checked against platform.claude.com/docs/en/build-with-claude/prompt-caching
+ * on 2026-11-15): writing the stable part of a prompt to the 5-minute cache costs 1.25 x the model's
+ * input price; reading it back costs 0.05 x on Opus 5.5 and Sonnet 5.5 and 0.1 x on Haiku 5.5. A read
+ * refreshes the five minutes for free. Prompts under 512 tokens aren't cached on these models (no error).
+ */
+export const CACHE_WRITE_MULT = 1.25;
+const CACHE_READ_MULT = { "claude-opus-5-5": 0.05, "claude-sonnet-5-5": 0.05, "claude-haiku-5-5": 0.1 };
+const DEFAULT_CACHE_READ_MULT = 0.1;
+const perMillion = (n) => Math.round(n * 1e6) / 1e6;
+
+/**
+ * The models the family can pick (state.settings.aiModel). Prices: USD per million tokens.
+ * cacheWriteUsd / cacheReadUsd are derived from inUsd with the multipliers above.
+ */
 export const MODELS = [
   { id: "claude-opus-5-5", label: "Claude Opus 5.5", inUsd: 4, outUsd: 20 },
   { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5", inUsd: 2, outUsd: 10 },
   { id: "claude-haiku-5-5", label: "Claude Haiku 5.5", inUsd: 0.1, outUsd: 0.5 },
-];
+].map((m) => ({
+  ...m,
+  cacheWriteUsd: perMillion(m.inUsd * CACHE_WRITE_MULT),
+  cacheReadUsd: perMillion(m.inUsd * (CACHE_READ_MULT[m.id] ?? DEFAULT_CACHE_READ_MULT)),
+}));
 export const DEFAULT_MODEL = "claude-opus-5-5";
 export const DEFAULT_MONTHLY_CAP_USD = 5;
 
@@ -37,14 +55,52 @@ export function modelInfo(id) {
   return MODEL_BY_ID.get(pickModel(id));
 }
 
-/** What one call cost in USD (unrounded), from the token counts the API reported. */
+/**
+ * What one call cost in USD (unrounded), from the token counts the API reported. `input_tokens` is
+ * only the part of the prompt that was neither read from nor written to the cache; the cached part
+ * is billed at its own rates (cache_creation_input_tokens, cache_read_input_tokens).
+ */
 export function costUsd(model, usage) {
   const m = modelInfo(model);
   const input = tokenCount(usage && usage.input_tokens);
   const output = tokenCount(usage && usage.output_tokens);
+  const written = tokenCount(usage && usage.cache_creation_input_tokens);
+  const read = tokenCount(usage && usage.cache_read_input_tokens);
   let { inUsd, outUsd } = m;
-  if (m.id === LONG_PROMPT.model && input > LONG_PROMPT.overTokens) ({ inUsd, outUsd } = LONG_PROMPT);
-  return (input * inUsd + output * outUsd) / 1_000_000;
+  // The long-prompt tier goes by the whole prompt, cached or not.
+  if (m.id === LONG_PROMPT.model && input + written + read > LONG_PROMPT.overTokens) ({ inUsd, outUsd } = LONG_PROMPT);
+  const readMult = CACHE_READ_MULT[m.id] ?? DEFAULT_CACHE_READ_MULT;
+  return (input * inUsd + written * inUsd * CACHE_WRITE_MULT + read * inUsd * readMult + output * outUsd) / 1_000_000;
+}
+
+/** The API's usage object as plain token counts (missing fields are 0). */
+export function usageOf(u) {
+  return {
+    input_tokens: tokenCount(u && u.input_tokens),
+    output_tokens: tokenCount(u && u.output_tokens),
+    cache_creation_input_tokens: tokenCount(u && u.cache_creation_input_tokens),
+    cache_read_input_tokens: tokenCount(u && u.cache_read_input_tokens),
+  };
+}
+
+/**
+ * System blocks for a prompt whose leading parts are the same from call to call. `stable` is a list
+ * of strings in reading order (empty ones are skipped). The last three are marked as cache
+ * breakpoints (the API allows four), so a change in a later part still reads the earlier ones from
+ * the cache. With cache: false the parts come back as one plain string.
+ */
+export function cachedSystem(stable, { cache = true } = {}) {
+  const parts = (Array.isArray(stable) ? stable : [stable]).map((t) => (typeof t === "string" ? t : "")).filter((t) => t.trim());
+  if (!parts.length) return undefined;
+  if (!cache) return parts.join("\n\n");
+  const firstMarked = Math.max(0, parts.length - 3);
+  return parts.map((text, i) => (i >= firstMarked ? { type: "text", text, cache_control: { type: "ephemeral" } } : { type: "text", text }));
+}
+
+/** The text of a system prompt, whichever shape it has. */
+export function systemText(system) {
+  if (Array.isArray(system)) return system.map((b) => (b && typeof b.text === "string" ? b.text : "")).join("\n\n");
+  return typeof system === "string" ? system : "";
 }
 
 export function tokenCount(v) {
@@ -93,12 +149,23 @@ export function chicagoDate(at = new Date()) {
 // ── Request building ──────────────────────────────────────────────────────────────────────────
 const IMAGE_DATA_URL_RE = /^data:(image\/(?:jpeg|jpg|png|webp|gif));base64,([A-Za-z0-9+/]+={0,2})$/;
 
-/** A Messages API image block from one of the app's (already validated) image data URLs. */
+const IMAGE_HEAD_RE = /^data:(image\/(?:jpeg|jpg|png|webp|gif));base64,$/;
+const B64_EDGE_RE = /^[A-Za-z0-9+/]+={0,2}$/;
+
+/**
+ * A Messages API image block from one of the app's image data URLs. The Worker has already checked
+ * the whole photo (validateImage), so only the header and both ends of the data are checked here:
+ * a second pass over 1.5 MB of base64 costs CPU the Free plan doesn't have to spare.
+ */
 export function imageBlock(dataUrl) {
-  const m = IMAGE_DATA_URL_RE.exec(String(dataUrl || ""));
-  if (!m) throw new ClaudeError("An image for Claude must be a base64 JPEG, PNG, WebP or GIF data URL.", { status: 400 });
-  const mediaType = m[1] === "image/jpg" ? "image/jpeg" : m[1];
-  return { type: "image", source: { type: "base64", media_type: mediaType, data: m[2] } };
+  const s = typeof dataUrl === "string" ? dataUrl : "";
+  const comma = s.indexOf(",", 0);
+  const head = comma > 0 && comma < 40 ? IMAGE_HEAD_RE.exec(s.slice(0, comma + 1)) : null;
+  const data = head ? s.slice(comma + 1) : "";
+  const ok = head && data.length > 0 && (data.length <= 4096 ? IMAGE_DATA_URL_RE.test(s) : /^[A-Za-z0-9+/]+$/.test(data.slice(0, 1024)) && B64_EDGE_RE.test(data.slice(-1024)));
+  if (!ok) throw new ClaudeError("An image for Claude must be a base64 JPEG, PNG, WebP or GIF data URL.", { status: 400 });
+  const mediaType = head[1] === "image/jpg" ? "image/jpeg" : head[1];
+  return { type: "image", source: { type: "base64", media_type: mediaType, data } };
 }
 
 export function textBlock(text) {
@@ -129,7 +196,10 @@ export async function callClaude(env, { model, system, content, maxTokens = 4000
     max_tokens: Math.max(1, Math.min(32_000, Math.round(maxTokens))),
     messages: [{ role: "user", content: Array.isArray(content) ? content : [textBlock(content)] }],
   };
-  if (system) body.system = String(system);
+  // A string, or a list of text blocks with the stable ones marked for the cache (cachedSystem).
+  if (Array.isArray(system)) {
+    if (system.length) body.system = system;
+  } else if (system) body.system = String(system);
 
   const doFetch = fetchImpl || globalThis.fetch;
   const ctrl = new AbortController();
@@ -173,10 +243,10 @@ export async function callClaude(env, { model, system, content, maxTokens = 4000
     .filter((b) => b && b.type === "text" && typeof b.text === "string")
     .map((b) => b.text)
     .join("");
-  const usage = {
-    input_tokens: tokenCount(data.usage && data.usage.input_tokens),
-    output_tokens: tokenCount(data.usage && data.usage.output_tokens),
-  };
+  const usage = usageOf(data.usage);
+  // The cache counts only appear when the API reported any.
+  if (!usage.cache_creation_input_tokens) delete usage.cache_creation_input_tokens;
+  if (!usage.cache_read_input_tokens) delete usage.cache_read_input_tokens;
   return { text, usage, model: id, stopReason: data.stop_reason || null };
 }
 
@@ -243,13 +313,21 @@ function outermost(s, start) {
 }
 
 // ── Recipe ideas (POST /api/ideas) ────────────────────────────────────────────────────────────
-export const IDEA_EQUIPMENT = ["stovetop", "blackstone", "electric grill", "outdoor grill", "air fryer", "microwave"];
+/** `possible cooker` = the family's Ninja 10-in-1 Everyday PossibleCooker Pro 6.5 qt (MC1101). */
+export const IDEA_EQUIPMENT = ["stovetop", "blackstone", "electric grill", "outdoor grill", "air fryer", "microwave", "possible cooker"];
+/** What the PossibleCooker is used for in this house (a step's `setting`). */
+export const POSSIBLE_COOKER_SETTINGS = ["slow cook", "sear/sauté", "braise", "steam", "rice", "keep warm"];
 const EQUIPMENT_ALIASES = new Map(Object.entries({
   stove: "stovetop", "stove top": "stovetop", "gas stove": "stovetop", burner: "stovetop", burners: "stovetop", skillet: "stovetop", pot: "stovetop",
   griddle: "blackstone", "blackstone griddle": "blackstone", "flat top": "blackstone", "flat-top": "blackstone",
   "indoor grill": "electric grill", "indoor electric grill": "electric grill", grill: "electric grill",
   "outdoor gas grill": "outdoor grill", "charcoal grill": "outdoor grill",
   airfryer: "air fryer", "air-fryer": "air fryer",
+  possiblecooker: "possible cooker", "possible cooker pro": "possible cooker", "possiblecooker pro": "possible cooker",
+  "ninja possiblecooker": "possible cooker", "ninja possible cooker": "possible cooker", "ninja possiblecooker pro": "possible cooker",
+  ninja: "possible cooker", "slow cooker": "possible cooker", "slow-cooker": "possible cooker", slowcooker: "possible cooker",
+  crockpot: "possible cooker", "crock pot": "possible cooker", "crock-pot": "possible cooker",
+  multicooker: "possible cooker", "multi-cooker": "possible cooker", "multi cooker": "possible cooker",
 }));
 const PROTEINS = ["chicken", "beef", "pork", "turkey", "sausage", "bacon", "mixed", "crab"];
 
@@ -293,11 +371,40 @@ export function ideaBreaksRule(parts) {
   for (const k of ["prose", "items", "head"]) {
     joined[k] = (parts[k] || []).filter((t) => typeof t === "string" && t).join("\n");
   }
-  for (const r of IDEA_BANNED) if (r.in.some((k) => r.re.test(joined[k]))) return r.rule;
+  for (const r of IDEA_BANNED) {
+    // "No oven needed" and "instead of the oven" say the oven ISN'T used.
+    const text = (k) => (r.rule === "oven" ? joined[k].replace(NOT_THE_OVEN, " ") : joined[k]);
+    if (r.in.some((k) => r.re.test(text(k)))) return r.rule;
+  }
   return null;
 }
+export const NOT_THE_OVEN = /\b(?:no|never (?:an?|the)|without (?:an?|the)|instead of (?:an?|the)|skip(?:s|ping)? the|not? (?:need|use)(?:s|ing)? (?:an?|the))\s+ovens?\b|\boven[- ]free\b/gi;
 
-const IDEA_LIMITS = { items: 25, missing: 20, steps: 14, usesPantry: 40, equipment: 6 };
+const IDEA_LIMITS = { items: 25, missing: 20, steps: 14, usesPantry: 40, equipment: 7, tips: 5 };
+
+/** Whole minutes from a number or a string like "25" / "25 min"; null when there is none. */
+function minutesOf(v, max) {
+  const n = typeof v === "string" ? Number((/\d+(?:\.\d+)?/.exec(v) || [])[0]) : Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.min(max, Math.max(1, Math.round(n))) : null;
+}
+
+/**
+ * One step as Claude wrote it: a plain sentence, or { text, minutes?, setting? } where `setting` is
+ * what the equipment is set to ("slow cook, low", "sear/sauté, high", "400°F"). → { text, minutes?, setting? } | null
+ */
+export function cleanStep(s) {
+  const o = typeof s === "string" ? { text: s } : s;
+  if (!o || typeof o !== "object" || Array.isArray(o)) return null;
+  const said = o.text ?? o.step ?? o.instruction ?? o.description;
+  const text = (typeof said === "string" ? clean(said, 400) : "").replace(/^\d{1,2}[.)]\s+/, "");
+  if (!text) return null;
+  const out = { text };
+  const minutes = minutesOf(o.minutes ?? o.time ?? o.duration, 720);
+  if (minutes !== null) out.minutes = minutes;
+  const setting = clean(o.setting ?? o.mode ?? o.heat, 40);
+  if (setting && !/^(null|none|n\/a|-)$/i.test(setting)) out.setting = setting;
+  return out;
+}
 
 /**
  * Cleans the ideas Claude returned against the request: drops any idea that breaks a house rule,
@@ -305,7 +412,7 @@ const IDEA_LIMITS = { items: 25, missing: 20, steps: 14, usesPantry: 40, equipme
  * only from the pantry sent, and clamps every string and list.
  * Returns { ideas, dropped: [{ title, rule }] }.
  */
-export function validateIdeas(parsed, { count = 3, sides = [], catalog = [], pantry = [] } = {}) {
+export function validateIdeas(parsed, { count = 3, sides = [], catalog = [], pantry = [], detail = false } = {}) {
   const list = Array.isArray(parsed) ? parsed : parsed && Array.isArray(parsed.ideas) ? parsed.ideas : parsed && Array.isArray(parsed.recipes) ? parsed.recipes : [];
   const catalogIds = new Set(catalog.map((c) => c.id));
   const pantryIds = new Set(pantry.map((p) => p.id));
@@ -323,15 +430,18 @@ export function validateIdeas(parsed, { count = 3, sides = [], catalog = [], pan
     const category = clean(raw.category, 40);
     const proteinRaw = clean(raw.protein, 40).toLowerCase();
     const equipmentRaw = Array.isArray(raw.equipment) ? raw.equipment.map((e) => clean(e, 40)).filter(Boolean) : [];
-    const steps = (Array.isArray(raw.steps) ? raw.steps : [])
-      .map((s) => clean(typeof s === "string" ? s : s && (s.text ?? s.step), 400).replace(/^\d{1,2}[.)]\s+/, ""))
+    // Steps come as plain sentences or as { text, minutes?, setting? }; both are kept (see below).
+    const stepDetails = (Array.isArray(raw.steps) ? raw.steps : []).map(cleanStep).filter(Boolean).slice(0, IDEA_LIMITS.steps);
+    const steps = stepDetails.map((s) => s.text);
+    const tips = (Array.isArray(raw.tips) ? raw.tips : typeof raw.tips === "string" ? [raw.tips] : [])
+      .map((t) => (typeof t === "string" ? clean(t, 240) : ""))
       .filter(Boolean)
-      .slice(0, IDEA_LIMITS.steps);
+      .slice(0, IDEA_LIMITS.tips);
     const items = ingredientList(raw.items ?? raw.ingredients, IDEA_LIMITS.items, catalogIds);
     const missing = ingredientList(raw.missing ?? raw.toBuy ?? raw.shopping, IDEA_LIMITS.missing, catalogIds);
 
     const rule = ideaBreaksRule({
-      prose: [title, subtitle, why, category, ...equipmentRaw, ...steps],
+      prose: [title, subtitle, why, category, ...equipmentRaw, ...steps, ...stepDetails.map((s) => s.setting || ""), ...tips],
       items: [...items.map((i) => i.name), ...missing.map((i) => i.name)],
       head: [title, proteinRaw],
     });
@@ -362,19 +472,27 @@ export function validateIdeas(parsed, { count = 3, sides = [], catalog = [], pan
       if (pantryIds.has(id) && !usesPantry.includes(id)) usesPantry.push(id);
       if (usesPantry.length >= IDEA_LIMITS.usesPantry) break;
     }
-    const minutes = Number(raw.minutes);
+    // Hands-on time and unattended time. A slow-cooked dinner can take all day, so new clients
+    // (detail: true) get `minutes` up to 12 hours; older ones keep the 4-hour ceiling they expect.
+    const prepMinutes = minutesOf(raw.prepMinutes ?? raw.prep ?? raw.prepTime, 240);
+    const cookMinutes = minutesOf(raw.cookMinutes ?? raw.cook ?? raw.cookTime, 720);
+    const total = minutesOf(raw.minutes ?? raw.totalMinutes, 720) ?? (prepMinutes !== null || cookMinutes !== null ? (prepMinutes || 0) + (cookMinutes || 0) : null);
 
     ideas.push({
       title,
       subtitle,
       why,
-      minutes: Number.isFinite(minutes) && minutes > 0 ? Math.min(240, Math.max(5, Math.round(minutes))) : null,
+      minutes: total === null ? null : Math.min(detail ? 720 : 240, Math.max(5, total)),
+      prepMinutes,
+      cookMinutes,
       equipment,
       protein,
       category,
       items,
       sides: pickedSides,
       steps,
+      stepDetails,
+      tips,
       usesPantry,
       missing,
     });
@@ -411,10 +529,19 @@ function squash(s) {
 // ── Prompts for ideas ─────────────────────────────────────────────────────────────────────────
 export const IDEAS_SYSTEM_PROMPT = [
   "You suggest weeknight dinners for the Bilbrey family of five in Glen Ellyn, Illinois: Jeff, Candi, Knox, Jordan and Jackson. All five eat adult portions.",
-  "They shop at Sam's Club (Addison) and Jewel-Osco (599 E Roosevelt Rd), two or three trips a month, on about $650 a month for groceries. They want to eat healthier and to use older food first.",
+  "They shop at Sam's Club (Addison) and Jewel-Osco (599 E Roosevelt Rd), two or three trips a month, on about $650 a month for groceries. They want to save money on groceries, waste less food (use older food first) and eat lighter.",
+  "",
+  "HOW THEY WANT TO EAT:",
+  "- Lean, high-protein dinners for the whole family: leaner cuts (chicken breast, pork loin, 90% lean or leaner ground beef, ground turkey), more vegetables, less frying. Air-fry, grill, griddle, sear, braise or slow cook instead of deep- or pan-frying, and go easy on butter, cream and cheese.",
+  "- A vegetable or a salad with every dinner: at least one of the two sides, or plenty of vegetables cooked into the main.",
+  "- Lighter never means small: three growing kids eat these dinners, so every plate is a full adult portion. Never label a food good or bad, never set calorie targets, and don't mention dieting.",
+  "",
+  "THE KITCHEN (cook only with these; the equipment ids are in quotes):",
+  '- "stovetop" (gas burners), "blackstone" (outdoor Blackstone griddle), "electric grill" (indoor), "outdoor grill", "air fryer", "microwave".',
+  '- "possible cooker": a Ninja 10-in-1 Everyday PossibleCooker Pro, 6.5 quart. Use it to slow cook, sear/sauté, braise, steam, cook rice and keep warm. It sears and then slow cooks or braises in the same pot, so it is the right tool for chili, stews, soups, pulled chicken or pork, braised lean cuts and rice for five.',
   "",
   "HOUSE RULES (never break one):",
-  "- NO OVEN, ever (it leaks propane): no baking, roasting in an oven, broiling or sheet-pan dinners. Cook only with: stovetop (gas burners), blackstone (outdoor griddle), electric grill, outdoor grill, air fryer, microwave.",
+  "- NO OVEN, ever (it leaks propane): no baking, roasting in an oven, broiling or sheet-pan dinners.",
   "- Every dinner is one meat main plus two sides, sized for five full adult plates. Meat in every dinner (chicken, beef, pork, turkey, sausage, bacon). No vegetarian dinners.",
   "- No tofu. No seafood or fish of any kind (no shrimp, salmon, tuna, tilapia, fish sauce, oyster sauce, Worcestershire). The ONE exception: an occasional snow-crab boil with Old Bay, every few months — suggest it only if the family's note asks for crab or seafood.",
   "- Never anything Caesar.",
@@ -426,55 +553,85 @@ export const IDEAS_SYSTEM_PROMPT = [
   "Answer with JSON only: one JSON object, no prose, no markdown.",
 ].join("\n");
 
-/** The user-message text for an ideas request (the images go before it in the same message). */
-export function ideasUserPrompt({ note = "", pantry = [], sides = [], catalog = [], count = 3, imageCount = 0, today = "" }) {
+/**
+ * What every idea must look like. It never changes between requests, so it sits in the system
+ * prompt (cached) right after the house rules, not in the user message.
+ */
+export const IDEAS_FORMAT_PROMPT = (() => {
+  const example = {
+    ideas: [{
+      title: "Slow-cooked salsa chicken bowls",
+      subtitle: "Pulled chicken breast in jarred salsa over rice, with green beans.",
+      why: "Uses the chicken breasts that should be cooked by Tuesday and the open jar of salsa.",
+      minutes: 255,
+      prepMinutes: 15,
+      cookMinutes: 240,
+      equipment: ["possible cooker"],
+      protein: "chicken",
+      category: "Tex-Mex",
+      items: [{ name: "Boneless skinless chicken breast", qty: 2.5, unit: "lb", matchId: "chicken" }],
+      sides: ["side-id-1", "side-id-2"],
+      steps: [
+        { text: "Sear the chicken in the PossibleCooker until golden on both sides.", minutes: 6, setting: "sear/sauté, high" },
+        { text: "Pour the salsa over the chicken, cover, and slow cook until it reaches 165°F and pulls apart.", minutes: 240, setting: "slow cook, high" },
+        "Shred the chicken with two forks and stir it back into the sauce.",
+      ],
+      tips: ["Start it by 1 pm for a 5:30 dinner; it holds on keep warm."],
+      usesPantry: ["chicken"],
+      missing: [{ name: "Limes", qty: 2, unit: "each", matchId: null }],
+    }],
+  };
+  return [
+    "FOR EACH IDEA RETURN:",
+    '- "title", "subtitle" (one appetizing sentence), "why" (one sentence: what on hand it uses up, and why now).',
+    '- "prepMinutes": hands-on time. "cookMinutes": time it cooks on its own (a slow cook can be hours). "minutes": the total, start to table.',
+    `- "equipment": from ${IDEA_EQUIPMENT.join(", ")}.`,
+    '- "protein": chicken, beef, pork, turkey, sausage, bacon or mixed. "category": e.g. Burgers, Asian-inspired, Pasta, Tex-Mex, Grill, Comfort, Salads, Soups.',
+    '- "items": the MAIN dish ingredients for five adults, each { name, qty, unit, matchId } where matchId is an id from CATALOG or null. Never invent an id.',
+    '- "sides": exactly two ids from SIDES (the family\'s own sides) that go with it; at least one a vegetable or a salad unless the main is full of vegetables.',
+    `- "steps": short, plain steps in order. A step is a sentence, or { "text", "minutes", "setting" } when it has a time or a setting worth showing: "setting" is what the equipment is set to (for the possible cooker one of ${POSSIBLE_COOKER_SETTINGS.join(", ")}, plus low or high; a heat level or a temperature for the others). State safe temperatures in the text (chicken and turkey 165°F, ground beef and sausage 160°F, pork 145°F plus a 3-minute rest). No oven.`,
+    '- "tips": up to three short, practical tips: when to start a slow cook, what to prep ahead, how to keep it lean, what to do with leftovers.',
+    '- "usesPantry": ids from PANTRY this dinner uses. "missing": what they would need to buy, each { name, qty, unit, matchId }.',
+    "",
+    `Answer with exactly one JSON object shaped like: ${JSON.stringify(example)}`,
+  ].join("\n");
+})();
+
+/**
+ * The family's sides and catalog for an ideas request. They change rarely, so they are a system
+ * block of their own with a cache breakpoint (cachedSystem), read back at a fraction of the price.
+ */
+export function ideasReference({ sides = [], catalog = [] } = {}) {
+  const sideLines = sides.map((s) => `${s.id} = ${s.title}${s.kind ? ` [${s.kind}]` : ""}`);
+  const catalogLines = catalog.map((c) => `${c.id} = ${c.name}${c.unit ? ` (${c.unit})` : ""}`);
+  return [
+    "SIDES (id = title [kind]):",
+    sideLines.length ? sideLines.join("\n") : "(none listed)",
+    "",
+    "CATALOG (id = name (unit)):",
+    catalogLines.length ? catalogLines.join("\n") : "(none listed)",
+  ].join("\n");
+}
+
+/**
+ * The user-message text for an ideas request (the images go before it in the same message): only
+ * what changes from request to request. The format and the sides/catalog are in the system prompt.
+ */
+export function ideasUserPrompt({ note = "", pantry = [], count = 3, imageCount = 0, today = "" }) {
   const byUseBy = [...pantry].sort((a, b) => (a.useBy || "9999-99-99").localeCompare(b.useBy || "9999-99-99"));
   const pantryLines = byUseBy.map((p) => {
     const amt = p.qty !== null && p.qty !== undefined ? ` — ${p.qty}${p.unit ? ` ${p.unit}` : ""}` : "";
     return `${p.id} = ${p.name}${amt}${p.useBy ? ` (use by ${p.useBy})` : ""}`;
   });
-  const sideLines = sides.map((s) => `${s.id} = ${s.title}${s.kind ? ` [${s.kind}]` : ""}`);
-  const catalogLines = catalog.map((c) => `${c.id} = ${c.name}${c.unit ? ` (${c.unit})` : ""}`);
-  const example = {
-    ideas: [{
-      title: "Griddled chicken fajita bowls",
-      subtitle: "Charred peppers and chicken over cilantro-lime rice.",
-      why: "Uses the chicken thighs that should be cooked by Tuesday and the peppers in the photo.",
-      minutes: 35,
-      equipment: ["blackstone", "stovetop"],
-      protein: "chicken",
-      category: "Tex-Mex",
-      items: [{ name: "Boneless chicken thighs", qty: 2.5, unit: "lb", matchId: "chickenThighs" }],
-      sides: ["side-id-1", "side-id-2"],
-      steps: ["Slice the chicken and peppers.", "Cook the chicken on the hot griddle to 165°F."],
-      usesPantry: ["chickenThighs"],
-      missing: [{ name: "Limes", qty: 2, unit: "each", matchId: null }],
-    }],
-  };
   return [
     today ? `Today is ${today}.` : "",
     `Suggest ${count} different dinner idea${count === 1 ? "" : "s"} for tonight or this week.`,
     imageCount ? `The ${imageCount} photo${imageCount === 1 ? " shows" : "s show"} food the family has on hand right now: use it.` : "",
     note ? `The family's note: """${note}"""` : "",
     "",
-    "For each idea return:",
-    '- "title", "subtitle" (one appetizing sentence), "why" (one sentence: what on hand it uses up, and why now).',
-    '- "minutes": total time. "equipment": from stovetop, blackstone, electric grill, outdoor grill, air fryer, microwave.',
-    '- "protein": chicken, beef, pork, turkey, sausage, bacon or mixed. "category": e.g. Burgers, Asian-inspired, Pasta, Tex-Mex, Grill, Comfort, Salads, Soups.',
-    '- "items": the MAIN dish ingredients for five adults, each { name, qty, unit, matchId } where matchId is an id from CATALOG or null. Never invent an id.',
-    '- "sides": exactly two ids from SIDES (the family\'s own sides) that go with it.',
-    '- "steps": short, plain steps; safe temperatures (chicken 165°F, ground beef 160°F, pork 145°F plus a rest). No oven.',
-    '- "usesPantry": ids from PANTRY this dinner uses. "missing": what they would need to buy, each { name, qty, unit, matchId }.',
-    "",
-    `Answer with exactly one JSON object shaped like: ${JSON.stringify(example)}`,
-    "",
     "PANTRY (id = name — amount, soonest use-by first):",
     pantryLines.length ? pantryLines.join("\n") : "(nothing listed)",
     "",
-    "SIDES (id = title [kind]):",
-    sideLines.length ? sideLines.join("\n") : "(none listed)",
-    "",
-    "CATALOG (id = name (unit)):",
-    catalogLines.length ? catalogLines.join("\n") : "(none listed)",
+    "Answer with one JSON object in the format given above, using ids from SIDES and CATALOG.",
   ].filter((l, i, a) => l !== "" || (i > 0 && a[i - 1] !== "")).join("\n").trim();
 }
