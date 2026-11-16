@@ -25,7 +25,8 @@ eating less."
 - "Looks right" saves `checkin.money[weekStart] = { end, spent, by, at }` for the whole family.
 
 ## 25.3 The weigh-in
-Optional, per person, and private by design.
+Optional, per person. Jeff, later the same day: "You don't have to keep our weight private. We are
+outwardly trying to better ourselves and it's okay." So it is shared by default (v3.1.1).
 - A person chooses a **direction**, never a number: lose some, gain some back, stay about the same.
   There is no goal weight, no calorie target, no score, and no BMI.
 - One point a week (the week's last weigh-in). The page says the change since last week, the change
@@ -34,14 +35,14 @@ Optional, per person, and private by design.
   staying the same who is down three weeks running; someone losing faster than 2.5 lb a week over
   four weeks. The setup card says that weight dropping without trying is one for a doctor, and that
   a scale doesn't help everyone.
-- **Where the numbers live is the person's choice.** "Only on this phone" (the default) keeps them in
-  that device's own record (`device.weigh = { name, goal, keep: 'device', weights }`), never synced.
-  "The family's private storage" keeps them in `checkin.weights[name][date]` and
-  `checkin.people[name] = { goal }`: backed up, and visible to anyone with the family passcode on
-  their phone or computer. Switching back takes them off the family's storage; "Stop, and erase"
-  removes them everywhere.
-- **Never on the TV.** With the TV display on, the page shows the groceries and a note; no weight,
-  and no name, is rendered. Tonight's card never mentions a weigh-in on a TV.
+- **Shared with the family by default**: `checkin.weights[name][date]` and
+  `checkin.people[name] = { goal }`, backed up and shown on every phone, computer and the TV. Any
+  device can take a shared weigh-in over with "This is me".
+- A person can still choose **"Only on this phone"** (`device.weigh = { name, goal, keep: 'device',
+  weights }`, never synced), and "Stop, and erase" removes theirs everywhere.
+- **The TV**: weigh-ins show there unless the family turns off "Show weigh-ins on the TV"
+  (`settings.weighOnTv: false`), which hides every weight and name on TV screens only.
+- Tonight's reminder never shows a weight, on any screen.
 - Weigh-ins are not sent to Claude and are not part of the chat connector.
 
 ## 25.4 Easy tonight (`app/easy.js`)

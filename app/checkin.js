@@ -2,9 +2,8 @@
 //  - Money: what the week cost, where the month stands against the target, and one thing to do next.
 //  - A weigh-in, for whoever wants one. Each person chooses what they're working toward (losing some,
 //    gaining some back, staying about the same). There is no goal weight, no calorie number and no
-//    score: only this week, last week, and the trend. Where the numbers are kept (this phone only, or
-//    the family's private storage) is the person's own choice; app/views/checkin.js never shows them
-//    on a TV.
+//    score: only this week, last week, and the trend. The family shares them by default (every
+//    phone and the TV); a person can keep theirs on their own phone instead.
 
 import { addDays, diffDays, monIndex, round2, shortDate, cleanName, isISODate, money, listJoin } from './util.js';
 import { settingsOf, set, del } from './state.js';

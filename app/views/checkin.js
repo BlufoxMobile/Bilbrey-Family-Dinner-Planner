@@ -1,7 +1,8 @@
 // WEEKLY CHECK-IN (docs/spec/25): the week's groceries against the budget, the week's dinners, and
-// a weigh-in for whoever wants one. The weigh-in is private by design: it never renders on a TV,
-// Tonight's reminder never shows a number, and each person chooses where theirs is kept.
-import { html, ic, when, toast, segmented, confirmSheet } from '../ui.js';
+// a weigh-in for whoever wants one. The family does this together, in the open (Jeff, 2026-11-16):
+// weigh-ins are shared with the family and shown on every screen, the TV included, unless a person
+// keeps theirs on their own phone or the family turns the TV off for them.
+import { html, ic, when, toast, segmented, confirmSheet, switchToggle } from '../ui.js';
 import { money, shortDate, mediumDate, weekdayName, datesBetween, diffDays, cleanName } from '../util.js';
 import { tvOn } from '../tv.js';
 import { PARENTS } from '../config.js';
@@ -18,8 +19,11 @@ export const title = () => 'Weekly check-in';
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const weekLabel = (w) => `${shortDate(w.start)} to ${shortDate(w.end)}`;
-/** Is this screen a TV? (`app.tvOn` lets a test say so.) Weigh-ins never render on one. */
+/** Is this screen a TV? (`app.tvOn` lets a test say so.) */
 const onTv = (app) => (typeof app.tvOn === 'function' ? app.tvOn() : tvOn());
+/** Weigh-ins show on the TV unless the family turns that off (`settings.weighOnTv: false`). */
+const weighOnTv = (app) => app.state?.settings?.weighOnTv !== false;
+const hiddenHere = (app) => onTv(app) && !weighOnTv(app);
 const possessive = (name) => `${name}’${/s$/i.test(name) ? '' : 's'}`;
 
 // ---------------------------------------------------------------- charts (one series each, so no legend)
@@ -156,9 +160,9 @@ function setupForm(app, shared) {
       ${WEIGH_GOALS.map((g, i) => html`<label class="chip chip-radio"><input type="radio" name="goal" value="${g.id}" ${i === 0 ? 'checked' : ''}>${g.label}</label>`)}
     </div><p class="muted small">Only a direction. There’s no goal weight and nothing to hit.</p></fieldset>
     <fieldset class="field"><legend class="field-label">Where should the numbers be kept?</legend><div class="chip-grid">
-      <label class="chip chip-radio"><input type="radio" name="keep" value="device" checked>Only on this phone</label>
-      <label class="chip chip-radio"><input type="radio" name="keep" value="family">In the family’s private storage</label>
-    </div><p class="muted small">“Only on this phone” means nobody else sees them, and they’re gone if this phone’s browser data is cleared. The family’s storage backs them up and shows them on the family’s other phones and computers. Either way they never show on the TV.</p></fieldset>
+      <label class="chip chip-radio"><input type="radio" name="keep" value="family" checked>With the family</label>
+      <label class="chip chip-radio"><input type="radio" name="keep" value="device">Only on this phone</label>
+    </div><p class="muted small">“With the family” backs them up and shows them on the family’s phones, computers and the TV, so you can cheer each other on. “Only on this phone” keeps them to yourself; they’re gone if this phone’s browser data is cleared.</p></fieldset>
     <label class="field ck-lb"><span class="field-label">Today’s weight, in pounds</span><input class="input" name="lb" type="number" inputmode="decimal" min="${LB_MIN}" max="${LB_MAX}" step="0.1" required></label>
     <button type="submit" class="btn btn-primary btn-block">Start my weekly weigh-in</button>
     <button type="button" class="btn btn-quiet btn-block" data-action="weigh:cancel-setup">Not now</button>
@@ -172,7 +176,7 @@ function myWeighCard(app, me, today) {
   const thisWeek = t.doneThisWeek ? t.latest : null;
   return html`<section class="ck-card ck-weigh" id="ck-weigh" aria-labelledby="ckw-h">
     <div class="section-head"><h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}${possessive(me.name)} weigh-in</h2>
-      <span class="ck-where">${ic(me.keep === 'family' ? 'cloud' : 'lock', { size: 16 })}${me.keep === 'family' ? 'Family’s private storage' : 'Only on this phone'}</span></div>
+      <span class="ck-where">${ic(me.keep === 'family' ? 'cloud' : 'lock', { size: 16 })}${me.keep === 'family' ? 'Shared with the family' : 'Only on this phone'}</span></div>
     ${trendBlock(t)}
     ${weighLine(t.weeks, me.name)}
     <form class="form form-row ck-entry" data-submit="weigh:save" autocomplete="off">
@@ -186,7 +190,7 @@ function myWeighCard(app, me, today) {
         <button type="button" class="icon-btn" data-action="weigh:remove" data-date="${p.date}" aria-label="Remove the weigh-in from ${shortDate(p.date)}">${ic('trash', { size: 20 })}</button></li>`)}</ul></details>`)}
     <details class="cover-more ck-settings"><summary>Weigh-in settings</summary>
       <div class="opt"><span class="opt-label">Working toward</span>${segmented('weighGoal', WEIGH_GOALS, me.goal, { label: 'Working toward', action: 'weigh:goal', small: true })}</div>
-      <div class="opt"><span class="opt-label">Kept</span>${segmented('weighKeep', [{ id: 'device', label: 'Only on this phone' }, { id: 'family', label: 'Family’s storage' }], me.keep, { label: 'Where the weigh-ins are kept', action: 'weigh:keep', small: true })}</div>
+      <div class="opt"><span class="opt-label">Kept</span>${segmented('weighKeep', [{ id: 'family', label: 'With the family' }, { id: 'device', label: 'Only on this phone' }], me.keep, { label: 'Where the weigh-ins are kept', action: 'weigh:keep', small: true })}</div>
       <button type="button" class="btn btn-danger-quiet btn-small" data-action="weigh:forget">Stop, and erase my weigh-ins</button>
     </details>
   </section>`;
@@ -203,9 +207,9 @@ function sharedCard(app, s, today, canClaim) {
 }
 
 function weighSection(app, today) {
-  if (onTv(app)) {
+  if (hiddenHere(app)) {
     return html`<section class="ck-card ck-weigh ck-tv" aria-labelledby="ckw-h"><h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}Weigh-in</h2>
-      <p class="small">Weigh-ins never show on the TV. Open the planner on your own phone to add or see yours.</p></section>`;
+      <p class="small">Weigh-ins are turned off for the TV. Open the planner on a phone to add or see them.</p></section>`;
   }
   const me = app.store.device.weigh;
   const shared = sharedWeighIns(app.state).filter((s) => !(me && me.keep === 'family' && s.name === me.name));
@@ -213,7 +217,7 @@ function weighSection(app, today) {
     ${me ? myWeighCard(app, me, today)
     : html`<section class="ck-card ck-weigh" id="ck-weigh" aria-labelledby="ckw-h">
         <h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}A weekly weigh-in, if you want one</h2>
-        <p class="small">Private, optional, and yours. One number a week and a plain trend: no goal weight, no calorie count, no score.</p>
+        <p class="small">Optional, and done together. One number a week and a plain trend: no goal weight, no calorie count, no score.</p>
         <p class="muted small">A scale doesn’t help everyone. If weighing in adds stress, leave this off: the dinners work the same without it. And weight that’s dropping without trying is one for your doctor, not for an app.</p>
         ${app.ui.weighSetup ? setupForm(app, shared) : html`<button type="button" class="btn btn-secondary" data-action="weigh:open-setup">Set up my weigh-in</button>`}
       </section>`}
@@ -237,6 +241,7 @@ export function render(app) {
           <h2 id="ckday-h" class="section-title">Check-in day</h2>
           <div class="chip-grid" role="radiogroup" aria-label="Check-in day">${DAYS.map((d, i) => html`<button type="button" role="radio" aria-checked="${i === day ? 'true' : 'false'}" class="chip ${i === day ? 'is-on' : ''}" data-action="checkin:day" data-value="${i}" aria-label="${DAY_NAMES[i]}">${d}</button>`)}</div>
           <p class="muted small">The week ends on ${DAY_NAMES[day]}, and Tonight offers the check-in that day.</p>
+          <div class="set-row ck-tv-row"><span class="set-label">Show weigh-ins on the TV<small>Off hides them on the TV only; phones still show them.</small></span>${switchToggle({ on: weighOnTv(app), action: 'checkin:tv', label: 'Show weigh-ins on the TV' })}</div>
         </section>
       </div>
     </div>
@@ -250,7 +255,7 @@ export function render(app) {
 export function checkinCard(app) {
   const today = app.today();
   const due = dueWeek(app.state, today);
-  const me = onTv(app) ? null : app.store.device?.weigh;
+  const me = hiddenHere(app) ? null : app.store.device?.weigh;
   const day = checkinDay(app.state);
   const cur = weekOf(today, day);
   const weighDue = !!me && (!!due || cur.end === today) && !weighTrend(myWeights(app, me), { today, goal: me.goal, day }).doneThisWeek;
@@ -282,6 +287,10 @@ export const actions = {
     const n = Number(el.dataset.value);
     if (!Number.isInteger(n) || n < 0 || n > 6) return;
     app.commit({ ...settingOps(app.state, 'checkinDay', n), message: `The check-in is on ${DAY_NAMES[n]}s now.` });
+  },
+  'checkin:tv': (app) => {
+    const on = !weighOnTv(app);
+    app.commit({ ...settingOps(app.state, 'weighOnTv', on), message: on ? 'Weigh-ins show on the TV.' : 'Weigh-ins are hidden on the TV.' });
   },
   'weigh:open-setup': (app) => { app.ui.weighSetup = true; app.render(); },
   'weigh:cancel-setup': (app) => { app.ui.weighSetup = false; app.render(); },
@@ -332,16 +341,14 @@ export const actions = {
     const to = el.dataset.value === 'family' ? 'family' : 'device';
     if (!me || me.keep === to) return;
     if (to === 'family') {
-      const ok = await confirmSheet({ title: 'Keep your weigh-ins in the family’s storage?', body: 'They’ll be backed up, and anyone with the family passcode can see them on their phone or computer. They still never show on the TV.', confirm: 'Yes, keep them there' });
-      if (!ok) return;
       app.commit(shareWeighOps(app.state, { name: me.name, goal: me.goal, weights: me.weights }), { quiet: true });
       saveMine(app, { ...me, keep: 'family', weights: {} });
-      toast('Your weigh-ins are in the family’s storage now.');
+      toast('Your weigh-ins are shared with the family now.');
     } else {
       const weights = Object.fromEntries(weighSeries(app.state.checkin?.weights?.[me.name]).map((p) => [p.date, p.lb]));
       saveMine(app, { ...me, keep: 'device', weights });
       app.commit(forgetWeighOps(app.state, { name: me.name }), { quiet: true });
-      toast('Your weigh-ins are only on this phone now, and off the family’s storage.');
+      toast('Your weigh-ins are only on this phone now.');
     }
   },
   'weigh:forget': async (app) => {

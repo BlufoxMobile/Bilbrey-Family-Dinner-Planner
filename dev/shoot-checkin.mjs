@@ -66,7 +66,11 @@ await sp.check('input[name=goal][value=gain]', { force: true });
 await sp.fill('.ck-setup input[name=lb]', '118.6');
 await sp.click('.ck-setup button[type=submit]');
 await sp.waitForSelector('#ck-lb');
-await sp.evaluate(() => { const d = JSON.parse(localStorage.getItem('bfdp.v2.device')); d.weigh.weights = { '2026-10-19': 116.2, '2026-10-26': 116.8, '2026-11-02': 117.4, '2026-11-09': 117.9, '2026-11-16': 118.6 }; localStorage.setItem('bfdp.v2.device', JSON.stringify(d)); });
+// Shared with the family (the default): add a few weeks of history for both of them on the server.
+const hist = [set(['checkin', 'weights', 'Candi'], { '2026-10-19': 116.2, '2026-10-26': 116.8, '2026-11-02': 117.4, '2026-11-09': 117.9, '2026-11-16': 118.6 }),
+  set(['checkin', 'people', 'Jeff'], { goal: 'lose' }), set(['checkin', 'weights', 'Jeff'], { '2026-10-26': 214.2, '2026-11-02': 212.8, '2026-11-09': 211.4, '2026-11-16': 210.6 })];
+await sp.waitForTimeout(800);
+await fetch(`${apiBase}/api/ops`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Family-Key': key }, body: JSON.stringify({ ops: hist, by: 'Family', clientId: 'ck', batchId: 'ck-hist' }) });
 await sp.reload();
 await sp.waitForSelector('.page-checkin .ck-chart-weigh');
 await sp.waitForTimeout(400);
@@ -87,7 +91,7 @@ for (const [name, opts, q] of [['1280', { viewport: { width: 1280, height: 800 }
   await p.waitForTimeout(600);
   await p.screenshot({ path: out(`page-${name}`), fullPage: name !== 'tv' });
   const text = (await p.textContent('#view')).replace(/\s+/g, ' ');
-  console.log(name, 'shows a weight:', /118\.6|117\.9/.test(text), '| mentions Candi:', /Candi/.test(text));
+  console.log(name, 'shows the shared weigh-ins:', /Candi’s weigh-in/.test(text) && /Jeff’s weigh-in/.test(text));
   if (name === 'tv') { await p.goto(`${base}?api=${encodeURIComponent(apiBase)}${q}#/tonight`); await p.waitForSelector('.page-tonight'); await p.waitForTimeout(500); await p.screenshot({ path: out('tonight-tv') }); }
   await ctx.close();
 }

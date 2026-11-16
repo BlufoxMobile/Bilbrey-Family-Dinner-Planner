@@ -18,6 +18,7 @@
 .ck-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 4px; }
 .ck-actions .status-note { margin: 0; }
 .ck-day .chip { min-width: 48px; min-height: 40px; justify-content: center; }
+.ck-tv-row { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
 
 /* ---------------------------------------------------------------- charts: one series each, marks thin, text in text tokens */
 .ck-chart { margin: 0; display: grid; gap: 6px; }
