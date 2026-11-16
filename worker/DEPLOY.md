@@ -8,6 +8,12 @@
 > applied, so wrangler skips it. After a push, run `node worker/smoke.mjs <worker URL>` and check
 > `version=` in `/api/health`. The manual upload below is the fallback (the dashboard's firewall
 > has blocked it for some code changes).
+>
+> **Since the Claude workstream (SPEC §14) the Worker is two source modules:** `src/index.js` imports
+> `src/claude.js`. Workers Builds bundles them automatically. For a manual upload, bundle first with
+> `npx wrangler deploy --dry-run --outdir dist` (from `worker/`) and upload `dist/index.js` as the
+> single `index.js` part, and add `{ "type": "plain_text", "name": "AI_MONTHLY_CAP_USD", "text": "5" }`
+> to `bindings`. The `ANTHROPIC_API_KEY` secret is kept across uploads.
 
 
 The Worker is ONE ES-module file, `worker/src/index.js` (v2.3.0, ~80 KB, no npm runtime
@@ -166,8 +172,8 @@ node worker/smoke.mjs https://bilbrey-dinner-planner.jeff-bilbrey-jb.workers.dev
 
 It checks `/api/health` (`ok`, `hasPasscode`, `ai: true`, `revision`), CORS preflight and actual
 responses for `https://blufoxmobile.github.io` and `http://localhost:5173`, rejection of a foreign
-origin (no `Access-Control-Allow-Origin`), and that `/api/state`, `/api/ops`, `/api/scan` and
-`/api/receipt` return 401 without a key. That makes 20 checks, and it prints `version` at the end. It never calls `/api/setup` and never sends a family key, so it can't trip the backoff.
+origin (no `Access-Control-Allow-Origin`), and that `/api/state`, `/api/ops`, `/api/scan`,
+`/api/receipt`, `/api/ai` and `/api/ideas` return 401 without a key. That makes 22 checks, and it prints `version` at the end. It never calls `/api/setup` and never sends a family key, so it can't trip the backoff.
 It never triggers an AI call either. It exits 1 on any failure. Behind an HTTPS proxy, run it with
 `NODE_USE_ENV_PROXY=1` (and `NODE_EXTRA_CA_CERTS=<ca bundle>`).
 
@@ -201,6 +207,17 @@ does.
     "Image 2 couldn't be read …").
   - If one image fails, the scan still returns 200 with that warning. If every image fails, it
     returns 502 `{ error, detail }`.
+- **Claude (SPEC §14):**
+  - Jeff adds the Anthropic API key himself: Worker → Settings → Variables and Secrets → Add →
+    type **Secret**, name `ANTHROPIC_API_KEY`. It must be a Secret, not Text: deploys from GitHub
+    replace plain-text variables with `wrangler.toml`'s `[vars]`, but keep secrets.
+  - With the key set, scans and receipts go to Claude first (the family's `settings.aiModel`, default
+    `claude-opus-5-5`) and fall back to Workers AI if Claude fails or this month's spend has reached
+    `AI_MONTHLY_CAP_USD` (in `wrangler.toml`, $5; `"0"` turns Claude off). `POST /api/ideas` is
+    Claude-only. Spend is kept per America/Chicago month in the Durable Object's `ai_usage` table;
+    `GET /api/ai` shows it.
+  - A wrong or revoked key doesn't break scans (they fall back), but every scan then carries
+    `claudeError: "… Claude API 401 authentication_error …"`; check that field after adding the key.
 - **Limits enforced:**
   - Ops: 200 per request; more is a 400.
   - State: 1 MB; over is a 413.

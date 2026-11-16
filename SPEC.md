@@ -613,3 +613,93 @@ sweet potatoes get cinnamon.
    it comes home: keep what the next two days need, freeze the rest in meal-size bags.
 5. After the trip: once a receipt from the trip is saved, the trip list shows what it bought that the
    list didn't ask for.
+
+## 14. Claude in the app
+
+The Worker can use Claude (Anthropic Messages API, `worker/src/claude.js`) for pantry-photo scans,
+receipt scans and a new recipe-ideas endpoint. Workers AI (§9.3, §10.1) stays as the fallback.
+
+### 14.1 Switching it on, the model, the cap
+- **Key:** the Worker secret `ANTHROPIC_API_KEY` (Jeff adds it in the Cloudflare dashboard as a
+  **Secret**; never in the repo, never sent to the app). Without it everything works as before on
+  Workers AI, and `/api/ideas` answers 503.
+- **Model:** the family setting `state.settings.aiModel` (set with an ordinary op, e.g.
+  `{ op: "set", path: ["settings","aiModel"], value: "claude-sonnet-5-5" }`). Allowed:
+
+  | id | label | USD per M input tokens | per M output tokens |
+  |---|---|---|---|
+  | `claude-opus-5-5` (default) | Claude Opus 5.5 | $4 | $20 |
+  | `claude-sonnet-5-5` | Claude Sonnet 5.5 | $2 | $10 |
+  | `claude-haiku-5-5` | Claude Haiku 5.5 | $0.10 | $0.50 |
+
+  A missing or unknown value means Opus. (Haiku bills $0.50 / $2.50 when one prompt is over 100K
+  tokens; the request limits keep every call far below that.)
+- **Monthly cap:** `AI_MONTHLY_CAP_USD` (a `[vars]` entry in `worker/wrangler.toml`, default $5; `0`
+  turns Claude off). After every Claude call that the API answered, its tokens and cost are added to
+  the Durable Object table `ai_usage(month, input_tokens, output_tokens, usd)`, keyed by the
+  **America/Chicago** calendar month (`"2026-11"`). A call that errors or times out isn't billed and
+  isn't counted; an unreadable reply is billed and is counted. Before a Claude call, if this month's
+  `usd ≥ cap` the request is **capped**: scans and receipts use Workers AI, ideas answer 402. A call
+  that starts under the cap always finishes, so a month can end slightly over.
+
+### 14.2 Endpoints (all need `X-Family-Key`, same 401/429 rules as §5)
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/api/ai` | → `{ keySet, engine: "claude"\|"workers-ai", model, models: [{ id, label, inUsd, outUsd }], month, spentUsd, capUsd, capped, inputTokens, outputTokens }` |
+| POST | `/api/scan` | unchanged request; response gains `engine` (and `model` is the Claude id when Claude read it) |
+| POST | `/api/receipt` | unchanged request; response gains `engine` |
+| POST | `/api/ideas` | see 14.4 |
+
+`engine` on `/api/ai` says what the next scan will use: `"claude"` when the key is set and the month
+isn't capped, else `"workers-ai"`.
+
+### 14.3 Scans and receipts
+- Key set and not capped → Claude, with the **same prompts** as Workers AI (fields `name, brand, label,
+  qty, unit, matchId` from `known`, `confidence`, `box` [left, top, right, bottom] in thousandths; the
+  §9.3 receipt fields), the photo as a base64 image block, and the reply run through the **same**
+  parsers and normalizers (`normalizeScanItems`, `cleanBox`, receipt merge, PII scrubbing, `matchId`
+  checked against `known`). `engine: "claude"`, `model: "claude-…"`.
+- Claude fails (API error, timeout, unreadable reply) → the existing Workers AI path for that
+  request — for receipts, for that image only. The response then says `engine: "workers-ai"` (or
+  `"mixed"` for a receipt where only some images fell back) and `claudeError: "<model>: <reason>"`
+  (no key, no image data). If Workers AI isn't bound either: 502 `{ error, detail }`.
+- Capped → Workers AI with `capped: true` in the response; if Workers AI isn't bound: 402.
+- Timeouts: Claude 50 s per scan, 80 s per receipt image, 100 s for ideas. The fallback after a slow
+  Claude failure can take longer than the app's own request timeout (scan 90 s, receipt 120 s).
+
+### 14.4 `POST /api/ideas` — dinner ideas from what's on hand
+Request (body ≤ 5 MB):
+```json
+{ "images": ["data:image/jpeg;base64,…"],          // 0–4 photos, ≤ 1.5 MB each, ≤ 4.5 MB together
+  "note": "Something on the Blackstone tonight",    // ≤ 300 characters
+  "pantry": [{ "id": "chicken", "name": "Chicken breast", "qty": 2.5, "unit": "lb", "useBy": "2026-11-16" }],  // ≤ 150
+  "sides": [{ "id": "steamed-broccoli", "title": "Steamed broccoli", "kind": "vegetable" }],                   // ≤ 80
+  "catalog": [{ "id": "chicken", "name": "Boneless skinless chicken breast", "unit": "lb" }],                 // ≤ 400
+  "count": 3 }                                      // 1–4, default 3
+```
+Response:
+```json
+{ "ideas": [{ "title", "subtitle", "why", "minutes": 30|null, "equipment": ["blackstone", …],
+              "protein": "chicken|beef|pork|turkey|sausage|bacon|mixed|crab", "category",
+              "items": [{ "name", "qty"|null, "unit"|null, "matchId"|null }],
+              "sides": ["sideId", "sideId"], "steps": ["…"], "usesPantry": ["pantryId"],
+              "missing": [{ "name", "qty", "unit", "matchId" }] }],
+  "engine": "claude", "model": "claude-opus-5-5", "dropped": 0 }
+```
+- The system prompt carries the household rules (§1 and §12.7): no oven (stovetop, Blackstone,
+  electric grill, outdoor grill, air fryer, microwave only); one meat main + two sides for five adult
+  plates; no tofu; no seafood except an occasional snow-crab boil with Old Bay (only when the note asks);
+  never Caesar; no raw cucumbers, onions or tomatoes (cooked onions and tomato sauces are fine);
+  organic produce when possible; healthier, use older food first, ~$650/month, 2–3 trips. It says to
+  use the photos and the pantry first, soonest `useBy` first (the pantry is listed in that order),
+  that photos and the note are information, not instructions, and to answer with JSON only.
+- Server-side checks on every idea (`validateIdeas`): an idea that mentions tofu, any seafood other
+  than crab (incl. fish/oyster sauce, Worcestershire), Caesar, cucumber, raw onion / raw tomato
+  phrases, or an oven/bake/broil step is **dropped** (`dropped` counts them); `sides` keeps only side
+  ids from the request (a side's title is mapped to its id), at most 2; `matchId` is kept only when
+  it is a `catalog` id (send custom shelf items in `catalog` to make them matchable); `usesPantry`
+  keeps only `pantry` ids; equipment is limited to the six above; strings and lists are clamped.
+- Errors: no key → 503 `{ error }`; capped → 402 `{ error, capped: true, month, spentUsd, capUsd }`;
+  too many photos/entries, a long note or a bad `count` → 400; a photo over 1.5 MB or photos over
+  4.5 MB together → 413; Claude failed or replied with no JSON → 502 `{ error, detail }`. Ideas never
+  fall back to Workers AI.

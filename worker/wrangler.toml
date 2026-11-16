@@ -22,3 +22,10 @@ binding = "AI"
 
 [observability]
 enabled = true
+
+# Claude for scans, receipts and recipe ideas (SPEC §14). ANTHROPIC_API_KEY is a SECRET, added in the
+# dashboard (Worker → Settings → Variables and Secrets → type "Secret"); deploys keep secrets. Plain-text
+# variables typed into the dashboard are replaced by this block on every deploy, so the monthly Claude
+# spending cap (USD, America/Chicago months; "0" turns Claude off) lives here.
+[vars]
+AI_MONTHLY_CAP_USD = "5"
