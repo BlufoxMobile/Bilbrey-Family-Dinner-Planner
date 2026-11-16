@@ -13,6 +13,8 @@
  *   POST /api/receipt {images[≤4],store?,known}  → { store, date, total, subtotal, tax, savings, lines:[…], model, engine }
  *   GET  /api/ai                                  → { keySet, engine, model, models, month, spentUsd, capUsd, capped }
  *   POST /api/ideas  {images?,note?,pantry,sides,catalog,count?} → { ideas:[…], engine:"claude", model }
+ *   GET  /api/mcp/link · POST /api/mcp/rotate    → { url }  the Claude chat connector link (SPEC §15)
+ *   POST /mcp/<token>                            MCP (JSON-RPC) for the Claude chat connector, in ./mcp.js
  *
  * State lives in ONE SQLite-backed Durable Object (`Kitchen`, idFromName("bilbrey")), so every
  * read and write is strongly consistent and ops batches apply atomically, in arrival order.
@@ -25,9 +27,10 @@ import {
   MODELS, callClaude, chicagoDate, chicagoMonth, costUsd, hasClaudeKey, imageBlock, monthlyCap, pickModel, textBlock,
   tokenCount, extractJsonObject, validateIdeas, ideasUserPrompt, IDEAS_SYSTEM_PROMPT, ClaudeError,
 } from "./claude.js";
+import { handleMcpRequest, mcpTokenMatches, newMcpToken } from "./mcp.js";
 
 const SERVICE = "bilbrey-dinner-planner";
-const VERSION = "2.5.0";
+const VERSION = "2.6.0";
 const KITCHEN_NAME = "bilbrey";
 
 // ── CORS (SPEC §5) ────────────────────────────────────────────────────────────────────────────
@@ -129,12 +132,19 @@ const ROUTES = {
   // Claude (SPEC §14)
   "/api/ai": { GET: handleAiStatus },
   "/api/ideas": { POST: handleIdeas },
+  // Claude chat connector (SPEC §15)
+  "/api/mcp/link": { GET: handleMcpLink },
+  "/api/mcp/rotate": { POST: handleMcpRotate },
 };
 
 async function route(request, env, origin) {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "") || "/";
   const method = request.method.toUpperCase();
+
+  // The Claude chat connector is called server-to-server by Claude; its unguessable link is the
+  // credential, so it skips the browser Origin rules below (SPEC §15).
+  if (path === "/mcp" || path.startsWith("/mcp/")) return handleMcp(request, env, path, method);
 
   // A browser on any other site gets a plain 403 with no Access-Control-Allow-Origin, so it can
   // neither read responses nor spend AI neurons. Requests with no Origin (curl, smoke tests) pass.
@@ -302,6 +312,37 @@ async function handleReceipt(request, env, url, origin) {
   return json(200, result, origin);
 }
 
+// ── Claude chat connector (SPEC §15): the private link, and MCP at /mcp/<token> (./mcp.js) ─────
+const MCP_MAX_BODY = 512 * 1024;
+
+async function handleMcpLink(request, env, url, origin) {
+  const res = await kitchen(env).mcpToken(familyKey(request), clientOf(request), false);
+  if (res.status !== 200) return fromResult(res, origin);
+  return json(200, { ok: true, url: `${url.origin}/mcp/${res.body.token}` }, origin);
+}
+
+async function handleMcpRotate(request, env, url, origin) {
+  const res = await kitchen(env).mcpToken(familyKey(request), clientOf(request), true);
+  if (res.status !== 200) return fromResult(res, origin);
+  return json(200, { ok: true, rotated: true, url: `${url.origin}/mcp/${res.body.token}` }, origin);
+}
+
+async function handleMcp(request, env, path, method) {
+  const token = path.slice("/mcp/".length);
+  const body = method === "POST" ? await readBodyText(request, MCP_MAX_BODY) : "";
+  const res = await kitchen(env).mcp(token, method, body, request.headers.get("MCP-Protocol-Version"));
+  const text = res.body === null || res.body === undefined ? null : typeof res.body === "string" ? res.body : JSON.stringify(res.body);
+  return new Response(text, {
+    status: res.status,
+    headers: {
+      ...(text === null ? {} : { "Content-Type": "application/json; charset=utf-8" }),
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      ...(res.headers || {}),
+    },
+  });
+}
+
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 // Durable Object: the family kitchen (state document + family key + backoff counters)
 // ═════════════════════════════════════════════════════════════════════════════════════════════
@@ -351,8 +392,54 @@ export class Kitchen extends DurableObject {
       output_tokens INTEGER,
       usd REAL
     )`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS mcp_link (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      token TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )`);
     this.doc = null; // in-memory cache of the doc row (this object is the only writer)
     this.authRow = undefined; // undefined = not loaded, null = no passcode yet
+  }
+
+  // ── Claude chat connector (SPEC §15) ──
+  /** The connector's token (made on first use); rotate = replace it, so the old link stops working. */
+  async mcpToken(key, client, rotate) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    let token = rotate ? null : this.sql.exec("SELECT token FROM mcp_link WHERE id = 1").toArray()[0]?.token || null;
+    if (!token) {
+      token = newMcpToken();
+      this.sql.exec(
+        `INSERT INTO mcp_link (id, token, created_at) VALUES (1, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET token = excluded.token, created_at = excluded.created_at`,
+        token, new Date().toISOString(),
+      );
+    }
+    return { status: 200, body: { ok: true, token } };
+  }
+
+  /** One MCP HTTP request. The token must match (constant time) or it's a plain 404. */
+  async mcp(token, method, bodyText, protocolVersion) {
+    const stored = this.sql.exec("SELECT token FROM mcp_link WHERE id = 1").toArray()[0]?.token || null;
+    if (!stored || !mcpTokenMatches(token, stored)) return failure(404, "Not found.");
+    if (method !== "POST") {
+      return failure(405, "This MCP endpoint takes JSON-RPC 2.0 over POST.", undefined, { Allow: "POST" });
+    }
+    return handleMcpRequest(bodyText, {
+      version: VERSION,
+      env: this.env,
+      state: () => JSON.parse(this.#doc().json),
+      commit: (ops, by) => {
+        let checked;
+        try {
+          checked = ops.map(validateOp);
+        } catch (err) {
+          return { ok: false, status: 400, error: err.message };
+        }
+        const res = this.#commit(checked, by, "claude-chat");
+        return res ? { ok: false, status: res.status, error: res.body.error } : { ok: true, revision: this.doc.revision };
+      },
+    }, { protocolVersion });
   }
 
   // ── RPC methods (called by the Worker) ──
@@ -462,10 +549,34 @@ export class Kitchen extends DurableObject {
       }
     }
 
+    const refused = this.#commit(req.ops, req.by, req.clientId);
+    if (refused) return refused;
+    const { revision } = this.doc;
+    if (req.clientId && req.batchId) {
+      this.sql.exec(
+        `INSERT INTO batches (client_id, batch_id, revision, at) VALUES (?, ?, ?, ?)
+         ON CONFLICT(client_id) DO UPDATE SET batch_id = excluded.batch_id, revision = excluded.revision, at = excluded.at`,
+        req.clientId, req.batchId, revision, Date.now(),
+      );
+      this.sql.exec(
+        "DELETE FROM batches WHERE client_id NOT IN (SELECT client_id FROM batches ORDER BY at DESC LIMIT 200)",
+      );
+    }
+    return { status: 200, body: stateBody(this.doc), headers: { "X-Revision": String(revision) } };
+  }
+
+  // ── internals ──
+  /**
+   * Applies validated ops to the state document and saves it as the next revision (synchronous, so
+   * atomic). Returns null on success (this.doc is the new revision) or a failure result. Shared by
+   * POST /api/ops and the Claude chat connector.
+   */
+  #commit(ops, by, clientId) {
+    const d = this.#doc();
     let state = JSON.parse(d.json);
     if (!isPlainObject(state)) state = {};
     try {
-      req.ops.forEach((op, i) => applyOp(state, op, i));
+      ops.forEach((op, i) => applyOp(state, op, i));
     } catch (err) {
       return asFailure(err);
     }
@@ -482,20 +593,10 @@ export class Kitchen extends DurableObject {
       `INSERT INTO doc (id, state, revision, updated_at, updated_by, client_id) VALUES (1, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET state = excluded.state, revision = excluded.revision,
          updated_at = excluded.updated_at, updated_by = excluded.updated_by, client_id = excluded.client_id`,
-      stateJson, revision, updatedAt, req.by, req.clientId,
+      stateJson, revision, updatedAt, by, clientId,
     );
-    if (req.clientId && req.batchId) {
-      this.sql.exec(
-        `INSERT INTO batches (client_id, batch_id, revision, at) VALUES (?, ?, ?, ?)
-         ON CONFLICT(client_id) DO UPDATE SET batch_id = excluded.batch_id, revision = excluded.revision, at = excluded.at`,
-        req.clientId, req.batchId, revision, Date.now(),
-      );
-      this.sql.exec(
-        "DELETE FROM batches WHERE client_id NOT IN (SELECT client_id FROM batches ORDER BY at DESC LIMIT 200)",
-      );
-    }
-    this.doc = { json: stateJson, revision, updatedAt, updatedBy: req.by };
-    return { status: 200, body: stateBody(this.doc), headers: { "X-Revision": String(revision) } };
+    this.doc = { json: stateJson, revision, updatedAt, updatedBy: by };
+    return null;
   }
 
   // ── AI usage (SPEC §14) ──
@@ -538,7 +639,6 @@ export class Kitchen extends DurableObject {
     };
   }
 
-  // ── internals ──
   #doc() {
     if (this.doc) return this.doc;
     const row = this.sql.exec("SELECT state, revision, updated_at, updated_by FROM doc WHERE id = 1").toArray()[0];

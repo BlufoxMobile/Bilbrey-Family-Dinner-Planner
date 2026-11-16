@@ -108,7 +108,7 @@ export function implicitPromotions(db, state) {
   return map;
 }
 
-/** Family-made dinners are core unless saved as 'bench' (a one-off "What can I make?" idea, SPEC §17). */
+/** Custom dinners count as core unless saved as a one-off (rotation 'bench': a "What can I make?" idea or a dinner planned from a Claude chat, SPEC §15, §17). */
 export function inRotation(state, d, db = null) {
   if (!d || isRetired(state, d.id)) return false;
   return d.rotation === 'core' || isPromoted(state, d.id) || (!!db && implicitPromotions(db, state).has(d.id));

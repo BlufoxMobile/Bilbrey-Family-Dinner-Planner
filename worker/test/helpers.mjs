@@ -2,10 +2,36 @@
 // with the Workers AI binding replaced by a scriptable mock implemented in this Node process.
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
+const REPO = here("../..");
+
+/**
+ * Every ES module the entry imports, followed recursively through relative imports, so the
+ * Worker's own `../../app/*.js` imports (bundled by wrangler in production) load in workerd too.
+ */
+function collectModules(entry) {
+  const seen = new Set();
+  const order = [];
+  const visit = (file) => {
+    if (seen.has(file)) return;
+    seen.add(file);
+    order.push(file);
+    const src = readFileSync(file, "utf8");
+    for (const m of src.matchAll(/(?:^|[;\s])(?:import|export)\s[^'"`]*?from\s*["'](\.{1,2}\/[^"']+)["']|(?:^|[;\s])import\s*["'](\.{1,2}\/[^"']+)["']/gm)) {
+      const next = resolve(dirname(file), m[1] || m[2]);
+      if (existsSync(next)) visit(next);
+    }
+  };
+  visit(entry);
+  return order;
+}
+
+/** The public GitHub Pages copy of data/*.json, served from this checkout (the Worker fetches it). */
+export const DATA_ORIGIN = "https://blufoxmobile.github.io/Bilbrey-Family-Dinner-Planner/";
 
 // Keep the test runtime on the same compatibility date as wrangler.toml / DEPLOY.md.
 const COMPAT_DATE = /compatibility_date\s*=\s*"([^"]+)"/.exec(readFileSync(here("../wrangler.toml"), "utf8"))[1];
@@ -32,21 +58,33 @@ export async function startWorker({ ai = true, anthropic = false, bindings = und
   const claudeCalls = [];
   let claudeHandler = () => claudeReply('{"items":[]}');
 
+  // Outbound fetches from the Worker (only the recipe-box data so far): logged, and answered from
+  // this checkout's data/ folder unless a test scripts something else with setOutbound().
+  const fetches = [];
+  const serveData = async (url) => {
+    if (!url.startsWith(DATA_ORIGIN)) return new Response("Not found", { status: 404 });
+    const rel = url.slice(DATA_ORIGIN.length).split("?")[0];
+    const file = resolve(REPO, rel);
+    if (!/^data\/[a-z]+\.json$/.test(rel) || !existsSync(file)) return new Response("Not found", { status: 404 });
+    return new Response(readFileSync(file), { headers: { "Content-Type": "application/json" } });
+  };
+  let outbound = serveData;
+
   const options = {
-    modules: [
-      { type: "ESModule", path: here("./fixtures/entry.mjs") },
-      { type: "ESModule", path: here("../src/index.js") },
-      { type: "ESModule", path: here("../src/claude.js") },
-    ],
-    modulesRoot: here(".."),
+    modules: collectModules(here("./fixtures/entry.mjs")).map((path) => ({ type: "ESModule", path })),
+    modulesRoot: REPO,
     compatibilityDate: COMPAT_DATE,
     durableObjects: { KITCHEN: { className: "Kitchen", useSQLite: true } },
+    outboundService: async (request) => {
+      fetches.push(request.url);
+      return outbound(request.url, request);
+    },
   };
   if (bindings) options.bindings = bindings;
   if (anthropic) {
     options.outboundService = async (request) => {
       const url = new URL(request.url);
-      if (url.hostname !== "api.anthropic.com") return new Response(`unexpected outbound fetch to ${url.hostname}`, { status: 599 });
+      if (url.hostname !== "api.anthropic.com") { fetches.push(request.url); return outbound(request.url, request); }
       const body = await request.json();
       const headers = Object.fromEntries(request.headers);
       claudeCalls.push({ url: request.url, headers, body });
@@ -98,9 +136,14 @@ export async function startWorker({ ai = true, anthropic = false, bindings = und
   return {
     call,
     calls,
+    fetches,
     /** Script the mock model: fn(model, inputs, callNumber) → response object (throw = AI error). */
     setAI(fn) {
       aiHandler = fn;
+    },
+    /** Script outbound fetches: fn(url, request) → Response; null restores the data/ files. */
+    setOutbound(fn) {
+      outbound = fn || serveData;
     },
     claudeCalls,
     /** Script the mock Messages API: fn(body, callNumber, headers) → reply object or Response (throw = 500). */
