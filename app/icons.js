@@ -58,6 +58,13 @@ const P = {
   bowl: '<path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20.5h8"/>',
   lunch: '<path d="M4.5 9.5h15v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2z"/><path d="M9 9.5V7a3 3 0 0 1 6 0v2.5"/><path d="M4.5 13.5h15"/><path d="M11 13.5v2h2v-2"/>',
   textSize: '<path d="M4 18L8.5 6 13 18"/><path d="M5.6 14h5.8"/><path d="M15 18l2.8-7.5 2.7 7.5"/><path d="M15.9 15.8h3.8"/>',
+  // v3 additions (docs/spec/19-design.md): the PossibleCooker, and a few for the newer screens.
+  cooker: '<path d="M5 10.5h14v6a3.5 3.5 0 0 1-3.5 3.5h-7A3.5 3.5 0 0 1 5 16.5z"/><path d="M7.5 10.5c.3-2.4 2.2-4 4.5-4s4.2 1.6 4.5 4"/><path d="M12 6.5V5"/><path d="M2.5 13H5"/><path d="M19 13h2.5"/><path d="M10.5 16h3"/>',
+  tv: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8.5 20.5h7"/><path d="M12 17v3.5"/>',
+  heart: '<path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z"/>',
+  chart: '<path d="M4 20h16"/><path d="M7 20v-6"/><path d="M12 20V8"/><path d="M17 20v-9"/>',
+  timer: '<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.5l2.2 1.6"/><path d="M10 3.5h4"/><path d="M12 3.5v3"/>',
+  bin: '<path d="M5 8h14l-1.2 11a1.7 1.7 0 0 1-1.7 1.5H7.9A1.7 1.7 0 0 1 6.2 19z"/><path d="M4 8l1.2-3h13.6L20 8"/><path d="M10 12v5"/><path d="M14 12v5"/>',
 };
 
 // Larger glyphs for photo placeholders (48×48 viewBox).
@@ -90,5 +97,5 @@ export function glyph(category, { size = 56 } = {}) {
 }
 
 export const EQUIPMENT_ICON = {
-  stovetop: 'stovetop', blackstone: 'blackstone', 'electric grill': 'grill', 'outdoor grill': 'grill', 'air fryer': 'airfryer', microwave: 'microwave',
+  stovetop: 'stovetop', blackstone: 'blackstone', 'electric grill': 'grill', 'outdoor grill': 'grill', 'air fryer': 'airfryer', microwave: 'microwave', 'possible cooker': 'cooker',
 };

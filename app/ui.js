@@ -4,6 +4,8 @@
 import { escapeHtml } from './util.js';
 import { icon, glyph } from './icons.js';
 import { FAMILY } from './config.js';
+import * as motion from './motion.js';
+import { captureFocus, restoreFocus, focusFirst, tvOn } from './tv.js';
 
 class Safe { constructor(s) { this.s = s; } toString() { return this.s; } }
 export const raw = (s) => new Safe(String(s ?? ''));
@@ -64,17 +66,30 @@ export function photo(db, kind, id, { category = 'Comfort', size = 'card', alt =
   const cat = kind === 'lunch' ? `lunch-${sideKind || 'main'}` : kind === 'side' ? (sideKind === 'shelf' ? 'shelf' : 'side') : category;
   const tone = kind === 'lunch' ? `lunch-${sideKind || 'main'}` : kind === 'side' ? `side-${sideKind || 'vegetable'}` : `cat-${String(category).toLowerCase().replace(/[^a-z]+/g, '-')}`;
   const glyphSize = size === 'hero' ? 84 : size === 'thumb' ? 30 : 52;
+  // Intrinsic size, so the browser knows the shape before the bytes arrive (the frame fixes the layout).
+  const dims = kind === 'dinner' ? 'width="1200" height="800"' : 'width="640" height="640"';
   let img = '';
   if (p?.src) {
     const small = p.small || (kind === 'dinner' ? p.src.replace(/\.webp$/, '-640.webp') : null);
     const sizes = size === 'hero' ? '(min-width: 960px) 640px, 100vw' : size === 'thumb' ? '96px' : '(min-width: 960px) 320px, 50vw';
     const srcset = small && small !== p.src ? `${small} 640w, ${p.src} 1280w` : '';
-    img = `<img src="${escapeHtml(p.src)}" ${srcset ? `srcset="${escapeHtml(srcset)}" sizes="${sizes}"` : ''} alt="${escapeHtml(alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" data-photo>`;
+    // A picture this page has already shown comes back without a second fade (re-renders rebuild the markup).
+    const seen = SEEN.has(p.src) ? ' class="is-loaded is-instant"' : '';
+    img = `<img src="${escapeHtml(p.src)}" ${srcset ? `srcset="${escapeHtml(srcset)}" sizes="${sizes}"` : ''} ${dims} alt="${escapeHtml(alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" data-photo${seen}>`;
   }
   return raw(`<span class="photo photo-${size} ${tone}">${`<span class="photo-ph">${glyph(cat, { size: glyphSize })}</span>`}${img}</span>`);
 }
 
+/** Photos that have finished loading at least once since the app opened (by their src). */
+const SEEN = new Set();
+function shown(img) {
+  img.classList.add('is-loaded');
+  const src = img.getAttribute('src');
+  if (src) SEEN.add(src);
+}
+
 function photoFailed(img) {
+  SEEN.delete(img.getAttribute('src'));
   if (img.hasAttribute('srcset')) { img.removeAttribute('srcset'); img.removeAttribute('sizes'); img.src = img.getAttribute('src'); return; }
   img.remove();
 }
@@ -90,10 +105,10 @@ export function settlePhotos(root = document) {
   const imgs = root.matches?.('img[data-photo]') ? [root] : root.querySelectorAll('img[data-photo]:not(.is-loaded)');
   for (const img of imgs) {
     if (img.classList.contains('is-loaded')) continue;
-    if (img.complete && img.naturalWidth > 0) { img.classList.add('is-loaded'); continue; }
+    if (img.complete && img.naturalWidth > 0) { shown(img); continue; }
     if (img.dataset.watch) continue;
     img.dataset.watch = '1';
-    img.addEventListener('load', () => img.classList.add('is-loaded'));
+    img.addEventListener('load', () => shown(img));
     img.addEventListener('error', () => { if (!img.isConnected) photoFailed(img); });
   }
 }
@@ -107,7 +122,7 @@ export function installPhotoFallback(root = document) {
   }, true);
   root.addEventListener('load', (ev) => {
     const img = ev.target;
-    if (img instanceof HTMLImageElement && img.hasAttribute('data-photo')) img.classList.add('is-loaded');
+    if (img instanceof HTMLImageElement && img.hasAttribute('data-photo')) shown(img);
   }, true);
   // Every way markup reaches the page (renders, sheets, search results) passes through here.
   if (typeof MutationObserver !== 'undefined') {
@@ -120,6 +135,7 @@ export function installPhotoFallback(root = document) {
 // ---------------------------------------------------------------- sheets
 
 let current = null;
+let pendingFocus = null; // where focus goes back to, while a sheet is still sliding away
 
 function dialogEl() {
   let d = document.getElementById('sheet');
@@ -131,6 +147,7 @@ function dialogEl() {
     document.body.appendChild(d);
     d.addEventListener('cancel', (e) => { e.preventDefault(); closeSheet(); });
     d.addEventListener('click', (e) => { if (e.target === d) closeSheet(); });
+    motion.dragToDismiss(d, () => closeSheet({ instant: true }));
   }
   return d;
 }
@@ -141,20 +158,26 @@ function dialogEl() {
  */
 export function openSheet(opts) {
   const d = dialogEl();
-  const prevFocus = current ? current.prevFocus : document.activeElement;
+  // A sheet that is still sliding away is reused as it is: no exit, and focus returns where it would have.
+  const reused = motion.cancelClose();
+  const page = document.getElementById('app') || document.body;
+  // Where focus returns when the sheet closes: the element itself, and a description of it in case
+  // the page is redrawn behind the sheet and that element is replaced.
+  const from = current ? { el: current.prevFocus, snap: current.prevSnap } : (reused && pendingFocus) || { el: document.activeElement, snap: captureFocus(page) };
+  pendingFocus = null;
   if (current?.onClose) { try { current.onClose(); } catch { /* ignore */ } }
-  current = { ...opts, prevFocus };
+  current = { ...opts, prevFocus: from.el, prevSnap: from.snap };
   d.className = `sheet sheet-${opts.size || 'auto'}`;
+  const wasOpen = d.open;
   renderSheet({ fresh: true });
   if (!d.open) {
     try { d.showModal(); } catch { d.setAttribute('open', ''); }
-    document.documentElement.classList.add('has-sheet');
   }
+  document.documentElement.classList.add('has-sheet'); // also when reusing a sheet that was on its way out
+  if (!wasOpen) motion.sheetOpened(d);
   const first = d.querySelector('[autofocus]') || d.querySelector('.sheet-body button, .sheet-body input, .sheet-body select, .sheet-body a, .sheet-body textarea') || d.querySelector('.sheet-close');
   first?.focus({ preventScroll: true });
 }
-
-const FOCUSABLE = 'button, a[href], input:not([type=hidden]), select, textarea, summary';
 
 /**
  * Draws the open sheet. `fresh` is a new sheet (slides up, starts at the top); anything else
@@ -167,11 +190,12 @@ export function renderSheet({ fresh = false } = {}) {
   const body = current.render();
   const scroller = d.querySelector('.sheet-body');
   const top = !fresh && scroller ? scroller.scrollTop : 0;
-  const act = document.activeElement;
-  const focusAt = !fresh && act && d.contains(act) ? [...d.querySelectorAll(FOCUSABLE)].indexOf(act) : -1;
+  const focus = fresh ? null : captureFocus(d);
+  const snap = fresh ? null : motion.snapshot(scroller);
   const t = document.getElementById('toast');
+  const settled = d.open && !fresh;
   setHTML(d, html`
-    <div class="sheet-panel ${fresh ? '' : 'is-shown'}">
+    <div class="sheet-panel ${settled || (d.open && fresh) ? 'is-shown' : ''}">
       <div class="sheet-grip" aria-hidden="true"></div>
       <header class="sheet-head">
         <div class="sheet-titles">
@@ -186,23 +210,41 @@ export function renderSheet({ fresh = false } = {}) {
   if (sc && top) sc.scrollTop = top;
   current.onMount?.(d.querySelector('.sheet-body'));
   if (t) d.appendChild(t); // a message (and its Undo) stays on top of the sheet
-  if (focusAt >= 0) (d.querySelectorAll(FOCUSABLE)[focusAt] || d.querySelector('.sheet-close'))?.focus({ preventScroll: true });
+  if (focus && !restoreFocus(d, focus, { nearest: true })) d.querySelector('.sheet-close')?.focus({ preventScroll: true });
+  if (snap) motion.play(sc, snap);
+  // One sheet replacing another (a picker opened from a night): the panel stays, its contents arrive.
+  if (fresh && d.open && sc) { sc.classList.add('is-entering'); setTimeout(() => sc.classList.remove('is-entering'), motion.dur('slow') + 60); }
 }
 
 export function refreshLiveSheet() {
   if (current?.live) renderSheet();
 }
 
-export function closeSheet() {
+/** Closes the sheet. `instant` skips the exit (the route is changing, or it was dragged away). */
+export function closeSheet({ instant = false } = {}) {
   const d = document.getElementById('sheet');
   const c = current;
   current = null;
-  if (d?.open) { try { d.close(); } catch { d.removeAttribute('open'); } }
   document.documentElement.classList.remove('has-sheet');
   const t = document.getElementById('toast');
   if (t && d?.contains(t)) document.body.appendChild(t);
   c?.onClose?.();
-  if (c?.prevFocus && document.contains(c.prevFocus)) c.prevFocus.focus?.({ preventScroll: true });
+  const back = c?.prevFocus || null;
+  const snap = c?.prevSnap || null;
+  const finish = () => {
+    if (current) return; // another sheet opened in the meantime and is using the dialog
+    const late = document.getElementById('toast');
+    if (late && d?.contains(late)) document.body.appendChild(late);
+    if (d?.open) { try { d.close(); } catch { d.removeAttribute('open'); } }
+    pendingFocus = null;
+    const page = document.getElementById('app') || document.body;
+    if (back && document.contains(back) && back !== document.body) back.focus?.({ preventScroll: true });
+    else if (!restoreFocus(page, snap) && tvOn()) focusFirst(document.getElementById('view') || document.body);
+  };
+  if (!d?.open) { finish(); return; }
+  if (instant) { motion.cancelClose(); finish(); return; }
+  pendingFocus = { el: back, snap };
+  motion.closeDialog(d, finish);
 }
 
 export const sheetOpen = () => !!current;
@@ -246,7 +288,7 @@ export function toast(message, { undo = null, action = null, duration = 6500 } =
   }
   // An open sheet is a modal <dialog> in the top layer: the toast must live inside it to be seen and tapped.
   const sheet = document.getElementById('sheet');
-  const host = sheet?.open ? sheet : document.body;
+  const host = sheet?.open && current ? sheet : document.body; // a sheet that is sliding away is already gone
   if (root.parentNode !== host) host.appendChild(root);
   clearTimeout(toastTimer);
   const btn = undo ? { label: 'Undo', fn: undo } : action;
@@ -290,6 +332,17 @@ export function emptyState({ title, body, actions = '' , iconName = 'tonight' })
     <h3 class="empty-title">${title}</h3>
     <p class="empty-body">${body}</p>
     ${actions ? html`<div class="empty-actions">${actions}</div>` : ''}
+  </div>`;
+}
+
+/**
+ * A placeholder with the shape of what is loading (styles/parts/design.css, .sk).
+ * skeleton({ rows: 4 }) → rows of thumbnail + two lines; skeleton({ hero: true }) adds a photo block.
+ */
+export function skeleton({ rows = 3, hero = false, label = 'Loading' } = {}) {
+  return html`<div class="sk-wrap" role="status" aria-label="${label}">
+    ${when(hero, () => html`<span class="sk sk-block"></span>`)}
+    ${Array.from({ length: rows }, () => html`<div class="sk-row"><span class="sk"></span><span><span class="sk sk-line"></span><span class="sk sk-line sk-short"></span></span></div>`)}
   </div>`;
 }
 

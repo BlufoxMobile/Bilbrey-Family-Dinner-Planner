@@ -53,8 +53,10 @@ async function waitFor(fn, { timeout = 8000, step = 100 } = {}) {
 /** Waits for a toast whose text matches (an earlier toast may still be showing). */
 const toastMatch = (p, re) => waitFor(async () => re.test((await p.textContent('.toast-root .toast-msg').catch(() => '')) || ''));
 const noOverflow = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
-const shot = (p, name, full = false) => p.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: full });
-const go = async (p, hash, sel) => { await p.goto(`${base}${hash}`); await p.waitForSelector(sel); await p.waitForTimeout(150); };
+/** Waits until no page transition, sheet or flying photo is mid-flight (app/motion.js marks <html> while one is). */
+const settled = (p) => p.waitForFunction(() => !/\bis-(vt|moving)\b/.test(document.documentElement.className) && !document.querySelector('.sheet.is-closing'), null, { timeout: 4000 }).catch(() => {});
+const shot = async (p, name, full = false) => { await settled(p); await p.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: full }); };
+const go = async (p, hash, sel) => { await p.goto(`${base}${hash}`); await p.waitForSelector(sel); await p.waitForTimeout(150); await settled(p); };
 const listTotal = async (p) => { await go(p, '#/list', '.page-list'); const t = await p.textContent('.total-num').catch(() => '$0'); return Number(String(t).replace(/[^0-9.]/g, '')) || 0; };
 const lunchCost = async (p) => { await go(p, '#/list', '.page-list'); const t = await p.textContent('.cost-lines li:nth-child(2) b').catch(() => '$0'); return Number(String(t).replace(/[^0-9.]/g, '')) || 0; };
 const listNames = async (p) => { await go(p, '#/list', '.page-list'); return p.$$eval('.item-name', (els) => els.map((e) => e.textContent.trim())); };
@@ -553,7 +555,7 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   assert.ok((await row.locator('.item-product').textContent()).startsWith(expectName));
   const href = await row.locator('a.find-it').getAttribute('href');
   assert.ok(href.startsWith("https://www.samsclub.com/s/Member's+Mark+"), href);
-  await row.scrollIntoViewIfNeeded();
+  await waitFor(() => row.scrollIntoViewIfNeeded().then(() => true, () => false)); // a sync can redraw the list mid-scroll; try again
   await shot(page, 'e2e-29-list-paid');
   // Copy & open uses the exact product name.
   await page.click('[data-action="list:handoff"][data-store="sams"]');
@@ -902,6 +904,376 @@ test('dark theme renders without overflow', async () => {
   assert.ok(await noOverflow(p));
   await shot(p, 'e2e-16-dark-list');
   await dark.close();
+});
+
+// ---------------------------------------------------------------- design system (docs/spec/19-design.md)
+
+const DESIGN_SCREENS = [['tonight', '.page-tonight'], ['plan', '.page-plan'], ['list', '.page-list'], ['pantry', '.page-pantry'], ['recipes', '.page-recipes'], ['family', '.page-family']];
+const FIRE_TV = 'Mozilla/5.0 (Linux; Android 11; AFTKA) AppleWebKit/537.36 (KHTML, like Gecko) Silk/130.4.1 like Chrome/130.0.6723.102 Safari/537.36';
+/** A context that starts from the family's saved state, with this device's theme (and TV switch) set before the app boots. */
+async function designContext({ viewport, deviceScaleFactor = 1, theme, tv = null, userAgent, reducedMotion }) {
+  const c = await browser.newContext({ viewport, deviceScaleFactor, colorScheme: theme, serviceWorkers: 'block', storageState: await ctx.storageState(), ...(userAgent ? { userAgent } : {}), ...(reducedMotion ? { reducedMotion } : {}) });
+  await c.addInitScript(([tvSetting, th]) => {
+    try {
+      if (tvSetting) localStorage.setItem('bfdp.v2.display', JSON.stringify({ tv: tvSetting }));
+      const d = JSON.parse(localStorage.getItem('bfdp.v2.device') || '{}');
+      if (d.who && th) { d.theme = th; localStorage.setItem('bfdp.v2.device', JSON.stringify(d)); }
+    } catch { /* first load */ }
+  }, [tv, tv ? theme : null]);
+  return c;
+}
+const active = (p) => p.evaluate(() => {
+  const a = document.activeElement;
+  if (!a || a === document.body) return null;
+  return { tag: a.tagName, cls: a.className, href: a.getAttribute('href'), action: a.dataset.action || null, date: a.dataset.date || null, key: a.dataset.key || null, inDialog: !!a.closest('dialog'), inRail: !!a.closest('.rail'), inView: !!a.closest('#view'), text: (a.textContent || '').trim().slice(0, 40) };
+});
+
+test('design: Tonight, Plan, List, Pantry, Recipes and Family at phone, desktop and TV size, light and dark', async () => {
+  const sizes = [
+    { name: '390', viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 },
+    { name: '1280', viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 },
+    { name: 'tv', viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1, tv: 'on' }, // a 1080p panel: the 960-wide canvas at 2×
+  ];
+  for (const size of sizes) {
+    for (const theme of ['light', 'dark']) {
+      const c = await designContext({ ...size, theme });
+      const p = await newPage(c, size.viewport);
+      for (const [name, sel] of DESIGN_SCREENS) {
+        await go(p, `#/${name}`, sel);
+        await p.waitForTimeout(250);
+        assert.ok(await noOverflow(p), `${name} at ${size.name} (${theme}) has no horizontal scroll`);
+        const state = await p.evaluate(() => ({ tv: document.documentElement.classList.contains('is-tv'), theme: document.documentElement.dataset.theme || 'auto', scheme: getComputedStyle(document.documentElement).colorScheme, zoom: getComputedStyle(document.documentElement).getPropertyValue('--tv-zoom').trim() }));
+        assert.equal(state.tv, !!size.tv, `${size.name}: TV layout ${size.tv ? 'on' : 'off'}`);
+        assert.equal(state.scheme, theme, `${name} at ${size.name} renders the ${theme} theme`);
+        if (size.tv) assert.equal(state.zoom, '2', 'a 1920-wide screen is the 960 canvas at 2×');
+        await shot(p, `design-${name}-${size.name}-${theme}`);
+      }
+      if (size.tv) {
+        // The kitchen display: tonight's dinner, its name on the photo, and the prep list, all on the first screen.
+        await go(p, '#/tonight', '.page-tonight');
+        const board = await p.evaluate(() => {
+          const r = (s) => document.querySelector(s)?.getBoundingClientRect();
+          const photo = r('.hero-photo'); const title = r('.hero-title'); const side = r('.tonight-side'); const rail = r('.rail');
+          return { vh: innerHeight, vw: innerWidth, photo, title, side, rail, clock: document.querySelector('.tv-clock')?.textContent || '' };
+        });
+        assert.ok(board.photo && board.photo.bottom <= board.vh + 1, 'the whole photograph is on the first screen');
+        assert.ok(board.title.top >= board.photo.top && board.title.bottom <= board.photo.bottom, 'the dinner’s name is set on its photograph');
+        assert.ok(board.title.height / 1 >= 90, `the name is big enough to read across the room (${Math.round(board.title.height)}px tall)`);
+        assert.ok(board.side.left > board.photo.right && board.side.top < board.vh * 0.25, 'prep sits beside the photo');
+        assert.ok(Math.abs(board.rail.height - board.vh) <= 2, 'the rail is exactly as tall as the screen under zoom');
+        assert.ok(board.photo.left >= board.vw * 0.05 && board.side.right <= board.vw * 0.951, 'content keeps out of the overscan margins');
+        assert.match(board.clock, /^\d{1,2}:\d{2}\s?[AP]M$/, 'the kitchen clock shows the time');
+        assert.match(await p.textContent('.tonight-side'), /Prep today and tomorrow/);
+      }
+      await c.close();
+    }
+  }
+  // No horizontal scroll from the smallest phone to a wide monitor.
+  const wide = await designContext({ viewport: { width: 320, height: 800 }, theme: 'light' });
+  const wp = await newPage(wide, { width: 320, height: 800 });
+  for (const width of [320, 768, 1024, 1920]) {
+    await wp.setViewportSize({ width, height: 800 });
+    for (const [name, sel] of DESIGN_SCREENS) {
+      await wp.goto(`${base}#/${name}`);
+      await wp.waitForSelector(sel);
+      assert.ok(await noOverflow(wp), `${name} fits ${width}px`);
+    }
+    if (width === 320) { await wp.goto(`${base}#/tonight`); await wp.waitForSelector('.page-tonight'); await wp.waitForTimeout(300); await shot(wp, 'design-tonight-320-light'); }
+  }
+  await wide.close();
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('design: targets are at least 44px, every photo has its size, and focus is always visible', async () => {
+  const c = await designContext({ viewport: PHONE, deviceScaleFactor: 2, theme: 'light' });
+  const p = await newPage(c);
+  for (const [name, sel] of DESIGN_SCREENS) {
+    await go(p, `#/${name}`, sel);
+    const small = await p.evaluate(() => [...document.querySelectorAll('#app button, #app a[href], #app select, #app input:not([type=hidden]):not(.sr-only), #app summary')]
+      .filter((el) => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && !el.closest('.sr-only, .skip'))
+      .map((el) => {
+        // An inline text link's target is its line; a control tucked inside a bigger target counts as that target.
+        const r = el.getBoundingClientRect();
+        const after = getComputedStyle(el, '::after'); const before = getComputedStyle(el, '::before');
+        const grow = (ps) => (ps.content !== 'none' && ps.position === 'absolute' ? Math.max(0, -parseFloat(ps.top) || 0) + Math.max(0, -parseFloat(ps.bottom) || 0) : 0);
+        const h = r.height + Math.max(grow(after), grow(before));
+        return { h, w: r.width, inline: getComputedStyle(el).display === 'inline', what: `${el.tagName}.${String(el.className).split(' ')[0]} “${(el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 30)}”` };
+      })
+      .filter((x) => !x.inline && (x.h < 43.5 || x.w < 43.5))
+      .map((x) => `${x.what} ${Math.round(x.w)}×${Math.round(x.h)}`));
+    assert.deepEqual(small, [], `${name}: every control is at least 44×44`);
+    const unsized = await p.$$eval('.photo > img[data-photo]', (imgs) => imgs.filter((i) => !i.getAttribute('width') || !i.getAttribute('height') || (!i.hasAttribute('loading') && !i.hasAttribute('fetchpriority'))).length);
+    assert.equal(unsized, 0, `${name}: every photo carries width and height and is lazy unless it is the hero`);
+  }
+  // Tab to a few controls on each kind of surface: each one shows a ring that stands off its background.
+  await go(p, '#/tonight', '.page-tonight');
+  for (let i = 0; i < 9; i++) {
+    await p.keyboard.press('Tab');
+    const ring = await p.evaluate(() => { const a = document.activeElement; const s = getComputedStyle(a); return { w: parseFloat(s.outlineWidth) || 0, style: s.outlineStyle, tag: a.tagName, cls: String(a.className), within: !!a.closest('.scan-btn, .rcpt-file, .chip-radio') }; });
+    assert.ok(ring.within || (ring.style !== 'none' && ring.w >= 3), `focus ring on ${ring.tag}.${ring.cls}`);
+  }
+  await c.close();
+});
+
+test('remote control: arrows move focus, Enter activates, Back closes a sheet then goes back, and focus survives a redraw', async () => {
+  // What a Fire TV stick reports: Silk, 960 × 540 at 2×. Nothing is switched on by hand.
+  const c = await designContext({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 2, theme: 'dark', userAgent: FIRE_TV });
+  const p = await newPage(c, { width: 960, height: 540 });
+  await go(p, '#/tonight', '.page-tonight');
+  assert.ok(await p.evaluate(() => document.documentElement.classList.contains('is-tv')), 'a Fire TV is recognized by its user agent');
+  assert.equal(await p.evaluate(() => document.documentElement.dataset.theme), 'dark', 'a TV left on “match” is dark');
+  let a = await active(p);
+  assert.ok(a && a.inView, 'a remote has somewhere to start: something on the screen has focus');
+  assert.match(a.cls, /hero-photo/, 'it starts on tonight’s dinner');
+  const ring = await p.evaluate(() => { const s = getComputedStyle(document.activeElement); return { w: parseFloat(s.outlineWidth), style: s.outlineStyle }; });
+  assert.ok(ring.style === 'solid' && ring.w >= 4, 'the focused thing wears a thick ring');
+  await shot(p, 'design-tv-focus-tonight');
+
+  // Left goes to the navigation (onto the current section), Down walks it, Enter opens that section.
+  await p.keyboard.press('ArrowLeft');
+  a = await active(p);
+  assert.ok(a.inRail && a.href === '#/tonight', `Left lands on the current section in the rail (${a.href})`);
+  await p.keyboard.press('ArrowDown');
+  a = await active(p);
+  assert.equal(a.href, '#/plan', 'Down moves to the next section');
+  await p.keyboard.press('Enter');
+  await p.waitForSelector('.page-plan');
+  await settled(p);
+  a = await active(p);
+  assert.ok(a.inRail && a.href === '#/plan', 'after the screen changes, focus is still on the rail');
+  await p.keyboard.press('ArrowRight');
+  a = await active(p);
+  assert.ok(a.inView, 'Right crosses into the screen');
+
+  // Across the week: Right and Left step from night to night.
+  await p.focus('.day-hit[data-date="2026-11-18"]');
+  await p.keyboard.press('ArrowRight');
+  assert.equal((await active(p)).date, '2026-11-19');
+  await p.keyboard.press('ArrowLeft');
+  await p.keyboard.press('ArrowLeft');
+  assert.equal((await active(p)).date, '2026-11-17');
+  await p.waitForTimeout(600); // the smooth scroll that brings it into view
+  const onScreen = await p.evaluate(() => { const r = document.activeElement.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; });
+  assert.ok(onScreen, 'whatever takes focus is scrolled onto the screen');
+  await p.waitForTimeout(400);
+  await shot(p, 'design-tv-focus-plan');
+
+  // Enter opens the night; focus is inside the sheet and cannot leave it.
+  await p.keyboard.press('Enter');
+  await p.waitForSelector('dialog[open] .sheet-body');
+  a = await active(p);
+  assert.ok(a.inDialog, 'focus moves into the sheet');
+  for (const k of ['ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowUp', 'ArrowUp', 'ArrowUp', 'ArrowUp', 'ArrowUp', 'ArrowLeft', 'ArrowLeft', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown']) {
+    await p.keyboard.press(k);
+    assert.ok((await active(p))?.inDialog, `${k}: focus stays inside the open sheet`);
+  }
+  await p.waitForTimeout(600); // the smooth scroll that follows the focus
+  await shot(p, 'design-tv-focus-sheet');
+  // The remote's Back button closes the sheet and puts focus back on the night it came from.
+  await p.evaluate(() => document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'GoBack', bubbles: true, cancelable: true })));
+  await p.waitForSelector('dialog[open]', { state: 'detached' });
+  a = await active(p);
+  assert.equal(a.date, '2026-11-17', 'focus returns to the night that opened the sheet');
+  // Escape does the same from inside a sheet…
+  await p.keyboard.press('Enter');
+  await p.waitForSelector('dialog[open] .sheet-body');
+  // (A thumbs-up inside the sheet redraws the whole planner behind it; focus still finds its way back.)
+  if (await p.$('dialog[open] .thumb-up')) {
+    await p.click('dialog[open] .thumb-up');
+    await p.waitForTimeout(300);
+    assert.ok((await active(p))?.inDialog, 'a redraw keeps focus in the sheet');
+  }
+  await p.keyboard.press('Escape');
+  await p.waitForSelector('dialog[open]', { state: 'detached' });
+  assert.equal((await active(p)).date, '2026-11-17', 'focus returns to the same night even though the planner was redrawn');
+  // …and with no sheet open, Back goes back to the screen before.
+  await p.keyboard.press('Escape');
+  await p.waitForSelector('.page-tonight');
+  assert.match(p.url(), /#\/tonight$/, 'Back returns to Tonight');
+
+  // A redraw keeps focus: check an item off with Enter and the same checkbox still has it.
+  await go(p, '#/list', '.page-list');
+  const key = await p.evaluate(() => { const b = document.querySelector('.item:not(.is-checked) .check'); b.focus(); return b.dataset.key; });
+  await p.keyboard.press('Enter');
+  await waitFor(async () => p.evaluate((k) => !!document.querySelector(`.item.is-checked .check[data-key="${k}"]`), key));
+  a = await active(p);
+  assert.ok(a && a.key === key && /check/.test(a.cls), 'the checkbox that was pressed still has focus after the list redraws');
+  assert.ok(await p.evaluate(() => !!document.querySelector('.item.is-checked .check-box.pop')), 'the box pops as it is checked');
+  await p.keyboard.press('Enter');
+  await waitFor(async () => p.evaluate((k) => !document.querySelector(`.item.is-checked .check[data-key="${k}"]`), key));
+
+  // Text boxes keep their arrow keys: Left moves the caret, Down leaves the box.
+  await go(p, '#/recipes', '.page-recipes');
+  await p.focus('.search input');
+  await p.keyboard.type('chick');
+  await p.keyboard.press('ArrowLeft');
+  const caret = await p.evaluate(() => ({ at: document.activeElement.selectionStart, input: document.activeElement.tagName === 'INPUT', value: document.activeElement.value }));
+  assert.deepEqual(caret, { at: 4, input: true, value: 'chick' }, 'Left moved the caret, not the focus');
+  await p.keyboard.press('ArrowDown');
+  a = await active(p);
+  assert.ok(a && a.tag !== 'INPUT', 'Down leaves the text box for the next thing below');
+  assert.ok(await noOverflow(p));
+  await c.close();
+
+  // On a computer the arrows are left alone until someone drives with the keyboard (Tab), and a click hands them back.
+  const d = await designContext({ viewport: DESKTOP, theme: 'light' });
+  const q = await newPage(d, DESKTOP);
+  await go(q, '#/recipes', '.page-recipes');
+  assert.equal(await q.evaluate(() => document.documentElement.classList.contains('is-tv')), false, 'a laptop is not a TV');
+  await q.keyboard.press('ArrowDown');
+  assert.equal(await q.evaluate(() => (document.activeElement === document.body || document.activeElement.id === 'view')), true, 'arrows scroll as usual for a mouse user');
+  await q.keyboard.press('Tab');
+  await q.keyboard.press('Tab');
+  const before = await active(q);
+  await q.keyboard.press('ArrowDown');
+  const after = await active(q);
+  assert.ok(after && JSON.stringify(after) !== JSON.stringify(before), 'after Tab, arrows move focus on a computer too');
+  await q.focus('.r-card');
+  const first = await q.evaluate(() => document.activeElement.getAttribute('href'));
+  await q.keyboard.press('ArrowRight');
+  const second = await q.evaluate(() => document.activeElement.getAttribute('href'));
+  assert.ok(/^#\/recipe\//.test(second) && second !== first, 'Right steps to the next recipe card');
+  const sameRow = await q.evaluate(([f, s]) => Math.abs(document.querySelector(`a[href="${f}"]`).getBoundingClientRect().top - document.querySelector(`a[href="${s}"]`).getBoundingClientRect().top) < 4, [first, second]);
+  assert.ok(sameRow, 'and it is the card beside it, not one from another row');
+  await q.mouse.click(900, 70);
+  await q.evaluate(() => document.activeElement.blur?.());
+  const y0 = await q.evaluate(() => scrollY);
+  await q.keyboard.press('ArrowDown');
+  await q.waitForTimeout(250);
+  assert.ok(await q.evaluate((y) => scrollY > y || document.activeElement === document.body, y0), 'after a click the arrows scroll again');
+  await d.close();
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('motion: pages cross-fade, a tapped photo travels, sheets leave, and reduced motion turns all of it off', async () => {
+  const c = await designContext({ viewport: PHONE, deviceScaleFactor: 2, theme: 'light' });
+  const p = await newPage(c);
+  await go(p, '#/recipes', '.page-recipes');
+  // A tap on a recipe card starts a view transition and the card's photo is the shared element.
+  const seen = await p.evaluate(async () => {
+    const card = document.querySelector('.r-card');
+    const out = { vt: false, shared: false, nav: null };
+    const watch = new MutationObserver(() => {
+      if (document.documentElement.classList.contains('is-vt')) { out.vt = true; out.nav = document.documentElement.dataset.nav || out.nav; }
+      if ([...document.querySelectorAll('.photo, .hero-photo')].some((e) => e.style.viewTransitionName === 'shared-photo')) out.shared = true;
+    });
+    watch.observe(document.documentElement, { attributes: true, subtree: true, childList: true, attributeFilter: ['class', 'style', 'data-nav'] });
+    card.click();
+    await new Promise((r) => setTimeout(r, 900));
+    watch.disconnect();
+    return { ...out, supported: typeof document.startViewTransition === 'function', still: document.documentElement.classList.contains('is-vt'), on: location.hash };
+  });
+  assert.match(seen.on, /^#\/recipe\//);
+  assert.ok(seen.supported && seen.vt, 'the route change ran as a view transition');
+  assert.equal(seen.nav, 'forward', 'going into a recipe moves forward');
+  assert.ok(seen.shared, 'the tapped photo was the shared element');
+  assert.equal(seen.still, false, 'and the transition finished');
+  await p.waitForSelector('.page-recipe');
+  await shot(p, 'design-recipe-390-light');
+
+  // A sheet rises on a spring and leaves on its way out; the photo that was tapped flies into it.
+  await go(p, '#/plan', '.page-plan');
+  const flew = await p.evaluate(async () => {
+    let ghost = false;
+    const watch = new MutationObserver(() => { if (document.querySelector('.photo-ghost')) ghost = true; });
+    watch.observe(document.body, { childList: true, subtree: true });
+    const night = [...document.querySelectorAll('.day:not(.is-away):not(.is-open) .day-hit')].find((b) => b.querySelector('.photo img.is-loaded'));
+    night.scrollIntoView({ block: 'center', behavior: 'instant' });
+    await new Promise((r) => setTimeout(r, 120));
+    night.click();
+    await new Promise((r) => setTimeout(r, 60));
+    const anim = getComputedStyle(document.querySelector('dialog[open] .sheet-panel')).animationName;
+    await new Promise((r) => setTimeout(r, 900));
+    watch.disconnect();
+    return { ghost, anim, left: !!document.querySelector('.photo-ghost'), hidden: !!document.querySelector('.is-ghosted') };
+  });
+  assert.equal(flew.anim, 'sheet-up', 'the sheet slides up');
+  assert.ok(flew.ghost, 'the night’s photo travelled into the sheet');
+  assert.ok(!flew.left && !flew.hidden, 'and was tidied away afterwards');
+  await shot(p, 'design-sheet-390-light');
+  const closing = await p.evaluate(async () => {
+    document.querySelector('dialog[open] .sheet-close').click();
+    const d = document.getElementById('sheet');
+    const during = { open: d.open, cls: d.classList.contains('is-closing') };
+    await new Promise((r) => setTimeout(r, 700));
+    return { during, after: d.open };
+  });
+  assert.deepEqual(closing, { during: { open: true, cls: true }, after: false }, 'closing plays an exit, then the dialog really closes');
+  // Dragging the sheet down by its handle dismisses it.
+  await p.click('.day:not(.is-away):not(.is-open) .day-hit');
+  await p.waitForSelector('dialog[open] .sheet-body');
+  await settled(p);
+  await p.waitForTimeout(500);
+  const grip = await p.evaluate(() => { const r = document.querySelector('dialog[open] .sheet-grip').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  await p.mouse.move(grip.x, grip.y);
+  await p.mouse.down();
+  for (let i = 1; i <= 12; i++) { await p.mouse.move(grip.x, grip.y + i * 30); await p.waitForTimeout(16); }
+  assert.ok(await p.evaluate(() => document.getElementById('sheet').classList.contains('is-dragging')), 'the sheet follows the finger');
+  await p.mouse.up();
+  await p.waitForSelector('dialog[open]', { state: 'detached' });
+  await c.close();
+
+  // Reduced motion: no view transition, no flying photo, no exit animation, no shimmer.
+  const r = await designContext({ viewport: PHONE, deviceScaleFactor: 2, theme: 'light', reducedMotion: 'reduce' });
+  const rp = await newPage(r);
+  await go(rp, '#/recipes', '.page-recipes');
+  const calm = await rp.evaluate(async () => {
+    let vt = false;
+    const watch = new MutationObserver(() => { if (document.documentElement.classList.contains('is-vt')) vt = true; });
+    watch.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    document.querySelector('.r-card').click();
+    await new Promise((res) => setTimeout(res, 300));
+    watch.disconnect();
+    return { vt, hash: location.hash };
+  });
+  assert.match(calm.hash, /^#\/recipe\//);
+  assert.equal(calm.vt, false, 'no view transition when motion is reduced');
+  await go(rp, '#/plan', '.page-plan');
+  await rp.click('.day:not(.is-away):not(.is-open) .day-hit');
+  await rp.waitForSelector('dialog[open] .sheet-body');
+  const still = await rp.evaluate(() => {
+    const d = document.getElementById('sheet');
+    const ghost = !!document.querySelector('.photo-ghost');
+    document.querySelector('dialog[open] .sheet-close').click();
+    return { ghost, openAfterClose: d.open, dur: getComputedStyle(document.querySelector('.btn')).transitionDuration };
+  });
+  assert.equal(still.ghost, false, 'no flying photo');
+  assert.equal(still.openAfterClose, false, 'the sheet closes at once');
+  assert.ok(still.dur.split(',').every((x) => parseFloat(x) < 0.001), `transitions are off (${still.dur})`);
+  await r.close();
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('the “TV display” switch lives in settings, on this device only, and print still hides the chrome', async () => {
+  const c = await designContext({ viewport: DESKTOP, theme: 'light' });
+  const p = await newPage(c, DESKTOP);
+  await go(p, '#/family', '.page-family');
+  assert.equal(await p.getAttribute('.tv-row .switch', 'aria-checked'), 'false');
+  await p.click('[data-action="tv:toggle"]');
+  await toastMatch(p, /TV display is on/);
+  await waitFor(() => p.evaluate(() => document.documentElement.classList.contains('is-tv')));
+  assert.equal(await p.getAttribute('.tv-row .switch', 'aria-checked'), 'true');
+  assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('bfdp.v2.display')).tv), 'on', 'kept on this device');
+  const shared = await (await fetch(`${apiBase}/__mock/state`)).json();
+  assert.ok(!JSON.stringify(shared.state).includes('"tv"'), 'never in the family’s shared state');
+  assert.ok(await noOverflow(p), 'the TV layout fits a 1280px window too');
+  await p.reload();
+  await p.waitForSelector('.page-family');
+  assert.ok(await p.evaluate(() => document.documentElement.classList.contains('is-tv')), 'and it is still on after a reload');
+  await p.click('[data-action="tv:toggle"]');
+  await waitFor(() => p.evaluate(() => !document.documentElement.classList.contains('is-tv')));
+  // Print: the list on paper has no navigation, no buttons, no photos.
+  await go(p, '#/list', '.page-list');
+  await p.emulateMedia({ media: 'print' });
+  const printed = await p.evaluate(() => {
+    const shown = (s) => { const el = document.querySelector(s); return !!el && getComputedStyle(el).display !== 'none'; };
+    return { rail: shown('.rail'), tabbar: shown('.tabbar'), topbar: shown('.topbar'), check: shown('.item .check'), items: document.querySelectorAll('.item').length, name: shown('.item-name'), bg: getComputedStyle(document.body).backgroundColor };
+  });
+  assert.deepEqual({ rail: printed.rail, tabbar: printed.tabbar, topbar: printed.topbar, check: printed.check, name: printed.name }, { rail: false, tabbar: false, topbar: false, check: false, name: true });
+  assert.ok(printed.items > 5 && /255, 255, 255/.test(printed.bg), 'the list prints black on white');
+  await p.emulateMedia({ media: 'screen' });
+  await c.close();
+  assert.equal(errors.length, 0, errors.join('\n'));
 });
 
 test('installable PWA: the service worker caches the app so it opens offline', async () => {

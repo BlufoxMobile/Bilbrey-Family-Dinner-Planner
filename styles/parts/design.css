@@ -1,0 +1,143 @@
+/* The Bilbrey Family Dinner Planner — motion, loading states and focus (docs/spec/19-design.md §3).
+   Everything here animates transform and opacity only, takes its timing from the --dur-* and
+   --ease-* tokens, and is switched off at the bottom for prefers-reduced-motion.
+   app/motion.js adds the classes named here (.is-entering, .flip-in, .pop, .num-tick, .is-closing). */
+
+html { background: var(--paper); }
+
+/* ---------------------------------------------------------------- page to page
+   With the View Transitions API the outgoing screen fades while the incoming one rises under it,
+   the bars stay put, the little nav marker slides to its new tab, and a dinner's photograph
+   travels from its card to its recipe (app/motion.js gives both ends the name "shared-photo"). */
+.topbar { view-transition-name: topbar; }
+.tabbar { view-transition-name: tabbar; }
+.rail { view-transition-name: rail; }
+.toast-root { view-transition-name: toast; }
+.nav-mark { view-transition-name: nav-mark; }
+html.is-tv .topbar, html.is-tv .tabbar, html.is-tv .rail, html.is-tv .toast-root, html.is-tv .nav-mark,
+.app.is-cook .topbar, .app.is-cook .tabbar, .app.is-cook .rail { view-transition-name: none; }
+
+::view-transition-group(*) { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-out); }
+::view-transition-group(topbar), ::view-transition-group(tabbar), ::view-transition-group(rail), ::view-transition-group(toast) { animation: none; }
+::view-transition-old(topbar), ::view-transition-old(tabbar), ::view-transition-old(rail), ::view-transition-old(toast) { animation: none; opacity: 0; }
+::view-transition-new(topbar), ::view-transition-new(tabbar), ::view-transition-new(rail), ::view-transition-new(toast) { animation: none; }
+::view-transition-group(nav-mark) { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-spring); }
+::view-transition-old(nav-mark), ::view-transition-new(nav-mark) { animation: none; height: 100%; }
+::view-transition-old(nav-mark) { opacity: 0; }
+
+::view-transition-old(root) { animation: vt-fade-out var(--dur-fast) var(--ease-in) both; }
+::view-transition-new(root) { animation: vt-rise-in var(--dur-slow) var(--ease-out) both; }
+html[data-nav="forward"]::view-transition-new(root) { animation-name: vt-from-right; }
+html[data-nav="back"]::view-transition-new(root) { animation-name: vt-from-left; }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-rise-in { from { opacity: 0; transform: translateY(14px); } }
+@keyframes vt-from-right { from { opacity: 0; transform: translateX(28px); } }
+@keyframes vt-from-left { from { opacity: 0; transform: translateX(-28px); } }
+
+::view-transition-group(shared-photo) { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-spring); z-index: 1; }
+::view-transition-old(shared-photo), ::view-transition-new(shared-photo) { animation: none; width: 100%; height: 100%; object-fit: cover; border-radius: var(--r-card); overflow: clip; }
+::view-transition-old(shared-photo) { opacity: 0; }
+
+/* Without the API (or on the TV, where a simple fade is kinder to the hardware): the new screen rises in. */
+.view.is-entering > *, .sheet-body.is-entering > * { animation: view-in var(--dur-slow) var(--ease-out) both; }
+@keyframes view-in { from { opacity: 0; transform: translateY(12px); } }
+
+/* ---------------------------------------------------------------- sheets */
+.sheet[open] .sheet-panel { animation: sheet-up var(--dur-slow) var(--ease-spring) both; }
+.sheet[open]::backdrop { animation: fade-in var(--dur-base) var(--ease) both; }
+.sheet-panel.is-shown, .sheet[open] .sheet-panel.is-shown { animation: none; } /* updating in place, not opening */
+.sheet.is-closing .sheet-panel, .sheet.is-closing .sheet-panel.is-shown { animation: sheet-down var(--dur-base) var(--ease-in) both; }
+.sheet.is-closing::backdrop { animation: fade-out var(--dur-base) var(--ease) both; }
+.sheet.is-dragging .sheet-panel { animation: none; transition: none; will-change: transform; }
+.sheet-grip { transition: transform var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease); }
+.sheet.is-dragging .sheet-grip { transform: scaleX(1.25); background: var(--ink-3); }
+@keyframes sheet-up { from { transform: translateY(105%); } }
+@keyframes sheet-down { to { transform: translateY(105%); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+@media (min-width: 600px) {
+  @keyframes sheet-up { from { transform: translateY(28px) scale(.96); opacity: 0; } }
+  @keyframes sheet-down { to { transform: translateY(16px) scale(.97); opacity: 0; } }
+}
+/* A photo flying from its card into the sheet it opened (app/motion.js). */
+.photo-ghost { position: fixed; z-index: 70; left: 0; top: 0; margin: 0; pointer-events: none; overflow: hidden; background-size: cover; background-position: center; transform-origin: 0 0; will-change: transform; box-shadow: var(--sh-2); }
+.is-ghosted { visibility: hidden; }
+
+/* ---------------------------------------------------------------- lists: enter, move, check, count */
+.flip-in { animation: flip-in var(--dur-base) var(--ease-out) both; }
+@keyframes flip-in { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+.flip-move { will-change: transform; }
+
+/* Something just switched on: a checkbox, a thumb, a finished step. */
+.pop { animation: pop var(--dur-slow) var(--ease-spring) both; }
+@keyframes pop { 0% { transform: scale(.55); } 100% { transform: scale(1); } }
+.check-box.pop .ic path { stroke-dasharray: 24; animation: draw var(--dur-base) var(--ease-out) both; }
+@keyframes draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+/* A row that was just checked off settles back. */
+.item.just-checked .item-main { animation: settle var(--dur-slow) var(--ease-out) both; }
+@keyframes settle { 0% { transform: translateX(0); } 35% { transform: translateX(6px); } 100% { transform: translateX(0); } }
+
+/* A number that changed rolls in from the direction it moved. */
+.num-tick { display: inline-block; animation: tick-up var(--dur-base) var(--ease-out) both; }
+.num-tick.is-down { animation-name: tick-down; }
+@keyframes tick-up { from { opacity: 0; transform: translateY(.38em); } }
+@keyframes tick-down { from { opacity: 0; transform: translateY(-.38em); } }
+
+/* ---------------------------------------------------------------- loading: shimmer and skeletons
+   Photos shimmer over their category tone until the image arrives. .sk is the building block for
+   any screen that waits on the network: <span class="sk sk-line"></span>, .sk-block, .sk-circle. */
+.photo:has(img:not(.is-loaded))::after, .sk::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(100deg, transparent 20%, var(--shimmer) 50%, transparent 80%);
+  transform: translateX(-100%); animation: shimmer calc(var(--dur-slow) * 3.4) var(--ease) infinite;
+}
+@keyframes shimmer { 60%, 100% { transform: translateX(100%); } }
+.sk { position: relative; display: block; overflow: hidden; background: var(--paper-2); border-radius: var(--r-ctl); color: transparent; }
+.sk-line { height: 0.9em; margin: 0.45em 0; border-radius: 0.45em; }
+.sk-line.sk-short { width: 45%; }
+.sk-line.sk-title { height: 2.4rem; width: 70%; border-radius: var(--r-ctl); }
+.sk-block { aspect-ratio: 4 / 3; border-radius: var(--r-card); }
+.sk-hero { aspect-ratio: 4 / 5; border-radius: var(--r-photo); }
+.sk-circle { width: var(--hit); height: var(--hit); border-radius: 50%; }
+.sk-row { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; padding: 10px 0; }
+.sk-row > .sk:first-child { width: 56px; height: 56px; border-radius: var(--r-thumb); }
+
+/* The first paint, before the recipes arrive: the shape of Tonight. */
+.boot-sk { max-width: 760px; margin: 0 auto; padding: calc(var(--safe-t) + 12px) var(--gutter) 0; display: grid; gap: 16px; }
+.boot-sk-bar { display: flex; align-items: center; gap: 10px; min-height: var(--header-h); }
+.boot-sk-bar .wm-text { color: var(--ink); }
+.boot-sk .sk-hero { max-height: 62dvh; width: 100%; }
+@media (min-width: 600px) { .boot-sk .sk-hero { aspect-ratio: 3 / 2; } }
+
+/* ---------------------------------------------------------------- pressed and hovered
+   Cards that are buttons give a little when pressed. */
+.day-hit, .ld-slot, .ed-item { transition: transform var(--dur-press) var(--ease), background-color var(--dur-fast) var(--ease); }
+.day-hit:active { transform: scale(.985); }
+.hero-photo .photo img { transition: opacity var(--dur-slow) ease, transform calc(var(--dur-slow) * 2) var(--ease-out); }
+@media (hover: hover) { .hero-photo:hover .photo img { transform: scale(1.03); } }
+.hero-photo:active .photo img { transform: scale(.99); }
+details > summary { transition: color var(--dur-fast) var(--ease); }
+details[open] > summary ~ * { animation: flip-in var(--dur-base) var(--ease-out) both; }
+
+/* ---------------------------------------------------------------- focus
+   One ring everywhere (tokens --focus, --ring-w, --ring-gap). On photographs and filled buttons a
+   second, inner line keeps it visible whatever is underneath. */
+.btn-primary:focus-visible, .btn-danger:focus-visible, .chip.is-on:focus-visible, .scan-btn:focus-within { box-shadow: 0 0 0 var(--ring-gap) var(--paper); }
+.hero-photo:focus-visible, .r-card:focus-visible, .day-hit:focus-visible, .menu-row:focus-visible, .glance-card:focus-visible { outline-offset: 3px; }
+.photo-thumb, .photo-card { outline: 1px solid color-mix(in srgb, var(--ink) 6%, transparent); outline-offset: -1px; }
+
+/* The nav marker: a short bar that slides to the current section. */
+.nav-mark { position: absolute; pointer-events: none; background: var(--pine); border-radius: 2px; }
+.tab .nav-mark { top: -4px; left: 50%; width: 28px; height: 3px; margin-left: -14px; }
+.rail-link .nav-mark { left: 4px; top: 50%; width: 4px; height: 22px; margin-top: -11px; border-radius: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  .photo:has(img:not(.is-loaded))::after, .sk::after { animation: none; transform: none; opacity: .5; }
+  .view.is-entering > *, .sheet-body.is-entering > *, .flip-in, .pop, .num-tick, .item.just-checked .item-main, .sheet[open] .sheet-panel, .sheet[open]::backdrop,
+  .sheet.is-closing .sheet-panel, .sheet.is-closing::backdrop, details[open] > summary ~ * { animation: none !important; }
+  .btn:active:not(:disabled), .icon-btn:active:not(:disabled), .chip:active, .menu-row:active, .day-hit:active, .r-card:active, .quick-btn:active:not(:disabled) { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

@@ -1,0 +1,146 @@
+/* The Bilbrey Family Dinner Planner — the 10-foot layout (docs/spec/19-design.md §4).
+   app/tv.js puts .is-tv on <html> when the app is on a television (a Fire TV's Silk browser, a big
+   screen with no touch and no mouse, or the "TV display" switch in settings), and sets --tv-zoom so
+   the page is always laid out on a 960-wide canvas — what a Fire TV reports at 1080p — and scaled
+   to fill whatever the screen really is. So: design for 960 × 540, and everything is twice the size
+   by the time it reaches the glass.
+
+   Under CSS zoom, viewport units are multiplied too. Use var(--tv-vh) / var(--tv-vw) here instead
+   of 100dvh / 100vw. */
+
+html.is-tv {
+  zoom: var(--tv-zoom, 1);
+  --tv-zoom: 1;
+  --tv-vh: calc(100dvh / var(--tv-zoom));
+  --tv-vw: calc(100vw / var(--tv-zoom));
+  --tv-safe-x: 48px;   /* 5% of 960: nothing important sits in the overscan */
+  --tv-safe-y: 27px;   /* 5% of 540 */
+  --rail-w: 104px;
+  --gutter: 32px;
+  --hit: 52px;
+  --ring-w: 4px;
+  --ring-gap: 3px;
+  font-size: 112.5%;   /* 17px body text becomes ~19px on the canvas, ~38px on a 1080p panel */
+  scroll-padding: calc(var(--tv-safe-y) + 16px) 0;
+  scroll-behavior: smooth;
+  cursor: default;
+}
+html.is-tv body { overflow-x: hidden; }
+
+/* ---------------------------------------------------------------- shell: a slim rail, no bars */
+html.is-tv .app:not(.is-gate):not(.is-cook) { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); min-height: var(--tv-vh); }
+html.is-tv .topbar, html.is-tv .tabbar, html.is-tv .skip { display: none; }
+html.is-tv .rail {
+  display: flex; flex-direction: column; align-items: stretch; gap: 14px; position: sticky; top: 0; height: var(--tv-vh);
+  padding: var(--tv-safe-y) 8px var(--tv-safe-y) calc(var(--tv-safe-x) - 28px); border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--card) 55%, var(--paper)); overflow: hidden;
+}
+html.is-tv .rail .wordmark { justify-content: center; padding: 0; }
+html.is-tv .rail .wm-text { display: none; }
+html.is-tv .rail .wm-mark { width: 36px; height: 36px; border-radius: 11px; }
+html.is-tv .rail-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; }
+html.is-tv .rail-link { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 43px; padding: 3px 2px; border-radius: var(--r-ctl); color: var(--ink-2); font-size: 0.625rem; font-weight: 700; line-height: 1.1; text-align: center; text-decoration: none; }
+html.is-tv .rail-link .ic { width: 21px; height: 21px; }
+html.is-tv .rail-link span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A long label gives way to its short form (data-short) on the slim rail; the full name is still what is read out. */
+html.is-tv .rail-link span[data-short] { font-size: 0; }
+html.is-tv .rail-link span[data-short]::after { content: attr(data-short); font-size: 0.625rem; }
+html.is-tv .rail-link.is-on { color: var(--pine); background: var(--sage-tint); }
+html.is-tv .rail-link.is-on::before { content: none; }
+html.is-tv .rail-link .nav-mark { left: -7px; height: 26px; margin-top: -13px; }
+html.is-tv .rail-foot { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 4px; }
+html.is-tv .rail-foot .sync { min-height: 28px; padding: 0 9px; }
+html.is-tv .rail-foot .sync-label { display: none; }
+html.is-tv .rail-who { display: grid; place-items: center; min-height: 40px; padding: 4px; border: 0; background: transparent; border-radius: 50%; }
+html.is-tv .rail-who span:not(.avatar) { display: none; }
+html.is-tv .view { max-width: none; width: 100%; margin: 0; padding: var(--tv-safe-y) var(--tv-safe-x) calc(var(--tv-safe-y) + 24px) var(--gutter); }
+html.is-tv .page-list, html.is-tv .page-pantry, html.is-tv .page-budget, html.is-tv .page-family, html.is-tv .page-products, html.is-tv .page-receipts { max-width: 760px; }
+html.is-tv .toast-root { left: var(--rail-w); bottom: calc(var(--tv-safe-y) + 8px); }
+html.is-tv.has-sheet .toast-root { left: 0; }
+html.is-tv .boot, html.is-tv .gate, html.is-tv .app.is-gate, html.is-tv .cook { min-height: var(--tv-vh); }
+
+/* ---------------------------------------------------------------- targets and type */
+html.is-tv .btn { min-height: 52px; }
+html.is-tv .btn-lg { min-height: 60px; }
+html.is-tv .page-title { font-size: 2.75rem; }
+html.is-tv .page-head { margin: 0 0 12px; }
+html.is-tv .plan-opts { grid-template-columns: auto auto; justify-content: start; gap: 6px 18px; }
+html.is-tv .page-plan .period-nav { max-width: 420px; }
+html.is-tv .plan-actions { flex-wrap: nowrap; margin: 12px 0; }
+html.is-tv .plan-actions .btn, html.is-tv .plan-actions .btn-primary { flex: 1 1 auto; padding: 0 12px; font-size: 0.875rem; white-space: nowrap; }
+html.is-tv .recipe-title { font-size: 3.5rem; }
+html.is-tv .gate-title { font-size: 3.5rem; }
+html.is-tv .budget-num { font-size: 4.5rem; }
+html.is-tv .muted, html.is-tv .menu-main small { color: var(--ink-2); } /* nothing faint from across the room */
+
+/* ---------------------------------------------------------------- focus you can see from the sofa
+   The remote moves a real keyboard focus (app/tv.js). Whatever has it wears a thick ring; cards and
+   buttons also step forward a little. :focus, not :focus-visible — on a TV there is no other pointer. */
+html.is-tv :focus { outline: var(--ring-w) solid var(--focus); outline-offset: var(--ring-gap); }
+html.is-tv .view:focus, html.is-tv dialog:focus, html.is-tv .sheet-body:focus { outline: none; }
+html.is-tv .btn, html.is-tv .chip, html.is-tv .icon-btn, html.is-tv .rail-link, html.is-tv .menu-row, html.is-tv .day, html.is-tv .r-card, html.is-tv .quick-btn,
+html.is-tv .action-row, html.is-tv .pick-row, html.is-tv .thumb, html.is-tv .glance-card, html.is-tv .hero-photo, html.is-tv .who-pick, html.is-tv .seg-opt {
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+html.is-tv .btn:focus, html.is-tv .chip:focus, html.is-tv .quick-btn:focus, html.is-tv .who-pick:focus, html.is-tv .thumb:focus, html.is-tv .icon-btn:focus { transform: scale(1.06); }
+html.is-tv .r-card:focus, html.is-tv .glance-card:focus { transform: scale(1.04); }
+html.is-tv .rail-link:focus { background: var(--sage-tint); color: var(--pine); outline-offset: 0; }
+html.is-tv .menu-row:focus, html.is-tv .action-row:focus, html.is-tv .pick-row:focus, html.is-tv .move-row:focus, html.is-tv .ld-slot:focus, html.is-tv .ed-item:focus, html.is-tv .item-main:focus { background: var(--sage-tint); border-radius: var(--r-btn); outline-offset: 0; }
+html.is-tv .day:has(.day-hit:focus) { transform: scale(1.04); box-shadow: 0 0 0 var(--ring-w) var(--focus), var(--sh-2); z-index: 2; }
+html.is-tv .day-hit:focus { outline: none; }
+html.is-tv .seg-opt:focus, html.is-tv .tab-opt:focus { outline-offset: -4px; }
+html.is-tv .chip-radio:has(input:focus) { outline: var(--ring-w) solid var(--focus); outline-offset: var(--ring-gap); transform: scale(1.06); }
+html.is-tv .scan-btn:focus-within, html.is-tv .rcpt-file:focus-within { outline: var(--ring-w) solid var(--focus); outline-offset: var(--ring-gap); }
+
+/* ---------------------------------------------------------------- Tonight: the kitchen display
+   Left: tonight's dinner, as big as the screen allows, named on the photograph with its sides and
+   how it's cooked. Right: what to thaw and prep today and tomorrow, then the rest of the week.
+   All of it fits the first screen; the buttons are one press of Down away. */
+html.is-tv .page-tonight { display: grid; grid-template-columns: minmax(0, 1.28fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
+html.is-tv .page-tonight > * { grid-column: 1 / -1; }
+html.is-tv .page-tonight > .dateline { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 0 12px; font-family: var(--font-display); font-weight: var(--display-weight); font-size: 1.75rem; line-height: 1; color: var(--ink); }
+html.is-tv .tv-clock { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+html.is-tv .page-tonight > .today-nutri { order: 5; margin: 20px 0 0; }
+html.is-tv .page-tonight > .howwas { order: 4; margin: 20px 0 0; }
+html.is-tv .tonight-grid { display: contents; }
+html.is-tv .tonight-main { grid-column: 1; min-width: 0; }
+html.is-tv .tonight-side { grid-column: 2; min-width: 0; padding: 0; display: grid; gap: 14px; align-content: start; }
+html.is-tv .hero-photo .photo-hero { aspect-ratio: auto; height: calc(var(--tv-vh) - var(--tv-safe-y) * 2 - 3.2rem); min-height: 300px; }
+html.is-tv .hero:not(.hero-empty):not(.hero-away) { grid-template-rows: minmax(0, 1fr) auto auto auto auto; }
+html.is-tv .hero:not(.hero-empty):not(.hero-away) > .hero-photo { grid-row: 1 / span 5; }
+html.is-tv .hero:not(.hero-empty):not(.hero-away) .index-card > .hero-kicker { margin: 0 24px 6px; font-size: 1rem; }
+html.is-tv .hero:not(.hero-empty):not(.hero-away) .index-card > .hero-title { margin: 0 24px 8px; font-size: 3.5rem; line-height: 0.92; }
+html.is-tv .hero:not(.hero-empty):not(.hero-away) .index-card > .hero-sides { grid-row: 4; z-index: 1; margin: 0 24px 6px; color: rgba(255, 255, 255, 0.92); font-size: 1.0625rem; line-height: 1.35; }
+html.is-tv .hero:not(.hero-empty):not(.hero-away) .index-card > .hero-meta { grid-row: 5; z-index: 1; margin: 0 24px 20px; }
+html.is-tv .hero:not(.hero-empty):not(.hero-away) .hero-sides .link-side { color: #fff; text-decoration-color: rgba(255, 255, 255, 0.5); padding: 2px 0; }
+html.is-tv .hero:not(.hero-empty):not(.hero-away) .hero-meta .facts { color: rgba(255, 255, 255, 0.92); }
+html.is-tv .hero:not(.hero-empty):not(.hero-away) .hero-meta .facts .ic { color: #BFEBCF; }
+html.is-tv .hero-photo::after { background: linear-gradient(to top, rgba(8, 12, 10, 0.94) 0%, rgba(8, 12, 10, 0.78) 34%, rgba(8, 12, 10, 0.3) 60%, rgba(8, 12, 10, 0) 78%); }
+html.is-tv .hero-sub { margin-top: 20px; font-size: 1.125rem; }
+html.is-tv .hero-actions { grid-template-columns: auto; justify-content: start; }
+html.is-tv .away-card-hero { min-height: calc(var(--tv-vh) - var(--tv-safe-y) * 2 - 3.2rem); }
+html.is-tv .tonight-side .prep-card { margin: 0; padding: 16px 18px; }
+html.is-tv .tonight-side .prep-card .section-title { font-size: 1.375rem; }
+html.is-tv .tonight-side .prep-text { font-size: 0.9375rem; color: var(--ink); }
+html.is-tv .tonight-side .prep-thaw .prep-text { font-weight: 700; }
+html.is-tv .tonight-side .prep-thaw .prep-ic { background: var(--dusk-2); color: #fff; }
+html.is-tv .tonight-side .section-title { font-size: 1.5rem; }
+html.is-tv .tonight-side .menu-row { min-height: 60px; grid-template-columns: 44px 1fr auto; padding: 4px 6px 4px 2px; }
+html.is-tv .tonight-side .menu-row .photo-thumb, html.is-tv .tonight-side .menu-ic { width: 56px; height: 50px; }
+html.is-tv .tonight-side .menu-main small { -webkit-line-clamp: 1; }
+html.is-tv .tonight-side .ds-d { font-size: 1.625rem; }
+html.is-tv .glance { margin-top: 0; }
+
+/* ---------------------------------------------------------------- other screens on the canvas */
+html.is-tv .days { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+html.is-tv .days-month { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+html.is-tv .tab-opt:focus { border-radius: var(--r-ctl) var(--r-ctl) 0 0; }
+html.is-tv .r-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 16px; }
+html.is-tv .recipe-top { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: 32px; }
+html.is-tv .recipe-cols { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 36px; }
+html.is-tv .sheet[open] { align-items: center; }
+html.is-tv .sheet-panel { border-radius: var(--r-sheet); max-width: 600px; max-height: calc(var(--tv-vh) - var(--tv-safe-y) * 2); }
+html.is-tv .sheet-tall .sheet-panel { height: calc(var(--tv-vh) - var(--tv-safe-y) * 2); }
+html.is-tv .sheet-grip { display: none; }
+html.is-tv .cook-body { max-width: 820px; }
+html.is-tv .boot-sk .sk-hero { max-height: calc(var(--tv-vh) * 0.62); }
