@@ -13,7 +13,10 @@ at 390 px, 1280 px and 1920×1080).
 Top to bottom (and in focus order for a remote):
 1. **How was dinner?** for last night (existing, §9.2), and **Did you cook last night?** when yesterday's
    dinner is still marked planned: "Yes, mark it cooked" (the pantry drops), "No, move it to another
-   night", or "We skipped it". Without this the pantry keeps counting food that's gone.
+   night", or "We skipped it" (the night opens; its food stays). Without this the pantry keeps counting
+   food that's gone. This is §21.3's one catch-up card (`catchUpCard`): the same prompt shows on Plan and
+   Pantry, and with more than one missed dinner (the last 7 days) or packed lunches to settle it opens
+   the catch-up sheet instead.
 2. **Tonight's dinner**: photo, title, sides (tap one to substitute), time and equipment, calories and
    protein a plate with the Lean marker, then **Start cooking** (`#tonight-cook`; "Keep cooking: step 4
    of 9" when a session is under way) and "See the whole recipe". Under the buttons: up to three reasons
@@ -163,8 +166,13 @@ state.leftovers["YYYY-MM-DD" (the night it was cooked)] = {
   note: "<title>, from <weekday>", from: "<cooked date>" }, manual: true, by, at }`.
   `awayReason()` in `views/common.js` shows it as "Leftover night"; "Cook … after all" is the ordinary
   bring-back. Tonight shows a leftover-night card with "We ate them".
-- **For lunch**: "Ate one" counts a serving down. Lunch planning can read `state.leftovers` to offer a
-  serving as someone's lunch main; nothing writes to `state.lunch` from here.
+- **For lunch, or the freezer** (§21.3, "Lunch or freezer…" on a batch's row): `leftoverLunchOps` puts one
+  serving in a packer's next packed lunch (that lunch is skipped with the reason "Leftover …", so its
+  groceries leave the list; the record gains `lunches: [{ name, date }]`), and `freezeLeftoversOps` moves
+  servings to the freezer as a dated shelf item counted in plates (the record gains `frozen`, `item`).
+  "Ate one" counts a serving down. Past its best, "Tossed" (`tossLeftoversOps`) also writes the waste log.
+- The question is one card (`leftoversAskCard`) and the fridge rows one list (`leftoverRows`), shared by
+  Tonight, Plan and Pantry: answered or changed in one place, it is the same everywhere.
 
 ### 22.6 Calories, protein and Lean, calmly
 - `plateFacts(db, state, dinnerId, entry)` is the one source for a plate on every screen: it is

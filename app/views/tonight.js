@@ -8,14 +8,14 @@ import { buildList, plannedNights } from '../shopping.js';
 import { generateOps, markCookedOps, awayBlock } from '../actions.js';
 import {
   sidesFor, dinnerPhoto, equipment, favoriteBadge, awayReason, dayStamp, nutri, showNutrition, lighterChip, rateList, isDismissed, replacedText, prepCard,
-  plate, leanMark, whyList, cic, leftoversQuestion, isLeftoverNight,
+  plate, leanMark, whyList, cic, isLeftoverNight, leftoversAskCard, leftoverRows,
 } from './common.js';
 import { dayNutrition, lighterSide, fmtKcal, lunchNutrition } from '../nutrition.js';
 import { lunchPeople, lunchFor } from '../lunch.js';
 import { useSoon } from '../freshness.js';
-import { whyThisDinner, weekSummary, leftoversOnHand, leftoversToAsk, servingsText, useByText, leftoverNightChoices, plainName } from '../cooking.js';
+import { whyThisDinner, weekSummary, leftoversOnHand, servingsText, useByText, plainName } from '../cooking.js';
 import { openPick, openAway, openNight } from './sheets.js';
-import { defaultAnchor } from './plan.js';
+import { defaultAnchor, catchUpCard } from './plan.js';
 import { cookProgress } from './cook.js';
 
 export const title = () => 'Tonight';
@@ -207,17 +207,7 @@ function useFirst(app, today) {
   const more = useSoon(app.db, app.state, today).length - soon.length;
   return html`<section class="tcard use-first" aria-labelledby="use-h">
     <div class="section-head"><h2 id="use-h" class="section-title">${cic('box', { size: 22 })}Use first</h2><a class="text-link" href="#/pantry">Pantry</a></div>
-    ${when(left.length, () => html`<ul class="lo-list">${left.map((l) => {
-      const nights = l.night ? [] : leftoverNightChoices(app.state, l, today);
-      return html`<li class="lo-row ${l.daysLeft < 0 ? 'is-late' : l.daysLeft <= 0 ? 'is-due' : ''}">
-        <span class="lo-main"><b>${l.title}</b><small>Leftovers: ${servingsText(l.servings)}, ${useByText(l, today)}${l.night ? `. Set for ${l.night === today ? 'tonight' : weekdayName(l.night)}’s leftover night` : ''}.</small></span>
-        <span class="lo-acts">
-          ${when(l.daysLeft >= 0, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="leftovers:ate" data-date="${l.date}" aria-label="Someone ate one serving of the ${l.title} leftovers">Ate one</button>`)}
-          ${when(l.daysLeft >= 0 && l.servings >= 3 && nights.length, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="leftovers:night" data-date="${l.date}">Leftover night…</button>`)}
-          <button type="button" class="btn btn-small btn-quiet" data-action="leftovers:gone" data-date="${l.date}" aria-label="The ${l.title} leftovers are all gone">${l.daysLeft < 0 ? 'Tossed' : 'All gone'}</button>
-        </span>
-      </li>`;
-    })}</ul>`)}
+    ${leftoverRows(app)}
     ${soon.length ? html`<ul class="soon-list">${soon.map((u) => {
       const use = plannedUse(app, u.id, today);
       const by = u.daysLeft < 0 ? 'past its best' : u.daysLeft === 0 ? 'best today' : u.daysLeft === 1 ? 'best by tomorrow' : `best by ${weekdayName(u.useBy)}${u.daysLeft > 6 ? `, ${shortDate(u.useBy)}` : ''}`;
@@ -312,46 +302,15 @@ function howWas(app, today) {
   </section>`;
 }
 
-/** After a dinner is cooked (tonight, or last night): how many servings are left? Asked once. */
-function leftoversAsk(app, today) {
-  const date = leftoversToAsk(app.state, today);
-  if (!date || isDismissed(app, `leftovers:${date}`)) return '';
-  const d = dinnerById(app.db, app.state, app.state.plan[date].dinner);
-  return html`<section class="tcard lo-card">
-    ${leftoversQuestion(app, date, { heading: date === today ? 'Any leftovers tonight?' : 'Any leftovers from last night?', dish: d?.title || '' })}
-    <button type="button" class="btn btn-small btn-quiet" data-action="lighter:dismiss" data-key="leftovers:${date}">Don’t ask</button>
-  </section>`;
-}
-
-/**
- * Last night's dinner is still marked planned: was it cooked? Until someone says, the pantry
- * still counts food that's gone, and the list buys less than the week needs.
- */
-function forgotCard(app, today) {
-  const date = addDays(today, -1);
-  const e = app.state.plan?.[date];
-  const d = e?.status === 'planned' && e.dinner ? dinnerById(app.db, app.state, e.dinner) : null;
-  if (!d || isDismissed(app, `forgot:${date}`)) return '';
-  return html`<section class="tcard forgot-card" aria-labelledby="forgot-h">
-    <h2 id="forgot-h" class="section-title">Did you cook last night?</h2>
-    <p class="muted small"><b>${d.title}</b> was on the plan for ${weekdayName(date)} and isn’t marked cooked. Marking it takes what it used out of the pantry, so the shopping list stays right.</p>
-    <div class="forgot-acts">
-      <button type="button" class="btn btn-small btn-primary" data-action="night:cooked" data-date="${date}">${ic('checkCircle', { size: 18 })}Yes, mark it cooked</button>
-      <button type="button" class="btn btn-small btn-secondary" data-action="night:move" data-date="${date}">No, move it to another night</button>
-      <button type="button" class="btn btn-small btn-quiet" data-action="lighter:dismiss" data-key="forgot:${date}">We skipped it</button>
-    </div>
-  </section>`;
-}
-
 export function render(app) {
   const today = app.today();
   return html`<div class="page page-tonight">
     <p class="dateline">${longDay(today)}</p>
     ${when(howWasDate(app) !== today, () => howWas(app, today))}
-    ${forgotCard(app, today)}
+    ${catchUpCard(app)}
     ${todayLine(app, today)}
     <div class="tonight-grid">
-      <div class="tonight-main">${hero(app, today)}${leftoversAsk(app, today)}${when(howWasDate(app) === today, () => howWas(app, today))}</div>
+      <div class="tonight-main">${hero(app, today)}${leftoversAskCard(app)}${when(howWasDate(app) === today, () => howWas(app, today))}</div>
       <div class="tonight-side">
         ${prepCard(app, { days: 2, title: 'Thaw and prep now', empty: true, emptyText: 'Nothing to thaw or pack for tonight or tomorrow.' })}
         ${useFirst(app, today)}

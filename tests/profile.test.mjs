@@ -121,8 +121,9 @@ test('use-it-first reads the real day off entries saved with the old UTC date (n
   assert.equal(sinceOf({ qty: 2, since: '2026-11-16', at: '2026-11-16T18:00:00.000Z' }), '2026-11-16');
   // A `since` from a receipt date, or kept from an earlier trip, is left alone.
   assert.equal(sinceOf({ qty: 2, since: '2026-11-10', at: '2026-11-16T01:15:00.000Z' }), '2026-11-10');
-  // No `since`: the last update, in Chicago time.
-  assert.equal(sinceOf({ qty: 2, at: '2026-11-16T01:15:00.000Z' }), '2026-11-15');
+  // No `since`: the date isn't known (docs/spec/21 §21.3). The last time the amount was edited is
+  // not the day it came home, so the stamp never stands in for one; the pantry asks instead.
+  assert.equal(sinceOf({ qty: 2, at: '2026-11-16T01:15:00.000Z' }), null);
   assert.equal(sinceOf({ qty: 2 }), null);
   assert.equal(sinceOf({ qty: 2, at: 'garbage' }), null);
 });

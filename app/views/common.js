@@ -1,14 +1,14 @@
 // Bits of markup several views share.
-import { html, ic, raw, photo, tf } from '../ui.js';
+import { html, ic, raw, photo, tf, when } from '../ui.js';
 import { EQUIPMENT_LABELS } from '../config.js';
 import { EQUIPMENT_ICON } from '../icons.js';
 import { dinnerById, effectiveSides, sideInfo, isFavorite, dinnerSignal, sideSignal } from '../planner.js';
 import { lunchVote } from '../lunch.js';
-import { listJoin, midSentence, relativeDay, shortWeekday } from '../util.js';
+import { listJoin, midSentence, relativeDay, shortWeekday, weekdayName } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
 import { prepSchedule } from '../prep.js';
-import { plateFacts, timeLabel, fmtMinutes, equipmentLabel, LEFTOVER_REASON } from '../cooking.js';
+import { plateFacts, timeLabel, fmtMinutes, equipmentLabel, LEFTOVER_REASON, leftoversOnHand, leftoversToAsk, leftoverNightChoices, servingsText, useByText } from '../cooking.js';
 
 /** Calories are shown when nutrition.json is there and this phone hasn't hidden them. */
 export const showNutrition = (app) => hasNutrition(app.db) && !app.store?.device?.hideNutrition;
@@ -219,6 +219,45 @@ export function leftoversQuestion(app, date, { then = '', heading = 'Any leftove
 }
 
 /**
+ * The one leftovers question for a cooked night nobody has answered (tonight's, or last night's),
+ * as a card: shown on Tonight, Plan and Pantry, and gone everywhere once it's answered.
+ */
+export function leftoversAskCard(app) {
+  const today = app.today();
+  const date = leftoversToAsk(app.state, today);
+  if (!date || isDismissed(app, `leftovers:${date}`)) return '';
+  const d = dinnerById(app.db, app.state, app.state.plan[date].dinner);
+  return html`<section class="tcard lo-card">
+    ${leftoversQuestion(app, date, { heading: date === today ? 'Any leftovers tonight?' : 'Any leftovers from last night?', dish: d?.title || '' })}
+    <button type="button" class="btn btn-small btn-quiet" data-action="lighter:dismiss" data-key="leftovers:${date}">Don’t ask</button>
+  </section>`;
+}
+
+/**
+ * Leftovers in the fridge, each with what can be done with it: eat one, a leftover night, a lunch
+ * or the freezer, or gone (thrown out goes in the waste log). Shared by Tonight and Plan. '' when none.
+ */
+export function leftoverRows(app) {
+  const today = app.today();
+  const left = leftoversOnHand(app.state, today);
+  if (!left.length) return '';
+  return html`<ul class="lo-list">${left.map((l) => {
+    const nights = l.night ? [] : leftoverNightChoices(app.state, l, today);
+    return html`<li class="lo-row ${l.daysLeft < 0 ? 'is-late' : l.daysLeft <= 0 ? 'is-due' : ''}">
+      <span class="lo-main"><b>${l.title}</b><small>Leftovers: ${servingsText(l.servings)}, ${useByText(l, today)}${l.night ? `. Set for ${l.night === today ? 'tonight' : weekdayName(l.night)}’s leftover night` : ''}.</small></span>
+      <span class="lo-acts">
+        ${when(l.daysLeft >= 0, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="leftovers:ate" data-date="${l.date}" aria-label="Someone ate one serving of the ${l.title} leftovers">Ate one</button>`)}
+        ${when(l.daysLeft >= 0 && l.servings >= 3 && nights.length, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="leftovers:night" data-date="${l.date}" aria-haspopup="dialog">Leftover night…</button>`)}
+        ${when(l.daysLeft >= 0, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="leftovers:more" data-date="${l.date}" aria-haspopup="dialog" aria-label="Take the ${l.title} leftovers for a lunch, or freeze them">Lunch or freezer…</button>`)}
+        ${l.daysLeft < 0
+          ? html`<button type="button" class="btn btn-small btn-quiet" data-action="leftovers:gone" data-date="${l.date}" data-tossed="1" aria-label="The ${l.title} leftovers were thrown out">Tossed</button>`
+          : html`<button type="button" class="btn btn-small btn-quiet" data-action="leftovers:gone" data-date="${l.date}" aria-label="The ${l.title} leftovers are all gone">All gone</button>`}
+      </span>
+    </li>`;
+  })}</ul>`;
+}
+
+/**
  * A lighter plate, in hands and halves. General guidance for whoever wants it: no numbers to hit,
  * no food is off the table, and nothing here is about the kids' plates.
  */
@@ -247,7 +286,12 @@ export function plateGuide({ dismissKey = '' } = {}) {
 // ---------------------------------------------------------------- v2.5: the prep schedule (SPEC §12.5)
 
 const PREP_WHEN = { morning: 'Morning', anytime: 'Today', evening: 'Evening' };
-const PREP_ICON = { thaw: 'snow', freeze: 'snow', cook: 'flame', lunch: 'lunch', buy: 'store' };
+const PREP_ICON = { thaw: 'snow', freeze: 'snow', cook: 'flame', lunch: 'lunch', buy: 'store', slow: 'clock', use: 'info', leftovers: 'bowl', catchup: 'pantry' };
+/** A prep job with something to tap (SPEC §21): a link to the pantry or the plan (`nav`), or an action. */
+const prepAction = (a) => (a.name === 'nav'
+  ? html`<a class="btn btn-small btn-secondary prep-act" href="${a.data?.href || '#/tonight'}">${a.label}</a>`
+  : prepActionButton(a));
+const prepActionButton = (a) => html`<button type="button" class="btn btn-small btn-secondary prep-act" data-action="${a.name}" ${raw(Object.entries(a.data || {}).map(([k, v]) => `data-${k}="${String(v).replace(/"/g, '&quot;')}"`).join(' '))}>${a.label}</button>`;
 
 /** Thaw, cook-once and lunch-packing jobs for the next few days, from the plan and the pantry. */
 export function prepCard(app, { days = 7, title = 'Prep schedule', empty = true, emptyText = 'Nothing to thaw or pack in the next few days.' } = {}) {
@@ -258,7 +302,7 @@ export function prepCard(app, { days = 7, title = 'Prep schedule', empty = true,
     <h2 id="prep-h-${days}" class="section-title">${ic('clock', { size: 22 })}${title}</h2>
     ${sched.length ? html`<ol class="prep-days">${sched.map((d) => html`<li class="prep-day">
       <h3 class="prep-date">${d.date === today ? 'Today' : relativeDay(d.date, today)}</h3>
-      <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${PREP_WHEN[t.when] || ''}</small>${t.text}</span></li>`)}</ul>
+      <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${PREP_WHEN[t.when] || ''}</small>${t.text}${t.action ? prepAction(t.action) : ''}</span></li>`)}</ul>
     </li>`)}</ol>` : html`<p class="muted small">${emptyText}</p>`}
   </section>`;
 }

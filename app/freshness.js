@@ -5,6 +5,7 @@
 
 import { itemMeta } from './shopping.js';
 import { addDays, diffDays, chicagoDay } from './util.js';
+import { tossCounts } from './waste.js';
 
 export const PLACES = [
   { id: 'fridge', label: 'In the fridge' },
@@ -62,6 +63,8 @@ export function keepsDays(db, state, id) {
   const place = placeOf(db, state, id);
   const kind = kindOfItem(db, state, id);
   const n = m.name.toLowerCase();
+  // Leftovers the family saved after a dinner (SPEC §21.3): four days cold, three months frozen.
+  if (isLeftover(m.name)) return place === 'freezer' ? 90 : place === 'fridge' ? 4 : null;
   if (place === 'freezer') return kind === 'meat' ? 120 : 180;
   if (place === 'fridge') {
     if (kind === 'meat') {
@@ -95,15 +98,103 @@ export function keepsDays(db, state, id) {
   return null;
 }
 
-/** The day an item came into the house: `since` when known, else the last time it was updated. */
+/** A saved plate of leftovers on the shelf ("Leftover chicken fajitas"). */
+export const isLeftover = (name) => /^leftovers?\b/i.test(String(name || ''));
+
+/**
+ * The day an item came into the house, when the family or a receipt said so (`since`). The last
+ * time the amount was edited (`at`) is not that day: cooking from a bag would make September's
+ * chicken look new. No `since` means the date isn't known (SPEC §21.3): the pantry asks.
+ */
 export function sinceOf(p) {
   const s = String(p?.since || '').slice(0, 10);
-  const at = typeof p?.at === 'string' && !Number.isNaN(Date.parse(p.at)) ? p.at : null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
   // Days are the family's (America/Chicago). Until v3 `since` was cut from the UTC timestamp, so
-  // anything put away after 6 pm was dated tomorrow: when `since` is exactly that UTC day, read
-  // the real day off the timestamp instead (nothing is rewritten).
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return at && at.startsWith(s) && chicagoDay(at) < s ? chicagoDay(at) : s;
-  return at ? chicagoDay(at) : null;
+  // anything put away after 6 pm was dated tomorrow: when `since` is exactly the UTC day of the
+  // entry's own stamp, read the real day off that stamp (nothing is rewritten). This only corrects
+  // a date the family gave; the stamp alone never stands in for one (docs/spec/20 §20.4, 21 §21.3).
+  const at = typeof p?.at === 'string' && !Number.isNaN(Date.parse(p.at)) ? p.at : null;
+  return at && at.startsWith(s) && chicagoDay(at) < s ? chicagoDay(at) : s;
+}
+
+/** Is there some of it? (An amount, or a stocked item with no amount.) */
+const onShelf = (p) => !!p && !p.low && (typeof p.qty === 'number' ? p.qty > 0 : !!p.stocked);
+
+export const isMeatItem = (db, state, id) => !!db.ingredients[id]?.meat || itemMeta(db, state, id).aisle === 'Meat';
+
+/** Anything in the freezer this long counts as "use soon" (Jeff threw out freezer-burnt steak and corn). */
+export const FREEZER_OLD_DAYS = 60;
+
+/** "About when did this go in?" (SPEC §21.3): the quick answers, and the day each stands for. */
+export const ABOUT_WHEN = [
+  { id: 'week', label: 'This week', days: 3 },
+  { id: 'month', label: 'This month', days: 20 },
+  { id: 'older', label: 'Older', days: 90 },
+];
+export function aboutDate(today, about) {
+  const a = ABOUT_WHEN.find((x) => x.id === about);
+  return a ? addDays(today, -a.days) : null;
+}
+
+/**
+ * Perishables with no came-home date (older scans): they can't get a use-by until someone says
+ * about when they went in. → [{ id, name, place, meat }], freezer meat first.
+ */
+export function undated(db, state) {
+  const out = [];
+  for (const [id, p] of Object.entries(state?.pantry || {})) {
+    if (!onShelf(p) || sinceOf(p) || keepsDays(db, state, id) == null) continue;
+    out.push({ id, name: itemMeta(db, state, id).name, place: placeOf(db, state, id), meat: isMeatItem(db, state, id) });
+  }
+  const rank = (x) => (x.place === 'freezer' ? 0 : 1) + (x.meat ? 0 : 0.5);
+  return out.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+}
+
+/**
+ * How much it matters to eat an on-hand item by the night of `date`: 0 (it keeps) and up.
+ *  - Fridge and counter food by its estimated use-by: past it by that night 6 and more (the strong
+ *    one: use it now), due that night 4, within two days 3 to 2, within a week 1.
+ *  - Freezer food by age: 60+ days in the freezer is "use soon" (2, plus a point a month), younger
+ *    food a fraction of that, so the oldest always goes first; past its freezer use-by adds 4.
+ *  - No came-home date: meat counts as old (3: nobody remembers when it went in, which is how the
+ *    steak got freezer-burnt); other perishables get a small nudge (½) until someone dates them.
+ *  - Food the family has thrown out before (the waste log) gets half again for each time, and at
+ *    least 1.5 while it's a perishable on the shelf: it gets planned sooner.
+ * Shelf goods that keep for months score 0.
+ */
+export function urgency(db, state, id, date) {
+  const p = state?.pantry?.[id];
+  if (!p || p.low) return 0;
+  const days = keepsDays(db, state, id);
+  const place = placeOf(db, state, id);
+  const since = sinceOf(p);
+  let u;
+  if (!since) {
+    if (days == null) return 0;
+    u = isMeatItem(db, state, id) ? 3 : 0.5;
+  } else if (place === 'freezer') {
+    const age = Math.max(0, diffDays(date, since));
+    u = age >= FREEZER_OLD_DAYS ? 2 + (age - FREEZER_OLD_DAYS) / 30 : age / FREEZER_OLD_DAYS;
+    if (days != null && addDays(since, days) < date) u += 4;
+  } else {
+    if (days == null) return 0;
+    const left = diffDays(addDays(since, days), date);
+    if (left < 0) u = 6 + Math.min(2, -left / 7);
+    else if (left === 0) u = 4;
+    else if (left <= 2) u = 4 - left;
+    else if (left <= 6) u = 1;
+    else u = 0.25;
+  }
+  const tossed = tossCounts(state, date).get(id) || 0;
+  if (tossed) u = Math.max(u, 1.5) * (1 + 0.5 * Math.min(tossed, 4));
+  return u;
+}
+
+/** How much a meal's ingredients need eating first (meat counts half again: it's the costly waste). */
+export function useFirstScore(db, state, items, date) {
+  let s = 0;
+  for (const id of Object.keys(items || {})) s += urgency(db, state, id, date) * (isMeatItem(db, state, id) ? 1.5 : 1);
+  return s;
 }
 
 /**
@@ -113,7 +204,7 @@ export function sinceOf(p) {
 export function useSoon(db, state, today, { soon = 2, freezerSoon = 14 } = {}) {
   const out = [];
   for (const [id, p] of Object.entries(state?.pantry || {})) {
-    if (!p || p.low || !(typeof p.qty === 'number' ? p.qty > 0 : p.stocked)) continue;
+    if (!onShelf(p)) continue;
     const days = keepsDays(db, state, id);
     const since = sinceOf(p);
     if (days == null || !since) continue;
@@ -121,7 +212,34 @@ export function useSoon(db, state, today, { soon = 2, freezerSoon = 14 } = {}) {
     const left = diffDays(useBy, today);
     const place = placeOf(db, state, id);
     if (left > (place === 'freezer' ? freezerSoon : soon)) continue;
-    out.push({ id, name: itemMeta(db, state, id).name, place, useBy, daysLeft: left });
+    out.push({ id, name: itemMeta(db, state, id).name, place, useBy, daysLeft: left, since });
   }
   return out.sort((a, b) => a.daysLeft - b.daysLeft || a.name.localeCompare(b.name));
+}
+
+/**
+ * The freezer, oldest first (SPEC §21.3): everything in it for 60 days or more, past its keep
+ * time, or meat nobody dated. Nothing sits past its date silently.
+ * → [{ id, name, qty, unit, since, age, useBy, past, unknown, meat }]
+ */
+export function freezerWatch(db, state, today) {
+  const out = [];
+  for (const [id, p] of Object.entries(state?.pantry || {})) {
+    if (!onShelf(p) || placeOf(db, state, id) !== 'freezer') continue;
+    const m = itemMeta(db, state, id);
+    const meat = isMeatItem(db, state, id);
+    const since = sinceOf(p);
+    const days = keepsDays(db, state, id);
+    if (!since) {
+      if (meat) out.push({ id, name: m.name, qty: p.qty ?? null, unit: m.unit, since: null, age: null, useBy: null, past: false, unknown: true, meat });
+      continue;
+    }
+    const age = diffDays(today, since);
+    const useBy = days != null ? addDays(since, days) : null;
+    const past = !!useBy && useBy < today;
+    if (age < FREEZER_OLD_DAYS && !past) continue;
+    out.push({ id, name: m.name, qty: p.qty ?? null, unit: m.unit, since, age, useBy, past, unknown: false, meat });
+  }
+  const rank = (x) => (x.past ? 0 : x.unknown ? 1 : 2);
+  return out.sort((a, b) => rank(a) - rank(b) || (b.age ?? 0) - (a.age ?? 0) || a.name.localeCompare(b.name));
 }

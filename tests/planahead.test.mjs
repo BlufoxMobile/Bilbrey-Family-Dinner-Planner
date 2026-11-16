@@ -88,7 +88,7 @@ test('the shelf is counted down night by night: one pack never covers two nights
   assert.deepEqual(st.usesUp.map((u) => [u.id, u.since]), [['chickenThighs', '2026-08-20']], 'it uses up the old thighs');
 });
 
-test('cooked, away and already-planned nights are never touched, and keep their food', () => {
+test('filling open nights only: cooked, away and already-planned nights are never touched, and keep their food', () => {
   const state = {
     lunch: noLunches,
     pantry: shelfWith({ chickenThighs: { qty: 2.3, stocked: false, since: '2026-08-20' } }),
@@ -99,13 +99,14 @@ test('cooked, away and already-planned nights are never touched, and keep their 
       [FRI]: { dinner: 'smashburgers', status: 'planned', by: 'Family', at: 'x' }, // planned by the app, not by hand
     },
   };
-  const r = planAheadOps(db, state, { start: TUE, end: NEXT_MON, today: TUE, ...ctx });
+  // replan: false is "only open nights" (SPEC §21.1; re-planning the planner's own picks is in smarter.test.mjs).
+  const r = planAheadOps(db, state, { start: TUE, end: NEXT_MON, today: TUE, replan: false, ...ctx });
   const touched = new Set(r.ops.filter((o) => o.path[0] === 'plan').map((o) => o.path[1]));
   for (const d of [TUE, WED, THU, FRI]) assert.ok(!touched.has(d), `${d} left alone`);
   assert.deepEqual([...touched].sort(), ['2026-11-21', '2026-11-22', NEXT_MON], 'only the open nights');
   assert.deepEqual(r.fromPantry, [], 'Thursday’s thighs stay Thursday’s: no other night is counted as covered by them');
   const { [THU]: _thu, ...withoutThu } = state.plan;
-  assert.equal(planAheadOps(db, { ...state, plan: withoutThu }, { start: TUE, end: NEXT_MON, today: TUE, ...ctx }).fromPantry.length, 1, 'without Thursday’s dinner, those thighs would make a night');
+  assert.equal(planAheadOps(db, { ...state, plan: withoutThu }, { start: TUE, end: NEXT_MON, today: TUE, replan: false, ...ctx }).fromPantry.length, 1, 'without Thursday’s dinner, those thighs would make a night');
   const s = applyOps(state, r.ops);
   const st = pantryStretch(db, s, { start: TUE, end: NEXT_MON });
   assert.ok(st.nights.find((n) => n.date === THU).covered, 'Thursday is still fully stocked');
@@ -217,7 +218,7 @@ test('“Use what we have first” off: the usual planner, no lunch swaps', () =
   const state = { pantry: { chickenThighs: { qty: 9, since: '2026-08-20' }, bonduelleSantaFeBowl: { qty: 5 } } };
   const r = planAheadOps(db, state, { start: TUE, end: NEXT_MON, today: TUE, pantryFirst: false, ...ctx });
   const plain = generatePlan({ db, state, dates: datesBetween(TUE, NEXT_MON), mode: 'fill', by: 'Jeff', at: ctx.at, today: TUE, seedKey: TUE });
-  assert.deepEqual(Object.fromEntries(r.ops.map((o) => [o.path[1], o.value])), plain.entries);
+  assert.deepEqual(Object.fromEntries(r.ops.filter((o) => o.path[0] === 'plan').map((o) => [o.path[1], o.value])), plain.entries);
   assert.ok(!r.ops.some((o) => o.path[0] === 'lunch'));
   assert.deepEqual(r.fromPantry, []);
 });
@@ -234,7 +235,7 @@ test('how far ahead: quick picks, and never more than a month out', () => {
   assert.equal(clampAheadEnd(MON, 'soon'), MON);
   const r = planAheadOps(db, { lunch: noLunches }, { start: MON, end: '2027-03-01', today: MON, ...ctx });
   assert.equal(r.end, '2026-12-17');
-  assert.ok(r.ops.every((o) => o.path[1] <= '2026-12-17'));
+  assert.ok(r.ops.filter((o) => o.path[0] === 'plan').every((o) => o.path[1] <= '2026-12-17'));
 });
 
 test('use it first: how urgent each thing on the shelf is', () => {
@@ -252,5 +253,7 @@ test('use it first: how urgent each thing on the shelf is', () => {
   assert.equal(urgency(db, state, 'pulledChicken', TUE), 3, 'due in a day');
   assert.ok(urgency(db, state, 'pulledChicken', '2026-11-20') >= 6, 'past its use-by by that night: the strong one');
   assert.equal(urgency(db, state, 'spaghetti', TUE), 0, 'shelf goods keep');
-  assert.equal(urgency(db, { pantry: { beef: { qty: 3 } } }, 'beef', TUE), 0, 'no came-home date, no guess');
+  // SPEC §21.3: meat nobody dated counts as old; when it was last edited (`at`) is not when it came home.
+  assert.equal(urgency(db, { pantry: { beef: { qty: 3, at: '2026-11-16T12:00:00Z' } } }, 'beef', TUE), 3, 'undated freezer meat is treated as old');
+  assert.equal(urgency(db, { pantry: { spaghetti: { qty: 32 } } }, 'spaghetti', TUE), 0, 'undated shelf goods still keep');
 });

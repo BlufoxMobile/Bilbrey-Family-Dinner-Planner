@@ -2,7 +2,7 @@
 // /Bilbrey-Family-Dinner-Planner/ like GitHub Pages. Run: cd tests && npm run e2e
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -92,7 +92,7 @@ test('first launch: no “who is this”, the app says what it is, create the fa
   await shot(page, 'e2e-01-welcome');
   await page.waitForSelector('#pc-new');
   await page.unroute(`${apiBase}/api/health`);
-  assert.equal(await page.$('.who-pick'), null, 'nobody is asked who they are');
+  assert.equal(await page.locator('.who-pick').count(), 0, 'nobody is asked who they are');
   assert.equal(await page.evaluate(() => document.activeElement?.id), 'pc-new', 'ready to type');
   assert.ok(await noOverflow(page));
   await shot(page, 'e2e-02-create-passcode');
@@ -106,14 +106,14 @@ test('first launch: no “who is this”, the app says what it is, create the fa
   // "Show the passcode": you can read it, so there's no second box.
   await page.click('[data-action="fam:show-pass"]');
   await page.waitForSelector('#pc-new[type=text]');
-  assert.equal(await page.$('#pc-again'), null);
+  assert.equal(await page.locator('#pc-again').count(), 0);
   assert.equal(await page.inputValue('#pc-new'), 'Tacos Tuesday', 'still there after switching');
   await page.click('[data-action="fam:show-pass"]');
   await page.waitForSelector('#pc-again');
   await page.fill('#pc-again', 'tacos tuesday');
   await page.click('form[data-submit="fam:create"] button[type=submit]');
   await page.waitForSelector('.page-tonight');
-  assert.equal(await page.$('.rail-who, .who-btn'), null, 'no person switcher in the app shell');
+  assert.equal(await page.locator('.rail-who, .who-btn').count(), 0, 'no person switcher in the app shell');
   assert.match(await page.textContent('.hero-title'), /Nothing planned/);
   await page.click('[data-action="tonight:plan-week"]');
   await page.waitForSelector('.hero-photo');
@@ -329,7 +329,7 @@ test('messages show on top of an open sheet, Undo works there, and a dismissed m
   await page.click('.store-sams .item .item-main');
   await page.waitForSelector('dialog[open] form[data-submit="item:price"]');
   const id = await page.evaluate(() => document.querySelector('dialog[open] form[data-submit="item:price"]').dataset.id);
-  assert.equal(await page.$('dialog[open] [data-action="item:brand"]'), null, 'no store-brand / name-brand toggle any more');
+  assert.equal(await page.locator('dialog[open] [data-action="item:brand"]').count(), 0, 'no store-brand / name-brand toggle any more');
   const was = await page.inputValue('dialog[open] form[data-submit="item:price"] input[name="price"]');
   await page.fill('dialog[open] form[data-submit="item:price"] input[name="price"]', String(Math.round((Number(was) + 1.11) * 100) / 100));
   await page.click('dialog[open] form[data-submit="item:price"] button[type=submit]');
@@ -427,7 +427,7 @@ test('lunch: edit Knox’s lunches, swap a drink for a day, skip a day, and the 
 test('calories and protein: today’s line on Tonight for whoever this device picks, and a per-device switch to hide them', async () => {
   // One shared profile: no device belongs to a person, so the line is off until someone picks whose to show.
   await go(page, '#/tonight', '.page-tonight');
-  assert.equal(await page.$('.today-nutri'), null, 'nobody’s daily total by default');
+  assert.equal(await page.locator('.today-nutri').count(), 0, 'nobody’s daily total by default');
   await go(page, '#/family', '.page-family');
   assert.deepEqual(await page.$$eval('[data-action="fam:today"]', (els) => els.map((e) => e.textContent.trim())), ['Nobody', 'Jeff', 'Knox']);
   await page.click('[data-action="fam:today"][data-value="Jeff"]');
@@ -439,7 +439,7 @@ test('calories and protein: today’s line on Tonight for whoever this device pi
   await go(page, '#/family', '.page-family');
   await page.click('[data-action="fam:nutrition"]');
   await go(page, '#/tonight', '.page-tonight');
-  assert.equal(await page.$('.today-nutri'), null, 'hidden on this device');
+  assert.equal(await page.locator('.today-nutri').count(), 0, 'hidden on this device');
   await go(page, '#/family', '.page-family');
   await page.click('[data-action="fam:nutrition"]');
   await go(page, '#/tonight', '.page-tonight');
@@ -538,10 +538,10 @@ test('a side’s thumbs-down swaps in a similar side everywhere; Restore from Re
 
 test('“How was dinner?” shows after it’s cooked and the next morning, then waves off', async () => {
   await go(page, '#/tonight', '.page-tonight');
-  assert.equal(await page.$('.howwas'), null, 'not before dinner is cooked');
+  assert.equal(await page.locator('.howwas').count(), 0, 'not before dinner is cooked');
   await page.click('[data-action="tonight:cooked"]');
   await page.waitForSelector('.howwas .rate-row');
-  assert.equal(await page.$('.hero-rate'), null, 'no second set of thumbs on the card above');
+  assert.equal(await page.locator('.hero-rate').count(), 0, 'no second set of thumbs on the card above');
   await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
   await page.locator('.howwas').scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
@@ -561,7 +561,7 @@ test('“How was dinner?” shows after it’s cooked and the next morning, then
   await page.clock.setSystemTime(NOW);
   await page.reload();
   await page.waitForSelector('.page-tonight');
-  assert.equal(await page.$('.howwas'), null, 'waved off stays waved off');
+  assert.equal(await page.locator('.howwas').count(), 0, 'waved off stays waved off');
   await page.click('[data-action="night:uncook"]');
   await waitFor(async () => (await familyState(page)).state.plan[TODAY].status === 'planned');
   assert.equal(errors.length, 0, errors.join('\n'));
@@ -610,6 +610,15 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   // The receipt is still syncing; its answer redraws the list once. Let that pass before holding on to a row.
   await waitFor(async () => (await familyState(page)).pending === 0);
   await page.waitForTimeout(150);
+  // The receipt's pack is in the pantry now. When that one pack covers the week, the item leaves the
+  // list (which dinners are planned decides that), so the family "uses it up" and the list asks again.
+  if (!(await page.locator(`.item-main[data-key="${id0}"]`).count())) {
+    await go(page, '#/pantry', '.page-pantry');
+    await page.fill(`#pan-${id0} .qty-input`, '0');
+    await page.dispatchEvent(`#pan-${id0} .qty-input`, 'change');
+    await waitFor(async () => (await familyState(page)).state.pantry[id0].qty === 0);
+    await go(page, '#/list', '.page-list');
+  }
   const row = page.locator(`.item:has(.item-main[data-key="${id0}"])`);
   await row.locator('.paid').waitFor();
   assert.match(await row.locator('.paid').textContent(), /^paid \$[\d.]+ · Nov 15$/);
@@ -684,7 +693,7 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   const key = await page.evaluate(() => JSON.parse(localStorage.getItem('bfdp.v2.device')).key);
   const item = (qty, since, extra = {}) => ({ qty, stocked: false, since, at: `${since}T18:00:00.000Z`, by: 'Candi', ...extra });
   const seed = Object.entries({
-    chickenThighs: item(4.5, '2026-09-03'), eyeRoundSteak: item(2.5, '2026-10-20'), cornCobs: item(10, '2026-10-20'),
+    chickenThighs: item(9, '2026-09-03'), eyeRoundSteak: item(2.5, '2026-10-20'), cornCobs: item(10, '2026-10-20'),
     tikka: item(30, '2026-11-02'), basmati: item(8, '2026-11-02'), naan: item(10, '2026-11-14'), butter: item(16, '2026-11-14'),
     potatoes: item(5, '2026-11-14'), milk: item(8, '2026-11-14'),
     turmeric: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' }, cajunSeasoning: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' }, soy: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' },
@@ -711,8 +720,11 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   await page.waitForSelector('#ahead-card');
   const s = (await familyState(page)).state;
   for (let d = 23; d <= 29; d++) assert.ok(s.plan[`2026-11-${d}`]?.dinner, `Nov ${d} is planned`);
-  const thighNight = Object.entries(s.plan).find(([d, e]) => d >= '2026-11-23' && e.dinner === 'tikka-masala');
-  assert.ok(thighNight, 'the September chicken thighs make a tikka masala night next week');
+  // SPEC §21.1: the planner's own nights are re-planned too, so the thighs may get a night this week.
+  // (Which dinner that is depends on the recipe box; any dinner made with chicken thighs will do.)
+  const withThighs = new Set(JSON.parse(readFileSync(path.join(ROOT, 'data/recipes.json'), 'utf8')).dinners.filter((d) => d.items?.chickenThighs).map((d) => d.id));
+  const thighNight = Object.entries(s.plan).find(([d, e]) => d > TODAY && d <= end && withThighs.has(e.dinner));
+  assert.ok(thighNight, 'the September chicken thighs get a night');
   const card = await page.textContent('#ahead-card');
   assert.match(card, /Your pantry covers \d+ dinners?/);
   assert.match(card, /Uses up the boneless skinless chicken thighs from Sep 3/);
@@ -958,7 +970,7 @@ test('a second phone joins with the passcode and sees the same tonight', async (
   await p2.goto(`${base}?api=${encodeURIComponent(apiBase)}`);
   // A new device needs only the passcode: nobody picks who they are.
   await p2.waitForSelector('#pc-enter');
-  assert.equal(await p2.$('.who-pick'), null);
+  assert.equal(await p2.locator('.who-pick').count(), 0);
   assert.match(await p2.textContent('.gate-title'), /Enter the family passcode/);
   assert.ok(await noOverflow(p2));
   await shot(p2, 'e2e-14a-join-passcode');
@@ -1009,17 +1021,17 @@ test('shared profile: a device that used to be “Candi’s phone” opens strai
   }, [apiBase, key]);
   await p.goto(`${base}#/tonight`);
   await p.waitForSelector('.page-tonight');
-  assert.equal(await p.$('.gate'), null, 'no first-open screen, nothing to migrate');
+  assert.equal(await p.locator('.gate').count(), 0, 'no first-open screen, nothing to migrate');
   await waitFor(async () => /Synced/.test(await p.textContent('.topbar .sync')));
   // Her "today" line is still hers on this device; nothing else on screen belongs to a person.
   await p.waitForSelector('.today-nutri');
   assert.match(await p.textContent('.today-nutri'), /Today for Candi/);
-  assert.equal(await p.$('.rail-who, .who-btn'), null);
+  assert.equal(await p.locator('.rail-who, .who-btn').count(), 0);
   // Two thumbs-up → loved, a family favorite.
   await go(p, `#/recipe/${liked}`, '.page-recipe');
   await p.waitForSelector('.votes [data-action="rec:vote"][data-value="1"].is-on');
   assert.ok(await p.$('.page-recipe .badge-fav'), 'shown as a family favorite');
-  assert.equal(await p.$('.vote-person'), null, 'no row of five people voting');
+  assert.equal(await p.locator('.vote-person').count(), 0, 'no row of five people voting');
   assert.doesNotMatch(await p.textContent('.votes'), /Voting as|Jeff|Candi|Knox|Jordan|Jackson/);
   await p.locator('.votes').scrollIntoViewIfNeeded();
   await shot(p, 'e2e-p8-recipe-family-signal');
@@ -1033,7 +1045,7 @@ test('shared profile: a device that used to be “Candi’s phone” opens strai
   await waitFor(async () => (await familyState(p)).pending === 0);
   let server = (await (await fetch(`${apiBase}/__mock/state`)).json()).state;
   assert.equal(server.votes[dropped], undefined);
-  assert.equal(await p.$('.votes .vote-btn.is-on'), null, 'fine: neither thumb');
+  assert.equal(await p.locator('.votes .vote-btn.is-on').count(), 0, 'fine: neither thumb');
   // Put the other one back to fine too, and leave the family's data as it was.
   await go(p, `#/recipe/${liked}`, '.page-recipe');
   await p.click('.votes [data-action="rec:vote"][data-value="1"]');
@@ -1092,8 +1104,8 @@ test('lunches for whoever packs: add a person (name, spots, items), the list fol
   await go(page, '#/family', '.page-family');
   assert.deepEqual(await page.$$eval('.packer-name b', (els) => els.map((e) => e.textContent)), ['Jeff', 'Candi', 'Knox']);
   assert.match(await page.textContent('#lun-h + p'), /for Jeff, Candi and Knox\. Nobody else\./);
-  assert.equal(await page.$('.me-row'), null, 'no “whose phone is this”');
-  assert.equal(await page.$('[data-action="sheet:who"]'), null);
+  assert.equal(await page.locator('.me-row').count(), 0, 'no “whose phone is this”');
+  assert.equal(await page.locator('[data-action="sheet:who"]').count(), 0);
   // Pause from the editor: stays on the page, groceries off the list.
   await go(page, '#/lunch', '.page-lunch');
   await page.click('[data-action="lunch:who"][data-who="Candi"]');
@@ -1298,13 +1310,23 @@ test('after 6 pm Central, what gets saved is still dated today (not the UTC day)
   await go(p, '#/pantry', '.page-pantry');
   const more = p.locator('.page-pantry [data-action="pan:step"]:not([data-delta^="-"])').first();
   const id = await more.getAttribute('data-id');
+  const was = (await familyState(p)).state.pantry[id];
+  // More of what's already on the shelf keeps the day the older food came home (docs/spec/21 §21.3)…
   await more.click();
-  const s = await waitFor(async () => {
+  let s = await waitFor(async () => {
     const st = (await familyState(p)).state;
-    return String(st.pantry?.[id]?.at || '').startsWith('2026-11-17T01:3') ? st : null;
+    return String(st.pantry?.[id]?.at || '').startsWith('2026-11-17T01:3') && st.pantry[id].qty > was.qty ? st : null;
   });
+  assert.equal(s.pantry[id].since, was.since, 'adding to stock doesn’t make the older food look new');
+  // …and food coming home to an empty shelf is dated today: Monday in Glen Ellyn, though it's Tuesday in UTC.
+  await p.fill(`#pan-${id} .qty-input`, '0');
+  await p.dispatchEvent(`#pan-${id} .qty-input`, 'change');
+  await waitFor(async () => (await familyState(p)).state.pantry?.[id]?.qty === 0);
+  await go(p, '#/pantry', '.page-pantry');
+  await p.locator(`.page-pantry [data-action="pan:step"][data-id="${id}"]:not([data-delta^="-"])`).first().click();
+  s = await waitFor(async () => { const st = (await familyState(p)).state; return st.pantry?.[id]?.qty > 0 ? st : null; });
+  assert.match(s.pantry[id].at, /^2026-11-17T01:3/);
   assert.equal(s.pantry[id].since, '2026-11-16', 'the pantry’s “came home” day is Monday in Glen Ellyn');
-  await p.locator(`.page-pantry [data-action="pan:step"][data-id="${id}"][data-delta^="-"]`).first().click();
   await waitFor(async () => (await familyState(p)).pending === 0);
   await p.close();
 });

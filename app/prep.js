@@ -5,12 +5,19 @@
 //  - Portion and freeze: 2 lb or more of fresh raw meat, the day it comes home (SPEC §13).
 //  - Lunches: once-a-week jobs (portion the party bag) on the first day, then each evening the
 //    next day's lunches, and a morning reminder for anything bought fresh that day.
+//  - Slow cooker (SPEC §21): a dinner that cooks for hours in the PossibleCooker gets a morning
+//    "start it by" job.
+//  - Keeping the pantry true (SPEC §21): food past its date gets called out today, a dinner cooked
+//    tonight asks about leftovers, and a night never marked cooked asks what happened. These carry
+//    an `action` the card turns into a button.
 // Pure: no DOM, no clock (today is passed in).
 
 import { plannedNights, itemMeta, unitText } from './shopping.js';
 import { itemsForNight, dinnerById } from './planner.js';
 import { lunchesIn } from './lunch.js';
 import { addDays, datesBetween, diffDays, weekdayName, listJoin, midSentence } from './util.js';
+import { isSlowCooked } from './health.js';
+import { useSoon } from './freshness.js';
 
 const WHEN = { morning: 0, anytime: 1, evening: 2 };
 /** Brown once, use twice: ground meats that go in the pan the same way every time. */
@@ -162,10 +169,49 @@ function portionTasks(db, state, today, end) {
   return out;
 }
 
+/** "by 10 AM" for a dinner at 6 that cooks 8 hours; long cooks start "first thing in the morning". */
+function startBy(minutes) {
+  const hours = Math.max(1, Math.round(minutes / 60));
+  const at = 18 - hours;
+  if (at <= 8) return { hours, text: 'first thing in the morning' };
+  return { hours, text: `by ${at > 12 ? `${at - 12} PM` : at === 12 ? 'noon' : `${at} AM`}` };
+}
+
+/** The slow cooker does the work, but only if it's started in time. */
+function slowTasks(db, state, today, end) {
+  const out = [];
+  for (const { date, entry } of plannedNights(db, state, datesBetween(today, end))) {
+    const d = dinnerById(db, state, entry.dinner);
+    if (!isSlowCooked(d) || !(d.minutes >= 90)) continue;
+    const s = startBy(d.minutes);
+    out.push({ date, when: 'morning', kind: 'slow', text: `Start ${possessive(date, today)} ${d.title} in the PossibleCooker ${s.text}. It cooks about ${s.hours} ${s.hours === 1 ? 'hour' : 'hours'} on its own.` });
+  }
+  return out;
+}
+
+const plain = (name) => midSentence(String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/,.*$/, '').trim());
+
+/** Today's jobs that keep the pantry honest: nothing past its date sits unseen, nothing cooked goes uncounted. */
+function pantryTasks(db, state, today) {
+  const out = [];
+  const due = useSoon(db, state, today, { soon: 0, freezerSoon: 0 });
+  const fresh = due.filter((x) => x.place !== 'freezer');
+  const frozen = due.filter((x) => x.place === 'freezer');
+  if (fresh.length) {
+    out.push({ date: today, when: 'anytime', kind: 'use', text: `Use today or check: ${listJoin(fresh.slice(0, 3).map((x) => `the ${plain(x.name)}`))}${fresh.length > 3 ? ` and ${fresh.length - 3} more` : ''}. ${fresh.length === 1 ? 'It’s' : 'They’re'} at the usual use-by.`, action: { name: 'nav', label: 'See the pantry', data: { href: '#/pantry' } } });
+  }
+  if (frozen.length) {
+    out.push({ date: today, when: 'anytime', kind: 'use', text: `In the freezer too long: ${listJoin(frozen.slice(0, 3).map((x) => `the ${plain(x.name)}`))}${frozen.length > 3 ? ` and ${frozen.length - 3} more` : ''}. Plan ahead puts ${frozen.length === 1 ? 'it' : 'them'} first.`, action: { name: 'nav', label: 'Plan it', data: { href: '#/plan' } } });
+  }
+  // Leftovers and dinners never marked cooked are asked about once, on their own cards (Tonight,
+  // Plan and Pantry: docs/spec/22 §22.1), not as prep jobs as well.
+  return out;
+}
+
 export function prepSchedule(db, state, { today, days = 7 }) {
   const end = addDays(today, days - 1);
   const pairs = cookOncePairs(db, state, today, end);
-  const all = [...portionTasks(db, state, today, end), ...thawTasks(db, state, today, end, pairs), ...cookOnceTasks(db, state, today, pairs), ...lunchTasks(db, state, today, end)];
+  const all = [...pantryTasks(db, state, today), ...slowTasks(db, state, today, end), ...portionTasks(db, state, today, end), ...thawTasks(db, state, today, end, pairs), ...cookOnceTasks(db, state, today, pairs), ...lunchTasks(db, state, today, end)];
   const byDate = new Map();
   for (const t of all) {
     if (t.date < today || t.date > end) continue;

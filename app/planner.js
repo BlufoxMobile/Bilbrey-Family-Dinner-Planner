@@ -6,6 +6,10 @@ import {
 } from './util.js';
 import { settingsOf } from './state.js';
 import { normalizeDinner } from './data.js';
+// These three import this file back; every use is inside a function, so the cycle is harmless.
+import { leanOn, busyNightsOf, plateLean, leanScore, busyScore, effortOf, isVegSide, HEAVY_MAX_PER_WEEK } from './health.js';
+import { urgency, isMeatItem } from './freshness.js';
+import { tossCounts } from './waste.js';
 
 export const PERIODS = [
   { id: 'week', label: '1 week', short: '1 wk', days: 7 },
@@ -449,6 +453,40 @@ export function feasibleSides(db, state, d, store, entry) {
   return refs;
 }
 
+/**
+ * Lean by default (SPEC §21.2): a two-side dinner with no vegetable or salad on the plate trades
+ * one side for the vegetable that suits it best. The bread goes first, then fruit, soup, and the
+ * second starch; a dinner whose sides the family has chosen themselves is left alone, and burger
+ * and pizza nights keep their sides. The vegetable: one already in the house first, then one this
+ * kind of dinner is already served with, then one the family likes.
+ * → side refs (the same ones when nothing changes)
+ */
+const TRADE_ORDER = ['bread', 'fruit', 'soup', 'starch'];
+export function withVegetable(db, state, d, refs, store = 'both') {
+  if (!d || sideSlotsFor(d) < 2 || isBurger(d) || isPizza(d)) return refs;
+  const eff = effectiveSides(db, state, d.id, { sides: refs });
+  if (eff.length < 2 || eff.some((s) => s.remembered || isVegSide(db, state, s.parsed))) return refs;
+  let pick = null;
+  for (const s of eff) {
+    if (s.parsed.type !== 'side') continue;
+    const rank = TRADE_ORDER.indexOf(db.sides[s.parsed.id]?.kind);
+    if (rank < 0) continue;
+    if (!pick || rank < pick.rank || (rank === pick.rank && s.slot > pick.s.slot)) pick = { s, rank };
+  }
+  if (!pick) return refs;
+  const used = new Set(eff.map((s) => s.parsed.id));
+  const paired = pairedSides(db, d.category);
+  const onHand = (x) => Object.entries(x.items).every(([id, q]) => pantryCovers(db, state, id, q));
+  const score = (x) => (onHand(x) ? 3 : 0) + Math.min(paired.get(x.id) || 0, 4) / 2 + sideVoteInfo(state, x.id).up;
+  const veg = db.sideList
+    .filter((x) => ['vegetable', 'salad'].includes(x.kind) && !used.has(x.id) && !isSideDropped(state, x.id) && itemsFeasible(db, state, x.items, store))
+    .sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id))[0];
+  if (!veg) return refs;
+  const out = [...refs];
+  out[pick.s.slot] = veg.id;
+  return out;
+}
+
 /** What the generator writes into a night's `sides`: never a remembered substitution (that lives in state.substitutions). */
 function storedSides(state, d, refs) {
   const subs = state?.substitutions?.[d.id] || {};
@@ -593,10 +631,12 @@ export function unitPrice(db, state, id, planStore) {
 }
 
 class Ledger {
-  constructor(db, state, planStore) {
+  constructor(db, state, planStore, ref = '') {
     this.db = db;
     this.state = state;
     this.planStore = planStore;
+    // Food the family has thrown out lately (the waste log): opening a new pack of it costs more.
+    this.tossed = tossCounts(state, ref);
     this.rem = {};
     for (const [id, p] of Object.entries(state?.pantry || {})) {
       if (typeof p?.qty === 'number' && p.qty > 0 && !p.low) this.rem[id] = p.qty;
@@ -631,7 +671,7 @@ class Ledger {
         if (p) {
           // Frozen and shelf-stable leftovers keep for next week; fresh ones are the real waste.
           const storage = this.db.ingredients[id]?.storage || this.state?.custom?.[id]?.storage || 'pantry';
-          const perish = { freezer: 0.2, pantry: 0.15, fridge: 0.7, counter: 0.8 }[storage] ?? 0.5;
+          const perish = ({ freezer: 0.2, pantry: 0.15, fridge: 0.7, counter: 0.8 }[storage] ?? 0.5) * (1 + (this.tossed.get(id) || 0));
           const packs = Math.ceil(short / p.size - 1e-9);
           waste += (packs * p.size - short) * up * perish;
         }
@@ -662,12 +702,12 @@ class Ledger {
  * The first three keep the night's type (burger, pizza), the rice limit and the Asian cap.
  */
 const LEVELS = [
-  { type: true, repeat: 14, rice: true, cap: true, force: true },
-  { type: true, repeat: 14, rice: true, cap: true, force: false },
-  { type: true, repeat: 7, rice: true, cap: true, force: false },
-  { type: true, repeat: 7, rice: true, cap: false, force: false },
-  { type: false, repeat: 7, rice: true, cap: false, force: false },
-  { type: false, repeat: 2, rice: false, cap: false, force: false },
+  { type: true, repeat: 14, rice: true, cap: true, force: true, heavy: true },
+  { type: true, repeat: 14, rice: true, cap: true, force: false, heavy: true },
+  { type: true, repeat: 7, rice: true, cap: true, force: false, heavy: true },
+  { type: true, repeat: 7, rice: true, cap: false, force: false, heavy: true },
+  { type: false, repeat: 7, rice: true, cap: false, force: false, heavy: true },
+  { type: false, repeat: 2, rice: false, cap: false, force: false, heavy: false },
 ];
 
 /**
@@ -675,6 +715,13 @@ const LEVELS = [
  * Keeps away/cooked nights and anything the family set by hand. Never touches past nights.
  * Deterministic: the same state + dates + seedKey always produce the same plan.
  * Returns { entries: { date: entry }, unfilled: [date] }.
+ *
+ * Smarter planning (SPEC §21), read from the family's state:
+ *   lean (settings.lean, on by default): lean plates score higher, fried and heavy ones lower, at
+ *     most two heavy dinners a week, and a two-side dinner with no vegetable gets one;
+ *   busy nights (settings.busyNights): the slow cooker or a 30-minute dinner;
+ *   use it first: food on the shelf that's old or near its date pulls its dinners forward, and
+ *     food the family has thrown out before pulls harder.
  *
  * Optional hooks (SPEC §16, plan ahead; leaving them out changes nothing):
  *   accept(date, dinner, items) → false keeps a candidate out (e.g. "the pantry doesn't cover it")
@@ -696,7 +743,17 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
   for (const d of fillable) delete merged[d];
   const pool = rotationList(db, state).sort((a, b) => a.id.localeCompare(b.id));
   const dateSet = new Set(sorted);
-  const ledger = new Ledger(db, state, planStore);
+  const ref = today || sorted[0] || '';
+  const ledger = new Ledger(db, state, planStore, ref);
+  const lean = leanOn(state);
+  const busy = busyNightsOf(state);
+  const rated = new Map();
+  /** One plate of this dinner with these sides, rated once. */
+  const rate = (id, sides) => {
+    const k = `${id}|${(sides || []).join(',')}`;
+    if (!rated.has(k)) rated.set(k, plateLean(db, state, id, sides ? { sides } : null));
+    return rated.get(k);
+  };
   if (reserve) for (const d of sorted) if (!fillable.has(d) && eaten(merged[d])) ledger.consume(itemsForNight(db, state, merged[d].dinner, merged[d]));
   const entries = {};
   const unfilled = [];
@@ -723,6 +780,8 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
     const weekDinners = week.filter((d) => d !== date && eaten(merged[d])).map((d) => dinnerById(db, state, merged[d].dinner)).filter(Boolean);
     const riceCount = week.filter((d) => d !== date && eaten(merged[d]) && nightIsRice(db, state, merged[d].dinner, merged[d])).length;
     const asianCount = weekDinners.filter(isAsian).length;
+    const heavyCount = lean ? week.filter((d) => d !== date && eaten(merged[d]) && rate(merged[d].dinner, merged[d].sides)?.heavy).length : 0;
+    const busyNight = busy.includes(monIndex(date));
     const known = week.filter((d) => dateSet.has(d) || merged[d]).length;
     const floor = known >= 5 ? 2 : known >= 3 ? 1 : 0;
     const openAfter = week.filter((d) => d > date && fillable.has(d) && nightType(d, st) === 'regular').length;
@@ -734,8 +793,14 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
 
     const feasible = [];
     for (const d of pool) {
-      const sides = feasibleSides(db, state, d, planStore, null);
+      let sides = feasibleSides(db, state, d, planStore, null);
       if (!sides) continue;
+      if (lean) {
+        // A vegetable on the plate, unless that would take a dinner the caller accepts as it is (plan
+        // ahead: "the pantry covers it") and make it one it doesn't.
+        const v = withVegetable(db, state, d, sides, planStore);
+        if (v !== sides && (!accept || accept(date, d, itemsForNight(db, state, d.id, { sides: v })))) sides = v;
+      }
       if (accept && !accept(date, d, itemsForNight(db, state, d.id, { sides }))) continue;
       feasible.push({ d, sides });
     }
@@ -751,6 +816,8 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
         if (L.rice && riceCount >= st.riceMaxPerWeek && nightIsRice(db, state, d.id, { sides: sides })) return false;
         if (L.cap && isAsian(d) && asianCount >= 3) return false;
         if (L.force && mustAsian && !isAsian(d)) return false;
+        // Lean: the week's fried and heavy dinners are capped; burger and pizza nights stay what they are.
+        if (L.heavy && lean && type === 'regular' && heavyCount >= HEAVY_MAX_PER_WEEK && rate(d.id, sides)?.heavy) return false;
         return true;
       });
       if (candidates.length) break;
@@ -779,8 +846,14 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
       // Keep the week varied: burgers count half toward the beef tally.
       const sameProteinWeek = weekDinners.reduce((n, x) => n + (x.protein === d.protein ? (isBurger(x) ? 0.5 : 1) : 0), 0);
       if (!isBurger(d) && sameProteinWeek > 1) score -= 0.45 * (sameProteinWeek - 1);
-      if (monIndex(date) < 4 && d.minutes > 45) score -= 0.3;
+      if (monIndex(date) < 4 && effortOf(d) === 'long') score -= 0.3; // a long cook on a weeknight (the slow cooker isn't one)
       if (lastUse(d.id, date, 28) !== null) score -= 0.6;
+      if (lean) score += leanScore(rate(d.id, c.sides));
+      if (busyNight) score += busyScore(d);
+      // Use it first: what's on the shelf and old, near its date, or thrown out before.
+      let first = 0;
+      for (const id of Object.keys(items)) if ((ledger.rem[id] || 0) > 0) first += urgency(db, state, id, date) * (isMeatItem(db, state, id) ? 1.5 : 1);
+      score += 0.6 * Math.min(8, first);
       if (bonus) score += bonus(date, d, items, money) || 0;
       if (!best || score > best.score + 1e-9 || (Math.abs(score - best.score) <= 1e-9 && d.id < best.c.d.id)) best = { score, c };
     }

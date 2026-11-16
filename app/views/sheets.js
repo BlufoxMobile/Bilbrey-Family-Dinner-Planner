@@ -13,6 +13,7 @@ import {
   placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps,
   resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName, awayBlock, bringBackTripOps,
   voteOps, sideVoteOps, lunchVoteOps, saveLeftoversOps, useLeftoverOps, clearLeftoversOps, leftoverNightOps,
+  leftoverLunchChoices, leftoverLunchOps, freezeLeftoversOps, tossLeftoversOps,
 } from '../actions.js';
 import {
   sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote,
@@ -417,6 +418,41 @@ export function openLeftoverNight(app, from) {
   });
 }
 
+/**
+ * The other two places leftovers can go (docs/spec/21 §21.3, on §22.5's one batch): a serving in
+ * someone's packed lunch (whoever packs: Jeff and Knox, and anyone the family added), or plates in
+ * the freezer as a dated shelf item.
+ */
+export function openLeftoverMore(app, from) {
+  const st = (openLeftoverMore.state = { from, plates: null });
+  const dayName = (d, today) => (d === today ? 'today' : d === addDays(today, 1) ? 'tomorrow' : `on ${weekdayName(d)}`);
+  openSheet({
+    id: `leftover-more:${from}`,
+    live: true,
+    title: 'Lunch or freezer',
+    get subtitle() { const l = leftoversOnHand(app.state, app.today()).find((x) => x.date === from); return l ? `${servingsText(l.servings)} of ${l.title}, ${useByText(l, app.today())}.` : ''; },
+    render: () => {
+      const today = app.today();
+      const l = leftoversOnHand(app.state, today).find((x) => x.date === from);
+      if (!l) return html`<p class="sheet-text">Those leftovers are gone.</p><div class="sheet-actions"><button type="button" class="btn btn-primary btn-block" data-action="sheet:close">OK</button></div>`;
+      const lunches = leftoverLunchChoices(app.db, app.state, { from, today });
+      const plates = Math.max(1, Math.min(l.servings, st.plates ?? l.servings));
+      return html`
+        <h3 class="sheet-h">For a lunch</h3>
+        ${lunches.length ? html`<div class="action-list left-choices">${lunches.map((c) => html`<button type="button" class="action-row" data-action="leftovers:lunch" data-from="${from}" data-name="${c.name}" data-to="${c.date}">${ic('lunch')}<span><b>${c.name}’s lunch ${dayName(c.date, today)}</b><small>One serving goes in the lunch box. That packed lunch comes off the plan and the list.</small></span></button>`)}</div>`
+          : html`<p class="muted small">Nobody packs a lunch before these are past their best.</p>`}
+        <h3 class="sheet-h">Or freeze them</h3>
+        <div class="left-plates"><span class="set-label">How many plates?</span>
+          <span class="qty-edit"><button type="button" class="stepper-btn" data-action="leftovers:plates" data-delta="-1" aria-label="One plate less" ${plates <= 1 ? 'disabled' : ''}>${ic('minus', { size: 18 })}</button>
+            <b class="left-n" aria-live="polite">${plates}</b>
+            <button type="button" class="stepper-btn" data-action="leftovers:plates" data-delta="1" aria-label="One plate more" ${plates >= l.servings ? 'disabled' : ''}>${ic('plus', { size: 18 })}</button></span></div>
+        <div class="action-list">
+          <button type="button" class="action-row" data-action="leftovers:freeze" data-from="${from}" data-n="${plates}">${ic('snow')}<span><b>Put ${plates === l.servings ? (plates === 1 ? 'it' : 'them all') : plates} in the freezer</b><small>Dated today, good for about 3 months, and listed in the pantry with the quick backups.</small></span></button>
+        </div>`;
+    },
+  });
+}
+
 // ---------------------------------------------------------------- sync
 
 export function openSync(app) {
@@ -490,7 +526,31 @@ export const actions = {
     });
   },
   'leftovers:ate': (app, el) => { app.commit(useLeftoverOps(app.db, app.state, { date: el.dataset.date, servings: 1 })); renderSheet(); },
-  'leftovers:gone': (app, el) => { app.commit(clearLeftoversOps(app.db, app.state, { date: el.dataset.date })); renderSheet(); },
+  // Past their best and thrown out: that goes in the waste log. Otherwise they were eaten.
+  'leftovers:gone': (app, el) => {
+    app.commit(el.dataset.tossed ? tossLeftoversOps(app.db, app.state, { date: el.dataset.date, today: app.today(), who: app.who() }) : clearLeftoversOps(app.db, app.state, { date: el.dataset.date }));
+    renderSheet();
+  },
+  'leftovers:more': (app, el) => openLeftoverMore(app, el.dataset.date),
+  'leftovers:plates': (app, el) => {
+    const st = openLeftoverMore.state;
+    const l = st ? app.state.leftovers?.[st.from] : null;
+    if (!l) return;
+    st.plates = Math.max(1, Math.min(l.servings, (st.plates ?? l.servings) + Number(el.dataset.delta)));
+    renderSheet();
+  },
+  'leftovers:lunch': (app, el) => {
+    const res = leftoverLunchOps(app.db, app.state, { from: el.dataset.from, name: el.dataset.name, to: el.dataset.to, today: app.today() });
+    if (res.error) { toast(res.message); return; }
+    app.commit(res);
+    closeSheet();
+  },
+  'leftovers:freeze': (app, el) => {
+    const res = freezeLeftoversOps(app.db, app.state, { from: el.dataset.from, servings: Number(el.dataset.n), today: app.today(), who: app.who() });
+    if (res.error) { toast(res.message); return; }
+    app.commit(res);
+    closeSheet();
+  },
   'leftovers:night': (app, el) => openLeftoverNight(app, el.dataset.date),
   'leftovers:night-set': (app, el) => {
     app.commit(leftoverNightOps(app.db, app.state, { from: el.dataset.from, night: el.dataset.night, who: app.who(), today: app.today() }));

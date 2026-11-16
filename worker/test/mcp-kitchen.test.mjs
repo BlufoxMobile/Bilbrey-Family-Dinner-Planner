@@ -122,6 +122,13 @@ test("get_health_summary: calories and protein per plate, and which dinners have
   assert.ok(h.lightest.kcal <= h.heaviest.kcal);
   assert.ok(h.mostProtein.proteinG >= h.lightest.proteinG);
   assert.equal(h.vegetables.plannedDinners, h.vegetables.withAVegetableOrSalad + h.vegetables.without.length);
+  // One lean rule everywhere: the app's (750 calories or less with 35 g of protein or more).
+  assert.match(h.leanMeans, /750 calories or less with at least 35 g of protein/);
+  for (const n of h.nights.filter((x) => typeof x.kcal === "number")) {
+    if (n.lean) assert.ok(n.kcal <= 750 && n.proteinG >= 35, `${n.dinner}: ${n.kcal} kcal, ${n.proteinG} g`);
+    assert.ok(typeof n.vegetableServings === "number");
+  }
+  assert.equal(h.perPlate.leanDinners, h.nights.filter((x) => x.lean).length);
   for (const g of h.vegetables.without) assert.match(g.suggestion, /vegetable/);
   assert.match(h.note, /no calorie targets/);
   assert.doesNotMatch(JSON.stringify(h), /\b(bad|unhealthy|junk|guilt|cheat|diet)\b/i, "numbers and facts, no labels");

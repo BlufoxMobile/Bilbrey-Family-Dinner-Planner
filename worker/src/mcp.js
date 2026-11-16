@@ -33,7 +33,7 @@ import { onHand, ENOUGH } from "../../app/coverage.js";
 import { kindOfItem, placeOf, keepsDays, sinceOf, useSoon, KINDS, PLACES } from "../../app/freshness.js";
 import { packageOf, packagesFor, plural as packWord } from "../../app/packages.js";
 import { normUnit, scanQtyIn } from "../../app/scanqty.js";
-import { plateNutrition } from "../../app/nutrition.js";
+import { plateNutrition, plateHealth, LEAN_RULE } from "../../app/nutrition.js";
 import { veggieCheck } from "../../app/health.js";
 import { cleanStep, POSSIBLE_COOKER_SETTINGS, NOT_THE_OVEN } from "./claude.js";
 
@@ -1707,6 +1707,12 @@ function getHealthSummary(args, { db, state, today }) {
       night.kcal = Math.round(n.kcal);
       night.proteinG = Math.round(n.protein);
       if (!n.complete) night.notCounted = n.missing.map((id) => itemMeta(db, state, id).name);
+      // The same plate the app shows, and its one lean rule (app/nutrition.js LEAN_RULE).
+      const h = plateHealth(db, state, d.id, e);
+      if (h) {
+        night.vegetableServings = h.vegServings;
+        if (h.lean) night.lean = true;
+      }
     } else night.noData = true;
     nights.push(night);
   }
@@ -1718,7 +1724,8 @@ function getHealthSummary(args, { db, state, today }) {
   return compact({
     from: range.from, to: range.to, today,
     dinners: nights.length,
-    perPlate: counted.length ? { averageKcal: avg("kcal"), averageProteinG: avg("proteinG"), countedDinners: counted.length } : undefined,
+    perPlate: counted.length ? { averageKcal: avg("kcal"), averageProteinG: avg("proteinG"), countedDinners: counted.length, leanDinners: counted.filter((n) => n.lean).length } : undefined,
+    leanMeans: `A lean plate is ${LEAN_RULE.maxKcal} calories or less with at least ${LEAN_RULE.minProteinG} g of protein (the main plus its sides, one of five). It describes a plate, never a person: nobody has a calorie target.`,
     lightest: byKcal.length > 1 ? pick(byKcal[0]) : undefined,
     heaviest: byKcal.length > 1 ? pick(byKcal[byKcal.length - 1]) : undefined,
     mostProtein: counted.length > 1 ? pick([...counted].sort((a, b) => b.proteinG - a.proteinG)[0]) : undefined,

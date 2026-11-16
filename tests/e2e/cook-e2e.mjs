@@ -366,7 +366,7 @@ test('leftovers wait on Tonight: eat one, or make it a leftover night', async ()
   await go(page, '#/tonight', '.page-tonight');
   await hideToast(page);
   assert.match(await page.textContent('.use-first .lo-row'), /Blackstone smashburgers.*Leftovers: 4 servings, good through Thursday/s);
-  assert.equal(await page.$('.lo-card'), null, 'the question was already answered');
+  assert.equal(await page.locator('.lo-card').count(), 0, 'the question was already answered');
   await page.click('[data-action="leftovers:ate"]');
   await waitFor(async () => (await familyState(page)).leftovers[TODAY].servings === 3);
   await hideToast(page);

@@ -3,15 +3,17 @@
 // Pure: (db, state, args) → { ops, undo, message, ... }. No DOM.
 
 import { set, del, push, applyOps as applyOpsPure } from './state.js';
-import { clone, listJoin, round2, slugify, uid, weekdayName, shortDate, diffDays, chicagoDay, SHARED_PROFILE } from './util.js';
-import { leftoverRecord, servingsText, LEFTOVER_REASON } from './cooking.js';
+import { clone, listJoin, round2, slugify, uid, weekdayName, shortDate, diffDays, chicagoDay, midSentence, SHARED_PROFILE } from './util.js';
+import { leftoverRecord, leftoversOnHand, servingsText, LEFTOVER_REASON } from './cooking.js';
 import {
   bestBenchFor, dinnerById, effectiveSides, findInPlan, generatePlan, itemsForNight, sideInfo, parseSideRef, kindOf,
   isRetired, isPromoted, rotationList, isSideDropped, dinnerSignal, sideSignal, votesForSignal, SIGNALS,
 } from './planner.js';
-import { boughtToPantry, readableId } from './shopping.js';
-import { personConfig, lunchItem, swappedConfig, lunchSlots, lunchPackers, isPacker, newPackerName } from './lunch.js';
+import { boughtToPantry, readableId, dinnerFoodCost } from './shopping.js';
+import { personConfig, lunchItem, swappedConfig, lunchSlots, lunchPackers, isPacker, newPackerName, packingNames, lunchFor } from './lunch.js';
 import { addDays } from './util.js';
+
+const isISO = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
 
 function getPath(obj, path) {
   let o = obj;
@@ -298,6 +300,101 @@ export function leftoverNightOps(db, state, { from, night, who, at, today }) {
   return result(state, ops, `${cap(nightName(night, today))} is a leftover night: ${title}.${bumped}`);
 }
 
+// Where a batch of leftovers can go besides the fridge (docs/spec/21 §21.3, folded into §22.5's one
+// model): a serving as someone's packed lunch, or servings into the freezer as a dated shelf item.
+
+/** What one serving of a night's dinner cost in food (a fifth of the dinner and its sides). */
+function servingCost(db, state, date, l) {
+  const e = state?.plan?.[date];
+  const id = e?.dinner || l?.dinner;
+  return id && dinnerById(db, state, id) ? round2(dinnerFoodCost(db, state, id, e?.dinner === id ? e : null) / 5) : 0;
+}
+
+/**
+ * The packed lunches a serving of these leftovers could replace: each packer's next packed lunch
+ * from tomorrow (today, when the dinner was last night's) to the leftovers' use-by day.
+ * → [{ name, date }]
+ */
+export function leftoverLunchChoices(db, state, { from, today }) {
+  const l = leftoversOnHand(state, today).find((x) => x.date === from);
+  if (!l || l.daysLeft < 0) return [];
+  const out = [];
+  const start = from < today ? today : addDays(from, 1);
+  for (const name of packingNames(db, state)) {
+    for (let day = start; day <= l.useBy; day = addDays(day, 1)) {
+      const lunch = lunchFor(db, state, name, day);
+      if (lunch && !lunch.skip && !lunch.empty) { out.push({ name, date: day }); break; }
+    }
+  }
+  return out;
+}
+
+/** One serving goes in `name`'s lunch on `to`: that packed lunch is skipped, so its groceries leave the list. */
+export function leftoverLunchOps(db, state, { from, name, to, today }) {
+  const l = state?.leftovers?.[from];
+  if (!l || !(l.servings > 0)) return result(state, [], 'Those leftovers are already gone.', { error: true });
+  if (!leftoverLunchChoices(db, state, { from, today }).some((c) => c.name === name && c.date === to)) return result(state, [], 'Pick whose lunch it is.', { error: true });
+  const what = `leftover ${midSentence(l.title || 'dinner')}`;
+  const left = l.servings - 1;
+  const ops = [
+    set(['lunch', 'days', to, name, 'skip'], true),
+    set(['lunch', 'days', to, name, 'reason'], `Leftover ${midSentence(l.title || 'dinner')}`),
+    set(['leftovers', from, 'servings'], left),
+    set(['leftovers', from, 'lunches'], [...(Array.isArray(l.lunches) ? l.lunches : []), { name, date: to }]),
+  ];
+  const day = to === today ? 'today' : to === addDays(today, 1) ? 'tomorrow' : `on ${weekdayName(to)}`;
+  return result(state, ops, `${name} takes a serving of the ${what} for lunch ${day}. That packed lunch is off the list.${left ? ` ${servingsText(left)} left.` : ''}`, { left });
+}
+
+/** The freezer shelf item a dinner's leftovers are kept as ("Leftover chicken fajitas", counted in plates). */
+export function leftoverItemId(state, title) {
+  const name = `Leftover ${midSentence(title)}`;
+  const hit = Object.entries(state?.custom || {}).find(([, c]) => c?.name?.toLowerCase() === name.toLowerCase());
+  return { id: hit ? hit[0] : `custom-${slugify(name)}`, name, exists: !!hit };
+}
+
+/**
+ * Some or all of a batch goes in the freezer: it leaves the fridge count and becomes a shelf item
+ * "Leftover …" in the freezer, counted in plates and dated, so it has a use-by (about 3 months),
+ * shows with the quick backups and the freezer watch, and is logged if it's ever thrown out.
+ */
+export function freezeLeftoversOps(db, state, { from, servings = null, today, who, at }) {
+  const l = state?.leftovers?.[from];
+  if (!l || !(l.servings > 0)) return result(state, [], 'Those leftovers are already gone.', { error: true });
+  const now = at || new Date().toISOString();
+  const n = Math.max(1, Math.min(l.servings, Math.round(Number(servings) || l.servings)));
+  const it = leftoverItemId(state, l.title || 'dinner');
+  const each = servingCost(db, state, from, l);
+  const prev = state?.pantry?.[it.id];
+  const base = prev && !prev.low && typeof prev.qty === 'number' ? prev.qty : 0;
+  // Plates already frozen and tonight's share one date: the older one, so nothing hides behind fresh food.
+  const since = base > 0 && isISO(prev.since) ? prev.since : (today || chicagoDay(now));
+  const ops = [];
+  if (!it.exists) ops.push(set(['custom', it.id], { name: it.name, unit: 'plates', aisle: 'Frozen', kind: 'measured', storage: 'freezer', ...(each > 0 ? { each } : {}) }));
+  ops.push(
+    set(['pantry', it.id], { qty: base + n, stocked: false, since, place: 'freezer', by: who || SHARED_PROFILE, at: now }),
+    set(['leftovers', from, 'servings'], l.servings - n),
+    set(['leftovers', from, 'frozen'], (Number(l.frozen) || 0) + n),
+    set(['leftovers', from, 'item'], it.id),
+  );
+  const left = l.servings - n;
+  return result(state, ops, `${n} ${n === 1 ? 'plate' : 'plates'} of leftover ${midSentence(l.title || 'dinner')} in the freezer. It keeps about 3 months and shows with the quick backups.${left ? ` ${servingsText(left)} still in the fridge.` : ''}`, { item: it.id, left });
+}
+
+/** Thrown out (past their best): the batch is done, and the waste log gets what those servings cost. */
+export function tossLeftoversOps(db, state, { date, today, who, at }) {
+  const l = state?.leftovers?.[date];
+  if (!l || !(l.servings > 0)) return result(state, [], 'Those leftovers are already gone.');
+  const now = at || new Date().toISOString();
+  const cost = round2(servingCost(db, state, date, l) * l.servings);
+  const name = `Leftover ${midSentence(l.title || 'dinner')}`;
+  const ops = [
+    set(['leftovers', date, 'servings'], 0),
+    set(['waste', uid('w')], { id: `leftover:${l.dinner || date}`, name, qty: l.servings, unit: 'servings', cost, reason: 'tossed', date: today || chicagoDay(now), estimated: true, since: date, by: who || SHARED_PROFILE, at: now }),
+  ];
+  return result(state, ops, `Logged: ${servingsText(l.servings)} of ${midSentence(name)} thrown out${cost ? `, about $${cost.toFixed(2)}` : ''}. Next time, a leftover night or the freezer saves it.`);
+}
+
 // ---------------------------------------------------------------- sides
 
 export function substituteOps(db, state, { dinnerId, slot, ref }) {
@@ -483,12 +580,22 @@ export function promoteOps(db, state, { dinnerId, at }) {
 
 export function setPantryOps(db, state, { id, qty, stocked, low, who, at }) {
   const prev = state?.pantry?.[id] || {};
-  const next = { qty: prev.qty ?? null, stocked: !!prev.stocked, ...(prev.label ? { label: prev.label } : {}), ...(prev.since ? { since: prev.since } : {}), ...(prev.place ? { place: prev.place } : {}), ...(prev.bought ? { bought: prev.bought } : {}), ...stamp(who, at) };
+  // Everything already on the entry is kept (label, place, bought, sinceAbout, and anything a
+  // newer version adds); only the amount, the stocked switch, "running low" and the stamp change.
+  const { low: wasLow, by: _by, at: _at, ...kept } = clone(prev);
+  const next = { ...kept, qty: prev.qty ?? null, stocked: !!prev.stocked, ...stamp(who, at) };
   if (qty !== undefined) next.qty = qty === null ? null : Math.max(0, round2(Number(qty) || 0));
   if (stocked !== undefined) next.stocked = !!stocked;
-  // "Came home" date for use-it-first (SPEC §13): new stock, more of it, or a staple back on the shelf.
-  const more = typeof next.qty === 'number' && next.qty > (typeof prev.qty === 'number' && !prev.low ? prev.qty : 0);
-  if (more || (next.stocked && !prev.stocked) || !prev.at) next.since = chicagoDay(next.at); // the family's day, not the UTC one
+  // "Came home" date for use-it-first (SPEC §13, §21.3): set when food arrives on an empty shelf
+  // (a new item, one that had run out or was running low, a staple back in stock). More of
+  // something that's already there keeps the older date, so last month's chicken doesn't look new
+  // because a pound was added; with no date on the old stock it stays undated and the pantry asks.
+  const had = !wasLow && (typeof prev.qty === 'number' ? prev.qty > 0 : !!prev.stocked);
+  const more = typeof next.qty === 'number' && next.qty > (typeof prev.qty === 'number' && !wasLow ? prev.qty : 0);
+  if ((more && !had) || (next.stocked && !prev.stocked && !had) || !prev.at) {
+    next.since = chicagoDay(next.at); // the family's day, not the UTC one
+    delete next.sinceAbout; // a real date now, not a rough answer
+  }
   // Changing the amount or the stocked toggle counts as restocking, which clears "running low".
   const isLow = low !== undefined ? !!low : !!prev.low && qty === undefined && stocked === undefined;
   if (isLow) next.low = true;

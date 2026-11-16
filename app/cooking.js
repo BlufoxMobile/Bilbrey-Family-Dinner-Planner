@@ -9,7 +9,7 @@ import { itemMeta, unitText, readableId, singular } from './shopping.js';
 import { onHand, ENOUGH } from './coverage.js';
 import { useSoon, sinceOf, placeOf } from './freshness.js';
 import { activeDeal } from './deals.js';
-import { isVegSide } from './health.js';
+import { isVegSide, VEG_ON_PLATE } from './health.js';
 import { addDays, diffDays, round2, shortDate, weekdayName, midSentence, listJoin } from './util.js';
 import { fmtMinutes } from './data.js';
 
@@ -407,8 +407,7 @@ export function pantryCheck(db, state, items, rem = onHand(db, state)) {
 
 // ---------------------------------------------------------------- plate facts: calories, protein, lean
 
-/** A plate "has a vegetable" at one serving or more (80 g; the validator's line for a default plate). */
-export const VEG_ON_PLATE = 1;
+export { VEG_ON_PLATE }; // a plate "has a vegetable" at one 80 g serving or more (app/health.js)
 
 /**
  * One plate of a dinner as served: nutrition.plateHealth (docs/spec/18 §18.5, the one lean rule:

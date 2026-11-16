@@ -160,12 +160,13 @@ test('generator groups proteins so a bulk pack is used across dinners', () => {
   const dates = periodRange('2026-11-16', 'two').dates;
   const { state } = plan({}, dates);
   const list = buildList(db, state, { dates });
-  const chicken = list.items.find((i) => i.id === 'chicken');
-  if (chicken && chicken.store === 'sams') {
-    const dinnersUsing = chicken.uses.length;
-    assert.ok(dinnersUsing >= 2, 'a 10 lb pack feeds several dinners');
-    assert.ok(chicken.leftover < chicken.pack.size, 'no more than one pack wasted');
-  }
+  // Which meat that is depends on the recipes and on "lean by default" (docs/spec/21 §21.2: today
+  // the lean plan leans on chicken thighs), so the rule is about the bulk packs, whichever they are.
+  const bulk = list.items.filter((i) => db.ingredients[i.id]?.meat && i.store === 'sams' && i.pack.size >= 5);
+  assert.ok(bulk.length > 0, 'the plan buys meat in bulk');
+  assert.ok(bulk.some((i) => i.uses.length >= 3), `a bulk pack feeds several dinners (${bulk.map((i) => `${i.id}: ${i.uses.length}`).join(', ')})`);
+  assert.ok(bulk.filter((i) => i.uses.length < 2).length <= 1, 'a bulk pack opened for one dinner is the exception');
+  for (const i of bulk) assert.ok(i.leftover < i.pack.size, `${i.id}: no more than one pack left over`);
 });
 
 test('night types follow settings', () => {
