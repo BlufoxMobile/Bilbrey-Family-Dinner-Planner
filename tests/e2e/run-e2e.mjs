@@ -236,6 +236,7 @@ test('pantry scan (mock AI) confirms items and they drop off the list', async ()
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVQI12P8z8DAwMDAxMDAwMDAAAANHQEDK+mmyAAAAABJRU5ErkJggg==', 'base64');
   await page.setInputFiles('input[type=file]', { name: 'shelf.png', mimeType: 'image/png', buffer: png });
   await page.waitForSelector('dialog[open] .review-row', { timeout: 15000 });
+  assert.equal((await page.textContent('dialog[open] .read-by')).trim(), 'Read by Claude Opus 5.5');
   await shot(page, 'e2e-10-scan-review');
   const rows = await page.$$('dialog[open] .review-row');
   assert.ok(rows.length >= 3, 'found several items');
@@ -521,6 +522,7 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   await page.waitForSelector('dialog[open] .rcpt-thumbs img');
   await page.click('dialog[open] [data-action="rcpt:read"]');
   await page.waitForSelector('dialog[open] .rcpt-line');
+  assert.equal((await page.textContent('dialog[open] .read-by')).trim(), 'Read by Claude Opus 5.5');
   const mock = await (await fetch(`${apiBase}/__mock/state`)).json();
   assert.equal(mock.lastReceipt.images, 1);
   assert.equal(mock.lastReceipt.store, 'sams');
@@ -572,8 +574,11 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   await page.waitForSelector('.rcpt-card[open] .rcpt-history-lines li');
   await page.click('[data-action="rcpt:scan"]');
   await page.setInputFiles('dialog[open] [data-testid="rcpt-files"]', path.join(ROOT, 'icons', 'icon-192.png'));
+  api.db.claude.keySet = false; // no Claude key: the free scanner reads it, and the sheet says so
   await page.click('dialog[open] [data-action="rcpt:read"]');
   await page.waitForSelector('dialog[open] .hint-warn');
+  assert.equal((await page.textContent('dialog[open] .read-by')).trim(), 'Read by the free scanner');
+  api.db.claude.keySet = true;
   assert.equal(await page.getAttribute('dialog[open] [data-action="rcpt:save"]', 'disabled'), '');
   await page.keyboard.press('Escape');
   api.db.receiptExtraLines = [];
@@ -687,6 +692,130 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   await shot(page, 'e2e-34-plan-ahead-list');
   await page.click('[data-action="trip:end"]'); // back to the week for the tests that follow
   await waitFor(async () => !(await familyState(page)).state.settings?.trip);
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('Claude in settings: the model and this month’s spend, a model switch, and the connector link', async () => {
+  await go(page, '#/family', '.page-family');
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await page.waitForSelector('.claude-card .ai-spend');
+  assert.match(await page.textContent('.claude-card .ai-status'), /^Claude Opus 5\.5 reads your photos$/);
+  assert.match(await page.textContent('.claude-card .ai-spend'), /\$1\.20 of \$5\.00/);
+  assert.match(await page.textContent('.claude-card .seg-ai [data-value="claude-opus-5-5"]'), /About 5¢ a photo/);
+  assert.match(await page.textContent('.claude-card .seg-ai [data-value="claude-haiku-5-5"]'), /About 1¢ a photo/);
+  await page.click('[data-action="ai:model"][data-value="claude-sonnet-5-5"]');
+  await toastMatch(page, /^Claude Sonnet 5\.5 reads your photos and suggests dinners from now on/);
+  assert.equal((await familyState(page)).state.settings.aiModel, 'claude-sonnet-5-5');
+  await waitFor(async () => /^Claude Sonnet 5\.5 reads your photos$/.test(await page.textContent('.claude-card .ai-status')));
+  assert.equal(await page.getAttribute('[data-action="ai:model"][data-value="claude-sonnet-5-5"]', 'aria-checked'), 'true');
+  await waitFor(async () => (await (await fetch(`${apiBase}/__mock/state`)).json()).state.settings?.aiModel === 'claude-sonnet-5-5');
+  // Connect your Claude chats: the private link, how to add it, Copy, and a new link.
+  await page.click('[data-action="ai:link"]');
+  await page.waitForSelector('#ai-link');
+  const link = await page.inputValue('#ai-link');
+  let mock = await (await fetch(`${apiBase}/__mock/state`)).json();
+  assert.ok(link.endsWith(`/mcp/${mock.mcpToken}`), link);
+  const steps = await page.textContent('.ai-connect');
+  assert.match(steps, /Settings.*Connectors.*Add custom connector/s);
+  assert.match(steps, /Bilbrey Dinner Planner/);
+  assert.match(steps, /Here’s our fridge — update the pantry/);
+  await page.click('[data-action="ai:copy"]');
+  await toastMatch(page, /Link copied/);
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), link);
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await page.waitForTimeout(350);
+  await page.locator('.claude-card').screenshot({ path: path.join(SHOTS, 'e2e-31-claude-card.png') });
+  await page.click('[data-action="ai:rotate"]');
+  await page.click('dialog[open] [data-confirm="yes"]');
+  await toastMatch(page, /New link ready/);
+  await waitFor(async () => (await page.inputValue('#ai-link')) !== link);
+  const link2 = await page.inputValue('#ai-link');
+  mock = await (await fetch(`${apiBase}/__mock/state`)).json();
+  assert.notEqual(link2, link, 'the old link is replaced');
+  assert.ok(link2.endsWith(`/mcp/${mock.mcpToken}`));
+  // Back to Opus for the rest of the run.
+  await page.click('[data-action="ai:model"][data-value="claude-opus-5-5"]');
+  await waitFor(async () => (await familyState(page)).state.settings.aiModel === 'claude-opus-5-5');
+  assert.ok(await noOverflow(page));
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('What can I make? a photo and a note → ideas → Make it tonight; its missing items land on the list', async () => {
+  const before = (await familyState(page)).state;
+  assert.ok(before.plan[TODAY]?.dinner, 'tonight already has a dinner');
+  await go(page, '#/pantry', '.page-pantry');
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await page.click('.ideas-cta [data-action="ideas:open"]');
+  await page.waitForSelector('dialog[open] [data-testid="ideas-files"]');
+  await page.setInputFiles('dialog[open] [data-testid="ideas-files"]', path.join(ROOT, 'icons', 'icon-512.png'));
+  await page.waitForSelector('dialog[open] .idea-thumbs img');
+  await page.fill('dialog[open] #idea-note', 'use the chicken first');
+  await page.waitForTimeout(400);
+  await shot(page, 'e2e-32-ideas-pick');
+  await page.click('dialog[open] [data-action="ideas:go"]');
+  await page.waitForSelector('dialog[open] .idea-card', { timeout: 20000 });
+  const mock = await (await fetch(`${apiBase}/__mock/state`)).json();
+  assert.equal(mock.lastIdeas.images, 1);
+  assert.equal(mock.lastIdeas.note, 'use the chicken first');
+  assert.ok(mock.lastIdeas.pantry > 3, 'the pantry goes along');
+  assert.ok(mock.lastIdeas.sides > 20 && mock.lastIdeas.catalog > 100, 'with the sides and the catalog');
+  assert.equal((await page.$$('dialog[open] .idea-card')).length, 2, 'the seafood idea is never shown');
+  assert.match(await page.textContent('dialog[open] .read-by'), /^Ideas from Claude Opus 5\.5, from your photo and the pantry$/);
+  const card = page.locator('dialog[open] .idea-card').first();
+  const title = (await card.locator('.idea-title').textContent()).trim();
+  const cardText = await card.textContent();
+  assert.match(cardText, /You’d need:.*fresh basil/i);
+  assert.match(cardText, /min · Stovetop/);
+  assert.doesNotMatch(cardText, /undefined|NaN|null/);
+  assert.equal(await page.evaluate(() => document.querySelector('dialog[open] .sheet-body').scrollWidth <= document.querySelector('dialog[open] .sheet-body').clientWidth), true, 'no sideways scroll in the sheet');
+  await page.waitForTimeout(400);
+  await shot(page, 'e2e-33-ideas');
+  await card.locator('[data-action="ideas:tonight"]').click();
+  // Tonight already has a dinner: it asks first.
+  await page.waitForSelector('dialog[open] [data-action="ideas:replace"]');
+  await page.waitForTimeout(300);
+  await shot(page, 'e2e-34-ideas-replace');
+  await page.click('dialog[open] [data-action="ideas:replace"]:not([data-move])');
+  await toastMatch(page, new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} is on for tonight\\. It replaces .+\\. The list has the \\d things it needs\\.$`));
+  let s = (await familyState(page)).state;
+  const id = s.plan[TODAY].dinner;
+  assert.ok(s.customDinners?.[id], 'tonight is a family-made dinner');
+  assert.equal(s.customDinners[id].title, title);
+  assert.equal(s.customDinners[id].rotation, 'bench', 'a one-off stays out of the rotation');
+  assert.equal(s.plan[TODAY].manual, true);
+  assert.equal(s.plan[TODAY].by, 'Jeff');
+  assert.ok(Object.values(s.custom || {}).some((c) => c.name === 'Fresh basil'), 'the unmatched basil is a shelf item');
+  await page.waitForSelector('dialog[open] .idea-card .badge-plan');
+  // The second idea goes on a night next month, then in the recipe box.
+  await page.locator('dialog[open] .idea-card').nth(1).locator('[data-action="ideas:night"]').click();
+  await page.waitForSelector('dialog[open] .move-list');
+  assert.equal((await page.$$('dialog[open] [data-action="ideas:pick-night"]')).length, 31, 'tonight and the next 30 nights');
+  await page.waitForTimeout(300);
+  await shot(page, 'e2e-35-ideas-night');
+  await page.click('dialog[open] [data-action="ideas:pick-night"][data-date="2026-12-01"]');
+  await toastMatch(page, /is on for Tuesday, Dec 1\./);
+  s = (await familyState(page)).state;
+  const id2 = s.plan['2026-12-01'].dinner;
+  assert.equal(s.customDinners[id2].rotation, 'bench');
+  await page.waitForSelector('dialog[open] .idea-card:nth-of-type(2) .badge-plan');
+  await page.locator('dialog[open] .idea-card').nth(1).locator('[data-action="ideas:box"]').click();
+  await toastMatch(page, /is in the recipe box and joins the rotation/);
+  s = (await familyState(page)).state;
+  assert.equal(s.customDinners[id2].rotation, 'core', 'the same dinner, now in the rotation');
+  assert.equal(Object.keys(s.customDinners).length, 2, 'no duplicates');
+  await page.waitForSelector('dialog[open] .idea-card .badge-fav');
+  await page.waitForTimeout(300);
+  await shot(page, 'e2e-36-ideas-saved');
+  await page.keyboard.press('Escape');
+  // What it needs is on the list.
+  const names = await listNames(page);
+  assert.ok(names.some((n) => /fresh basil/i.test(n)), `the basil is on the list (${names.join(', ')})`);
+  assert.ok(names.some((n) => /lemon/i.test(n)), 'and the lemons');
+  await go(page, '#/tonight', '.page-tonight');
+  assert.equal((await page.textContent('.hero-title')).trim(), title);
+  await go(page, '#/plan', '.page-plan');
+  assert.ok(await page.$('.plan-actions [data-action="ideas:open"]'), 'Plan has the button too');
+  await waitFor(async () => (await (await fetch(`${apiBase}/__mock/state`)).json()).state.customDinners?.[id]);
   assert.equal(errors.length, 0, errors.join('\n'));
 });
 

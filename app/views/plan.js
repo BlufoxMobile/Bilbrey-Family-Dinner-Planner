@@ -130,7 +130,7 @@ export function render(app) {
     })}
     <div class="plan-actions">
       <button type="button" class="btn btn-primary" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}Plan ahead</button>
-      ${/* The "What can I make?" button (its own workstream) goes right here, after Plan ahead. */ ''}
+      <button type="button" class="btn btn-secondary" data-action="ideas:open">${ic('camera', { size: 20 })}What can I make?</button>
       ${open ? html`<button type="button" class="btn btn-secondary" data-action="plan:fill">${ic('plus', { size: 20 })}Plan ${open} open ${open === 1 ? 'night' : 'nights'}</button>` : ''}
       ${auto ? html`<button type="button" class="btn btn-secondary" data-action="plan:replan">${ic('refresh', { size: 20 })}Re-plan this period</button>` : ''}
       <button type="button" class="btn ${app.ui.swapMode ? 'btn-primary' : 'btn-secondary'}" data-action="plan:swapmode" aria-pressed="${app.ui.swapMode ? 'true' : 'false'}">${ic('swap', { size: 20 })}${app.ui.swapMode ? 'Done swapping' : 'Swap two nights'}</button>

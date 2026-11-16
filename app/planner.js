@@ -98,7 +98,7 @@ export function implicitPromotions(db, state) {
   const map = new Map();
   const replaced = new Set(Object.values(state.promoted || {}).map((p) => p?.replaced).filter(Boolean));
   const gaps = allDinners(db, state)
-    .filter((d) => hasDownVote(state, d.id) && !state.retired?.[d.id] && !replaced.has(d.id) && (d.rotation === 'core' || d.custom || isPromoted(state, d.id)))
+    .filter((d) => hasDownVote(state, d.id) && !state.retired?.[d.id] && !replaced.has(d.id) && (d.rotation === 'core' || isPromoted(state, d.id)))
     .sort((a, b) => a.id.localeCompare(b.id));
   for (const d of gaps) {
     const bench = bestBenchFor(db, state, d.id, { exclude: new Set(map.keys()) });
@@ -108,9 +108,10 @@ export function implicitPromotions(db, state) {
   return map;
 }
 
+/** Family-made dinners are core unless saved as 'bench' (a one-off "What can I make?" idea, SPEC §17). */
 export function inRotation(state, d, db = null) {
   if (!d || isRetired(state, d.id)) return false;
-  return d.rotation === 'core' || d.custom || isPromoted(state, d.id) || (!!db && implicitPromotions(db, state).has(d.id));
+  return d.rotation === 'core' || isPromoted(state, d.id) || (!!db && implicitPromotions(db, state).has(d.id));
 }
 
 export function rotationList(db, state) {
