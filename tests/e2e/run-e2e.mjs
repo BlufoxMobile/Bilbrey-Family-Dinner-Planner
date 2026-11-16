@@ -546,6 +546,15 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   assert.ok(s.receipts.some((r) => r.receiptId === rid), 'counted once in the Budget');
   // The list: the product, "paid $… · Nov 15", and Find it for that exact product.
   await go(page, '#/list', '.page-list');
+  // The receipt's pack is in the pantry now. When that one pack covers the week, the item leaves the
+  // list (which dinners are planned decides that), so the family "uses it up" and the list asks again.
+  if (!(await page.locator(`.item-main[data-key="${id0}"]`).count())) {
+    await go(page, '#/pantry', '.page-pantry');
+    await page.fill(`#pan-${id0} .qty-input`, '0');
+    await page.dispatchEvent(`#pan-${id0} .qty-input`, 'change');
+    await waitFor(async () => (await familyState(page)).state.pantry[id0].qty === 0);
+    await go(page, '#/list', '.page-list');
+  }
   const row = page.locator(`.item:has(.item-main[data-key="${id0}"])`);
   await row.locator('.paid').waitFor();
   assert.match(await row.locator('.paid').textContent(), /^paid \$[\d.]+ · Nov 15$/);
@@ -620,7 +629,7 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   const key = await page.evaluate(() => JSON.parse(localStorage.getItem('bfdp.v2.device')).key);
   const item = (qty, since, extra = {}) => ({ qty, stocked: false, since, at: `${since}T18:00:00.000Z`, by: 'Candi', ...extra });
   const seed = Object.entries({
-    chickenThighs: item(4.5, '2026-09-03'), eyeRoundSteak: item(2.5, '2026-10-20'), cornCobs: item(10, '2026-10-20'),
+    chickenThighs: item(9, '2026-09-03'), eyeRoundSteak: item(2.5, '2026-10-20'), cornCobs: item(10, '2026-10-20'),
     tikka: item(30, '2026-11-02'), basmati: item(8, '2026-11-02'), naan: item(10, '2026-11-14'), butter: item(16, '2026-11-14'),
     potatoes: item(5, '2026-11-14'), milk: item(8, '2026-11-14'),
     turmeric: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' }, cajunSeasoning: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' }, soy: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' },
@@ -647,8 +656,9 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   await page.waitForSelector('#ahead-card');
   const s = (await familyState(page)).state;
   for (let d = 23; d <= 29; d++) assert.ok(s.plan[`2026-11-${d}`]?.dinner, `Nov ${d} is planned`);
-  const thighNight = Object.entries(s.plan).find(([d, e]) => d >= '2026-11-23' && e.dinner === 'tikka-masala');
-  assert.ok(thighNight, 'the September chicken thighs make a tikka masala night next week');
+  // SPEC §21.1: the planner's own nights are re-planned too, so the thighs may get a night this week.
+  const thighNight = Object.entries(s.plan).find(([d, e]) => d > TODAY && e.dinner === 'tikka-masala');
+  assert.ok(thighNight, 'the September chicken thighs make a tikka masala night');
   const card = await page.textContent('#ahead-card');
   assert.match(card, /Your pantry covers \d+ dinners?/);
   assert.match(card, /Uses up the boneless skinless chicken thighs from Sep 3/);

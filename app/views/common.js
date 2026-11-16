@@ -130,7 +130,9 @@ export { raw };
 // ---------------------------------------------------------------- v2.5: the prep schedule (SPEC §12.5)
 
 const PREP_WHEN = { morning: 'Morning', anytime: 'Today', evening: 'Evening' };
-const PREP_ICON = { thaw: 'snow', freeze: 'snow', cook: 'flame', lunch: 'lunch', buy: 'store' };
+const PREP_ICON = { thaw: 'snow', freeze: 'snow', cook: 'flame', lunch: 'lunch', buy: 'store', slow: 'clock', use: 'info', leftovers: 'bowl', catchup: 'pantry' };
+/** A prep job with something to tap (SPEC §21): "Leftovers?", "Catch up". */
+const prepAction = (a) => html`<button type="button" class="btn btn-small btn-secondary prep-act" data-action="${a.name}" ${raw(Object.entries(a.data || {}).map(([k, v]) => `data-${k}="${String(v).replace(/"/g, '&quot;')}"`).join(' '))}>${a.label}</button>`;
 
 /** Thaw, cook-once and lunch-packing jobs for the next few days, from the plan and the pantry. */
 export function prepCard(app, { days = 7, title = 'Prep schedule', empty = true } = {}) {
@@ -141,7 +143,7 @@ export function prepCard(app, { days = 7, title = 'Prep schedule', empty = true 
     <h2 id="prep-h-${days}" class="section-title">${ic('clock', { size: 22 })}${title}</h2>
     ${sched.length ? html`<ol class="prep-days">${sched.map((d) => html`<li class="prep-day">
       <h3 class="prep-date">${d.date === today ? 'Today' : relativeDay(d.date, today)}</h3>
-      <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${PREP_WHEN[t.when] || ''}</small>${t.text}</span></li>`)}</ul>
+      <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${PREP_WHEN[t.when] || ''}</small>${t.text}${t.action ? prepAction(t.action) : ''}</span></li>`)}</ul>
     </li>`)}</ol>` : html`<p class="muted small">Nothing to thaw or pack in the next few days.</p>`}
   </section>`;
 }

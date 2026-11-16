@@ -48,7 +48,7 @@ function missingFor(db, state, rem, items) {
 }
 
 /** Ready-made backups: frozen and shelf items that are a meal on their own (burritos, soups). */
-const BACKUP = /burrito|tamale|soup|bites|pizza|ramen|smashed|patties|chili/i;
+const BACKUP = /burrito|tamale|soup|bites|pizza|ramen|smashed|patties|chili|^leftover/i;
 export function backups(db, state) {
   const out = [];
   for (const [id, p] of Object.entries(state?.pantry || {})) {

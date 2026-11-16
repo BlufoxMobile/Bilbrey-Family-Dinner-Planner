@@ -1,16 +1,22 @@
 // PLAN: 1–3 weeks or a month, plan-from store, day cards with sides,
 // two-tap swap, drag-and-drop on desktop, plan / re-plan, and plan ahead, pantry first (SPEC §16).
+// Smarter planning (SPEC §21): plan ahead re-plans the planner's own picks with a before/after,
+// lean by default and busy nights, the freezer watch, leftovers and pantry catch-up.
 import { html, ic, when, segmented, toast, openSheet, closeSheet, renderSheet, switchToggle, tf } from '../ui.js';
 import { addDays, diffDays, money, rangeLabel, shortDate, startOfWeek, monthName, weekday, monthOnly, datesBetween, weekdayName, midSentence } from '../util.js';
-import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage, isRetired, defaultAnchor as defaultAnchorFor } from '../planner.js';
+import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage, isRetired, itemsForNight, defaultAnchor as defaultAnchorFor } from '../planner.js';
 import { listJoin } from '../util.js';
-import { buildList } from '../shopping.js';
-import { generateOps, swapNightsOps, settingOps } from '../actions.js';
+import { buildList, plannedNights, unitText } from '../shopping.js';
+import { generateOps, swapNightsOps, settingOps, markCookedOps, undoFor } from '../actions.js';
+import { del } from '../state.js';
 import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition, thumbs, prepCard } from './common.js';
 import { plateNutrition, fmtKcal } from '../nutrition.js';
 import { openNight } from './sheets.js';
-import { veggieCheck } from '../health.js';
-import { AHEAD_QUICK, aheadEnd, aheadLimit, clampAheadEnd, planAheadOps, pantryStretch, shoppingTripOps } from '../planahead.js';
+import { tripAdviceCard } from './budget.js';
+import { veggieCheck, leanOn, busyNightsOf, leanSummary } from '../health.js';
+import { AHEAD_QUICK, aheadEnd, aheadLimit, clampAheadEnd, planAheadOps, pantryStretch, shoppingTripOps, aheadStats, aheadRecord } from '../planahead.js';
+import { freezerWatch } from '../freshness.js';
+import { leftoverAsks, leftoverChoices, leftoversOps, catchUp, skippedNightOps, lunchUsedOps } from '../waste.js';
 
 export const title = () => 'Plan';
 
@@ -51,7 +57,7 @@ function dayCard(app, date, { compact = false } = {}) {
   if (past && !d && !away) {
     return html`<article class="day is-past is-past-empty" data-date="${date}"><span class="day-hit day-hit-static">${dayStamp(date, today)}<span class="day-note">Nothing planned</span></span></article>`;
   }
-  const label = away ? awayReason(e).label : d ? d.title : 'Nothing planned';
+  const label = away ? (e.away?.leftovers ? 'Leftovers night' : awayReason(e).label) : d ? d.title : 'Nothing planned';
   const sides = d && !away ? sidesFor(app, d.id, e) : [];
   return html`<article class="${cls}" data-date="${date}" ${!cooked && !past ? html`draggable="true"` : ''}>
     <button type="button" class="day-hit" data-action="plan:tap" data-date="${date}" aria-label="${shortDate(date)}: ${label}${cooked ? ', cooked' : ''}${app.ui.swapMode ? (picked ? ', selected for swap' : ', tap to swap') : ''}">
@@ -122,6 +128,7 @@ export function render(app) {
     ${periodNav(app, range)}
     <div class="plan-opts">
       <div class="opt"><span class="opt-label" id="pf-l">Plan from</span>${segmented('planStore', STORE_OPTS, s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}</div>
+      ${planPrefs(app, range)}
     </div>
     ${when(s.planStore !== 'both', () => {
       const cov = storeCoverage(app.db, app.state, s.planStore);
@@ -137,6 +144,10 @@ export function render(app) {
     </div>
     ${when(app.ui.swapMode, () => html`<p class="swap-banner" role="status">${app.ui.swapPick ? html`Now tap the night to trade with <b>${shortDate(app.ui.swapPick)}</b>.` : 'Tap the first night, then the night to trade with.'}</p>`)}
     ${aheadCard(app)}
+    ${tripAdviceCard(app)}
+    ${catchUpCard(app)}
+    ${leftoversCard(app)}
+    ${freezerCard(app)}
     <p class="plan-summary">${planned} ${planned === 1 ? 'dinner' : 'dinners'} planned${away ? `, ${away} ${away === 1 ? 'night' : 'nights'} away` : ''}. About <a href="#/list">${money(list.total)} in groceries</a>${list.nights.length ? `, ${money(list.perDinner)} a dinner` : ''}.</p>
     ${veggieCard(app, range)}
     ${grid(app, range)}
@@ -215,26 +226,58 @@ export const actions = {
     openPlanAhead.state.end = clampAheadEnd(app.today(), el.value);
     renderSheet();
   },
-  'ahead:pantry': (app) => { if (openPlanAhead.state) openPlanAhead.state.pantryFirst = !openPlanAhead.state.pantryFirst; renderSheet(); },
+  'ahead:pantry': (app) => {
+    const st = openPlanAhead.state;
+    if (!st) return;
+    st.pantryFirst = !st.pantryFirst;
+    if (!st.replanSet) st.replan = st.pantryFirst; // re-planning follows "use what we have" until it's set by hand
+    renderSheet();
+  },
+  'ahead:replan': (app) => { const st = openPlanAhead.state; if (st) { st.replan = !st.replan; st.replanSet = true; } renderSheet(); },
   'ahead:go': (app) => {
     const st = openPlanAhead.state;
     if (!st) return;
     const today = app.today();
     const end = clampAheadEnd(today, st.end);
-    const res = planAheadOps(app.db, app.state, { start: today, end, who: app.who(), today, pantryFirst: st.pantryFirst });
+    const res = planAheadOps(app.db, app.state, { start: today, end, who: app.who(), today, pantryFirst: st.pantryFirst, replan: st.replan });
     closeSheet();
-    app.ui.planAhead = { start: today, end, pantryFirst: st.pantryFirst };
-    // Undo takes the plan back, and the summary with it.
-    if (!app.commit(res, { onUndo: () => { app.ui.planAhead = null; } })) app.render();
+    app.ui.aheadLast = { end, pantryFirst: st.pantryFirst, replan: st.replan };
+    // The result card is part of what's saved (state.planAhead), so Undo takes it back with the plan,
+    // and it's still there after a reload.
+    if (!app.commit(res)) app.render();
     setTimeout(() => document.getElementById('ahead-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
   },
   'ahead:list': (app) => {
-    const a = app.ui.planAhead;
+    const a = aheadRecord(app.state, app.today());
     if (!a) return;
     app.commit(shoppingTripOps(app.state, { today: app.today(), end: a.end, who: app.who() }));
     app.navigate('#/list');
   },
-  'ahead:close': (app) => { app.ui.planAhead = null; app.render(); },
+  'ahead:close': (app) => { const ops = [del(['planAhead'])]; app.commit({ ops, undo: undoFor(app.state, ops), message: '' }, { quiet: true }); },
+  // ---------------------------------------------------------------- lean and busy nights (SPEC §21.2)
+  'plan:prefs': (app) => { app.ui.prefsOpen = !app.ui.prefsOpen; app.render(); },
+  'plan:lean': (app) => {
+    const on = !leanOn(app.state);
+    app.commit({ ...settingOps(app.state, 'lean', on), message: on ? 'Lean by default is on. New plans favor lighter, high-protein dinners.' : 'Lean by default is off.' });
+  },
+  'plan:busy': (app, el) => {
+    const day = Number(el.dataset.day);
+    const cur = busyNightsOf(app.state);
+    const next = cur.includes(day) ? cur.filter((d) => d !== day) : [...cur, day].sort();
+    app.commit(settingOps(app.state, 'busyNights', next), { quiet: true });
+  },
+  // ---------------------------------------------------------------- leftovers and catch-up (SPEC §21.3)
+  'left:open': (app, el) => openLeftovers(app, el.dataset.date),
+  'left:plates': (app, el) => { if (openLeftovers.state) openLeftovers.state.plates = Math.max(1, Math.min(10, openLeftovers.state.plates + Number(el.dataset.delta))); renderSheet(); },
+  'left:save': (app, el) => {
+    const st = openLeftovers.state;
+    const res = leftoversOps(app.db, app.state, { date: el.dataset.date, use: el.dataset.use, to: el.dataset.to || null, name: el.dataset.name || null, plates: st?.plates || 2, today: app.today(), who: app.who() });
+    if (app.commit(res)) closeSheet();
+  },
+  'catch:open': (app) => openCatchUp(app),
+  'catch:cooked': (app, el) => { app.commit(markCookedOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() })); renderSheet(); },
+  'catch:skip': (app, el) => { app.commit(skippedNightOps(app.db, app.state, { date: el.dataset.date })); renderSheet(); },
+  'catch:lunches': (app, el) => { app.commit(lunchUsedOps(app.db, app.state, { today: app.today(), packed: el.dataset.packed !== 'no', who: app.who() })); renderSheet(); },
 };
 
 export { addDays, startOfWeek, monthOnly };
@@ -267,10 +310,13 @@ const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 /** Choose how far ahead (a quick pick or any day up to a month out) and whether the pantry goes first. */
 function openPlanAhead(app) {
   const today = app.today();
-  const last = app.ui.planAhead;
+  const last = app.ui.aheadLast || aheadRecord(app.state, today);
+  const pantryFirst = last ? last.pantryFirst !== false : true;
   const st = (openPlanAhead.state = {
     end: last && last.end >= today ? last.end : aheadEnd(today, 'two'),
-    pantryFirst: last ? last.pantryFirst !== false : true,
+    pantryFirst,
+    // Re-plan the planner's own picks: on whenever the pantry goes first, unless switched by hand.
+    replan: pantryFirst, replanSet: false,
   });
   openSheet({
     id: 'plan-ahead',
@@ -279,6 +325,8 @@ function openPlanAhead(app) {
     render: () => {
       const dates = datesBetween(today, st.end);
       const open = dates.filter((d) => isFillable(app.state.plan?.[d], 'fill')).length;
+      const own = dates.filter((d) => d > today && app.state.plan?.[d]?.dinner && isFillable(app.state.plan[d], 'replan')).length; // never tonight's
+      const kept = dates.length - open - own;
       return html`
         <h3 class="sheet-h" id="ahead-through-h">Plan through</h3>
         <div class="ahead-quick" role="group" aria-labelledby="ahead-through-h">
@@ -290,8 +338,9 @@ function openPlanAhead(app) {
         </div>
         <label class="field ahead-date"><span class="field-label">Or pick the last night</span>
           <input class="input" type="date" id="ahead-end" min="${today}" max="${aheadLimit(today)}" value="${st.end}" data-change="ahead:end"></label>
-        <p class="muted small ahead-count">${count(dates.length, 'night')}, ${open ? `${open} still open to plan` : 'every one already planned'}. Nights set by hand, cooked or away stay as they are.</p>
+        <p class="muted small ahead-count">${count(dates.length, 'night')}: ${listJoin([open ? `${open} open` : '', own ? `${own} the planner picked` : '', kept ? `${kept} staying as ${kept === 1 ? 'it is' : 'they are'}` : ''])}. Tonight’s dinner and nights set by hand, cooked or away always stay as they are.</p>
         <div class="set-row ahead-switch"><span class="set-label">Use what we have first<small>Dinners the pantry already covers go first, oldest food first, so nothing sits until it’s freezer-burnt.</small></span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
+        <div class="set-row ahead-switch"><span class="set-label">Re-plan the planner’s picks<small>${own ? `${count(own, 'night')} the planner chose can change when that uses more of the pantry or costs less. Tonight’s dinner stays.` : 'Nothing after tonight was picked by the planner, so only open nights get planned.'} Off: only open nights are filled.</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Re-plan the planner’s picks' })}</div>
         <button type="button" class="btn btn-primary btn-block" data-action="ahead:go">${ic('sparkle', { size: 20 })}Plan it</button>`;
     },
   });
@@ -299,11 +348,14 @@ function openPlanAhead(app) {
 
 /** After planning: how far the pantry carries the plan, the old food it uses up, what still needs the store. */
 function aheadCard(app) {
-  const a = app.ui.planAhead;
   const today = app.today();
-  if (!a || a.end < today) return '';
+  const a = aheadRecord(app.state, today);
+  if (!a) return '';
   const start = a.start > today ? a.start : today;
   const s = pantryStretch(app.db, app.state, { start, end: a.end });
+  // Before and after (SPEC §21.1): the plan as it stood against the plan now, over the same nights.
+  const now = aheadStats(app.db, app.state, { start, end: a.end, today });
+  const was = a.before && start === a.start ? a.before : null;
   const need = s.nights.filter((n) => n.dinner && n.dinnerMissing.length);
   const lunchDays = s.nights.filter((n) => n.lunchMissing.length).length;
   const oldest = s.usesUp.slice(0, 3);
@@ -319,6 +371,11 @@ function aheadCard(app) {
       ? html`Without a trip to the store, it carries you through <b>${dayText(s.coveredThrough, today)}</b>${s.firstGap ? '.' : ', the whole plan.'}`
       : gap?.open ? html`Nothing is planned for ${dayText(gap.date, today)} yet.`
         : html`${dayText(s.firstGap, today).replace(/^./, (c) => c.toUpperCase())} already needs ${gap?.dinnerMissing.length ? 'groceries' : 'groceries for packed lunches'}.`}</p>
+    ${when(now.dinners, () => html`<div class="ahead-ba" id="ahead-ba">
+      <p class="ahead-ba-now"><b>${now.fromPantry} of ${now.dinners}</b> ${now.dinners === 1 ? 'dinner' : 'dinners'} ${was && now.fromPantry > was.fromPantry ? 'now ' : ''}${now.dinners === 1 ? 'comes' : 'come'} from the pantry${was && now.fromPantry !== was.fromPantry ? html` <span class="ahead-was ${now.fromPantry > was.fromPantry ? 'is-down' : ''}">${was.hadOpen ? 'the usual plan' : 'it was'}: ${was.fromPantry}</span>` : ''}</p>
+      <p class="ahead-ba-now"><b>About ${money(now.groceries)}</b> in groceries${was && Math.abs(was.groceries - now.groceries) >= 1 ? html` <span class="ahead-was ${now.groceries < was.groceries ? 'is-down' : ''}">${now.groceries < was.groceries ? `down from ${money(was.groceries)}` : `${was.hadOpen ? 'the usual plan' : 'it was'}: ${money(was.groceries)}`}</span>` : ''}</p>
+      ${when(was, () => html`<p class="muted small">${aheadVerdict(was, now)}</p>`)}
+    </div>`)}
     <div class="cover-meter" role="img" aria-label="${s.nights.filter((n) => n.covered).length} of ${s.nights.length} days covered by the pantry">${s.nights.map((n) => html`<span class="cover-pip ${n.covered ? 'is-on' : ''} ${n.away ? 'is-away' : ''}" title="${weekdayShort(n.date)} ${shortDate(n.date)}: ${n.away ? 'away' : n.covered ? 'covered' : n.open ? 'nothing planned' : 'needs groceries'}"></span>`)}</div>
     ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
     ${need.length ? html`<h3 class="ahead-sub">Still needs groceries<span class="count">${count(need.length, 'night')}</span></h3>
@@ -329,4 +386,146 @@ function aheadCard(app) {
     <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}Make the shopping list</button>
     <p class="muted small">One list for ${start === a.end ? shortDate(start) : rangeLabel(start, a.end)}, both stores, with only what the pantry doesn’t cover.</p>
   </section>`;
+}
+
+/** One plain sentence for the before/after. */
+function aheadVerdict(was, now) {
+  const more = now.fromPantry - was.fromPantry;
+  const saved = Math.round((was.groceries - now.groceries) * 100) / 100;
+  const base = was.hadOpen ? 'Against planning the open nights the usual way' : 'Against the plan before';
+  if (more > 0 && saved >= 1) return `${base}: ${count(more, 'more dinner')} from what’s already here, and about ${money(saved)} less to buy.`;
+  if (more > 0) return `${base}: ${count(more, 'more dinner')} from what’s already here.`;
+  if (saved >= 1) return `${base}: about ${money(saved)} less to buy.`;
+  if (saved <= -1) return `${base}: about ${money(-saved)} more to buy, because the pantry changed or nights were added since.`;
+  return 'The plan already made the most of the pantry, so it stayed as it was.';
+}
+
+// ---------------------------------------------------------------- lean by default, busy nights (SPEC §21.2)
+
+const DAY_LETTERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/** The two planning preferences, and how lean this period's plan is. */
+function planPrefs(app, range) {
+  const lean = leanOn(app.state);
+  const busy = busyNightsOf(app.state);
+  const today = app.today();
+  const sum = lean && showNutrition(app) ? leanSummary(app.db, app.state, range.dates.filter((d) => d >= today)) : null;
+  // A button, not <details>: the page re-renders on every sync, and this has to stay open through it.
+  const open = !!app.ui.prefsOpen;
+  return html`<div class="plan-prefs ${open ? 'is-open' : ''}">
+    <button type="button" class="plan-prefs-head" data-action="plan:prefs" aria-expanded="${tf(open)}" aria-controls="plan-prefs-body"><span class="opt-label">Planning for</span><span class="plan-prefs-now">${lean ? 'Lean plates' : 'Any dinner'}${busy.length ? `, easy on ${listJoin(busy.map((d) => DAY_LETTERS[d]))}` : ''}</span></button>
+    ${when(open, () => html`<div class="plan-prefs-body" id="plan-prefs-body">
+    <div class="set-row"><span class="set-label">Lean by default<small>New plans favor lighter, high-protein dinners with a vegetable, and keep fried and heavy ones to two a week. Burger and pizza nights stay.</small></span>${switchToggle({ on: lean, action: 'plan:lean', label: 'Lean by default' })}</div>
+    <div class="opt"><span class="opt-label" id="busy-l">Busy nights</span>
+      <div class="chip-grid busy-days" role="group" aria-labelledby="busy-l">${DAY_LETTERS.map((l, i) => html`<button type="button" class="chip ${busy.includes(i) ? 'is-on' : ''}" aria-pressed="${tf(busy.includes(i))}" data-action="plan:busy" data-day="${i}">${l}</button>`)}</div>
+      <p class="muted small">Busy nights get a slow-cooker dinner (the PossibleCooker does the work) or one that takes 30 minutes or less.</p></div>
+    ${when(sum && sum.known >= 3, () => html`<p class="small lean-line">${ic('leaf', { size: 18 })}<span><b>${sum.lean} of ${sum.total}</b> planned ${sum.total === 1 ? 'dinner is a lean plate' : 'dinners are lean plates'}${sum.heavy ? `, ${sum.heavy} ${sum.heavy === 1 ? 'is' : 'are'} heavy` : ''}. A plate averages about ${fmtKcal(sum.kcal)} calories and ${Math.round(sum.proteinG)} g protein.</span></p>`)}
+    </div>`)}
+  </div>`;
+}
+
+// ---------------------------------------------------------------- the freezer watch (SPEC §21.3)
+
+const monthsText = (days) => (days >= 60 ? `${Math.round(days / 30)} months` : `${days} days`);
+
+/** Old freezer food is called out with the night that uses it, or a nudge to plan it. */
+function freezerCard(app) {
+  const today = app.today();
+  const watch = freezerWatch(app.db, app.state, today);
+  if (!watch.length) return '';
+  const nights = plannedNights(app.db, app.state, datesBetween(today, addDays(today, 31)));
+  const usedOn = (id) => nights.find((n) => (itemsForNight(app.db, app.state, n.entry.dinner, n.entry)[id] || 0) > 0);
+  const rows = watch.slice(0, 6).map((w) => ({ ...w, night: usedOn(w.id) }));
+  const unplanned = rows.filter((r) => !r.night).length;
+  return html`<section class="freezer-card" id="freezer-card" aria-labelledby="fz-h">
+    <h2 id="fz-h" class="section-title">${ic('snow', { size: 22 })}<span>In the freezer the longest</span></h2>
+    <ul class="cover-list fz-list">${rows.map((w) => html`<li class="${w.past ? 'is-past' : ''}">
+      <span class="cover-day">${w.unknown ? 'No date' : w.past ? 'Past its time' : monthsText(w.age)}</span>
+      <span class="cover-what"><b>${foodName(w.name).replace(/^./, (c) => c.toUpperCase())}${typeof w.qty === 'number' ? html` <small class="fz-qty">${unitText(w.qty, w.unit)}</small>` : ''}</b>
+        <small>${w.unknown ? 'Nobody dated it, so it counts as old. ' : `Since ${shortDate(w.since)}. `}${w.night ? `Planned: ${w.night.date === today ? 'tonight' : `${weekdayShort(w.night.date)} ${shortDate(w.night.date)}`}, ${dinnerById(app.db, app.state, w.night.entry.dinner)?.title}.` : 'Not in the plan yet.'}</small></span>
+    </li>`)}</ul>
+    ${when(watch.length > rows.length, () => html`<p class="muted small">And ${watch.length - rows.length} more. <a href="#/pantry">See the pantry</a></p>`)}
+    ${unplanned ? html`<button type="button" class="btn btn-secondary btn-block" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}Plan ahead uses ${unplanned === 1 ? 'it' : 'these'} first</button>` : html`<p class="muted small">Every one of them is in the plan. Nothing sits past its date without a night.</p>`}
+  </section>`;
+}
+
+// ---------------------------------------------------------------- leftovers (SPEC §21.3)
+
+/** A cooked dinner (tonight's or last night's) with no word on leftovers yet. */
+export function leftoversCard(app) {
+  const asks = leftoverAsks(app.db, app.state, app.today());
+  if (!asks.length) return '';
+  const today = app.today();
+  return html`<section class="left-card" aria-label="Leftovers">${asks.map((a) => html`<div class="left-row">
+    <span class="left-ic" aria-hidden="true">${ic('bowl', { size: 22 })}</span>
+    <p class="left-text"><b>Any ${foodName(a.title)} left?</b><small>${a.date === today ? 'Tonight’s dinner' : 'Last night’s dinner'}. Say where it went and it gets eaten, not found in two weeks.</small></p>
+    <span class="left-acts"><button type="button" class="btn btn-small btn-primary" data-action="left:open" data-date="${a.date}" aria-haspopup="dialog">Leftovers?</button>
+      <button type="button" class="btn btn-small btn-quiet" data-action="left:save" data-date="${a.date}" data-use="none">None</button></span>
+  </div>`)}</section>`;
+}
+
+function openLeftovers(app, date) {
+  const today = app.today();
+  const c = leftoverChoices(app.db, app.state, { date, today });
+  if (!c || app.state.plan?.[date]?.status !== 'cooked') return;
+  const st = (openLeftovers.state = { plates: 2 });
+  const dayName = (d) => (d === today ? 'today' : d === addDays(today, 1) ? 'tomorrow' : weekdayName(d));
+  openSheet({
+    id: `leftovers:${date}`,
+    title: `Leftovers: ${c.title}`,
+    subtitle: 'Where is it going? Leftovers with a plan get eaten.',
+    render: () => html`
+      <div class="action-list left-choices">
+        ${when(c.lunch, () => html`<button type="button" class="action-row" data-action="left:save" data-date="${date}" data-use="lunch" data-to="${c.lunch.date}" data-name="${c.lunch.name}">${ic('lunch')}<span><b>${c.lunch.name}’s lunch ${dayName(c.lunch.date)}</b><small>That packed lunch comes off the plan and the list.</small></span></button>`)}
+        ${c.nights.map((n) => html`<button type="button" class="action-row" data-action="left:save" data-date="${date}" data-use="night" data-to="${n.date}">${ic('moon')}<span><b>Leftovers night ${dayName(n.date) === 'tomorrow' ? 'tomorrow' : `on ${weekdayName(n.date)}`}</b><small>${n.open ? 'That night is open.' : `Instead of ${n.title}, the planner’s pick. Its groceries come off the list.`}</small></span></button>`)}
+      </div>
+      <h3 class="sheet-h">Or put it away</h3>
+      <div class="left-plates"><span class="set-label">How many plates?</span>
+        <span class="qty-edit"><button type="button" class="stepper-btn" data-action="left:plates" data-delta="-1" aria-label="One plate less">${ic('minus', { size: 18 })}</button>
+          <b class="left-n" aria-live="polite">${st.plates}</b>
+          <button type="button" class="stepper-btn" data-action="left:plates" data-delta="1" aria-label="One plate more">${ic('plus', { size: 18 })}</button></span></div>
+      <div class="action-list">
+        <button type="button" class="action-row" data-action="left:save" data-date="${date}" data-use="fridge">${ic('clock')}<span><b>In the fridge</b><small>On the shelf list with a use-by of ${weekdayName(addDays(today, 4))}.</small></span></button>
+        <button type="button" class="action-row" data-action="left:save" data-date="${date}" data-use="freezer">${ic('snow')}<span><b>In the freezer</b><small>Dated today, good for about 3 months, and listed with the quick backups.</small></span></button>
+        <button type="button" class="action-row action-quiet" data-action="left:save" data-date="${date}" data-use="none">${ic('check')}<span><b>Nothing left</b></span></button>
+      </div>`,
+  });
+}
+
+// ---------------------------------------------------------------- catching the pantry up (SPEC §21.3)
+
+/** Dinners never marked cooked and packed lunches never taken off the shelf: how the pantry drifts. */
+export function catchUpCard(app) {
+  const c = catchUp(app.db, app.state, app.today());
+  if (!c.total) return '';
+  const parts = [c.nights.length ? count(c.nights.length, 'dinner') : '', c.lunches.length ? count(c.lunches.length, 'packed lunch', 'packed lunches') : ''].filter(Boolean);
+  return html`<section class="catch-card" id="catch-card" aria-labelledby="catch-h">
+    <span class="left-ic" aria-hidden="true">${ic('pantry', { size: 22 })}</span>
+    <p class="left-text"><b id="catch-h">Is the pantry still right?</b><small>${listJoin(parts)} from the last week ${c.total === 1 ? 'was' : 'were'} never taken off the shelves. If the food was eaten, the list thinks it’s still here.</small></p>
+    <span class="left-acts"><button type="button" class="btn btn-small btn-primary" data-action="catch:open" aria-haspopup="dialog">Catch up</button></span>
+  </section>`;
+}
+
+function openCatchUp(app) {
+  openSheet({
+    id: 'catch-up',
+    title: 'Catch the pantry up',
+    subtitle: 'Anything eaten comes off the shelves, so the list buys what’s really missing.',
+    render: () => {
+      const today = app.today();
+      const c = catchUp(app.db, app.state, today);
+      if (!c.total) return html`<p class="sheet-text">${ic('checkCircle', { size: 18 })} All caught up. The pantry matches what’s been cooked and packed.</p><div class="sheet-actions"><button type="button" class="btn btn-primary btn-block" data-action="sheet:close">Done</button></div>`;
+      const days = [...new Set(c.lunches.map((l) => l.date))];
+      return html`
+        ${when(c.nights.length, () => html`<h3 class="sheet-h">Did these get cooked?</h3>
+          <ul class="catch-list">${c.nights.map((n) => html`<li><span><b>${n.title}</b><small>${weekdayName(n.date)}, ${shortDate(n.date)}</small></span>
+            <span class="catch-acts"><button type="button" class="btn btn-small btn-secondary" data-action="catch:cooked" data-date="${n.date}">Yes, cooked</button>
+              <button type="button" class="btn btn-small btn-quiet" data-action="catch:skip" data-date="${n.date}">No</button></span></li>`)}</ul>
+          <p class="muted small">“Yes” takes what the dinner used out of the pantry. “No” leaves the food where it is and opens the night.</p>`)}
+        ${when(c.lunches.length, () => html`<h3 class="sheet-h">Packed lunches</h3>
+          <p class="sheet-text">${count(c.lunches.length, 'lunch', 'lunches')} on ${listJoin(days.map((d) => weekdayShort(d)))} (${listJoin([...new Set(c.lunches.map((l) => l.name))])}) haven’t come off the shelves.</p>
+          <div class="sheet-actions"><button type="button" class="btn btn-secondary btn-block" data-action="catch:lunches">They were packed: take the food off</button>
+            <button type="button" class="btn btn-quiet btn-block" data-action="catch:lunches" data-packed="no">They weren’t packed</button></div>`)}`;
+    },
+  });
 }

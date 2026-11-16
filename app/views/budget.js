@@ -1,9 +1,13 @@
 // BUDGET: the monthly target, this month's projection from the plan, logged receipts,
-// and savings against the old $1,000 month.
+// and savings against the old $1,000 month. SPEC §21.4: store trips against the 2–3 trip goal, the
+// year at this rate, what was thrown out, and whether the trip list is long enough.
 import { html, ic, when, toast } from '../ui.js';
 import { BASELINE_MONTHLY } from '../config.js';
-import { money, monthOnly, mediumDate, shortDate, round2, isISODate } from '../util.js';
-import { monthBudget } from '../shopping.js';
+import { money, monthOnly, mediumDate, shortDate, round2, isISODate, weekdayName, listJoin, shortWeekday, midSentence } from '../util.js';
+import { monthBudget, buildList, SPLIT_WHY } from '../shopping.js';
+import { tripAdvice, extendTripOps, tripKeyOf, TRIP_MIN_DAYS } from '../planahead.js';
+import { removeWasteOps } from '../waste.js';
+import { datesBetween } from '../util.js';
 import { addReceiptOps, removeReceiptOps, settingOps } from '../actions.js';
 import { segmented } from '../ui.js';
 import { MEAT_OPTS, actions as familyActions } from './family.js';
@@ -13,6 +17,96 @@ import { receiptDetails } from './receipts.js';
 
 export const title = () => 'Budget';
 const NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco', other: 'Other' };
+
+const STORE_SHORT = { sams: 'Sam’s', jewel: 'Jewel', other: 'another store' };
+const cleanName = (name) => String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/,.*$/, '').trim();
+const dayDate = (iso) => `${shortWeekday(iso)}, ${shortDate(iso)}`;
+
+/** Store trips this month against the goal of two or three (SPEC §21.4). */
+function tripsCard(app, b) {
+  const t = b.trips;
+  const month = monthOnly(app.today());
+  const pips = Math.max(t.goal, t.count);
+  let advice;
+  if (!t.count) advice = `No receipts in ${month} yet. The goal is ${t.goal === 3 ? 'two or three' : t.goal} store trips a month, so each list should cover about ${Math.ceil(30 / t.goal)} days.`;
+  else if (t.over) advice = `${t.count - t.goal} more than the goal of ${t.goal}. Quick extra runs are where the unplanned spending goes: make the next list cover the ${t.daysLeft} days left in ${month}.`;
+  else if (!t.left) advice = `That’s the month’s ${t.goal}. The plan and the pantry carry the ${t.daysLeft} ${t.daysLeft === 1 ? 'day' : 'days'} left; Plan ahead shows how far the pantry goes.`;
+  else advice = `${t.left} ${t.left === 1 ? 'trip' : 'trips'} left for the ${t.daysLeft} days to ${shortDate(b.end)}: ${t.left === 1 ? 'the next list should cover all of them' : `each list should cover about ${t.stretch} days`}.`;
+  return html`<section class="trips-card" id="trips-card" aria-labelledby="trips-h">
+    <h2 id="trips-h" class="section-title">${ic('cart', { size: 22 })}Store trips in ${month}</h2>
+    <p class="trips-big ${t.over ? 'is-over' : ''}"><b>${t.count}</b><span>of ${t.goal} ${t.goal === 1 ? 'trip' : 'trips'}${t.perTrip ? html`<small>about ${money(t.perTrip)} a trip</small>` : ''}</span></p>
+    <div class="trip-pips" role="img" aria-label="${t.count} of ${t.goal} trips used">${Array.from({ length: pips }, (_, i) => html`<span class="trip-pip ${i < t.count ? (i >= t.goal ? 'is-over' : 'is-on') : ''}"></span>`)}</div>
+    <p class="small trips-advice">${advice}</p>
+    ${when(t.count, () => html`<ul class="trips-list">${t.trips.map((x) => html`<li><span>${dayDate(x.date)}</span><span>${listJoin(x.stores.map((sid) => NAMES[sid] || sid)) || 'Store'}</span><b>${money(x.total)}</b></li>`)}</ul>`)}
+    <div class="opt trips-goal"><span class="opt-label" id="tg-l">Trips a month to aim for</span>${segmented('tripGoal', [2, 3, 4].map((n) => ({ id: String(n), label: String(n) })), String(t.goal), { label: 'Trips a month to aim for', action: 'bud:trip-goal', small: true })}</div>
+    <p class="muted small">Counted from receipts: each day with a receipt is one trip, so Sam’s and Jewel on the same day count once.</p>
+  </section>`;
+}
+
+/** The year at this month's rate, against 12 × the target, and what the last three months really cost. */
+function yearCard(app, b) {
+  const p = b.pace;
+  const over = p.overYear > 0;
+  return html`<section class="year-card ${over ? 'is-over' : ''}" id="year-card" aria-labelledby="year-h">
+    <h2 id="year-h" class="section-title">${ic('budget', { size: 22 })}The year at this rate</h2>
+    <p class="year-line">At this rate, about <b>${money(p.year, { whole: true })}</b> this year. Your target is <b>${money(p.yearTarget, { whole: true })}</b> (${money(p.target, { whole: true })} a month).${p.avg3 != null ? html` The last ${p.monthsWithData === 3 ? '3 months' : p.monthsWithData === 1 ? 'month with receipts' : `${p.monthsWithData} months with receipts`} averaged <b>${money(p.avg3, { whole: true })}</b>.` : ''}</p>
+    <p class="budget-verdict ${over ? 'is-over' : 'is-under'}">${over ? `That’s about ${money(p.overYear, { whole: true })} over for the year, or ${money(p.overYear / 12, { whole: true })} a month to find.` : `That’s about ${money(-p.overYear, { whole: true })} under the year’s target.`}</p>
+    ${when(p.monthsWithData, () => html`<ul class="legend year-months">${p.months.map((m) => html`<li><span class="key ${m.total > p.target ? 'key-maybe' : 'key-spent'}"></span>${monthOnly(`${m.month}-01`)}${m.total ? '' : ' (no receipts logged)'}<b>${m.total ? money(m.total) : '—'}</b></li>`)}</ul>`)}
+    <p class="muted small">“This rate” is ${monthOnly(app.today())}: its receipts plus what the plan still needs, ${money(p.rate)}, times twelve.${p.avg3 == null ? ' Scan receipts for a few months and this shows what the family really averages.' : ''}</p>
+  </section>`;
+}
+
+/** What went in the trash (SPEC §21.3): dollars this month, and what goes most often. */
+function wasteCard(app, b) {
+  const w = b.wasted;
+  const month = monthOnly(app.today());
+  const repeat = w.top.filter((x) => x.times >= 2);
+  return html`<section class="waste-card" id="waste-card" aria-labelledby="waste-h">
+    <h2 id="waste-h" class="section-title">${ic('trash', { size: 22 })}Thrown out in ${month}</h2>
+    ${w.count ? html`<p class="trips-big is-over"><b>${money(w.total)}</b><span>${w.count} ${w.count === 1 ? 'thing' : 'things'} wasted${w.lastMonth ? html`<small>${money(w.lastMonth)} last month</small>` : ''}</span></p>`
+      : html`<p class="small">Nothing thrown out so far${w.lastMonth ? ` (${money(w.lastMonth)} last month)` : ''}. When food goes in the trash, take it off the Pantry with “Threw it out” and it’s counted here.</p>`}
+    ${when(w.top.length, () => html`<h3 class="waste-sub">What gets wasted most <small>(last 90 days)</small></h3>
+      <ul class="legend waste-top">${w.top.slice(0, 5).map((x) => html`<li><span class="key ${x.times >= 2 ? 'key-maybe' : 'key-plan'}"></span>${cleanName(x.name)}: ${x.times === 1 ? 'once' : `${x.times} times`}<b>${money(x.cost)}</b></li>`)}</ul>`)}
+    ${when(repeat.length, () => html`<p class="hint">${ic('leaf', { size: 18 })}<span>The planner now buys ${listJoin(repeat.slice(0, 3).map((x) => midSentence(cleanName(x.name))))} in the smaller pack and plans ${repeat.length === 1 ? 'it' : 'them'} sooner.</span></p>`)}
+    ${when(w.items.length, () => html`<details class="cover-more"><summary>Every entry this month</summary>
+      <ul class="receipt-list">${w.items.map((x) => html`<li class="receipt-row"><span><b>${cleanName(x.name)}</b><small>${shortDate(x.date)}${x.by ? `, by ${x.by}` : ''}${x.estimated ? ', estimated' : ''}</small></span>
+        <span class="receipt-amt">${money(x.cost)}</span>
+        <button type="button" class="icon-btn" data-action="bud:waste-remove" data-key="${x.key}" aria-label="Remove ${cleanName(x.name)} from the waste log">${ic('trash', { size: 20 })}</button></li>`)}</ul></details>`)}
+    ${when(w.yearToDate > w.total, () => html`<p class="muted small">${money(w.yearToDate)} thrown out so far this year.</p>`)}
+  </section>`;
+}
+
+const adviceCache = new WeakMap();
+/**
+ * Is the trip list long enough? (SPEC §21.4) A list under 10 days means another run within the
+ * week: this says how many more days would skip it and what they cost, and offers to extend.
+ * Shown on the List (during a trip) and here.
+ */
+export function tripAdviceCard(app, list = null) {
+  const today = app.today();
+  let a = adviceCache.get(app.state);
+  if (a === undefined || a?.today !== today) {
+    a = tripAdvice(app.db, app.state, { today });
+    if (a) a.today = today;
+    adviceCache.set(app.state, a);
+  }
+  if (!a) return '';
+  const l = list || buildList(app.db, app.state, { dates: datesBetween(a.trip.start > today ? a.trip.start : today, a.trip.end), listKey: tripKeyOf(a.trip), store: a.trip.store === 'both' ? null : a.trip.store, split: a.trip.store === 'both', today });
+  const moved = (l.split?.moved || []).slice(0, 4);
+  const splitLine = a.trip.store === 'both' && l.stores.sams.items.length + l.stores.jewel.items.length > 0
+    ? html`<p class="small trip-split"><b>${STORE_SHORT.sams}</b> ${l.stores.sams.items.length ? `${money(l.stores.sams.subtotal)} for ${l.stores.sams.items.length} ${l.stores.sams.items.length === 1 ? 'thing' : 'things'} (bulk and freezer)` : 'nothing this trip'}; <b>${STORE_SHORT.jewel}</b> ${l.stores.jewel.items.length ? `${money(l.stores.jewel.subtotal)} for ${l.stores.jewel.items.length} (fresh and small packs)` : 'nothing this trip'}.${moved.length ? ` Moved for this trip: ${listJoin(moved.map((m) => `${midSentence(cleanName(m.name))} to ${STORE_SHORT[m.to]} (${SPLIT_WHY[m.why] || m.why})`))}.` : ''}</p>` : '';
+  if (!a.short) {
+    return html`<section class="trip-advice is-good" id="trip-advice" aria-label="This trip">
+      <p class="trip-advice-line">${ic('check', { size: 18 })}<span>This list covers <b>${a.days} days</b>, through ${dayDate(a.trip.end)}: one run, then no store until then.</span></p>
+      ${splitLine}
+    </section>`;
+  }
+  return html`<section class="trip-advice" id="trip-advice" aria-label="This trip">
+    <p class="trip-advice-line">${ic('info', { size: 18 })}<span>This list covers <b>${a.days} ${a.days === 1 ? 'day' : 'days'}</b>, so the next store run is ${weekdayName(a.trip.end) === weekdayName(today) && a.days === 1 ? 'tomorrow' : `right after ${weekdayName(a.trip.end)}`}. <b>${a.more} more ${a.more === 1 ? 'day' : 'days'} of food</b> would carry you through ${dayDate(a.newEnd)} and skip it: about ${money(Math.max(0, a.added))} more today${a.open ? `, with ${a.open} open ${a.open === 1 ? 'night' : 'nights'} planned from the pantry first` : ''}.</span></p>
+    <button type="button" class="btn btn-secondary btn-block" data-action="trip:extend">${ic('plus', { size: 20 })}Extend the trip to ${dayDate(a.newEnd)} (${TRIP_MIN_DAYS} days)</button>
+    ${splitLine}
+  </section>`;
+}
 
 export function render(app) {
   const today = app.today();
@@ -44,6 +138,11 @@ export function render(app) {
       ${when(b.savings > 0, () => html`<p class="budget-save">${ic('leaf', { size: 20 })}<span>${b.unplanned ? `On pace for about ${money(b.savings)}` : money(b.savings)} less than the old ${money(b.baseline, { whole: true })} month.</span></p>`)}
       <p class="muted small">Projected = receipts logged this month + the shopping list for the rest of ${month} (today through ${shortDate(b.end)}), at ${app.db.pricesUpdated ? `prices estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'estimated prices'}. ${b.receipts.length ? '' : 'Log receipts after each trip so “spent so far” is real.'}</p>
     </section>
+
+    ${tripsCard(app, b)}
+    ${tripAdviceCard(app)}
+    ${yearCard(app, b)}
+    ${wasteCard(app, b)}
 
     <section class="typical" aria-labelledby="ty-h">
       <h2 id="ty-h" class="section-title">A typical month</h2>
@@ -117,4 +216,11 @@ export const actions = {
     app.commit({ ...addReceiptOps(app.state, { date, store: String(f.get('store') || 'jewel'), amount, note: String(f.get('note') || '').trim(), who: app.who() }), message: `Logged ${money(amount)}.` });
   },
   'bud:remove': (app, el) => app.commit(removeReceiptOps(app.state, { id: el.dataset.id })),
+  'bud:trip-goal': (app, el) => {
+    const n = Number(el.dataset.value);
+    if (![2, 3, 4].includes(n)) return;
+    app.commit({ ...settingOps(app.state, 'tripGoal', n), message: `Aiming for ${n} store trips a month.` });
+  },
+  'bud:waste-remove': (app, el) => app.commit(removeWasteOps(app.state, { key: el.dataset.key })),
+  'trip:extend': (app) => app.commit(extendTripOps(app.db, app.state, { today: app.today(), who: app.who() })),
 };

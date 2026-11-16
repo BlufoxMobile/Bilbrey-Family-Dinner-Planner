@@ -3,17 +3,18 @@
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, switchToggle, confirmSheet } from '../ui.js';
 import { resizeImage, LIMITS } from '../images.js';
 import { STORAGE, AISLES } from '../config.js';
-import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween, weekdayName } from '../util.js';
-import { setPantryOps, removePantryOps, customItemOps, undoFor } from '../actions.js';
+import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween, weekdayName, monthOnly } from '../util.js';
+import { setPantryOps, customItemOps, undoFor } from '../actions.js';
 import { set } from '../state.js';
 import { kindOf } from '../planner.js';
 import { unitText, buildList } from '../shopping.js';
 import { pantryCoverage } from '../coverage.js';
 import { pantryStretch } from '../planahead.js';
 import { unsyncedReceipts, receiptPantryOps } from '../receipts.js';
-import { currentRange } from './plan.js';
+import { currentRange, leftoversCard, catchUpCard } from './plan.js';
 import { scanQtyIn } from '../scanqty.js';
-import { PLACES, KINDS, placeOf, kindOfItem, useSoon } from '../freshness.js';
+import { PLACES, KINDS, placeOf, kindOfItem, useSoon, undated, freezerWatch, sinceOf, ABOUT_WHEN } from '../freshness.js';
+import { REMOVE_REASONS, removeItemOps, aboutSinceOps, wasteSummary, wasteCost } from '../waste.js';
 import { itemPhoto, hydratePhotos, rememberPhoto, cropItem, photoUrl } from '../photos.js';
 import { del } from '../state.js';
 import { packageOf, packagesFor, plural } from '../packages.js';
@@ -49,6 +50,7 @@ function searchCatalog(app, q, limit = 8) {
 }
 
 let useBy = null; // id → useSoon row, set while the page renders
+let noDate = null; // ids of perishables nobody dated, set while the page renders
 
 function useByText(app, s) {
   if (s.daysLeft < 0) return 'Past its usual use-by. Check it';
@@ -71,6 +73,7 @@ function pantryRow(app, id, p) {
     <button type="button" class="pan-thumb ${ph ? 'has-photo' : ''}" data-action="pan:photo" data-id="${id}" aria-label="${ph ? `Picture of ${m.name}` : `Add a picture of ${m.name}`}">${ph ? html`<img data-photo="${ph}" alt="" loading="lazy" decoding="async">` : ic('camera', { size: 20 })}</button>
     <span class="pan-name"><b>${m.name}</b>
       ${when(soon, () => html`<small class="pan-soon ${soon.daysLeft <= 0 ? 'is-now' : ''}">${useByText(app, soon)}</small>`)}
+      ${when(!soon && noDate?.has(id), () => html`<small class="pan-soon is-ask">No date yet, so no use-by</small>`)}
       ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
       <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `${fmtQty(count)} ${plural(pk.word, count)} (about ${unitText(p.qty, m.unit)})` : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}${p.by ? `, updated by ${p.by}` : ''}</small></span>
     <span class="pan-ctrl">
@@ -139,14 +142,43 @@ function syncCard(app) {
   </section>`;
 }
 
+const bare = (name) => String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').trim();
+const agoText = (days) => (days >= 60 ? `about ${Math.round(days / 30)} months` : `${days} days`);
+
 function useFirstCard(app, soon) {
-  if (!soon.length) return '';
+  // Old freezer food belongs here too (SPEC §21.3): 60 days in, past its keep time, or meat nobody dated.
+  const seen = new Set(soon.map((s) => s.id));
+  const old = freezerWatch(app.db, app.state, app.today()).filter((w) => !seen.has(w.id));
+  if (!soon.length && !old.length) return '';
   const place = (id) => PLACES.find((p) => p.id === id)?.label.replace(/^(In|On) the /, '') || '';
   return html`<section class="use-first" aria-labelledby="use-h">
     <h2 id="use-h" class="section-title">${ic('clock', { size: 22 })}Use these first</h2>
-    <ul class="use-list">${soon.slice(0, 8).map((s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${s.name.replace(/\s*\(.*?\)\s*/g, ' ').trim()}</b><small>${useByText(app, s)}, ${place(s.place)}</small></button></li>`)}</ul>
-    <p class="muted small">Estimated from the day each came home. The date on the package wins. Plan a dinner that uses them, or freeze meat before its day.</p>
+    <ul class="use-list">${soon.slice(0, 8).map((s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${bare(s.name)}</b><small>${useByText(app, s)}, ${place(s.place)}</small></button></li>`)}
+      ${old.slice(0, 6).map((w) => html`<li class="${w.past ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${w.id}"><b>${bare(w.name)}</b><small>${w.unknown ? 'No date on it, so it counts as old' : `In the freezer ${agoText(w.age)}, since ${shortDate(w.since)}`}</small></button></li>`)}</ul>
+    <p class="muted small">Estimated from the day each came home. The date on the package wins. <a href="#/plan">Plan ahead</a> puts these in dinners first; freeze fresh meat before its day.</p>
   </section>`;
+}
+
+/** Food with no came-home date can't get a use-by (SPEC §21.3): one tap says about when it went in. */
+function whenCard(app, rows) {
+  if (!rows.length) return '';
+  const place = (id) => PLACES.find((p) => p.id === id)?.label.replace(/^(In|On) the /, '') || '';
+  const shown = rows.slice(0, 6);
+  return html`<section class="when-card" id="when-card" aria-labelledby="when-h">
+    <h2 id="when-h" class="section-title">${ic('info', { size: 22 })}About when did these go in?</h2>
+    <p class="small">${rows.length === 1 ? 'One thing has' : `${rows.length} things have`} no date, so the pantry can’t say when to use ${rows.length === 1 ? 'it' : 'them'}. A rough answer is enough.</p>
+    <ul class="when-list">${shown.map((r) => html`<li><span class="when-name"><b>${bare(r.name)}</b><small>${place(r.place)}${r.meat && r.place === 'freezer' ? ', counted as old until you say' : ''}</small></span>
+      <span class="when-chips" role="group" aria-label="When ${bare(r.name)} went in">${ABOUT_WHEN.map((a) => html`<button type="button" class="chip" data-action="pan:about" data-id="${r.id}" data-about="${a.id}">${a.label}</button>`)}</span></li>`)}</ul>
+    ${when(rows.length > shown.length, () => html`<p class="muted small">${rows.length - shown.length} more after these.</p>`)}
+  </section>`;
+}
+
+/** What's been thrown out this month, in dollars, with a way to the details. */
+function wasteLine(app) {
+  const w = wasteSummary(app.state, app.today());
+  if (!w.count && !w.top.length) return '';
+  const worst = w.top[0];
+  return html`<p class="waste-line">${ic('trash', { size: 18 })}<span>${w.count ? html`Thrown out in ${monthOnly(app.today())}: <b>${money(w.total)}</b> (${w.count} ${w.count === 1 ? 'thing' : 'things'}).` : `Nothing thrown out in ${monthOnly(app.today())} so far.`}${worst && worst.times >= 2 ? ` ${bare(worst.name)} has gone ${worst.times} times lately, so the planner buys less of it.` : ''} <a href="#/budget">See the waste log</a></span></p>`;
 }
 
 /** Shelves by place (fridge, freezer, pantry, counter), then by kind (meat, drinks, canned…). */
@@ -165,12 +197,20 @@ export function render(app) {
   const low = entries.filter(([, p]) => p.low);
   const soon = useSoon(app.db, app.state, app.today());
   useBy = new Map(soon.map((s) => [s.id, s]));
-  const places = shelves(app, entries.filter(([, p]) => !p.low));
+  const ask = undated(app.db, app.state);
+  noDate = new Set(ask.map((a) => a.id));
+  // Measured items at zero are used up: they get their own short list instead of cluttering the shelves.
+  const isEmpty = ([id, p]) => !p.low && typeof p.qty === 'number' && p.qty <= 0 && meta(app, id).kind !== 'staple';
+  const empty = entries.filter(isEmpty);
+  const places = shelves(app, entries.filter((e) => !e[1].low && !isEmpty(e)));
   const photos = entries.filter(([id]) => itemPhoto(app.state, id)).length;
   const canScan = app.store.device.key && !app.store.device.localOnly && app.store.health?.ai !== false;
   return html`<div class="page page-pantry">
     <header class="page-head"><h1 class="page-title">Pantry</h1></header>
+    ${catchUpCard(app)}
+    ${leftoversCard(app)}
     ${useFirstCard(app, soon)}
+    ${whenCard(app, ask)}
     ${coverageCard(app)}
     <section class="scan-card">
       <div class="scan-text">
@@ -201,7 +241,14 @@ export function render(app) {
       ${places.map((pl) => html`<section class="pan-place" id="place-${pl.id}" aria-labelledby="ph-${pl.id}">
         <h2 id="ph-${pl.id}" class="section-title">${pl.label}<span class="count">${pl.count}</span></h2>
         ${pl.kinds.map((k) => html`<h3 class="pan-kind">${k.label}<span class="count">${k.rows.length}</span></h3><ul class="pan-list">${k.rows.map(([id, p]) => pantryRow(app, id, p))}</ul>`)}
-      </section>`)}`
+      </section>`)}
+      ${when(empty.length, () => html`<section class="pan-place pan-empty" id="place-empty" aria-labelledby="ph-empty">
+        <h2 id="ph-empty" class="section-title">Used up<span class="count">${empty.length}</span></h2>
+        <p class="muted small">These are down to zero. Clear them, or set an amount if there’s still some.</p>
+        <button type="button" class="btn btn-small btn-secondary" data-action="pan:clear-empty">Clear all ${empty.length}</button>
+        <ul class="pan-list">${empty.map(([id, p]) => pantryRow(app, id, p))}</ul>
+      </section>`)}
+      ${wasteLine(app)}`
       : html`<div class="empty"><span class="empty-ic">${ic('pantry', { size: 28 })}</span><h3 class="empty-title">The pantry is empty</h3><p class="empty-body">Scan your shelves or add what you have. Staples like salt and spices stay off the list until you mark them running low.</p></div>`}
   </div>`;
 }
@@ -534,7 +581,25 @@ export const actions = {
       app.commit({ ...setPantryOps(app.db, app.state, { id, low: true, who: app.who() }), message: `${m.name} is on the shopping list.` });
     }
   },
-  'pan:remove': async (app, el) => app.commit(removePantryOps(app.db, app.state, { id: el.dataset.id })),
+  // Taking something off the shelf asks why (SPEC §21.3): eaten, thrown out, or never there.
+  'pan:remove': (app, el) => openRemove(app, el.dataset.id),
+  'pan:gone': (app, el) => {
+    const id = el.dataset.id;
+    const st = openRemove.state;
+    const input = document.getElementById('gone-qty');
+    const typed = input && input.value !== '' ? Number(input.value) : null;
+    const qty = typed != null && Number.isFinite(typed) && typed > 0 ? round2(typed * (st?.per || 1)) : null;
+    const res = removeItemOps(app.db, app.state, { id, reason: el.dataset.reason, qty, today: app.today(), who: app.who() });
+    closeSheet();
+    app.commit(res);
+  },
+  'pan:about': (app, el) => app.commit(aboutSinceOps(app.db, app.state, { id: el.dataset.id, about: el.dataset.about, today: app.today() })),
+  'pan:clear-empty': (app) => {
+    const ops = Object.entries(app.state.pantry || {})
+      .filter(([id, p]) => p && !p.low && typeof p.qty === 'number' && p.qty <= 0 && meta(app, id) && meta(app, id).kind !== 'staple')
+      .map(([id]) => del(['pantry', id]));
+    if (ops.length) app.commit({ ops, undo: undoFor(app.state, ops), message: `Cleared ${ops.length} used-up ${ops.length === 1 ? 'item' : 'items'}.` });
+  },
   'pan:scan': (app, el) => {
     const files = [...(el.files || [])].slice(0, 8);
     el.value = '';
@@ -594,3 +659,37 @@ export const actions = {
 };
 
 export { confirmSheet };
+
+// ---------------------------------------------------------------- taking something off the shelf (SPEC §21.3)
+
+const REASON_ICON = { used: 'checkCircle', tossed: 'trash', wrong: 'edit' };
+
+/** Why is it leaving? "Threw it out" goes in the waste log with what it cost. */
+function openRemove(app, id) {
+  const m = meta(app, id);
+  const p = app.state.pantry?.[id];
+  if (!m || !p) return;
+  const have = typeof p.qty === 'number' ? p.qty : null;
+  // An item at zero has nothing to explain: it just goes.
+  if (have !== null && have <= 0) { app.commit(removeItemOps(app.db, app.state, { id, reason: 'used', today: app.today(), who: app.who() })); return; }
+  const pk = m.kind === 'staple' ? null : packageOf(app.db, app.state, id);
+  const byPack = !!pk && !pk.counted;
+  const per = byPack ? pk.per : 1;
+  const unit = byPack ? plural(pk.word, 2) : m.unit;
+  const all = have == null ? null : round2(byPack ? packagesFor(have, pk.per) : have);
+  openRemove.state = { per };
+  const since = sinceOf(p);
+  const worth = wasteCost(app.db, app.state, id, have).cost;
+  openSheet({
+    id: `remove:${id}`,
+    title: bare(m.name),
+    subtitle: 'Taking it off the shelf: what happened to it? The answer keeps the pantry right, and the planner learns from it.',
+    render: () => html`
+      ${when(all != null, () => html`<label class="field gone-amount"><span class="field-label">How much? <small>(all ${fmtQty(all)} ${unit} unless you change it)</small></span>
+        <span class="gone-row"><input class="input" id="gone-qty" type="number" inputmode="decimal" min="0" max="${all}" step="any" value="${all}" aria-label="How much of the ${bare(m.name)}, in ${unit}"><span class="qty-unit">${unit}</span></span></label>`)}
+      <div class="action-list gone-reasons">
+        ${REMOVE_REASONS.map((r) => html`<button type="button" class="action-row" data-action="pan:gone" data-id="${id}" data-reason="${r.id}">${ic(REASON_ICON[r.id])}<span><b>${r.label}</b><small>${r.id === 'tossed' && worth ? `${r.note.replace(/\.$/, '')}: about ${money(worth)} for all of it.` : r.note}</small></span></button>`)}
+      </div>
+      ${when(since, () => html`<p class="muted small">On the shelf since ${shortDate(since)}.</p>`)}`,
+  });
+}

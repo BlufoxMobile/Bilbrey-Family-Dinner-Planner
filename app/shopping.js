@@ -3,7 +3,7 @@
 // priced from the family's corrections → data/prices.json → data/catalog.json.
 
 import { AISLES } from './config.js';
-import { datesBetween, endOfMonth, fmtQty, round2, startOfMonth, shortDate, rangeLabel } from './util.js';
+import { addMonths, datesBetween, diffDays, endOfMonth, fmtQty, round2, startOfMonth, shortDate, rangeLabel } from './util.js';
 import { settingsOf } from './state.js';
 import {
   canBuyAt, dinnerById, itemsForNight, kindOf, packFor, storeFor, rotationList, unitPrice,
@@ -11,6 +11,9 @@ import {
 import { lunchNeeds, lunchesIn } from './lunch.js';
 import { shownProduct, productLabel } from './products.js';
 import { activeDeal, applyDeal, regularPrice } from './deals.js';
+// freshness.js and waste.js import this file back; every use is inside a function.
+import { keepsDays, placeOf } from './freshness.js';
+import { tossCounts, wasteSummary } from './waste.js';
 
 export const OTHER = { sams: 'jewel', jewel: 'sams' };
 
@@ -116,11 +119,40 @@ export function formatPackQty(item) {
 
 const aisleIndex = (a) => { const i = AISLES.indexOf(a); return i < 0 ? AISLES.length : i; };
 
+/** Splitting a two-store trip (SPEC §21.4). */
+export const SPLIT = {
+  /** A fresh item moves to the smaller pack when the usual one would leave this share unused… */
+  freshLeftover: 0.4,
+  /** …and the smaller pack costs no more than this much extra. */
+  freshExtra: 1.15,
+  /** A store with this few things, worth less than `stopMax`, isn't worth the stop. */
+  stopItems: 2,
+  stopMax: 15,
+  /** Buying them at the other store may cost this much more. */
+  stopExtra: 5,
+};
+export const SPLIT_WHY = {
+  fresh: 'fresh, so the smaller pack',
+  bulk: 'it keeps, and the bulk pack is cheaper',
+  cheaper: 'cheaper there for what’s needed',
+  wasted: 'thrown out before, so the smaller pack',
+  'one-stop': 'saves a stop',
+};
+
 /**
  * The shopping list for a set of dates.
- * opts: { dates, listKey } — listKey keys check-offs in state.checked.
+ * opts: { dates, listKey, store, today, split }
+ *   listKey keys check-offs in state.checked; store 'sams' | 'jewel' shops one store (a trip);
+ *   split: true splits a two-store trip sensibly (SPEC §21.4; the default for a list whose listKey
+ *   is a two-store trip's, false turns it off): fresh food in Jewel's small packs
+ *   when the bulk pack would mostly go unused, things that keep at Sam's when the bulk pack is the
+ *   cheaper way to buy what's needed, and no stop at a store for one or two small things. A store
+ *   the family chose for an item (state.storeFor) is never changed. With or without `split`, food
+ *   the family has thrown out twice lately is bought in the pack that leaves the least over.
  */
-export function buildList(db, state, { dates, listKey = '', store: tripStore = null, today = null } = {}) {
+export function buildList(db, state, { dates, listKey = '', store: tripStore = null, today = null, split = null } = {}) {
+  // A list keyed as a two-store trip ("trip:start:end:both", SPEC §12.1) splits unless told otherwise.
+  const smart = split ?? /^trip:[^:]+:[^:]+:both$/.test(listKey);
   const st = settingsOf(state);
   // A trip (SPEC §12) shops one store: everything that store carries is bought there.
   const planStore = tripStore === 'sams' || tripStore === 'jewel' ? tripStore : st.planStore;
@@ -162,6 +194,9 @@ export function buildList(db, state, { dates, listKey = '', store: tripStore = n
 
   const items = [];
   const covered = [];
+  const moved = [];
+  const swappable = new Map(); // id → the same item bought at the other store
+  const offenders = tossCounts(state, today || dates?.[0] || '');
   for (const id of ids) {
     const meta = itemMeta(db, state, id);
     const need = needs[id] || 0;
@@ -180,17 +215,6 @@ export function buildList(db, state, { dates, listKey = '', store: tripStore = n
       if (need > 0) covered.push({ id, name: meta.name, unit: meta.unit, need, have, stocked, kind });
       continue;
     }
-    const { store, fallback } = listStore(db, state, id, planStore);
-    const deal = activeDeal(state, store, id, today);
-    const pack = deal ? applyDeal(packFor(db, state, id, store), deal) : packFor(db, state, id, store);
-    let packs = 0;
-    if (pack) {
-      packs = Math.ceil(shortfall / pack.size - 1e-9);
-      if (low && packs === 0 && !xp) packs = 1;
-      packs += xp;
-    }
-    const bought = pack ? packs * pack.size : 0;
-    const leftover = pack ? Math.max(0, bought - shortfall) : 0;
     const dinnerNeed = dinner.needs[id] || 0;
     const lunchNeed = lunch.needs[id] || 0;
     const reasons = [];
@@ -198,37 +222,82 @@ export function buildList(db, state, { dates, listKey = '', store: tripStore = n
     if (shortfall > 1e-9 && lunchNeed > 0) reasons.push('lunches');
     if (xp) reasons.push('extra');
     if (low) reasons.push('low');
-    const cost = pack ? round2(packs * pack.price) : null;
-    // Money split three ways for the budget: extras' own packs, then the rest by how much
-    // the dinners and the lunches each need.
-    const extrasPart = pack && xp ? xp * pack.price : 0;
-    const mealPart = Math.max(0, (cost || 0) - extrasPart);
-    const lunchShare = need > 0 ? lunchNeed / need : 0;
-    const usedTotal = pack ? pack.price * Math.min(packs, shortfall / pack.size) : 0;
-    const it = {
-      key: id, id, name: meta.name, unit: meta.unit, aisle: meta.aisle, storage: meta.storage, kind, custom: meta.custom, unknown: !!meta.unknown,
-      need, have, stocked, low, shortfall, extraPacks: xp,
-      store, storeFallback: fallback,
-      pack, packs, bought, leftover, cost,
-      // The one product the family buys there (their own, their usual, or the researched one) — SPEC §9.5.
-      product: shownProduct(state, store, id, pack, db),
-      // The share of the cost the planned meals actually use (the rest is leftovers for later).
-      usedCost: pack ? round2(usedTotal) : null,
-      usedDinner: pack ? round2(usedTotal * (1 - lunchShare)) : null,
-      usedLunch: pack ? round2(usedTotal * lunchShare) : null,
-      dinnerNeed, lunchNeed,
-      costLunch: round2(mealPart * lunchShare),
-      costExtras: round2(extrasPart),
-      uses: (uses[id] || []).slice().sort((a, b) => a.date.localeCompare(b.date)),
-      lunchUses: (lunch.uses[id] || []).slice().sort((a, b) => a.date.localeCompare(b.date)),
-      reasons, checked: !!checked[id],
-      regularCost: pack ? round2(packs * (regularPrice(pack) ?? pack.price)) : null,
-      coupon: pack?.coupon || null,
-      organic: !!(pack?.organic || it_organic(pack)),
+    /** This item bought at one store: the pack, how many, what it costs and what's left over. */
+    const at = (store, fallback = false, why = null) => {
+      const deal = activeDeal(state, store, id, today);
+      const pack = deal ? applyDeal(packFor(db, state, id, store), deal) : packFor(db, state, id, store);
+      let packs = 0;
+      if (pack) {
+        packs = Math.ceil(shortfall / pack.size - 1e-9);
+        if (low && packs === 0 && !xp) packs = 1;
+        packs += xp;
+      }
+      const bought = pack ? packs * pack.size : 0;
+      const leftover = pack ? Math.max(0, bought - shortfall) : 0;
+      const cost = pack ? round2(packs * pack.price) : null;
+      // Money split three ways for the budget: extras' own packs, then the rest by how much
+      // the dinners and the lunches each need.
+      const extrasPart = pack && xp ? xp * pack.price : 0;
+      const mealPart = Math.max(0, (cost || 0) - extrasPart);
+      const lunchShare = need > 0 ? lunchNeed / need : 0;
+      const usedTotal = pack ? pack.price * Math.min(packs, shortfall / pack.size) : 0;
+      return {
+        key: id, id, name: meta.name, unit: meta.unit, aisle: meta.aisle, storage: meta.storage, kind, custom: meta.custom, unknown: !!meta.unknown,
+        need, have, stocked, low, shortfall, extraPacks: xp,
+        store, storeFallback: fallback, ...(why ? { storeWhy: why } : {}),
+        pack, packs, bought, leftover, cost,
+        // The one product the family buys there (their own, their usual, or the researched one) — SPEC §9.5.
+        product: shownProduct(state, store, id, pack, db),
+        // The share of the cost the planned meals actually use (the rest is leftovers for later).
+        usedCost: pack ? round2(usedTotal) : null,
+        usedDinner: pack ? round2(usedTotal * (1 - lunchShare)) : null,
+        usedLunch: pack ? round2(usedTotal * lunchShare) : null,
+        dinnerNeed, lunchNeed,
+        costLunch: round2(mealPart * lunchShare),
+        costExtras: round2(extrasPart),
+        uses: (uses[id] || []).slice().sort((x, y) => x.date.localeCompare(y.date)),
+        lunchUses: (lunch.uses[id] || []).slice().sort((x, y) => x.date.localeCompare(y.date)),
+        reasons, checked: !!checked[id],
+        regularCost: pack ? round2(packs * (regularPrice(pack) ?? pack.price)) : null,
+        coupon: pack?.coupon || null,
+        organic: !!(pack?.organic || it_organic(pack)),
+      };
     };
+    const { store, fallback } = listStore(db, state, id, planStore);
+    let it = at(store, fallback);
+    // Which store, when both carry it and the family hasn't said (never on a one-store plan).
+    const free = planStore === 'both' && !state?.storeFor?.[id] && kind !== 'staple' && shortfall > 1e-9 && !it.checked
+      && it.pack && canBuyAt(db, state, id, OTHER[store]);
+    if (free) {
+      const alt = at(OTHER[store]);
+      if (alt.pack) {
+        const pick = pickStore(db, state, id, it, alt, { split: smart, tossed: offenders.get(id) || 0 });
+        if (pick) { moved.push({ id, name: meta.name, from: store, to: alt.store, why: pick, saves: round2((it.cost || 0) - (alt.cost || 0)) }); it = { ...alt, storeWhy: pick }; }
+        else swappable.set(id, alt);
+      }
+    }
     if (meta.buyOnDay) { onDay.push(it); continue; }
     if (skips[id]) { skipped.push({ ...it, skip: skips[id] }); continue; }
     items.push(it);
+  }
+  // One stop: a store left with one or two small things isn't worth the drive when the other has them.
+  if (smart && planStore === 'both') {
+    for (const s of ['sams', 'jewel']) {
+      const here = [...items, ...freeExtras].filter((i) => i.store === s);
+      const there = [...items, ...freeExtras].filter((i) => i.store === OTHER[s]);
+      if (!here.length || here.length > SPLIT.stopItems || there.length <= here.length) continue; // the other store is the real trip
+      const alts = here.map((i) => swappable.get(i.id));
+      if (alts.some((x) => !x)) continue;
+      const cost = here.reduce((t, i) => t + (i.cost || 0), 0);
+      const extra = alts.reduce((t, x) => t + (x.cost || 0), 0) - cost;
+      if (cost >= SPLIT.stopMax || extra > SPLIT.stopExtra) continue;
+      for (const i of here) {
+        const alt = swappable.get(i.id);
+        moved.push({ id: i.id, name: i.name, from: s, to: OTHER[s], why: 'one-stop', saves: round2((i.cost || 0) - (alt.cost || 0)) });
+        items[items.indexOf(i)] = { ...alt, storeWhy: 'one-stop' };
+      }
+      break;
+    }
   }
   items.push(...freeExtras);
   items.sort((a, b) => aisleIndex(a.aisle) - aisleIndex(b.aisle) || a.name.localeCompare(b.name));
@@ -303,7 +372,29 @@ export function buildList(db, state, { dates, listKey = '', store: tripStore = n
     perLunch: lunches.length ? round2(usedByLunches / lunches.length) : 0,
     weeks, planStore, pricesUpdated: db.pricesUpdated,
     unpriced: items.filter((i) => i.cost == null).length,
+    // Items bought somewhere other than their usual store, and why (SPEC §21.4).
+    split: { on: !!smart && planStore === 'both', moved, saved: round2(moved.reduce((t, m) => t + m.saves, 0)) },
   };
+}
+
+/**
+ * Should this item be bought at the other store instead? `usual` and `alt` are the item priced at
+ * each. → the reason ('wasted' | 'fresh' | 'bulk' | 'cheaper'), or null to leave it where it is.
+ */
+function pickStore(db, state, id, usual, alt, { split, tossed }) {
+  const less = alt.leftover < usual.leftover - 1e-9;
+  // Thrown out twice lately: the pack that leaves the least over, whatever the trip.
+  if (tossed >= 2 && less) return 'wasted';
+  if (!split) return null;
+  const fresh = keepsDays(db, state, id) != null && placeOf(db, state, id) !== 'freezer' && !db.ingredients[id]?.meat;
+  if (fresh) {
+    const unused = usual.bought > 0 ? usual.leftover / usual.bought : 0;
+    return unused > SPLIT.freshLeftover && less && (alt.cost || 0) <= (usual.cost || 0) * SPLIT.freshExtra ? 'fresh' : null;
+  }
+  // It keeps (freezer, shelf, or meat to portion and freeze): the other store only when it's cheaper
+  // for what's needed and no dearer by the unit.
+  const unit = (x) => x.pack.price / x.pack.size;
+  return (alt.cost || 0) < (usual.cost || 0) - 0.5 && unit(alt) <= unit(usual) * 1.1 ? (alt.store === 'sams' ? 'bulk' : 'cheaper') : null;
 }
 
 /**
@@ -446,6 +537,66 @@ export function extrasPerMonth(db, state) {
   return { total: round2(t), unpriced };
 }
 
+/** The family wants two or three store trips a month, not one every few days. */
+export const TRIP_GOAL = 3;
+
+/**
+ * Store trips in a month, from its receipts: each day with a receipt is one trip (Sam's and Jewel on
+ * the same day is one run). → [{ date, stores: [id], total, receipts }], oldest first.
+ */
+export function tripsIn(state, month) {
+  const days = new Map();
+  for (const r of receiptsIn(state, month)) {
+    const t = days.get(r.date) || { date: r.date, stores: [], total: 0, receipts: 0 };
+    if (r.store && !t.stores.includes(r.store)) t.stores.push(r.store);
+    t.total = round2(t.total + Number(r.amount));
+    t.receipts++;
+    days.set(r.date, t);
+  }
+  return [...days.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * This month's trips against the goal. → { month, trips, count, goal, left, over, last,
+ *   daysSince (the last trip), daysLeft (in the month, today included), perTrip (average spent),
+ *   stretch (days each trip still allowed has to cover to make it to the end of the month) }
+ */
+export function tripGoal(state, today) {
+  const month = today.slice(0, 7);
+  const trips = tripsIn(state, month);
+  const g = Number(state?.settings?.tripGoal);
+  const goal = Number.isInteger(g) && g >= 1 && g <= 8 ? g : TRIP_GOAL;
+  const count = trips.length;
+  const last = count ? trips[count - 1].date : null;
+  const daysLeft = diffDays(endOfMonth(today), today) + 1;
+  const left = Math.max(0, goal - count);
+  return {
+    month, trips, count, goal, left, over: count > goal, last,
+    daysSince: last ? diffDays(today, last) : null, daysLeft,
+    perTrip: count ? round2(trips.reduce((t, x) => t + x.total, 0) / count) : null,
+    stretch: left ? Math.ceil(daysLeft / left) : daysLeft,
+  };
+}
+
+/**
+ * The year at this rate. `rate` is what this month looks like costing (its receipts plus what's
+ * still to buy); the last three calendar months are averaged from their receipts (months with none
+ * are left out, and said so). → { target, yearTarget, rate, year, overYear, months: [{ month,
+ *   total }], monthsWithData, avg3 (null without data) }
+ */
+export function yearPace(state, today, rate) {
+  const target = settingsOf(state).monthlyTarget;
+  const months = [3, 2, 1].map((k) => addMonths(startOfMonth(today), -k).slice(0, 7))
+    .map((month) => ({ month, total: round2(receiptsIn(state, month).reduce((t, r) => t + Number(r.amount), 0)) }));
+  const withData = months.filter((m) => m.total > 0);
+  const thisRate = round2(Number.isFinite(rate) ? rate : receiptsIn(state, today.slice(0, 7)).reduce((t, r) => t + Number(r.amount), 0));
+  return {
+    target, yearTarget: round2(target * 12), rate: thisRate, year: round2(thisRate * 12), overYear: round2(thisRate * 12 - target * 12),
+    months, monthsWithData: withData.length,
+    avg3: withData.length ? round2(withData.reduce((t, m) => t + m.total, 0) / withData.length) : null,
+  };
+}
+
 export function receiptsIn(state, month) {
   const seen = new Set();
   return (Array.isArray(state?.receipts) ? state.receipts : [])
@@ -499,5 +650,9 @@ export function monthBudget(db, state, today, { baseline = 1000 } = {}) {
     byStore: { sams: list.stores.sams.subtotal, jewel: list.stores.jewel.subtotal },
     pricesUpdated: db.pricesUpdated,
     label: `${shortDate(today)} – ${shortDate(end)}`,
+    // SPEC §21: trips against the goal, the year at this rate, and what was thrown out.
+    trips: tripGoal(state, today),
+    pace: yearPace(state, today, ifPlanned),
+    wasted: wasteSummary(state, today),
   };
 }

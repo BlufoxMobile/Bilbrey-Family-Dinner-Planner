@@ -1,18 +1,19 @@
-// Plan ahead, pantry first (SPEC §16). Pick a day up to a month out; the planner fills the open
-// nights with dinners the pantry already covers, oldest and soonest-to-spoil food first (counting
-// the food down night by night), then fills the rest with the usual rules, cheapest to finish
-// first. Packed lunches swap to what's on hand when the rotation's item isn't. pantryStretch says
-// how far the pantry carries the plan before the store has to.
+// Plan ahead, pantry first (SPEC §16, §21.1). Pick a day up to a month out; the planner fills the
+// open nights, and re-plans the nights it chose itself, with dinners the pantry already covers,
+// oldest and soonest-to-spoil food first (counting the food down night by night), then the rest
+// with the usual rules, cheapest to finish first. Packed lunches swap to what's on hand when the
+// rotation's item isn't. pantryStretch says how far the pantry carries the plan before the store
+// has to; aheadStats is the before/after; tripAdvice says when a trip list is too short.
 // Pure: no DOM, no clock (today and `at` are passed in).
 
-import { set, del, normalizeTrip } from './state.js';
-import { generatePlan, itemsForNight, dinnerById } from './planner.js';
-import { plannedNights, itemMeta } from './shopping.js';
+import { set, del, normalizeTrip, applyOps } from './state.js';
+import { generatePlan, itemsForNight, dinnerById, isFillable } from './planner.js';
+import { plannedNights, itemMeta, buildList } from './shopping.js';
 import { onHand, ENOUGH } from './coverage.js';
-import { keepsDays, placeOf, sinceOf } from './freshness.js';
+import { keepsDays, placeOf, sinceOf, urgency, useFirstScore, FREEZER_OLD_DAYS } from './freshness.js';
 import { lunchFor, lunchItem, personConfig } from './lunch.js';
 import { FAMILY } from './config.js';
-import { addDays, datesBetween, daysInMonth, diffDays, isISODate, round2, shortDate, weekdayName } from './util.js';
+import { addDays, datesBetween, daysInMonth, diffDays, isISODate, money, round2, shortDate, weekdayName } from './util.js';
 import { undoFor } from './actions.js';
 
 /** Plan ahead reaches at most this many days past today. */
@@ -45,48 +46,8 @@ export function clampAheadEnd(today, end) {
   return end > max ? max : end;
 }
 
-// ---------------------------------------------------------------- use it first
-
-/** Anything in the freezer this long counts as "use soon" (Jeff threw out freezer-burnt steak and corn). */
-export const FREEZER_OLD_DAYS = 60;
-
-const isMeatItem = (db, state, id) => !!db.ingredients[id]?.meat || itemMeta(db, state, id).aisle === 'Meat';
-
-/**
- * How much it matters to eat an on-hand item by the night of `date`: 0 (it keeps) and up.
- *  - Fridge and counter food by its estimated use-by (freshness.js): past it by that night 6 and
- *    more (the strong one: use it now), due that night 4, within two days 3 to 2, within a week 1.
- *  - Freezer food by age: 60+ days in the freezer is "use soon" (2, plus a point a month), younger
- *    food a fraction of that, so the oldest always goes first; past its freezer use-by adds 4.
- * Items with no came-home date, and shelf goods that keep for months, score 0.
- */
-export function urgency(db, state, id, date) {
-  const p = state?.pantry?.[id];
-  if (!p || p.low) return 0;
-  const since = sinceOf(p);
-  if (!since) return 0;
-  const days = keepsDays(db, state, id);
-  if (placeOf(db, state, id) === 'freezer') {
-    const age = Math.max(0, diffDays(date, since));
-    let u = age >= FREEZER_OLD_DAYS ? 2 + (age - FREEZER_OLD_DAYS) / 30 : age / FREEZER_OLD_DAYS;
-    if (days != null && addDays(since, days) < date) u += 4;
-    return u;
-  }
-  if (days == null) return 0;
-  const left = diffDays(addDays(since, days), date);
-  if (left < 0) return 6 + Math.min(2, -left / 7);
-  if (left === 0) return 4;
-  if (left <= 2) return 4 - left;
-  if (left <= 6) return 1;
-  return 0.25;
-}
-
-/** How much a meal's ingredients need eating first (meat counts half again: it's the costly waste). */
-export function useFirstScore(db, state, items, date) {
-  let s = 0;
-  for (const id of Object.keys(items || {})) s += urgency(db, state, id, date) * (isMeatItem(db, state, id) ? 1.5 : 1);
-  return s;
-}
+// Use it first (urgency, useFirstScore) lives in freshness.js; re-exported here for older callers.
+export { urgency, useFirstScore, FREEZER_OLD_DAYS };
 
 // ---------------------------------------------------------------- the shelf, counted down
 
@@ -118,12 +79,14 @@ function shortOf(db, state, rem, items) {
 }
 
 /**
- * Nights already planned keep their food: what a kept night is fully stocked for is set aside
- * first, so a new pantry night never takes the chicken a hand-picked night counts on. (Food a
- * kept night is short of gets bought for it anyway, so it isn't held back.)
+ * Nights that stay as they are keep their food: what a kept night is fully stocked for is set
+ * aside first, so a new pantry night never takes the chicken a hand-picked night counts on. (Food
+ * a kept night is short of gets bought for it anyway, so it isn't held back.) A night the planner
+ * chose itself is only "kept" when it isn't being re-planned.
  */
-function setAsideKept(db, state, rem, dates) {
+function setAsideKept(db, state, rem, dates, mode = 'fill') {
   for (const { entry } of plannedNights(db, state, dates).sort((a, b) => a.date.localeCompare(b.date))) {
+    if (isFillable(entry, mode)) continue;
     for (const [id, need] of Object.entries(itemsForNight(db, state, entry.dinner, entry))) {
       const have = rem[id] ?? 0;
       if (have !== Infinity && enough(have, need)) rem[id] = Math.max(0, have - need);
@@ -165,9 +128,75 @@ function lunchPicks(db, state, rem, dates) {
 
 const dayText = (d) => `${weekdayName(d)}, ${shortDate(d)}`;
 
+/** Same dinner with the same sides? (Who planned it and when don't matter.) */
+const sameNight = (a, b) => !!a && !!b && a.dinner === b.dinner && a.status === b.status
+  && JSON.stringify((a.sides || []).map((x) => x ?? null)) === JSON.stringify((b.sides || []).map((x) => x ?? null));
+
+/** The state as it would be with these nights and lunch picks written (nothing else is copied). */
+function withPlan(state, entries, picks = []) {
+  const next = { ...state, plan: { ...(state?.plan || {}), ...entries } };
+  if (picks.length) {
+    const days = { ...(state?.lunch?.days || {}) };
+    for (const p of picks) {
+      days[p.date] = { ...(days[p.date] || {}) };
+      days[p.date][p.name] = { ...(days[p.date][p.name] || {}), picks: { ...(days[p.date][p.name]?.picks || {}), [p.slot]: p.id } };
+    }
+    next.lunch = { ...(state?.lunch || {}), days };
+  }
+  return next;
+}
+
 /**
- * Plan every open night from `start` through `end`. Cooked, away and already-planned nights (by
- * hand or not) are never touched.
+ * The plan for a stretch in three numbers (the before and after of plan ahead):
+ * → { dinners (planned), fromPantry (fully stocked, counted down night by night), groceries
+ *     (the list's total for the stretch), open (nights with nothing planned) }
+ */
+export function aheadStats(db, state, { start, end, today = null }) {
+  const s = pantryStretch(db, state, { start, end });
+  const list = buildList(db, state, { dates: datesBetween(start, end), today });
+  return { dinners: s.dinners, fromPantry: s.dinnersCovered, groceries: list.total, open: s.nights.filter((n) => n.open).length };
+}
+
+/** One planning pass. mode 'fill' touches open nights only; 'replan' also the planner's own. */
+function planPass(db, state, { dates, mode, pantryFirst, by, stamp, today, seed, day0, last }) {
+  const common = { db, dates, mode, by, at: stamp, today, seedKey: seed };
+  if (!pantryFirst) {
+    const rest = generatePlan({ ...common, state });
+    return { entries: rest.entries, fromPantry: [], picks: [], unfilled: rest.unfilled };
+  }
+  const rem = onHand(db, state);
+  setAsideKept(db, state, rem, datesBetween(today && today < day0 ? today : day0, last), mode);
+  const first = generatePlan({
+    ...common, state, strict: true,
+    accept: (date, d, items) => coversAll(rem, items),
+    bonus: (date, d, items) => 2.5 * useFirstScore(db, state, items, date),
+    onPlace: (date, entry, items) => { take(rem, items); },
+  }).entries;
+  // The second pass keeps the pantry nights (it sees them as set, though they're written as the planner's).
+  const held = Object.fromEntries(Object.entries(first).map(([d, e]) => [d, { ...e, manual: true }]));
+  const withPantry = { ...state, plan: { ...(state?.plan || {}), ...held } };
+  const rest = generatePlan({
+    ...common, state: withPantry, reserve: true,
+    // Twice the planner's usual weight on cost, and a nudge per thing to buy.
+    bonus: (date, d, items, money) => -(money.cost / 14) - 0.12 * money.buys,
+  });
+  for (const e of Object.values(rest.entries)) take(rem, itemsForNight(db, withPantry, e.dinner, e));
+  const entries = { ...first, ...rest.entries };
+  const picks = lunchPicks(db, withPlan(state, entries), rem, dates);
+  return { entries, fromPantry: Object.keys(first).sort(), picks, unfilled: rest.unfilled };
+}
+
+/** Re-planning has to earn it: more dinners from the pantry, or at least this much less to buy. */
+export const REPLAN_MIN_SAVING = 3;
+
+/**
+ * Plan from `start` through `end`. Cooked and away nights and nights the family set by hand are
+ * never touched.
+ *   replan (default: on with pantryFirst): also re-plan the nights the planner chose itself, from
+ *     tomorrow on (tonight's dinner may already be thawed or started, so it stays). The
+ *     app has usually planned weeks ahead already, so without this there is nothing left to fill
+ *     and the pantry never gets a say. It only happens when it helps: more dinners straight from
+ *     the pantry, or a smaller grocery bill; otherwise those nights stay as they are.
  *   pantryFirst: 1. nights the pantry fully covers, each night scored by how much soon-to-spoil
  *                   and oldest food it uses (urgency), with every planner rule kept (rotation and
  *                   votes, burger and pizza nights, rice limit, no repeats close together, store);
@@ -175,58 +204,73 @@ const dayText = (d) => `${weekdayName(d)}, ${shortDate(d)}`;
  *                2. the rest with the usual planner, favoring dinners with the fewest and cheapest
  *                   things to buy.
  *                3. lunch days swap a slot to what's on hand when the rotation's item isn't.
- * → { ops, undo, message, count, fromPantry: [date], lunchPicks: [...], unfilled: [date], start, end }
+ * Nights that come out the same as they already are aren't written again.
+ * → { ops, undo, message, count, fromPantry: [date], replanned: [date], lunchPicks: [...],
+ *     unfilled: [date], start, end, replan (did it), before, after }
+ * `before` is the plan as it stood (open nights filled the usual way, so the grocery numbers
+ * compare like with like); `after` is the plan this writes. Both are aheadStats.
  */
-export function planAheadOps(db, state, { start, end, who, today, at, pantryFirst = true, seedKey } = {}) {
+export function planAheadOps(db, state, { start, end, who, today, at, pantryFirst = true, replan = pantryFirst, seedKey, record = true } = {}) {
   const day0 = today && (!start || start < today) ? today : start;
   const last = today ? clampAheadEnd(today, end) : end;
   const dates = datesBetween(day0, last);
   const by = who || 'Family';
   const stamp = at || new Date().toISOString();
   const seed = seedKey || day0;
-  const common = { db, dates, mode: 'fill', by, at: stamp, today, seedKey: seed };
+  const plan = state?.plan || {};
+  const ctx = { dates, pantryFirst, by, stamp, today, seed, day0, last };
+  const span = { start: day0, end: last, today };
+  // Tonight's dinner is never re-planned: by now it may be thawed, started, or shopped for.
+  const own = dates.filter((d) => (!today || d > today) && plan[d]?.dinner && isFillable(plan[d], 'replan'));
+  const hadOpen = dates.some((d) => (!today || d >= today) && isFillable(plan[d], 'fill'));
 
-  let fromPantry = {};
-  let rest;
-  let picks = [];
-  if (!pantryFirst) {
-    rest = generatePlan({ ...common, state });
-  } else {
-    const rem = onHand(db, state);
-    setAsideKept(db, state, rem, datesBetween(today && today < day0 ? today : day0, last));
-    fromPantry = generatePlan({
-      ...common, state, strict: true,
-      accept: (date, d, items) => coversAll(rem, items),
-      bonus: (date, d, items) => 2.5 * useFirstScore(db, state, items, date),
-      onPlace: (date, entry, items) => { take(rem, items); },
-    }).entries;
-    const withPantry = { ...state, plan: { ...(state?.plan || {}), ...fromPantry } };
-    rest = generatePlan({
-      ...common, state: withPantry, reserve: true,
-      // Twice the planner's usual weight on cost, and a nudge per thing to buy.
-      bonus: (date, d, items, money) => -(money.cost / 14) - 0.12 * money.buys,
-    });
-    for (const e of Object.values(rest.entries)) take(rem, itemsForNight(db, withPantry, e.dinner, e));
-    picks = lunchPicks(db, withPantry, rem, dates);
+  let pass = planPass(db, state, { ...ctx, mode: 'fill' });
+  let after = aheadStats(db, withPlan(state, pass.entries, pass.picks), span);
+  let did = false;
+  if (replan && own.length) {
+    const tonight = today && plan[today]?.dinner && isFillable(plan[today], 'replan') ? { ...state, plan: { ...plan, [today]: { ...plan[today], manual: true } } } : state;
+    const re = planPass(db, tonight, { ...ctx, mode: 'replan' });
+    const reAfter = aheadStats(db, withPlan(state, re.entries, re.picks), span);
+    if (reAfter.fromPantry > after.fromPantry || (reAfter.fromPantry === after.fromPantry && reAfter.groceries < after.groceries - REPLAN_MIN_SAVING)) {
+      pass = re; after = reAfter; did = true;
+    }
   }
+  // Before: the plan as it stood, its open nights filled the way "Plan open nights" would.
+  const usual = hadOpen ? generatePlan({ db, state, dates, mode: 'fill', by, at: stamp, today, seedKey: seed }).entries : {};
+  const before = { ...aheadStats(db, withPlan(state, usual), span), hadOpen };
 
-  const entries = { ...fromPantry, ...rest.entries };
+  const changed = Object.keys(pass.entries).sort().filter((d) => !sameNight(plan[d], pass.entries[d]));
+  const replanned = changed.filter((d) => plan[d]?.dinner);
   const ops = [
-    ...Object.keys(entries).sort().map((d) => set(['plan', d], entries[d])),
-    ...picks.map((p) => set(['lunch', 'days', p.date, p.name, 'picks', p.slot], p.id)),
+    ...changed.map((d) => set(['plan', d], pass.entries[d])),
+    ...pass.picks.map((p) => set(['lunch', 'days', p.date, p.name, 'picks', p.slot], p.id)),
   ];
-  const n = Object.keys(entries).length;
-  const p = Object.keys(fromPantry).length;
-  const l = picks.length;
-  const open = rest.unfilled.length;
+  const n = changed.length;
+  const p = pass.fromPantry.length;
+  const l = pass.picks.length;
+  const open = pass.unfilled.length;
   let message;
-  if (!n && !l) message = open ? 'Couldn’t find dinners that fit those rules. Try planning from both stores.' : `Every night through ${dayText(last)} is already planned.`;
-  else {
+  if (!n && !l) {
+    message = open ? 'Couldn’t find dinners that fit those rules. Try planning from both stores.'
+      : `Every night through ${dayText(last)} is already planned${replan && pantryFirst && own.length ? ', and the plan already makes the most of the pantry' : ''}.`;
+  } else {
     message = n ? `Planned ${n} ${n === 1 ? 'dinner' : 'dinners'} through ${dayText(last)}${pantryFirst ? (p ? `: ${p} straight from the pantry` : ', none fully from the pantry yet') : ''}.` : `Dinners through ${dayText(last)} were already planned.`;
+    const r = replanned.length;
+    if (r) message += r === n ? ` ${n === 1 ? 'It replaces' : n === 2 ? 'Both replace' : `All ${n} replace`} the planner’s earlier ${n === 1 ? 'pick' : 'picks'}.` : ` ${r} of them ${r === 1 ? 'replaces' : 'replace'} the planner’s earlier ${r === 1 ? 'pick' : 'picks'}.`;
+    if (did && before.groceries - after.groceries >= 1) message += ` Groceries drop from about ${money(before.groceries)} to ${money(after.groceries)}.`;
     if (l) message += ` ${l} packed ${l === 1 ? 'lunch uses' : 'lunches use'} what’s on hand.`;
     if (open) message += ` ${open} ${open === 1 ? 'night is' : 'nights are'} still open.`;
   }
-  return { ops, undo: undoFor(state, ops), message, count: n, fromPantry: Object.keys(fromPantry).sort(), lunchPicks: picks, unfilled: rest.unfilled, start: day0, end: last };
+  // The result card reads this, so it's there after a reload and on the family's other screens.
+  if (record) ops.push(set(['planAhead'], { start: day0, end: last, pantryFirst: !!pantryFirst, replan: !!replan, before, changed: n, by, at: stamp }));
+  return { ops, undo: undoFor(state, ops), message, count: n, fromPantry: pass.fromPantry, replanned, lunchPicks: pass.picks, unfilled: pass.unfilled, start: day0, end: last, replan: did, before, after };
+}
+
+/** The saved result of the last plan ahead (state.planAhead), or null once its stretch has passed. */
+export function aheadRecord(state, today) {
+  const a = state?.planAhead;
+  if (!a || typeof a !== 'object' || !isISODate(a.start) || !isISODate(a.end) || a.end < today) return null;
+  return a;
 }
 
 // ---------------------------------------------------------------- how far the pantry carries the plan
@@ -317,4 +361,65 @@ export function shoppingTripOps(state, { today, end, who, at, store = 'both' }) 
   }
   const where = { sams: 'Sam’s Club', jewel: 'Jewel-Osco' }[store] || 'both stores';
   return { ops, undo: undoFor(state, ops), message: `Shopping list for ${where}, through ${dayText(trip.end)}: only what the pantry doesn’t cover.` };
+}
+
+// ---------------------------------------------------------------- fewer trips (SPEC §21.4)
+
+/** A trip list should cover at least this many days: three trips a month, not one every few days. */
+export const TRIP_MIN_DAYS = 10;
+
+const tripList = (db, state, trip, today) => {
+  const start = trip.start > today ? trip.start : today;
+  return buildList(db, state, { dates: datesBetween(start, trip.end), listKey: tripKeyOf(trip), store: trip.store === 'both' ? null : trip.store, split: trip.store === 'both', today });
+};
+
+/** The ops that stretch the trip in progress to `days` days from today, planning its open nights. */
+function extension(db, state, { today, days, who, at }) {
+  const trip = normalizeTrip(state?.settings?.trip);
+  if (!trip || trip.end < today) return null;
+  const end = clampAheadEnd(today, addDays(today, days - 1));
+  if (end <= trip.end) return null;
+  const stamp = at || new Date().toISOString();
+  const fill = planAheadOps(db, state, { start: addDays(trip.end, 1), end, who, today, at: stamp, pantryFirst: true, replan: false, record: false });
+  const next = { ...trip, end, by: who || trip.by || 'Family', at: stamp };
+  const ops = [...fill.ops, set(['settings', 'trip'], next)];
+  // What's already checked off or skipped comes along to the longer list.
+  const from = tripKeyOf(trip);
+  const to = tripKeyOf(next);
+  for (const k of ['checked', 'skips']) {
+    if (state?.[k]?.[from]) ops.push(set([k, to], state[k][from]), del([k, from]));
+  }
+  return { ops, trip, next, planned: fill.count, unfilled: fill.unfilled.length };
+}
+
+/**
+ * Is the trip list in progress long enough to skip the next store run? A list that covers fewer
+ * than 10 days means another trip within the week. → null when there's no trip, else
+ * { trip, days (it covers, from today), short, more (days to add), newEnd, open (nights in the
+ *   extra days with nothing planned yet), total (this list), longer (the list if extended, open
+ *   nights planned pantry first), added (longer − total) }
+ */
+export function tripAdvice(db, state, { today, min = TRIP_MIN_DAYS }) {
+  const trip = normalizeTrip(state?.settings?.trip);
+  if (!trip || trip.end < today) return null;
+  const days = diffDays(trip.end, today) + 1;
+  const total = tripList(db, state, trip, today).total;
+  if (days >= min) return { trip, days, short: false, more: 0, newEnd: trip.end, open: 0, total, longer: total, added: 0 };
+  const x = extension(db, state, { today, days: min, who: null, at: 'x' });
+  if (!x) return { trip, days, short: false, more: 0, newEnd: trip.end, open: 0, total, longer: total, added: 0 };
+  const longer = tripList(db, applyOps(state, x.ops), x.next, today).total;
+  const extra = datesBetween(addDays(trip.end, 1), x.next.end);
+  const open = extra.filter((d) => isFillable(state?.plan?.[d], 'fill')).length;
+  return { trip, days, short: true, more: extra.length, newEnd: x.next.end, open, total, longer, added: round2(longer - total) };
+}
+
+/** "Extend the trip": the list grows to 10 days, and any open night in them gets planned (pantry first). */
+export function extendTripOps(db, state, { today, who, at, days = TRIP_MIN_DAYS }) {
+  const x = extension(db, state, { today, days, who, at });
+  if (!x) return { ops: [], undo: [], message: 'This trip already covers that many days.' };
+  const n = diffDays(x.next.end, today) + 1;
+  return {
+    ops: x.ops, undo: undoFor(state, x.ops), end: x.next.end,
+    message: `The trip now shops through ${dayText(x.next.end)}: ${n} days of food in one run.${x.planned ? ` Planned ${x.planned} more ${x.planned === 1 ? 'dinner' : 'dinners'}, pantry first.` : ''}`,
+  };
 }
