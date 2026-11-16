@@ -9,7 +9,7 @@ import {
 import { restoreOps, restoreSideOps } from '../actions.js';
 import { onHand } from '../coverage.js';
 import { fmtKcal } from '../nutrition.js';
-import { recipeFacts, recipeMatches, recipeCompare, fmtMinutes, EQUIPMENT, TIME_FILTERS, RECIPE_SORTS } from '../cooking.js';
+import { recipeFacts, recipeMatches, recipeCompare, timeLabel, EQUIPMENT, TIME_FILTERS, RECIPE_SORTS } from '../cooking.js';
 import { dinnerPhoto, sidePhoto, showNutrition, leanMark, equipLabel } from './common.js';
 
 export const title = () => 'Recipes';
@@ -76,7 +76,7 @@ function card(app, { d, facts }) {
     ${dinnerPhoto(app, d, { size: 'card' })}
     <span class="r-body">
       <b class="r-title">${d.title}</b>
-      <span class="r-meta">${facts.minutes ? fmtMinutes(facts.minutes) : ''}${facts.minutes ? ', ' : ''}${d.category}${when(isFavorite(app.state, d), () => html`<span class="r-fav">${ic('star', { size: 14 })}<span class="sr-only">Family favorite</span></span>`)}</span>
+      <span class="r-meta">${timeLabel(d)}${facts.minutes ? ', ' : ''}${d.category}${when(isFavorite(app.state, d), () => html`<span class="r-fav">${ic('star', { size: 14 })}<span class="sr-only">Family favorite</span></span>`)}</span>
       ${when(nutri, () => html`<span class="r-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein${leanMark(facts, { compact: true })}</span>`)}
       ${when(facts.total, () => html`<span class="r-pantry ${facts.makeable ? 'is-ready' : ''}">${facts.makeable ? html`${ic('check', { size: 14 })}Everything’s in the pantry` : `${facts.total - facts.missing} of ${facts.total} ingredients on hand`}</span>`)}
     </span>
@@ -115,8 +115,8 @@ export function render(app) {
   const counts = Object.fromEntries(TABS.map((t) => [t.id, all.filter((d) => inTab(app, d, t.id)).length]));
   counts.out += droppedSides(app.db, app.state).length;
   const used = new Set(all.flatMap((d) => d.equipment));
-  // Every appliance in the house that a recipe uses, and always the PossibleCooker (Jeff's new one).
-  const appliances = EQUIPMENT.filter((e) => used.has(e.id) || e.id === 'possible cooker');
+  // Every appliance in the house that a recipe uses.
+  const appliances = EQUIPMENT.filter((e) => used.has(e.id));
   const chip = (key, label, hint = '') => html`<button type="button" id="rf-${key}" class="chip ${f[key] ? 'is-on' : ''}" aria-pressed="${f[key] ? 'true' : 'false'}" data-action="rec:toggle" data-key="${key}" ${hint ? html`title="${hint}"` : ''}>${label}</button>`;
   const select = (key, any, opts, label) => html`<select id="rf-${key}" class="input input-chip ${f[key] ? 'is-on' : ''}" data-change="rec:select" data-key="${key}" aria-label="${label}">
       <option value="">${any}</option>${opts.map((o) => html`<option value="${o.id}" ${f[key] === o.id ? 'selected' : ''}>${o.label}</option>`)}

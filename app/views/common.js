@@ -8,7 +8,7 @@ import { listJoin, midSentence, relativeDay, shortWeekday } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
 import { prepSchedule } from '../prep.js';
-import { plateFacts, recipeTimes, fmtMinutes, equipmentLabel, LEFTOVER_REASON } from '../cooking.js';
+import { plateFacts, timeLabel, fmtMinutes, equipmentLabel, LEFTOVER_REASON } from '../cooking.js';
 
 /** Calories are shown when nutrition.json is there and this phone hasn't hidden them. */
 export const showNutrition = (app) => hasNutrition(app.db) && !app.store?.device?.hideNutrition;
@@ -149,9 +149,9 @@ export const equipIcon = (id, opts) => ic(EQUIPMENT_ICON[id] || 'stovetop', opts
 
 export function equipment(d, { compact = false } = {}) {
   const eq = (d?.equipment || []).filter(Boolean);
-  const t = recipeTimes(d);
+  const time = timeLabel(d);
   return html`<ul class="facts ${compact ? 'facts-compact' : ''}">
-    ${t.total ? html`<li>${ic('clock', { size: 18 })}<span>${fmtMinutes(t.total)}</span></li>` : ''}
+    ${time ? html`<li>${ic('clock', { size: 18 })}<span>${time}</span></li>` : ''}
     ${eq.map((e) => html`<li>${equipIcon(e, { size: 18 })}<span>${equipLabel(e)}</span></li>`)}
   </ul>`;
 }

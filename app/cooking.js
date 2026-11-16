@@ -11,6 +11,9 @@ import { useSoon, sinceOf, placeOf } from './freshness.js';
 import { activeDeal } from './deals.js';
 import { isVegSide } from './health.js';
 import { addDays, diffDays, round2, shortDate, weekdayName, midSentence, listJoin } from './util.js';
+import { fmtMinutes } from './data.js';
+
+export { fmtMinutes }; // "45 min", "1 hr 10 min": one way to say a time, everywhere (app/data.js)
 
 // ---------------------------------------------------------------- equipment
 
@@ -48,12 +51,16 @@ export function leftoversNote(recipe) {
   return own || 'Cool it and get it in the fridge within 2 hours. It keeps 3–4 days; reheat until steaming hot all the way through (165°F).';
 }
 
-/** "45 min", "1 hr 10 min" */
-export function fmtMinutes(min) {
-  const m = Math.max(0, Math.round(Number(min) || 0));
-  if (m < 60) return `${m} min`;
-  const h = Math.floor(m / 60);
-  return m % 60 ? `${h} hr ${m % 60} min` : `${h} hr`;
+/**
+ * How long a dinner takes, for a card or a row. Most dinners: "35 min". A dinner that mostly cooks
+ * on its own (a slow cook, a braise: an hour or more that isn't hands-on) says both, so nobody
+ * reads six hours as six hours of work: "20 min hands-on, 6 hr 20 min in all".
+ * → '' when the recipe doesn't know its time.
+ */
+export function timeLabel(recipe) {
+  const t = recipeTimes(recipe);
+  if (!t.total) return '';
+  return t.prep && t.total - t.prep >= 60 ? `${fmtMinutes(t.prep)} hands-on, ${fmtMinutes(t.total)} in all` : fmtMinutes(t.total);
 }
 
 // ---------------------------------------------------------------- reading a step
@@ -132,6 +139,24 @@ export function stepDetails(recipe) {
   return out;
 }
 
+const COOKER_PROGRAM = /^(slow cook|sear\/saut[eé]|braise|steam|(?:white |brown )?rice|oats|pasta|keep warm)(?![a-z])/i;
+const upFirst = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+
+/**
+ * Which appliance a step's setting is for, when the setting says so. The recipe box writes
+ * "Stovetop, medium-low, lid on" or "Air fryer, 400°F", and the PossibleCooker's programs by name
+ * ("SLOW COOK on LO", "sear/sauté, high"). → { id, what } ("Medium-low, lid on") | null
+ */
+export function settingOwner(setting) {
+  const s = String(setting || '').trim();
+  if (!s) return null;
+  if (COOKER_PROGRAM.test(s)) return { id: 'possible cooker', what: s };
+  const m = s.match(/^([^,]+),\s*(.+)$/);
+  const named = m ? m[1].trim().toLowerCase() : '';
+  const eq = named ? EQUIPMENT.find((e) => e.id === named || e.label.toLowerCase() === named) : null;
+  return eq ? { id: eq.id, what: upFirst(m[2].trim()) } : null;
+}
+
 /** Each appliance the recipe uses, with the settings its steps call for. → [{ id, label, settings: [] }] */
 export function equipmentSettings(recipe) {
   const ids = (Array.isArray(recipe?.equipment) ? recipe.equipment : []).map(String);
@@ -139,12 +164,17 @@ export function equipmentSettings(recipe) {
   return ids.map((id) => {
     const eq = EQUIPMENT_BY_ID[id];
     const settings = [];
+    const add = (t) => { if (t && !settings.includes(t)) settings.push(t); };
     for (const st of steps) {
       if (!st.setting) continue;
+      // A setting that names its appliance goes there and nowhere else.
+      const owner = settingOwner(st.setting);
+      if (owner) { if (owner.id === id) add(owner.what); continue; }
+      // Otherwise (a family-saved dinner, read from its sentences) it goes by what the step mentions.
       const mentions = eq?.words.test(st.text);
       // A temperature in °F is an air-fryer (or cooker) setting; a burner heat belongs to the rest.
       const fits = /°F/.test(st.setting) ? ['air fryer', 'possible cooker'].includes(id) || mentions : id !== 'microwave' || mentions;
-      if ((ids.length === 1 || mentions) && fits && !settings.includes(st.setting)) settings.push(st.setting);
+      if ((ids.length === 1 || mentions) && fits) add(st.setting);
     }
     return { id, label: equipmentLabel(id), settings };
   });
@@ -377,34 +407,20 @@ export function pantryCheck(db, state, items, rem = onHand(db, state)) {
 
 // ---------------------------------------------------------------- plate facts: calories, protein, lean
 
+/** A plate "has a vegetable" at one serving or more (80 g; the validator's line for a default plate). */
+export const VEG_ON_PLATE = 1;
+
 /**
- * One plate of a dinner as served. Uses nutrition.plateHealth when the nutrition module has it,
- * else works it out from plateNutrition. Always the same shape:
+ * One plate of a dinner as served: nutrition.plateHealth (docs/spec/18 §18.5, the one lean rule:
+ * LEAN_RULE) in the shape the screens read.
  * → { kcal, protein, proteinG, carbsG?, fatG?, fiberG?, vegServings, lean, why, complete } | null
- * "Lean" (the fallback rule): at most ~800 calories a plate with 27% or more of them from protein.
+ * `why` is plateHealth's sentence without its full stop ("A lean plate: 640 cal with 50 g protein").
  */
-export function plateFacts(db, state, dinnerId, entry = null, { health = N.plateHealth } = {}) {
-  if (!N.hasNutrition(db)) return null;
-  const d = dinnerById(db, state, dinnerId);
-  if (!d) return null;
-  if (typeof health === 'function') {
-    try {
-      const h = health(db, state, dinnerId, entry);
-      if (h && Number.isFinite(h.kcal)) {
-        const p = Number.isFinite(h.proteinG) ? h.proteinG : Number(h.protein) || 0;
-        return { ...h, kcal: h.kcal, protein: p, proteinG: p, vegServings: Number(h.vegServings) || 0, lean: !!h.lean, why: h.why ? String(h.why) : '', complete: h.complete !== false };
-      }
-    } catch { /* fall through to the plain math */ }
-  }
+export function plateFacts(db, state, dinnerId, entry = null) {
+  const h = N.plateHealth(db, state, dinnerId, entry);
+  if (!h) return null;
   const n = N.plateNutrition(db, state, dinnerId, entry);
-  if (!n) return null;
-  const veg = effectiveSides(db, state, dinnerId, entry).filter((s) => isVegSide(db, state, s.parsed)).length + (d.tags.includes('salad') || d.category === 'Salads' ? 1 : 0);
-  const share = n.kcal > 0 ? (n.protein * 4) / n.kcal : 0;
-  const lean = n.complete !== false && n.kcal > 0 && n.kcal <= 800 && n.protein >= 30 && share >= 0.27;
-  return {
-    kcal: n.kcal, protein: n.protein, proteinG: n.protein, vegServings: veg, lean, complete: n.complete !== false,
-    why: lean ? `${Math.round(n.protein)} g of protein for about ${N.fmtKcal(n.kcal)} calories a plate` : '',
-  };
+  return { ...h, protein: h.proteinG, why: String(h.why || '').replace(/\.$/, ''), complete: n ? n.complete !== false : true };
 }
 
 /**
@@ -424,7 +440,7 @@ export function weekSummary(db, state, dates) {
     out.home++;
     if (e.status === 'cooked') out.cooked++;
     const f = plateFacts(db, state, d.id, e);
-    const veg = f ? f.vegServings > 0 : effectiveSides(db, state, d.id, e).some((s) => isVegSide(db, state, s.parsed));
+    const veg = f ? f.vegServings >= VEG_ON_PLATE : effectiveSides(db, state, d.id, e).some((s) => isVegSide(db, state, s.parsed));
     if (veg) out.withVeg++;
     if (!f) continue;
     out.counted++;
@@ -469,7 +485,7 @@ export function whyThisDinner(db, state, dinnerId, entry, { today, max = 3 } = {
     }
   }
   const f = plateFacts(db, state, dinnerId, entry);
-  if (f?.lean) out.push({ kind: 'lean', text: f.why ? `Lean: ${f.why}` : 'Lean and high in protein' });
+  if (f?.lean) out.push({ kind: 'lean', text: f.why || 'A lean plate, high in protein' });
   const check = pantryCheck(db, state, items);
   if (check.total && !check.missing.length) out.push({ kind: 'pantry', text: 'Everything for it is already in the house' });
   if (today) {
@@ -595,7 +611,7 @@ export function recipeFacts(db, state, d, rem) {
   const f = plateFacts(db, state, d.id, null);
   return {
     minutes: recipeTimes(d).total || 0,
-    kcal: f?.kcal ?? null, protein: f?.protein ?? null, lean: !!f?.lean, why: f?.why || '', veg: f ? f.vegServings > 0 : false,
+    kcal: f?.kcal ?? null, protein: f?.protein ?? null, lean: !!f?.lean, why: f?.why || '', veg: f ? f.vegServings >= VEG_ON_PLATE : false,
     missing: check.missing.length, total: check.total, makeable: check.total > 0 && !check.missing.length,
     words: [d.title, d.subtitle, d.category, d.protein, ...d.tags, ...d.equipment.map(equipmentLabel), ...Object.keys(d.items).map((id) => itemMeta(db, state, id).name)].join(' ').toLowerCase(),
   };

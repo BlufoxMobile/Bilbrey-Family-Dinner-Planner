@@ -126,7 +126,7 @@ test('Tonight is the home screen: dinner, start cooking, prep, use first, lunche
   assert.match(await page.textContent('.hero-title'), /smashburgers/i);
   assert.equal(await page.getAttribute('#tonight-cook', 'href'), `#/cook/${TODAY}`);
   assert.match(await page.textContent('.hero .nutri'), /≈ [\d,]+ cal.*\d+ g protein/s);
-  assert.match(await page.textContent('.hero .why'), /Uses (up )?the lean ground beef.*Nov 3/);
+  assert.match(await page.textContent('.hero .why'), /Uses up the romaine hearts from Nov 12 \(best by tomorrow\)/, 'the burgers take the lettuce that is about to turn');
   assert.ok(await page.$('.prep-card'), 'thaw and prep');
   assert.match(await page.textContent('.use-first'), /romaine|lettuce/i);
   assert.match(await page.textContent('.lunch-today'), /Jeff/);
@@ -155,19 +155,21 @@ test('the recipe page: why, times, equipment, pantry check, the plate timed toge
   await go(page, '#/recipe/smashburgers', '.page-recipe');
   assert.match(await page.textContent('.recipe-why'), /Why it’s on the plan tonight/);
   assert.match(await page.textContent('.time-strip'), /30 min/);
-  assert.match(await page.textContent('.gear'), /Blackstone\s*Medium-high heat/);
+  assert.match(await page.textContent('.gear'), /Blackstone\s*Medium-high/);
+  assert.doesNotMatch(await page.textContent('.gear'), /Blackstone\s*Blackstone/, 'the appliance is named once');
   // For five, against the pantry: the beef and buns are in, the cheese isn't.
   assert.match(await page.textContent('.pantry-sum'), /\d+ of \d+ ingredients are in the pantry/);
   assert.match(await page.textContent('.ing-have'), /In the pantry/);
   assert.ok((await page.$$('.ing-none, .ing-short')).length > 0, 'missing ingredients are marked');
   assert.equal((await page.$$('.tl-row')).length, 2, 'the dinner and its side on one clock');
-  assert.match(await page.textContent('.recipe-timing .cook-cues'), /Air-fryer fries\. Start here/);
+  assert.match(await page.textContent('.recipe-timing .cook-cues'), /Air-fryer fries\. Start it about \d+ min in/);
   assert.ok((await page.$$('.steps-detail .step')).length >= 4);
-  assert.match(await page.textContent('.steps-detail'), /Medium-high heat/);
-  assert.match(await page.textContent('.steps-detail .step-ings'), /2½ lb lean ground beef/);
+  assert.match(await page.textContent('.steps-detail'), /Blackstone, medium-high/);
+  assert.match(await page.textContent('.steps-detail .step-ings'), /2 lb lean ground beef/);
+  assert.match(await page.textContent('.recipe-tips'), /Cold beef smashes best/, 'the recipe’s own tips');
   assert.ok((await page.$$('.recipe-sides .steps-side li')).length >= 2, 'the side has its own method');
   assert.match(await page.textContent('.temps'), /160°F/);
-  assert.match(await page.textContent('.recipe-leftovers'), /165°F/);
+  assert.match(await page.textContent('.recipe-leftovers'), /Cooked patties keep 3 days in the fridge/, 'the recipe’s own leftovers note');
   assert.match(await page.textContent('.recipe-nutrition'), /≈ [\d,]+\s*calories/);
   assert.equal((await page.$$('.nutri-table tbody tr')).length, 2, 'the dinner and the side');
   // The plate guide shows once, in plain words, and goes away for good.
@@ -201,27 +203,29 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
   await go(page, '#/recipe/smashburgers', '.page-recipe');
   await page.click('#rec-cook');
   await page.waitForSelector('.cook.is-ready');
-  assert.match(await page.textContent('.cook-facts'), /About 38 min for the whole plate/);
+  assert.match(await page.textContent('.cook-facts'), /About 30 min for the whole plate/);
   await page.click('.cook-gather-row >> nth=0');
   await page.waitForSelector('.cook-gather-row.is-on');
   await shot(page, 'ready-390');
   await page.click('#cook-next');
   await page.waitForSelector('.cook.is-step');
   const n = Number(await page.getAttribute('.cook', 'data-n'));
-  assert.equal(n, 7, 'four burger steps and three for the fries, in one list');
-  assert.equal(await stepKey(page), 'side0:0', 'the fries go first: they take the longest');
+  assert.equal(n, 8, 'five burger steps and three for the fries, in one list');
+  assert.equal(await stepKey(page), 'main:0', 'the griddle heats first: the burgers take the longest');
   const size = await page.$eval('.cook-step-text', (el) => parseFloat(getComputedStyle(el).fontSize));
   assert.ok(size >= 23, `step text is large on a phone (${size}px)`);
-  assert.match(await page.textContent('.cook-title'), /Step 1 of 7/);
+  assert.match(await page.textContent('.cook-title'), /Step 1 of 8/);
+  assert.match(await page.textContent('.cook-setting'), /Blackstone, medium-high/);
+  assert.match(await page.textContent('.cook-ings'), /2 lb lean ground beef/);
+  assert.match(await page.textContent('.cook-dish-tag'), /Blackstone smashburgers\s*step 1 of 5/);
   // Arrow keys (and a TV remote's left / right).
   await page.keyboard.press('ArrowRight');
-  await waitFor(async () => (await stepKey(page)) === 'side0:1');
-  assert.match(await page.textContent('.cook-ings'), /26 oz frozen fries/);
-  assert.match(await page.textContent('.cook-setting'), /400°F/);
-  await page.keyboard.press('ArrowLeft');
   await waitFor(async () => (await stepKey(page)) === 'side0:0');
+  assert.match(await page.textContent('.cook-ings'), /26 oz frozen fries/);
+  await page.keyboard.press('ArrowLeft');
+  await waitFor(async () => (await stepKey(page)) === 'main:0');
   await page.keyboard.press('MediaTrackNext');
-  await waitFor(async () => (await stepKey(page)) === 'side0:1');
+  await waitFor(async () => (await stepKey(page)) === 'side0:0');
   // Swipe left for the next step.
   await page.evaluate(() => {
     const el = document.querySelector('.cook-stage');
@@ -229,17 +233,20 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
     el.dispatchEvent(new TouchEvent('touchstart', { touches: touch(320), changedTouches: touch(320), bubbles: true }));
     el.dispatchEvent(new TouchEvent('touchend', { touches: [], changedTouches: touch(90), bubbles: true }));
   });
-  await waitFor(async () => (await stepKey(page)) === 'main:0');
-  assert.match(await page.textContent('.cook-dish-tag'), /Blackstone smashburgers\s*step 1 of 4/);
+  await waitFor(async () => (await stepKey(page)) === 'side0:1');
+  assert.match(await page.textContent('.cook-setting'), /400°F/);
+  assert.match(await page.textContent('.cook-dish-tag'), /Air-fryer fries\s*step 2 of 3/);
   assert.ok(await noOverflow(page));
   await shot(page, 'step-390');
+  await next(page);
+  assert.equal(await stepKey(page), 'main:1', 'back to the burgers while the fries cook');
   // Every step, in order; tap one to go there.
   await page.click('[data-action="cook:steps"]');
   await page.waitForSelector('dialog[open] .cook-step');
-  assert.equal((await page.$$('dialog[open] .cook-step')).length, 7);
-  assert.equal((await page.$$('dialog[open] .cook-step.is-done')).length, 2);
+  assert.equal((await page.$$('dialog[open] .cook-step')).length, 8);
+  assert.equal((await page.$$('dialog[open] .cook-step.is-done')).length, 3);
   await shot(page, 'steps-sheet-390');
-  await page.click('dialog[open] .cook-step >> nth=1');
+  await page.click('dialog[open] .cook-step >> nth=2');
   await waitFor(async () => (await stepKey(page)) === 'side0:1');
   assert.equal(errors.length, 0, errors.join('\n'));
 });
@@ -250,8 +257,10 @@ test('timers keep running across steps, ring with a banner, and survive a reload
   await page.waitForSelector('.cook-timer.is-running');
   assert.match(await page.textContent('.cook-timer-clock'), /^1[12]:\d\d$/, 'a 12 minute timer (the low end of 12–18)');
   await shot(page, 'timer-390');
-  // On to the burgers: the fries' timer rides along at the bottom.
-  await page.click('#cook-next');
+  // Back to the griddle step: the fries' timer rides along at the bottom.
+  await page.keyboard.press('ArrowLeft');
+  await waitFor(async () => (await stepKey(page)) === 'side0:0');
+  await page.keyboard.press('ArrowLeft');
   await waitFor(async () => (await stepKey(page)) === 'main:0');
   await page.waitForSelector('.cook-dock .cook-pill.is-running');
   await page.click('.cook-timer-start'); // heat the Blackstone, 10 minutes
@@ -310,6 +319,8 @@ test('cook mode on a laptop and on the TV: big type, the step beside what it nee
     await p.keyboard.press('Enter');
     await p.waitForSelector('.cook.is-step');
     await p.keyboard.press('ArrowRight');
+    await waitFor(async () => (await stepKey(p)) === 'side0:0');
+    await p.keyboard.press('ArrowRight');
     await waitFor(async () => (await stepKey(p)) === 'side0:1');
     const size = await p.$eval('.cook-step-text', (el) => parseFloat(getComputedStyle(el).fontSize));
     assert.ok(size >= min, `step text at ${name} is ${size}px`);
@@ -336,7 +347,7 @@ test('finish: mark cooked (the pantry drops), then the leftovers question', asyn
   await page.waitForSelector('.cook-finish .lo-ask');
   let s = await familyState(page);
   assert.equal(s.plan[TODAY].status, 'cooked');
-  assert.equal(s.pantry.beef.qty, 0.5, '3 lb less the 2½ lb the burgers used');
+  assert.equal(s.pantry.beef.qty, 1, '3 lb less the 2 lb the burgers used');
   assert.equal(s.pantry.buns.qty, 3);
   await hideToast(page);
   await shot(page, 'leftovers-390');
@@ -419,9 +430,13 @@ test('the recipe box: search and the filters that matter to this family', async 
   await page.selectOption('#rf-time', '');
   await waitFor(async () => (await cards(page)) === air);
   await page.selectOption('#rf-equipment', 'possible cooker');
-  await waitFor(async () => (await cards(page)) === 1); // the family's own PossibleCooker dinner
-  assert.match(await page.textContent('.r-card'), /goulash/i);
-  await page.selectOption('#rf-protein', 'chicken');
+  const cooker = await waitFor(async () => { const c = await cards(page); return c !== air && c < all ? c : 0; });
+  assert.ok(cooker >= 10, `the PossibleCooker dinners and the family's own (${cooker})`);
+  const cookerText = await page.textContent('.r-grid');
+  assert.match(cookerText, /goulash/i);
+  assert.match(cookerText, /\d+ min hands-on, \d+ hr( \d+ min)? in all/, 'a slow cook says hands-on time and the total');
+  assert.doesNotMatch(cookerText, /\d{3} min/, 'never "520 min"');
+  await page.selectOption('#rf-protein', 'mixed');
   await page.waitForSelector('.r-empty');
   assert.match(await page.textContent('.r-empty'), /No PossibleCooker dinners match these filters/);
   await page.click('.r-empty [data-action="rec:clear"]');

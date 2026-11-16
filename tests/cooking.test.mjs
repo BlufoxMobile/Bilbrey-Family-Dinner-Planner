@@ -12,7 +12,9 @@ import {
   leftoverRecord, leftoversOnHand, leftoversToAsk, leftoverNightChoices, useByText, servingsText, LEFTOVER_REASON,
   newTimer, timerLeft, timerPhase, pauseTimer, resumeTimer, addTime, fmtClock, ringing,
   recipeFacts, recipeMatches, recipeCompare,
+  settingOwner, timeLabel,
 } from '../app/cooking.js';
+import { plateHealth, LEAN_RULE } from '../app/nutrition.js';
 
 const TODAY = '2026-11-16';
 
@@ -87,10 +89,22 @@ test('times, tips and the leftovers note degrade gracefully', () => {
 
 test('equipment: each appliance with the settings its steps call for; the PossibleCooker has a name', () => {
   const db = realDb();
-  assert.deepEqual(equipmentSettings(db.dinners.smashburgers), [{ id: 'blackstone', label: 'Blackstone', settings: ['Medium-high heat'] }]);
-  const bowls = equipmentSettings(db.dinners['orange-tofu-bowls']);
-  assert.deepEqual(bowls.find((e) => e.id === 'air fryer').settings, ['400°F']);
-  assert.ok(!bowls.find((e) => e.id === 'stovetop').settings.includes('400°F'));
+  // The recipe box names the appliance in each step's setting ("Blackstone, medium-high"): it goes there, once, without the name.
+  assert.deepEqual(equipmentSettings(db.dinners.smashburgers), [{ id: 'blackstone', label: 'Blackstone', settings: ['Medium-high'] }]);
+  const tacos = equipmentSettings(db.dinners['sweet-potato-tacos']);
+  assert.deepEqual(tacos.find((e) => e.id === 'air fryer').settings, ['400°F']);
+  assert.ok(!tacos.find((e) => e.id === 'stovetop').settings.includes('400°F'));
+  assert.deepEqual(equipmentSettings(db.dinners['cooker-chicken-tortilla-soup']), [{ id: 'possible cooker', label: 'PossibleCooker', settings: ['SLOW COOK on LO'] }]);
+  assert.deepEqual(settingOwner('Stovetop, medium-low, lid on'), { id: 'stovetop', what: 'Medium-low, lid on' });
+  assert.deepEqual(settingOwner('sear/sauté, high'), { id: 'possible cooker', what: 'sear/sauté, high' });
+  assert.equal(settingOwner('Medium-high heat'), null);
+  // A dinner the family saved has plain sentences: the setting is read from them and goes by what the step mentions.
+  assert.deepEqual(equipmentSettings({ equipment: ['blackstone'], steps: ['Heat the Blackstone over medium-high for about 10 minutes.'] }), [{ id: 'blackstone', label: 'Blackstone', settings: ['Medium-high heat'] }]);
+  // Every dinner in the box: each appliance it lists gets at least one setting from its steps, and a slow cook reads as hands-on plus the total.
+  for (const d of db.dinnerList) for (const e of equipmentSettings(d)) assert.ok(e.label && Array.isArray(e.settings), `${d.id}: ${e.id}`);
+  assert.equal(timeLabel(db.dinners['cooker-beef-stew']), '25 min hands-on, 8 hr 40 min in all');
+  assert.equal(timeLabel(db.dinners.smashburgers), fmtMinutes(db.dinners.smashburgers.minutes));
+  assert.equal(timeLabel({}), '');
   assert.equal(equipmentLabel('possible cooker'), 'PossibleCooker');
   assert.deepEqual(equipmentSettings({ equipment: ['possible cooker'], stepDetail: [{ text: 'Slow cook the chili.', minutes: 240, setting: 'Slow Cook, LO' }] }),
     [{ id: 'possible cooker', label: 'PossibleCooker', settings: ['Slow Cook, LO'] }]);
@@ -114,19 +128,21 @@ test('timeline: every dish finishes together, and the steps come in the order to
   const [burgers, fries] = tl.tracks;
   assert.equal(burgers.end, tl.total);
   assert.equal(fries.end, tl.total);
-  assert.equal(fries.start, 0, 'the fries take longest, so they start first');
-  assert.ok(burgers.start > 0);
-  assert.equal(tl.steps[0].track, 'side0');
-  assert.equal(tl.steps.length, 7);
+  // Whichever takes longest starts the clock; the other starts partway through.
+  const [first, second] = burgers.minutes >= fries.minutes ? [burgers, fries] : [fries, burgers];
+  assert.equal(first.start, 0);
+  assert.ok(second.start > 0);
+  assert.equal(tl.steps[0].track, first.id);
+  assert.equal(tl.steps.length, db.dinners.smashburgers.steps.length + db.sides['jewel-fries'].steps.length);
   // Each dish keeps its own order.
   for (const id of ['main', 'side0']) assert.deepEqual(tl.steps.filter((s) => s.track === id).map((s) => s.index), tl.steps.filter((s) => s.track === id).map((s, i) => i));
   for (let i = 1; i < tl.steps.length; i++) assert.ok(tl.steps[i].at >= tl.steps[i - 1].at, 'in starting order');
   assert.deepEqual(tl.cues.map((c) => [c.id, c.title]), [['side0', 'Air-fryer fries']]);
-  assert.match(tl.cues[0].text, /^Start here\. About \d+ min, the longest thing on the plate\.$/);
+  assert.match(tl.cues[0].text, /^(Start here\. About \d+ min, the longest thing on the plate\.|Start it about \d+ min in, around step \d of the dinner\. It needs \d+ min\.)$/);
 
   // One dish at a time, for a cook who'd rather not juggle.
   const byDish = cookTimeline(cookTracks(plateRecipes(db, {}, 'smashburgers', null)), { order: 'dish' });
-  assert.deepEqual(byDish.steps.map((s) => s.key), ['main:0', 'main:1', 'main:2', 'main:3', 'side0:0', 'side0:1', 'side0:2']);
+  assert.deepEqual(byDish.steps.map((s) => s.key), [...db.dinners.smashburgers.steps.map((_, i) => `main:${i}`), ...db.sides['jewel-fries'].steps.map((_, i) => `side0:${i}`)]);
 });
 
 test('timeline cues: a side that starts partway through, and a quick one left for last', () => {
@@ -160,11 +176,11 @@ test('step ingredients: the amounts for five beside the step that names them', (
   const d = db.dinners['teriyaki-chicken-bowls'];
   const per = stepIngredients(db, {}, d.items, stepDetails(d));
   const labels = per.map((list) => list.map((x) => x.label));
-  assert.deepEqual(labels[0], ['2 cups dry jasmine rice', '½ tsp table salt']);
-  assert.ok(labels[1].includes('6 tbsp soy sauce'));
-  assert.ok(labels[1].includes('4 tbsp light brown sugar'));
+  assert.deepEqual(labels[0], ['1½ cups dry jasmine rice', '½ tsp table salt']);
+  assert.ok(labels[1].includes('5 tbsp soy sauce'));
+  assert.ok(labels[1].includes('2 tbsp light brown sugar'));
   assert.ok(labels[1].includes('3 cloves garlic') || labels[1].includes('3 garlic'), labels[1].join('; '));
-  assert.deepEqual(labels[2], ['2½ lb boneless skinless chicken thighs'], '"the chicken thighs"');
+  assert.deepEqual(labels[2], ['2¼ lb boneless skinless chicken thighs'], '"the chicken thighs"');
   // "a drizzle of sesame oil" is the sesame oil; the rice is named again (already out).
   const last = per[3];
   assert.ok(last.some((x) => x.id === 'sesame'));
@@ -216,24 +232,22 @@ test('plate facts: calories, protein, vegetables and a lean marker with its reas
   const f = plateFacts(db, {}, 'chix-grill', null);
   assert.ok(f.kcal > 0 && f.protein > 0);
   assert.equal(f.protein, f.proteinG);
-  assert.equal(f.vegServings, 2, 'broccoli and green beans');
-  assert.equal(typeof f.lean, 'boolean');
-  if (f.lean) assert.match(f.why, /g of protein for about [\d,]+ calories a plate/);
-  assert.equal(plateFacts(db, {}, 'burger', null).vegServings, 0, 'fries are not a vegetable');
+  assert.equal(f.vegServings, 2.6, 'broccoli and green beans, in 80 g servings a plate');
+  // One lean rule everywhere: nutrition.plateHealth's (LEAN_RULE), with its own sentence.
+  assert.deepEqual(f, { ...plateHealth(db, {}, 'chix-grill', null), protein: f.proteinG, why: f.why, complete: true });
+  assert.equal(f.lean, f.kcal <= LEAN_RULE.maxKcal && f.proteinG >= LEAN_RULE.minProteinG);
+  assert.equal(f.why, 'A lean plate: 340 cal with 56 g protein', 'no full stop: it sits in a list of reasons');
+  const burger = plateFacts(db, {}, 'burger', null);
+  assert.equal(burger.vegServings, 0, 'fries are not a vegetable');
+  assert.equal(burger.lean, false);
   assert.equal(plateFacts(db, {}, 'nope', null), null);
   assert.equal(plateFacts({ ...db, nutrition: null }, {}, 'chix-grill', null), null, 'no nutrition data, no facts');
-  // When the nutrition module has plateHealth, its answer is used, in the same shape.
-  const viaHealth = plateFacts(db, {}, 'chix-grill', null, { health: () => ({ kcal: 510, proteinG: 46, carbsG: 30, fatG: 14, fiberG: 7, vegServings: 2, lean: true, why: 'grilled, with two vegetables' }) });
-  assert.deepEqual([viaHealth.kcal, viaHealth.protein, viaHealth.proteinG, viaHealth.fiberG, viaHealth.vegServings, viaHealth.lean, viaHealth.why, viaHealth.complete],
-    [510, 46, 46, 7, 2, true, 'grilled, with two vegetables', true]);
-  // …and a plateHealth that throws or returns nothing falls back to the plain math.
-  assert.equal(plateFacts(db, {}, 'chix-grill', null, { health: () => { throw new Error('boom'); } }).kcal, f.kcal);
-  assert.equal(plateFacts(db, {}, 'chix-grill', null, { health: () => null }).kcal, f.kcal);
   // The real box: some dinners are lean, most aren't, and every lean one says why.
   const real = realDb();
   const all = real.dinnerList.map((d) => plateFacts(real, {}, d.id, null)).filter(Boolean);
   const lean = all.filter((x) => x.lean);
   assert.ok(lean.length >= 5 && lean.length < all.length / 2, `${lean.length} of ${all.length} lean`);
+  assert.ok(all.every((x) => x.vegServings >= 0.4), 'every plate in the box carries some vegetable');
   assert.ok(lean.every((x) => x.why));
 });
 

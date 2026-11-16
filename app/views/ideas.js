@@ -12,7 +12,7 @@ import {
   MAX_IDEA_PHOTOS, NOTE_MAX, IDEA_NIGHTS, buildIdeasRequest, normalizeIdeas, missingCost, saveIdeaOps, savedIdeaId,
   openNightsAfter, pantryWords,
 } from '../ideas.js';
-import { fmtMinutes } from '../cooking.js';
+import { fmtMinutes, timeLabel } from '../cooking.js';
 import { awayReason } from './common.js';
 import { loadAiInfo, aiInfo } from './family.js';
 
@@ -101,7 +101,7 @@ function ideaStatus(app, idea) {
 }
 
 /** "30 min", or "20 min hands-on, 6 hr 20 min in all" when most of it cooks on its own (a slow cook). */
-const timeText = (idea) => (idea.prepMinutes && idea.minutes - idea.prepMinutes >= 30 ? `${fmtMinutes(idea.prepMinutes)} hands-on, ${fmtMinutes(idea.minutes)} in all` : fmtMinutes(idea.minutes));
+const timeText = (idea) => timeLabel(idea) || fmtMinutes(idea.minutes);
 
 /** "Stovetop and air fryer"; brand names keep their capitals ("Stovetop and PossibleCooker"). */
 const BRAND_GEAR = ['blackstone', 'possible cooker'];

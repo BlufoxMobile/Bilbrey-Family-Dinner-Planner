@@ -1,0 +1,408 @@
+[
+  {
+    "kind": "dinner",
+    "id": "tikka-masala",
+    "file": "img/dinners/tikka-masala.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Chunks of chicken and green peas in a rich orange, creamy tikka masala sauce in a shallow bowl beside golden turmeric rice. Smaller portions of the sides share the plate: golden turmeric rice and steamed broccoli with butter. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber spears."
+  },
+  {
+    "kind": "dinner",
+    "id": "chicken-lo-mein",
+    "file": "img/dinners/chicken-lo-mein.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Glossy brown lo mein noodles tossed with strips of chicken, shredded cabbage and carrot matchsticks, piled high on a platter. Smaller portions of the sides share the plate: steamed broccoli with butter and fresh orange wedges. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber slices."
+  },
+  {
+    "kind": "dinner",
+    "id": "chicken-fried-rice",
+    "file": "img/dinners/chicken-fried-rice.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A heaping plate of golden fried jasmine rice with scrambled egg, diced chicken, peas, carrots and corn, glistening with soy and sesame. Smaller portions of the sides share the plate: steamed broccoli with butter and fresh orange wedges. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber slices."
+  },
+  {
+    "kind": "dinner",
+    "id": "beef-broccoli-noodles",
+    "file": "img/dinners/beef-broccoli-noodles.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Noodles tossed with browned ground beef crumbles and bright green broccoli florets in a glossy dark soy-ginger glaze, in a wide bowl. Smaller portions of the sides share the plate: carrot sticks & ranch and sesame edamame. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber slices."
+  },
+  {
+    "kind": "dinner",
+    "id": "honey-ginger-noodles",
+    "file": "img/dinners/honey-ginger-noodles.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Noodles tossed with golden chicken pieces and red and yellow bell pepper strips in a sticky honey-ginger glaze, in a large shallow bowl. Smaller portions of the sides share the plate: buttered green beans and steamed broccoli with butter. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber slices and scallions."
+  },
+  {
+    "kind": "dinner",
+    "id": "egg-fried-rice",
+    "file": "img/dinners/egg-fried-rice.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A heaping plate of fried jasmine rice with browned diced pork, ribbons of scrambled egg and peas, carrots and corn. Smaller portions of the sides share the plate: sesame edamame and steamed broccoli with butter. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber slices."
+  },
+  {
+    "kind": "dinner",
+    "id": "veggie-chow-mein",
+    "file": "img/dinners/veggie-chow-mein.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Stir-fried noodles with seared strips of pork, sliced mushrooms, shredded cabbage and strips of egg, piled on a platter. Smaller portions of the sides share the plate: sesame edamame and honey-glazed carrots. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber spears."
+  },
+  {
+    "kind": "dinner",
+    "id": "lemon-pea-spaghetti",
+    "file": "img/dinners/lemon-pea-spaghetti.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Spaghetti glossy with lemon butter and Parmesan, dotted with green peas and flecked with lemon zest and black pepper, topped with sliced grilled chicken and a lemon wedge. Smaller portions of the sides share the plate: chopped romaine salad and crisp apple slices. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows a cucumber and raw tomato salad."
+  },
+  {
+    "kind": "dinner",
+    "id": "greek-chicken-pitas",
+    "file": "img/dinners/greek-chicken-pitas.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Warm naan flatbreads topped with shredded romaine, sliced grilled lemon-oregano chicken and a drizzle of white garlic yogurt sauce, with lemon wedges on a board. Smaller portions of the sides share the plate: warm lemon chickpeas and carrot sticks & ranch. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows diced cucumber and raw red onion."
+  },
+  {
+    "kind": "dinner",
+    "id": "griddle-beef-pitas",
+    "file": "img/dinners/griddle-beef-pitas.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Grilled naan flatbreads spread with creamy hummus and topped with cumin-spiced ground beef and shredded romaine, drizzled with yogurt and cut into wedges. Smaller portions of the sides share the plate: garlic green beans and carrot sticks & ranch. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows a cucumber and raw tomato salad."
+  },
+  {
+    "kind": "dinner",
+    "id": "hummus-grill-plates",
+    "file": "img/dinners/hummus-grill-plates.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A big bowl of chopped romaine and shredded carrots topped with sliced grilled chicken breast and a scoop of hummus dusted with paprika, lemon wedges alongside. Smaller portions of the sides share the plate: warm naan and warm lemon chickpeas. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber in the salad."
+  },
+  {
+    "kind": "dinner",
+    "id": "chicken-tostadas",
+    "file": "img/dinners/chicken-tostadas.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Three crisp flat corn tostadas layered with mashed black beans, sliced chicken, shredded lettuce, cheddar and salsa, on a plate. Smaller portions of the sides share the plate: buttered sweet corn and creamy lime slaw. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber spears and raw diced tomato."
+  },
+  {
+    "kind": "dinner",
+    "id": "potato-beef-burritos",
+    "file": "img/dinners/potato-beef-burritos.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Two golden toasted flour tortilla burritos, one cut open to show seasoned ground beef, crispy potato cubes, peppers and melted cheese, with salsa on the side. Smaller portions of the sides share the plate: creamy lime slaw and buttered sweet corn. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows a cucumber and raw tomato salad."
+  },
+  {
+    "kind": "dinner",
+    "id": "egg-roll-in-a-bowl",
+    "file": "img/dinners/egg-roll-in-a-bowl.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of savory stir-fried ground turkey with wilted shredded cabbage and carrots, glistening with soy and sesame oil. Smaller portions of the sides share the plate: crispy potstickers and sesame edamame. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber spears."
+  },
+  {
+    "kind": "dinner",
+    "id": "korean-beef-bowls",
+    "file": "img/dinners/korean-beef-bowls.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of white jasmine rice topped with glossy caramelized Korean-style ground beef and shredded carrots, drizzled with sesame oil. Smaller portions of the sides share the plate: steamed broccoli with butter and sesame edamame. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber slices and scallions."
+  },
+  {
+    "kind": "dinner",
+    "id": "sweet-sour-pork",
+    "file": "img/dinners/sweet-sour-pork.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Crispy golden pork bites tossed with pineapple chunks and stir-fried red and green bell pepper in a shiny red sweet-and-sour sauce, beside white rice. Smaller portions of the sides share the plate: steamed broccoli with butter and carrot sticks & ranch. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber spears."
+  },
+  {
+    "kind": "dinner",
+    "id": "pork-souvlaki-plates",
+    "file": "img/dinners/pork-souvlaki-plates.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Grilled lemon-oregano pork strips with char marks on warm flatbread with shredded romaine, a creamy lemon-garlic yogurt sauce and lemon wedges. Smaller portions of the sides share the plate: warm lemon chickpeas and steamed broccoli with butter. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows raw tomato, raw red onion and a cucumber sauce."
+  },
+  {
+    "kind": "dinner",
+    "id": "chicken-cobb-salad",
+    "file": "img/dinners/chicken-cobb-salad.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A large bowl of chopped romaine with neat rows of sliced grilled chicken, crumbled bacon, quartered hard-cooked eggs and shredded cheddar, ranch on the side. Smaller portions of the sides share the plate: buttered sweet corn and crisp apple slices. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows raw diced tomato."
+  },
+  {
+    "kind": "dinner",
+    "id": "pork-carnitas-tacos",
+    "file": "img/dinners/pork-carnitas-tacos.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Corn tortilla street tacos piled with crispy-edged pulled pork carnitas, chopped cilantro and salsa, with lime wedges. Smaller portions of the sides share the plate: seasoned black beans and creamy lime slaw. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows raw diced white onion."
+  },
+  {
+    "kind": "dinner",
+    "id": "breaded-pork-sandwiches",
+    "file": "img/dinners/breaded-pork-sandwiches.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A huge golden breaded pork cutlet hanging well past the edges of a toasted bun, topped with dill pickles, mustard and lettuce. Smaller portions of the sides share the plate: buttered corn on the cob and creamy lime slaw. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows raw onion rings."
+  },
+  {
+    "kind": "dinner",
+    "id": "bbq-chicken-naan-pizzas",
+    "file": "img/dinners/bbq-chicken-naan-pizzas.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Golden naan flatbread pizzas topped with barbecue pulled chicken and bubbly melted mozzarella, cut into wedges on a board. Smaller portions of the sides share the plate: chopped romaine salad and carrot sticks & ranch. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows red onion the recipe does not have."
+  },
+  {
+    "kind": "side",
+    "id": "romaine-salad",
+    "file": "img/sides/romaine-salad.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A large bowl of crisp chopped romaine lettuce, nothing but romaine, glossy with a light lemon vinaigrette and cracked black pepper, a halved lemon beside the bowl. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows cucumber slices."
+  },
+  {
+    "kind": "side",
+    "id": "chips-and-salsa",
+    "file": "img/sides/chips-and-salsa.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A basket of golden tortilla chips beside a small bowl of smooth red jarred salsa. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows a fresh salsa with raw tomato and onion."
+  },
+  {
+    "kind": "lunch",
+    "id": "mm-cobb-salad-avocado-ranch",
+    "file": "img/lunch/mm-cobb-salad-avocado-ranch.webp",
+    "prompt": "Appetizing, realistic photograph of a packed-lunch item for a family meal app, square 1:1. A chopped Cobb salad in a clear bowl: romaine, grilled chicken strips, egg, bacon bits, with a cup of pale green ranch on the side. On a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule: the current picture shows raw diced tomato."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-chicken-tortilla-soup",
+    "file": "img/dinners/cooker-chicken-tortilla-soup.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A wide bowl of brothy chicken tortilla soup with shredded chicken, black beans, corn and cooked tomatoes, topped with shredded cheddar, crushed tortilla chips and a lime wedge. Smaller portions of the sides share the plate: creamy lime slaw and fresh orange wedges. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-white-chicken-chili",
+    "file": "img/dinners/cooker-white-chicken-chili.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of creamy white chicken chili with shredded chicken, white beans, corn and flecks of green chile, topped with melting shredded white cheese and a lime wedge. Smaller portions of the sides share the plate: carrot sticks & ranch and crisp apple slices. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-beef-stew",
+    "file": "img/dinners/cooker-beef-stew.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A deep bowl of beef stew with tender chunks of beef, potatoes, carrot coins, celery and green peas in a glossy brown gravy. Smaller portions of the sides share the plate: chopped romaine salad and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-bbq-pulled-chicken",
+    "file": "img/dinners/cooker-bbq-pulled-chicken.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A toasted bun piled high with saucy shredded barbecue chicken and dill pickle chips, with creamy coleslaw and green beans on the plate. Smaller portions of the sides share the plate: creamy lime slaw and buttered green beans. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-salsa-chicken-tacos",
+    "file": "img/dinners/cooker-salsa-chicken-tacos.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Corn tortilla street tacos filled with juicy shredded salsa chicken, shredded lettuce and cheddar, with a dollop of yogurt and lime wedges. Smaller portions of the sides share the plate: seasoned black beans and buttered sweet corn. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-braised-pork-apples",
+    "file": "img/dinners/cooker-braised-pork-apples.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Thick slices of juicy pork loin fanned on a platter with soft golden apple wedges and cooked onions, spooned with a glossy cider-mustard pan sauce. Smaller portions of the sides share the plate: buttery smashed potatoes and garlic green beans. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-chicken-noodle-soup",
+    "file": "img/dinners/cooker-chicken-noodle-soup.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of chicken noodle soup with shredded chicken, wide egg noodles, carrot coins, celery and peas in a clear golden broth, a lemon wedge beside it. Smaller portions of the sides share the plate: chopped romaine salad and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-turkey-meatballs",
+    "file": "img/dinners/cooker-turkey-meatballs.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A plate of spaghetti topped with round turkey meatballs in a chunky red marinara with wilted spinach and grated Parmesan. Smaller portions of the sides share the plate: buttered green beans and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-sausage-minestrone",
+    "file": "img/dinners/cooker-sausage-minestrone.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A hearty bowl of minestrone with crumbled sausage, white beans, diced carrots, zucchini half-moons, elbow pasta and wilted spinach in a tomato broth, topped with grated Parmesan. Smaller portions of the sides share the plate: carrot sticks & ranch and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-sesame-ginger-chicken",
+    "file": "img/dinners/cooker-sesame-ginger-chicken.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of white jasmine rice topped with shredded chicken thighs and carrot coins in a glossy brown sesame-ginger sauce, with steamed broccoli alongside. Smaller portions of the sides share the plate: steamed jasmine rice and steamed broccoli with butter. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-beef-broccoli",
+    "file": "img/dinners/cooker-beef-broccoli.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of tender sliced beef and bright green broccoli florets in a glossy dark garlic-ginger soy sauce, with golden potstickers on the side. Smaller portions of the sides share the plate: crispy potstickers and sesame edamame. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-lasagna-soup",
+    "file": "img/dinners/cooker-lasagna-soup.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of thick tomato lasagna soup with penne, crumbled ground turkey and wilted spinach, topped with melting mozzarella and grated Parmesan. Smaller portions of the sides share the plate: chopped romaine salad and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-chicken-cacciatore",
+    "file": "img/dinners/cooker-chicken-cacciatore.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Braised chicken thighs in a chunky tomato sauce with soft strips of bell pepper, mushrooms and cooked onion, served over wide egg noodles. Smaller portions of the sides share the plate: buttered green beans and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-italian-beef",
+    "file": "img/dinners/cooker-italian-beef.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A Chicago-style Italian beef sandwich on a long roll, juicy shredded beef and soft cooked sweet pepper strips topped with colorful hot giardiniera, a cup of jus beside it. Smaller portions of the sides share the plate: air-fryer potato wedges and buttered green beans. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "side",
+    "id": "steamed-carrots",
+    "file": "img/sides/steamed-carrots.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A bowl of bright orange steamed carrot coins glistening with a little melted butter. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "side",
+    "id": "cooker-green-beans",
+    "file": "img/sides/cooker-green-beans.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A platter of bright green steamed whole green beans glistening with butter, with lemon wedges. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "side",
+    "id": "cooker-jasmine-rice",
+    "file": "img/sides/cooker-jasmine-rice.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A neat mound of fluffy steamed white jasmine rice in a bowl with a rice paddle. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "side",
+    "id": "steamed-mixed-vegetables",
+    "file": "img/sides/steamed-mixed-vegetables.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A bowl of steamed mixed vegetables (peas, corn, diced carrots and cut green beans) glistening with a little butter. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "side",
+    "id": "spinach-apple-salad",
+    "file": "img/sides/spinach-apple-salad.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A bowl of fresh baby spinach tossed with thin slices of crisp red apple in a light lemon dressing. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "side",
+    "id": "cooker-mashed-potatoes",
+    "file": "img/sides/cooker-mashed-potatoes.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A bowl of creamy mashed potatoes with a small pat of melting butter and cracked black pepper. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "lunch",
+    "id": "bonduelle-chef-turkey-ham",
+    "file": "img/lunch/bonduelle-chef-turkey-ham.webp",
+    "prompt": "Appetizing, realistic photograph of a packed-lunch item for a family meal app, square 1:1. A clear single-serve chef salad bowl with lettuce, folded turkey and ham, shredded cheddar and a ranch cup. On a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "lunch",
+    "id": "bonduelle-bbq-chicken",
+    "file": "img/lunch/bonduelle-bbq-chicken.webp",
+    "prompt": "Appetizing, realistic photograph of a packed-lunch item for a family meal app, square 1:1. A clear single-serve salad bowl with lettuce, BBQ chicken, corn and black beans, with a BBQ ranch cup. On a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "lunch",
+    "id": "ritz-crackers-portion",
+    "file": "img/lunch/ritz-crackers-portion.webp",
+    "prompt": "Appetizing, realistic photograph of a packed-lunch item for a family meal app, square 1:1. About nine round buttery crackers in a small clear zip snack bag. On a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "lunch",
+    "id": "bh-buffalo-chicken-sandwich",
+    "file": "img/lunch/bh-buffalo-chicken-sandwich.webp",
+    "prompt": "Appetizing, realistic photograph of a packed-lunch item for a family meal app, square 1:1. A deli sandwich on soft white bakery bread stacked with sliced buffalo chicken breast, dill pickle chips and spicy Chicago giardiniera, with kettle chips beside it. On a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "lunch",
+    "id": "bonduelle-chicken-queso-fresco",
+    "file": "img/lunch/bonduelle-chicken-queso-fresco.webp",
+    "prompt": "Appetizing, realistic photograph of a packed-lunch item for a family meal app, square 1:1. A clear single-serve salad bowl with greens, grilled chicken, crumbled queso fresco and a dressing cup on top. On a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "lunch",
+    "id": "bonduelle-santa-fe",
+    "file": "img/lunch/bonduelle-santa-fe.webp",
+    "prompt": "Appetizing, realistic photograph of a packed-lunch item for a family meal app, square 1:1. A clear single-serve salad bowl with greens, chicken, black beans, corn and tortilla strips, a dressing cup on top. On a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "lunch",
+    "id": "bh-salsalito-turkey-sandwich",
+    "file": "img/lunch/bh-salsalito-turkey-sandwich.webp",
+    "prompt": "Appetizing, realistic photograph of a packed-lunch item for a family meal app, square 1:1. A deli sandwich on seeded whole-grain bread stacked with sliced spiced turkey breast, dill pickle chips and spicy Chicago giardiniera, with chips beside it. On a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: the app shows its placeholder until this one lands."
+  },
+  {
+    "kind": "dinner",
+    "id": "sausage-cajun-potatoes",
+    "file": "img/dinners/sausage-cajun-potatoes.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A big skillet of browned smoked sausage coins and diced chicken with golden potatoes and strips of red and green bell pepper and cooked onion, flecked with Cajun spice. Smaller portions of the sides share the plate: buttered green beans and applesauce cups. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "The picture no longer matches: the dish now has diced chicken in it."
+  },
+  {
+    "kind": "dinner",
+    "id": "chicken-alfredo-night",
+    "file": "img/dinners/chicken-alfredo-night.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A plate of creamy fettuccine chicken Alfredo with tender chicken pieces and bright green broccoli florets in a glossy white sauce, topped with cracked black pepper. Smaller portions of the sides share the plate: garlic toast and chopped romaine salad. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "The picture no longer matches: the dish now has broccoli folded in."
+  },
+  {
+    "kind": "dinner",
+    "id": "orange-chicken",
+    "file": "img/dinners/orange-chicken.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Bite-size crispy chicken pieces coated in a shiny amber orange glaze with thin strips of orange zest, piled in a white bowl. Smaller portions of the sides share the plate: steamed broccoli with butter and crispy potstickers. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule (lower priority): the current picture has a raw scallion garnish."
+  },
+  {
+    "kind": "dinner",
+    "id": "chili-jacket-potatoes",
+    "file": "img/dinners/chili-jacket-potatoes.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Fluffy split golden potatoes heaped with chunky turkey and bean chili, melted cheddar and a dollop of white yogurt. Smaller portions of the sides share the plate: buttered green beans and carrot sticks & ranch. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule (lower priority): the current picture has a raw scallion garnish."
+  },
+  {
+    "kind": "dinner",
+    "id": "teriyaki-chicken-bowls",
+    "file": "img/dinners/teriyaki-chicken-bowls.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Sliced grilled chicken thighs glazed in glossy dark teriyaki sauce over a mound of white jasmine rice, extra sauce drizzled on top. Smaller portions of the sides share the plate: steamed broccoli with butter and chilled pineapple chunks. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule (lower priority): the current picture has a raw scallion garnish."
+  },
+  {
+    "kind": "dinner",
+    "id": "pepper-chicken-potatoes",
+    "file": "img/dinners/pepper-chicken-potatoes.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Sliced grilled chicken with dark grill marks, coated in cracked black pepper and a shiny soy-garlic glaze, fanned on a plate. Smaller portions of the sides share the plate: air-fryer potato wedges and grilled peppers & onions. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule (lower priority): the current picture has a raw scallion garnish."
+  },
+  {
+    "kind": "side",
+    "id": "crispy-potstickers",
+    "file": "img/sides/crispy-potstickers.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. Golden pan-fried potstickers with crispy browned bottoms arranged on a plate with a small bowl of soy dipping sauce. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "House rule (lower priority): the current picture has a raw scallion garnish."
+  }
+]

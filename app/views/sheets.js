@@ -19,9 +19,10 @@ import {
   plate, leanMark, isLeftoverNight, leftoversQuestion,
 } from './common.js';
 import { sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
-import { leftoversOnHand, leftoverNightChoices, servingsText, useByText } from '../cooking.js';
+import { leftoversOnHand, leftoverNightChoices, servingsText, useByText, timeLabel } from '../cooking.js';
 import { finishCooking } from './cook.js';
 import { waitText } from '../state.js';
+import { fmtMinutes } from '../data.js';
 
 const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
 
@@ -150,7 +151,7 @@ function pickBody(app, { date, query }) {
         return html`<li><button type="button" class="pick-row ${d.id === current ? 'is-current' : ''}" data-action="pick:choose" data-date="${date}" data-dinner="${d.id}" ${d.id === current ? html`aria-current="true"` : ''}>
           ${dinnerPhoto(app, d, { size: 'thumb' })}
           <span class="pick-main"><b>${d.title}</b>
-            <small>${d.minutes} min${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small>
+            <small>${timeLabel(d)}${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small>
             ${when(facts, () => html`<small class="pick-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein a plate${leanMark(facts, { compact: true })}</small>`)}</span>
         </button></li>`;
       }) : html`<li class="muted pad">${q ? `No dinners match “${query}”. Try another word, or browse the recipe box.` : 'There are no dinners in the rotation. Bring some back from Recipes, Dropped.'}</li>`}
@@ -367,7 +368,7 @@ function subBody(app, d, slot, st, date) {
     ${st.tab === 'box'
       ? html`<ul class="pick-list">${sides.map((s) => html`<li><button type="button" class="pick-row" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-ref="${s.id}">
           ${sidePhoto(app, { parsed: { type: 'side', id: s.id }, info: { kind: s.kind } }, { size: 'thumb' })}
-          <span class="pick-main"><b>${s.title}</b><small>${s.minutes ? `${s.minutes} min` : ''}${s.kind ? `${s.minutes ? ', ' : ''}${s.kind}` : ''}${(() => { const sn = showNutrition(app) ? sideNutrition(app.db, app.state, { type: 'side', id: s.id }) : null; return sn ? `, ${fmtKcal(sn.kcal)} cal a plate` : ''; })()}</small></span></button></li>`)}</ul>`
+          <span class="pick-main"><b>${s.title}</b><small>${s.minutes ? fmtMinutes(s.minutes) : ''}${s.kind ? `${s.minutes ? ', ' : ''}${s.kind}` : ''}${(() => { const sn = showNutrition(app) ? sideNutrition(app.db, app.state, { type: 'side', id: s.id }) : null; return sn ? `, ${fmtKcal(sn.kcal)} cal a plate` : ''; })()}</small></span></button></li>`)}</ul>`
       : html`
         ${shelf.length ? html`<ul class="shelf-list">${shelf.map((it) => {
           const q = st.qty[it.id] ?? Math.min(defaultQty(it.unit), typeof it.have === 'number' ? it.have : defaultQty(it.unit));

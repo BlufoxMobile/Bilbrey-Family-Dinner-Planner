@@ -12,7 +12,7 @@ import {
   sidesFor, dinnerPhoto, sidePhoto, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote,
   plate, leanMark, cic, equipIcon, equipLabel, whyList, timelineChart, plateGuide, isDismissed,
 } from './common.js';
-import { entreeNutrition, sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
+import { entreeNutrition, sideNutrition, lighterSide, fmtKcal, LEAN_RULE } from '../nutrition.js';
 import {
   recipeTimes, recipeTips, leftoversNote, fmtMinutes, stepDetails, equipmentSettings, safeTemps, plateRecipes, cookTracks, cookTimeline,
   stepIngredients, pantryCheck, whyThisDinner, plainName,
@@ -87,7 +87,7 @@ function nutritionSection(app, d, entry, sides, facts) {
     <h2 id="nutri-h" class="section-title">Nutrition, one plate</h2>
     ${facts ? html`<p class="nutri-big"><span><b>≈ ${fmtKcal(facts.kcal)}</b> calories</span><span><b>${Math.round(facts.protein)} g</b> protein</span>${more.map(([k, v]) => html`<span><b>${Math.round(v)} g</b> ${k.toLowerCase()}</span>`)}${leanMark(facts)}</p>`
       : html`<p class="muted">No calorie data for this one yet.</p>`}
-    ${when(facts?.lean && facts.why, () => html`<p class="muted small">Why it’s marked lean: ${facts.why}.</p>`)}
+    ${when(facts?.lean, () => html`<p class="muted small">Why it’s marked lean: a plate is ${fmtKcal(LEAN_RULE.maxKcal)} calories or less with at least ${LEAN_RULE.minProteinG} g of protein.</p>`)}
     <table class="nutri-table">
       <thead><tr><th scope="col">On the plate</th><th scope="col">Calories</th><th scope="col">Protein</th></tr></thead>
       <tbody>${rows.map(([name, n]) => html`<tr><th scope="row">${name}</th><td>${n ? fmtKcal(n.kcal) : '—'}</td><td>${n ? `${Math.round(n.protein)} g` : '—'}</td></tr>`)}</tbody>

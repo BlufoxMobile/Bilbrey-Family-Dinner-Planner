@@ -1338,7 +1338,7 @@ const MEAT_WORDS = /\b(chicken|beef|steaks?|sirloin|chuck|brisket|pork|ham|bacon
 // Safe temperatures (same as the validator): a recipe with these ids must state the temperature.
 const TEMP_RULES = [
   { ids: ["chicken", "chickenThighs", "fajitaChicken"], temp: "165°F", what: "chicken" },
-  { ids: ["groundTurkey"], temp: "165°F", what: "ground turkey" },
+  { ids: ["groundTurkey", "turkeySausage"], temp: "165°F", what: "ground turkey or turkey sausage" },
   { ids: ["beef", "beefPatties", "groundPork", "italianSausage", "chorizo"], temp: "160°F", what: "ground meat, sausage or patties" },
   { ids: ["eyeRoundSteak"], temp: "145°F", what: "whole-cut beef" },
   { ids: ["pulledPork", "pulledChicken", "smokedSausage", "chickenAlfredoDeli", "roastBeef"], temp: "165°F", what: "fully cooked meat (reheat)" },

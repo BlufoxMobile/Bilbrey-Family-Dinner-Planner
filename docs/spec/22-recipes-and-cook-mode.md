@@ -41,13 +41,22 @@ those two token blocks and keep the layout.
   entry's own reasons first (`plan[date].why` or `.reasons`, strings, if the planner writes them), then
   "Uses up the romaine hearts from Nov 12 (best by tomorrow)" for anything on the use-first list, or
   "Uses the lean ground beef in the freezer from Nov 3" when the meat is already in the house; "Lean:
-  49 g of protein for about 590 calories a plate"; "Everything for it is already in the house"; "Chicken
+  49 g of protein for about 590 calories a plate" (now plateHealth's own sentence: "A lean plate: 640 cal
+  with 50 g protein"); "Everything for it is already in the house"; "Chicken
   breast is on sale at Jewel-Osco through Wednesday" (a current price check, §12.3, on something still to
   buy); "A family favorite"; "On the table in about 25 min". Never more than three.
 - **Times**: Prep / Cook / Total when the recipe has `prepMinutes` and `cookMinutes`, else "Start to
   finish"; plus "With the sides" when the plate takes longer than the dinner alone.
-- **Equipment** with the settings its steps call for ("Blackstone: Medium-high heat", "Air fryer:
-  400°F"). Never an oven. The PossibleCooker (`possible cooker`) is named and has its own icon.
+- **Equipment** with the settings its steps call for ("Blackstone: Medium-high", "Air fryer: 400°F",
+  "PossibleCooker: SLOW COOK on LO"). The recipe box names the appliance in each step's setting
+  ("Stovetop, medium-low, lid on", §18.4), so `settingOwner()` puts a setting under the appliance it names,
+  without repeating the name; a family-saved dinner's settings are still read from its sentences and go
+  by what the step mentions. Never an oven. The PossibleCooker (`possible cooker`, label "PossibleCooker"
+  in `EQUIPMENT_LABELS`, the `cooker` icon in `app/icons.js`) has no local fallback any more.
+- **A dinner that mostly cooks on its own** (a slow cook or a braise: an hour or more that isn't hands-on)
+  says both times wherever a dinner's time is shown on a card or a row (`timeLabel()`: Tonight, the night
+  sheet, the dinner picker, the recipe box, ideas): "20 min hands-on, 6 hr 20 min in all". Times are always
+  `fmtMinutes` ("8 hr 40 min", never "520 min"). The recipe box's time filter and "Quickest" go by the total.
 - **For five, all adult plates**: every ingredient of the dinner and each side, each marked "In the
   pantry", "Need ½ lb more" or "Not in the pantry" (the same 95% rule as §12.5; salt, pepper and oil
   are assumed unless marked running low), with a summary and a link to the list.
@@ -158,11 +167,13 @@ state.leftovers["YYYY-MM-DD" (the night it was cooked)] = {
   serving as someone's lunch main; nothing writes to `state.lunch` from here.
 
 ### 22.6 Calories, protein and Lean, calmly
-- `plateFacts(db, state, dinnerId, entry)` is the one source for a plate: it calls
-  `nutrition.plateHealth(db, state, dinnerId, entry)` → `{ kcal, proteinG, carbsG?, fatG?, fiberG?,
-  vegServings, lean, why }` when that exists and otherwise works the same shape out from
-  `plateNutrition` (lean = at most about 800 calories with 27% or more of them from protein; vegetables
-  counted with `health.isVegSide`). It always returns both `protein` and `proteinG`.
+- `plateFacts(db, state, dinnerId, entry)` is the one source for a plate on every screen: it is
+  `nutrition.plateHealth(db, state, dinnerId, entry)` (§18.5) → `{ kcal, proteinG, carbsG?, fatG?, fiberG?,
+  vegServings, lean, why }` plus `protein` (= `proteinG`) and `complete`. There is **one lean rule**,
+  `LEAN_RULE` in `app/nutrition.js` (750 calories or less with at least 35 g of protein a plate); the
+  earlier local rule (800 calories, 27% from protein) is gone. A plate "has a vegetable" in the week's
+  summary at one 80 g serving or more (`VEG_ON_PLATE`), which is the validator's line for a default plate,
+  so a burger-and-fries night doesn't count.
 - Shown on: Tonight's dinner and the week list, the recipe page (header and its own section), the recipe
   box cards, the dinner picker, the night sheet, the substitute list (each side's calories), today's
   lunches, the week's summary; Plan and Lunch already show them.
@@ -186,7 +197,9 @@ state.leftovers["YYYY-MM-DD" (the night it was cooked)] = {
 
 ### 22.8 Honest limits
 - Step timings read from plain sentences are estimates, good for ordering the plate and for timers;
-  recipes with `stepDetail` are exact.
+  recipes with `stepDetail` are exact. Every built-in dinner and side has `stepDetail` from `app/data.js`
+  (§18.4). A dinner saved from Claude (the app's ideas or the chat connector) keeps `steps` as sentences
+  and the timed version beside them as `stepDetails`; `normalizeDinner` reads that list when it lines up.
 - "Timed together" assumes one cook. With two, "One dish at a time" on two devices works better.
 - A TV browser may refuse the wake lock or the sound; the banner and the on-screen clock don't depend on
   either.

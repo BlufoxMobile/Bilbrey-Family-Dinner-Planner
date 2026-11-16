@@ -73,7 +73,10 @@ const str = (v, max) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().s
 const OVEN = /\b(oven|broil(?:er|ed|ing)?|bake[sd]?|baking (?:sheet|dish|pan)|roast(?:ed)? in the)\b/i;
 const NOT_FOR_US = /\b(tofu|shrimp|prawns?|salmon|tuna|tilapia|cod|halibut|fish|seafood|crab|lobster|scallops?|clams?|mussels?|oysters?|anchov(?:y|ies)|caesar)\b/i;
 
-const EQUIPMENT_ALIASES = { 'air-fryer': 'air fryer', airfryer: 'air fryer', stove: 'stovetop', 'stove top': 'stovetop', griddle: 'blackstone', grill: 'outdoor grill', 'indoor grill': 'electric grill' };
+const EQUIPMENT_ALIASES = {
+  'air-fryer': 'air fryer', airfryer: 'air fryer', stove: 'stovetop', 'stove top': 'stovetop', griddle: 'blackstone', grill: 'outdoor grill', 'indoor grill': 'electric grill',
+  possiblecooker: 'possible cooker', 'slow cooker': 'possible cooker', 'slow-cooker': 'possible cooker', crockpot: 'possible cooker', 'crock pot': 'possible cooker', 'multi cooker': 'possible cooker', 'multi-cooker': 'possible cooker', 'ninja possiblecooker': 'possible cooker',
+};
 function cleanEquipment(list) {
   const out = [];
   for (const e of Array.isArray(list) ? list : []) {

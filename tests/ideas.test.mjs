@@ -11,6 +11,8 @@ import { dinnerById, inRotation, allDinners, rotationList } from '../app/planner
 import { buildList } from '../app/shopping.js';
 import { modelLabel, readByText, aiStatus, photoCostHint, claudeErrorText, AI_MODELS } from '../app/claude.js';
 import { mockIdeas } from '../dev/mock-api.mjs';
+import { normalizeDinner } from '../app/data.js';
+import { timeLabel, equipmentSettings } from '../app/cooking.js';
 
 const db = realDb();
 const TODAY = '2026-11-16';
@@ -166,6 +168,15 @@ test('detail: the app asks for timed steps, tips and the two times, and saves th
   assert.deepEqual(saved.stepDetails, idea.stepDetails);
   assert.deepEqual(saved.tips, idea.tips);
   assert.deepEqual([saved.minutes, saved.prepMinutes, saved.cookMinutes], [380, 20, 360]);
+  // The recipe page and cook mode read it like a built-in recipe (app/data.js): timed steps, the two times, the tips.
+  const asRecipe = dinnerById(db, applyOps(state, res.ops), res.id);
+  assert.deepEqual(asRecipe.steps, idea.steps);
+  assert.deepEqual(asRecipe.stepDetail.map((x) => [x.minutes, x.setting]), [[6, 'sear/sauté, high'], [null, null], [360, 'slow cook, low']]);
+  assert.deepEqual([asRecipe.prepMinutes, asRecipe.cookMinutes, asRecipe.minutes, asRecipe.tips], [20, 360, 380, idea.tips]);
+  assert.equal(timeLabel(asRecipe), '20 min hands-on, 6 hr 20 min in all');
+  assert.deepEqual(equipmentSettings(asRecipe).find((e) => e.id === 'possible cooker').settings, ['sear/sauté, high', 'slow cook, low']);
+  // A timed list that doesn't line up with the sentences is ignored: the sentences are what the family sees.
+  assert.deepEqual(normalizeDinner({ id: 'x', steps: ['One.', 'Two.'], stepDetails: [{ text: 'Only one.', minutes: 5 }] }).stepDetail.map((x) => x.text), ['One.', 'Two.']);
   // An older server (plain steps, no times): nothing extra is saved, and a silly total still falls back.
   const plain = normalizeIdea(db, state, rawIdea({ minutes: 9999 }));
   assert.equal(plain.minutes, 30);

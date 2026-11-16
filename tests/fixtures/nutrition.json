@@ -18,8 +18,8 @@
     "beef": { "kcal": 1000, "protein": 90, "unit": "lb" },
     "pasta": { "kcal": 100, "protein": 3.5, "unit": "oz" },
     "salt": { "kcal": 0, "protein": 0, "unit": "tsp" },
-    "broccoli": { "kcal": 150, "protein": 12, "unit": "lb" },
-    "greenBeans": { "kcal": 70, "protein": 4, "unit": "cans" },
+    "broccoli": { "kcal": 150, "protein": 12, "veg": 5.6, "unit": "lb" },
+    "greenBeans": { "kcal": 70, "protein": 4, "veg": 3, "unit": "cans" },
     "fries": { "kcal": 45, "protein": 0.6, "unit": "oz" },
     "buns": { "kcal": 140, "protein": 5, "unit": "buns" }
   }

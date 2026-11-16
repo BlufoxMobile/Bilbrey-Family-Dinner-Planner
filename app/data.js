@@ -102,22 +102,107 @@ function cleanItems(items) {
   return out;
 }
 
+// ---------------------------------------------------------------- recipe steps (docs/spec/18-recipe-box.md)
+
+const UNIT_MINUTES = { minute: 1, minutes: 1, min: 1, mins: 1, hour: 60, hours: 60, hr: 60, hrs: 60 };
+const FRACTIONS = { '¼': 0.25, '½': 0.5, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3 };
+const NUM = '(\\d+(?:\\.\\d+)?)?\\s*([¼½¾⅓⅔])?';
+const DURATION = new RegExp(`(?:^|[^\\w.])${NUM}(?:\\s*(?:–|—|-|to)\\s*${NUM})?[\\s-]*(minutes?|mins?|hours?|hrs?)\\b`, 'gi');
+const amount = (whole, frac) => (whole || frac ? (Number(whole) || 0) + (FRACTIONS[frac] || 0) : null);
+
+/**
+ * The timer a step is worth, in whole minutes, read from its own words: "about 10 minutes" → 10,
+ * "6–8 minutes" → 6 (a range starts the timer at its early end, so the cook checks in time),
+ * "LO for 6 to 7 hours" → 360. When a step names several times, the longest one is the cook time
+ * ("simmer 15 minutes, stirring every 2 minutes" → 15). Seconds are not worth a timer. null = none.
+ */
+export function stepMinutes(text) {
+  let best = null;
+  for (const m of String(text || '').matchAll(DURATION)) {
+    const lo = amount(m[1], m[2]);
+    if (lo == null) continue;
+    const mins = Math.round(lo * UNIT_MINUTES[m[5].toLowerCase()]);
+    if (mins >= 1 && mins <= 24 * 60 && (best == null || mins > best)) best = mins;
+  }
+  return best;
+}
+
+/**
+ * A recipe's steps, however they were written, as [{ text, minutes, setting }].
+ * A step is a plain sentence (older recipes, and every dinner the family saved themselves) or
+ * { text, minutes?, setting? }: `minutes` is a timer worth setting and `setting` is the appliance
+ * setting ("SLOW COOK on LO", "Air fryer 400°F"). `minutes: 0` means "no timer for this step";
+ * when `minutes` is left out it is read from the text. Empty steps are dropped.
+ */
+export function normalizeSteps(raw) {
+  const out = [];
+  for (const s of Array.isArray(raw) ? raw : []) {
+    const obj = s && typeof s === 'object' && !Array.isArray(s) ? s : null;
+    const text = String(obj ? obj.text ?? obj.step ?? '' : s ?? '').trim();
+    if (!text) continue;
+    const given = obj ? num(obj.minutes) : null;
+    const minutes = given != null ? (given > 0 ? Math.round(given) : null) : stepMinutes(text);
+    const setting = obj && typeof obj.setting === 'string' && obj.setting.trim() ? obj.setting.trim() : null;
+    out.push({ text, minutes, setting });
+  }
+  return out;
+}
+
+const cleanTips = (raw) => (Array.isArray(raw) ? raw : typeof raw === 'string' ? [raw] : []).map((t) => String(t ?? '').trim()).filter(Boolean);
+const minutesOrNull = (v) => { const n = num(v); return n != null && n >= 0 ? Math.round(n) : null; };
+
+/**
+ * The steps to read for a dinner. A dinner the family saved from Claude (the app's "What can I
+ * make?" or the chat connector, docs/spec/23) keeps `steps` as plain sentences, so older copies of
+ * the app can show them, and the same steps with their times and settings beside them as
+ * `stepDetails`. When that list lines up with the sentences it is the one to read.
+ */
+function timedSteps(raw) {
+  const timed = Array.isArray(raw.stepDetails) ? raw.stepDetails : Array.isArray(raw.stepDetail) ? raw.stepDetail : null;
+  if (!timed || !timed.length) return raw.steps;
+  const plain = Array.isArray(raw.steps) ? raw.steps.filter((s) => String(s?.text ?? s ?? '').trim()) : [];
+  return !plain.length || timed.length === plain.length ? timed : raw.steps;
+}
+
+/** Hands-on time: what the cook is busy for. A slow-cooker dinner is 20 minutes of work, not 7 hours. */
+export function handsOnMinutes(d) {
+  return d?.prepMinutes != null ? d.prepMinutes : d?.minutes || 0;
+}
+
+/** "25 min", "1 hr", "7 hr 20 min". */
+export function fmtMinutes(n) {
+  const m = Math.max(0, Math.round(Number(n) || 0));
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  return m % 60 ? `${h} hr ${m % 60} min` : `${h} hr`;
+}
+
 export function normalizeDinner(raw) {
   const tags = Array.isArray(raw.tags) ? raw.tags.map((t) => String(t).toLowerCase()) : [];
   const isBurger = tags.includes('burger') || raw.category === 'Burgers';
   const sides = Array.isArray(raw.sides) ? raw.sides.filter(Boolean).map(String) : [];
+  const stepDetail = normalizeSteps(timedSteps(raw));
+  const prepMinutes = minutesOrNull(raw.prepMinutes);
+  const cookMinutes = minutesOrNull(raw.cookMinutes);
   return {
     id: String(raw.id),
     title: String(raw.title || raw.id),
     subtitle: raw.subtitle ? String(raw.subtitle) : '',
     category: String(raw.category || 'Comfort'),
     protein: String(raw.protein || 'mixed'),
-    minutes: num(raw.minutes) || 0,
+    // The total, start to plate: prepMinutes (hands-on) + cookMinutes (the heat does the work).
+    minutes: num(raw.minutes) || (prepMinutes != null && cookMinutes != null ? prepMinutes + cookMinutes : 0),
+    prepMinutes,
+    cookMinutes,
     equipment: Array.isArray(raw.equipment) ? raw.equipment.map(String) : [],
     tags,
     rotation: raw.rotation === 'bench' ? 'bench' : 'core',
     items: cleanItems(raw.items),
-    steps: Array.isArray(raw.steps) ? raw.steps.map(String) : [],
+    // `steps` stays plain sentences for every screen that lists them; `stepDetail` adds the timer and setting.
+    steps: stepDetail.map((s) => s.text),
+    stepDetail,
+    tips: cleanTips(raw.tips),
+    leftovers: typeof raw.leftovers === 'string' ? raw.leftovers.trim() : '',
     sides,
     sideSlots: num(raw.sideSlots) || (isBurger ? 1 : 2),
     custom: !!raw.custom,
@@ -125,6 +210,7 @@ export function normalizeDinner(raw) {
 }
 
 export function normalizeSide(raw) {
+  const stepDetail = normalizeSteps(raw.steps);
   return {
     id: String(raw.id),
     title: String(raw.title || raw.id),
@@ -132,7 +218,9 @@ export function normalizeSide(raw) {
     minutes: num(raw.minutes) || 0,
     equipment: Array.isArray(raw.equipment) ? raw.equipment.map(String) : [],
     items: cleanItems(raw.items),
-    steps: Array.isArray(raw.steps) ? raw.steps.map(String) : [],
+    steps: stepDetail.map((s) => s.text),
+    stepDetail,
+    tips: cleanTips(raw.tips),
     tags: Array.isArray(raw.tags) ? raw.tags.map((t) => String(t).toLowerCase()) : [],
   };
 }
@@ -277,7 +365,11 @@ export function normalizeLunches(raw) {
   return { available: itemList.length > 0, slots, items, itemList, defaults, swaps, updated: typeof raw?.updated === 'string' ? raw.updated.slice(0, 10) : null };
 }
 
-/** data/nutrition.json (§8.3) → { per: { id: { kcal, protein } } } or null when missing. */
+/**
+ * data/nutrition.json (§8.3, §18) → { per: { id: { kcal, protein, carbs?, fat?, fiber?, veg? } } } or null when missing.
+ * Everything is per ONE catalog unit. carbs, fat and fiber are grams; veg is vegetable servings
+ * (one serving = 80 g of vegetables or beans). A value the file doesn't give is left off, never zeroed.
+ */
 export function normalizeNutrition(raw) {
   if (!raw || typeof raw !== 'object' || !raw.per || typeof raw.per !== 'object') return null;
   const per = {};
@@ -285,7 +377,9 @@ export function normalizeNutrition(raw) {
     const kcal = num(v?.kcal);
     const protein = num(v?.protein);
     if (kcal == null || kcal < 0) continue;
-    per[id] = { kcal, protein: protein != null && protein >= 0 ? protein : 0 };
+    const row = { kcal, protein: protein != null && protein >= 0 ? protein : 0 };
+    for (const k of ['carbs', 'fat', 'fiber', 'veg']) { const n = num(v?.[k]); if (n != null && n >= 0) row[k] = n; }
+    per[id] = row;
   }
   return { per, updated: typeof raw.updated === 'string' ? raw.updated.slice(0, 10) : null, notes: typeof raw.notes === 'string' ? raw.notes : '' };
 }
