@@ -17,6 +17,7 @@ import {
 import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote } from './common.js';
 import { plateNutrition, sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
 import { waitText } from '../state.js';
+import { fmtMinutes } from '../data.js';
 
 const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
 
@@ -138,7 +139,7 @@ function pickBody(app, { date, query }) {
         return html`<li><button type="button" class="pick-row ${d.id === current ? 'is-current' : ''}" data-action="pick:choose" data-date="${date}" data-dinner="${d.id}" ${d.id === current ? html`aria-current="true"` : ''}>
           ${dinnerPhoto(app, d, { size: 'thumb' })}
           <span class="pick-main"><b>${d.title}</b>
-            <small>${d.minutes} min${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small></span>
+            <small>${fmtMinutes(d.minutes)}${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small></span>
         </button></li>`;
       }) : html`<li class="muted pad">No dinners match “${query}”.</li>`}
     </ul>`;

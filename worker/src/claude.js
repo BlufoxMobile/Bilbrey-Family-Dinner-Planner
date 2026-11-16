@@ -243,13 +243,15 @@ function outermost(s, start) {
 }
 
 // ── Recipe ideas (POST /api/ideas) ────────────────────────────────────────────────────────────
-export const IDEA_EQUIPMENT = ["stovetop", "blackstone", "electric grill", "outdoor grill", "air fryer", "microwave"];
+export const IDEA_EQUIPMENT = ["stovetop", "blackstone", "electric grill", "outdoor grill", "air fryer", "microwave", "possible cooker"];
 const EQUIPMENT_ALIASES = new Map(Object.entries({
   stove: "stovetop", "stove top": "stovetop", "gas stove": "stovetop", burner: "stovetop", burners: "stovetop", skillet: "stovetop", pot: "stovetop",
   griddle: "blackstone", "blackstone griddle": "blackstone", "flat top": "blackstone", "flat-top": "blackstone",
   "indoor grill": "electric grill", "indoor electric grill": "electric grill", grill: "electric grill",
   "outdoor gas grill": "outdoor grill", "charcoal grill": "outdoor grill",
   airfryer: "air fryer", "air-fryer": "air fryer",
+  possiblecooker: "possible cooker", "ninja possiblecooker": "possible cooker", "slow cooker": "possible cooker", "slow-cooker": "possible cooker",
+  crockpot: "possible cooker", "crock pot": "possible cooker", "multi cooker": "possible cooker", "multi-cooker": "possible cooker",
 }));
 const PROTEINS = ["chicken", "beef", "pork", "turkey", "sausage", "bacon", "mixed", "crab"];
 
@@ -414,7 +416,7 @@ export const IDEAS_SYSTEM_PROMPT = [
   "They shop at Sam's Club (Addison) and Jewel-Osco (599 E Roosevelt Rd), two or three trips a month, on about $650 a month for groceries. They want to eat healthier and to use older food first.",
   "",
   "HOUSE RULES (never break one):",
-  "- NO OVEN, ever (it leaks propane): no baking, roasting in an oven, broiling or sheet-pan dinners. Cook only with: stovetop (gas burners), blackstone (outdoor griddle), electric grill, outdoor grill, air fryer, microwave.",
+  "- NO OVEN, ever (it leaks propane): no baking, roasting in an oven, broiling or sheet-pan dinners. Cook only with: stovetop (gas burners), blackstone (outdoor griddle), electric grill, outdoor grill, air fryer, microwave, possible cooker (a Ninja PossibleCooker Pro 6.5 qt: slow cook, sear/sauté, braise, steam, rice, keep warm).",
   "- Every dinner is one meat main plus two sides, sized for five full adult plates. Meat in every dinner (chicken, beef, pork, turkey, sausage, bacon). No vegetarian dinners.",
   "- No tofu. No seafood or fish of any kind (no shrimp, salmon, tuna, tilapia, fish sauce, oyster sauce, Worcestershire). The ONE exception: an occasional snow-crab boil with Old Bay, every few months — suggest it only if the family's note asks for crab or seafood.",
   "- Never anything Caesar.",
@@ -459,7 +461,7 @@ export function ideasUserPrompt({ note = "", pantry = [], sides = [], catalog = 
     "",
     "For each idea return:",
     '- "title", "subtitle" (one appetizing sentence), "why" (one sentence: what on hand it uses up, and why now).',
-    '- "minutes": total time. "equipment": from stovetop, blackstone, electric grill, outdoor grill, air fryer, microwave.',
+    '- "minutes": total time. "equipment": from stovetop, blackstone, electric grill, outdoor grill, air fryer, microwave, possible cooker.',
     '- "protein": chicken, beef, pork, turkey, sausage, bacon or mixed. "category": e.g. Burgers, Asian-inspired, Pasta, Tex-Mex, Grill, Comfort, Salads, Soups.',
     '- "items": the MAIN dish ingredients for five adults, each { name, qty, unit, matchId } where matchId is an id from CATALOG or null. Never invent an id.',
     '- "sides": exactly two ids from SIDES (the family\'s own sides) that go with it.',

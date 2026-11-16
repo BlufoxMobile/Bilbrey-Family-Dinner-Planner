@@ -1,7 +1,7 @@
 {
  "version": 1,
  "updated": "2026-11-15",
- "notes": "Knox's and Jeff's lunches are set up exactly as Jeff described (2026-11-14). Product picks: Knox's 'Boar's Head Italian blend with salami and cheese' = Boar's Head Uncured Genoa Salame & Picante Provolone 4 oz snack tray (the Boar's Head salami-plus-cheese product Jewel carries); his Cool Ranch Doritos come from the Sam's Doritos Mix 30-pack (most Cool Ranch of the Sam's variety packs; a party bag portioned into snack bags is the cheaper Cool Ranch-every-day option). Jeff's salad = Member's Mark Cobb Salad with Grilled Chicken & Avocado Ranch (Sam's deli; ranch-type dressing only; ~40 g protein a 10 oz portion). Quantities are per lunch in catalog units. 'healthy' is used honestly — Knox's chips, cookies and Yoo-hoo are not tagged healthy. nutritionHints give per-catalog-unit calories/protein from labels where found (source noted) for data/nutrition.json. 2026-11-15 (v2.5): Jeff alternates Jewel salad bowls (all with ranch) and a Boar’s Head spicy chicken sandwich he makes himself; Ritz portions from the pantry for Knox. 2026-11-15 (v2.5.3): no hot-deli sandwiches (Jeff: poor quality); Jeff’s salads are prepackaged store salads, ranch preferred, NEVER Caesar. 2026-11-15 (v2.5.4): Knox likes Cool Ranch Doritos only, never Nacho Cheese, so his chips come from a Cool Ranch party bag, not the variety pack.",
+ "notes": "Knox's and Jeff's lunches are set up exactly as Jeff described (2026-11-14). Product picks: Knox's 'Boar's Head Italian blend with salami and cheese' = Boar's Head Uncured Genoa Salame & Picante Provolone 4 oz snack tray (the Boar's Head salami-plus-cheese product Jewel carries); his Cool Ranch Doritos come from the Sam's Doritos Mix 30-pack (most Cool Ranch of the Sam's variety packs; a party bag portioned into snack bags is the cheaper Cool Ranch-every-day option). Jeff's salad = Member's Mark Cobb Salad with Grilled Chicken & Avocado Ranch (Sam's deli; ranch-type dressing only; ~40 g protein a 10 oz portion). Quantities are per lunch in catalog units. 'healthy' is used honestly — Knox's chips, cookies and Yoo-hoo are not tagged healthy. nutritionHints give per-catalog-unit calories/protein from labels where found (source noted) for data/nutrition.json. 2026-11-15 (v2.5): Jeff alternates Jewel salad bowls (all with ranch) and a Boar’s Head spicy chicken sandwich he makes himself; Ritz portions from the pantry for Knox. 2026-11-15 (v2.5.3): no hot-deli sandwiches (Jeff: poor quality); Jeff’s salads are prepackaged store salads, ranch preferred, NEVER Caesar. 2026-11-15 (v2.5.4): Knox likes Cool Ranch Doritos only, never Nacho Cheese, so his chips come from a Cool Ranch party bag, not the variety pack. 2026-11-15 (v3): the two BLT salad bowls are out of the library (they come with raw grape tomatoes, and the house rule is no raw tomatoes); the Cobb salad says to pick the tomato pieces out. The validator now checks lunches against every house rule and for calories and protein.",
  "slots": [
   {
    "id": "main",
@@ -66,8 +66,8 @@
     "high protein",
     "salad"
    ],
-   "prep": "Spoon about 10 oz (a third of the Sam's deli tray) into a lidded bowl; keep the dressing cup separate and use the tray within 3–4 days.",
-   "photo": "A chopped Cobb salad in a clear bowl: romaine, grilled chicken strips, egg, bacon bits, tomato, with a cup of pale green ranch on the side."
+   "prep": "Spoon about 10 oz (a third of the Sam's deli tray) into a lidded bowl; keep the dressing cup separate and use the tray within 3–4 days. Pick out any tomato pieces; only Candi eats them.",
+   "photo": "A chopped Cobb salad in a clear bowl: romaine, grilled chicken strips, egg, bacon bits, with a cup of pale green ranch on the side."
   },
   {
    "id": "tf-ranch-chicken-bowl",
@@ -101,22 +101,6 @@
    ],
    "prep": "Slice 3 oz of grilled chicken onto the bowl before you go.",
    "photo": "A single-serve romaine salad bowl topped with extra sliced grilled chicken breast and a ranch cup."
-  },
-  {
-   "id": "tf-blt-chicken-bowl",
-   "slot": "main",
-   "title": "BLT chicken salad bowl with avocado ranch",
-   "subtitle": "Romaine, grape tomatoes, bacon, cheddar and grilled chicken with avocado ranch.",
-   "items": {
-    "tfBltChickenBowl": 1
-   },
-   "tags": [
-    "healthy",
-    "salad",
-    "no-prep"
-   ],
-   "prep": "Grab one sealed bowl from the fridge.",
-   "photo": "A salad bowl of romaine, halved grape tomatoes, bacon bits, cheddar and grilled chicken with a green ranch cup."
   },
   {
    "id": "garden-salad-chicken-light-ranch",
@@ -563,22 +547,6 @@
    "photo": "A small white milk carton box with a straw."
   },
   {
-   "id": "bonduelle-chicken-blt",
-   "slot": "main",
-   "title": "Bonduelle Chicken BLT salad bowl",
-   "subtitle": "Chicken, bacon and grape tomatoes with buttermilk ranch. 260 cal, 11 g protein.",
-   "items": {
-    "bonduelleBltBowl": 1
-   },
-   "tags": [
-    "healthy",
-    "salad",
-    "no-prep"
-   ],
-   "prep": "Grab one from the fridge: the fork and ranch are inside. For a lighter lunch, use half the dressing.",
-   "photo": "A clear single-serve salad bowl with iceberg lettuce, grilled chicken strips, bacon pieces and grape tomatoes, a ranch cup on top."
-  },
-  {
    "id": "bonduelle-chef-turkey-ham",
    "slot": "main",
    "title": "Bonduelle Chef salad bowl (turkey & ham)",
@@ -681,7 +649,7 @@
    "id": "bh-salsalito-turkey-sandwich",
    "slot": "main",
    "title": "Boar's Head Salsalito turkey sandwich with pickles, hot giardiniera and chips",
-   "subtitle": "Bold Salsalito turkey on Dave's Killer Bread with dill chips and Buona hot giardiniera, chips on the side. About 550 cal and 35 g protein.",
+   "subtitle": "Bold Salsalito turkey on Dave's Killer Bread with dill chips and Buona hot giardiniera, chips on the side. About 610 cal and 35 g protein.",
    "items": {
     "bhSalsalitoTurkey": 0.25,
     "bread": 2,
@@ -795,11 +763,6 @@
    "from": "tf-ranch-chicken-bowl",
    "to": "tf-ranch-chicken-bowl-plus-chicken",
    "why": "The bowl has only 14 g protein; 3 oz of grilled chicken adds about 24 g so it holds you until dinner."
-  },
-  {
-   "from": "tf-blt-chicken-bowl",
-   "to": "garden-salad-chicken-light-ranch",
-   "why": "Light ranch and plain grilled chicken: about the same calories with nearly three times the protein."
   },
   {
    "from": "baby-carrots-ranch-cup",

@@ -1,7 +1,7 @@
 {
  "version": 2,
  "updated": "2026-11-15",
- "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos. 2026-11-15 (v2.5): Jewel salad bowls and the hot-deli chicken sandwich for Jeff’s lunches; organic produce at Jewel (prices read from jewelosco.com, Glen Ellyn, Nov 15) used when the family buys organic; frozen sirloin patties cook from frozen. 2026-11-15 (v2.5.3): Boar’s Head Blazing Buffalo chicken and Miss Vickie’s for Jeff’s sandwich lunches; the hot-deli sandwich is gone.",
+ "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos. 2026-11-15 (v2.5): Jewel salad bowls and the hot-deli chicken sandwich for Jeff’s lunches; organic produce at Jewel (prices read from jewelosco.com, Glen Ellyn, Nov 15) used when the family buys organic; frozen sirloin patties cook from frozen. 2026-11-15 (v2.5.3): Boar’s Head Blazing Buffalo chicken and Miss Vickie’s for Jeff’s sandwich lunches; the hot-deli sandwich is gone. 2026-11-15 (v3): five ingredients for the PossibleCooker dinners (white beans, celery, lean turkey Italian sausage, canned mild green chiles, beef stock). Their packs and prices are estimates, marked (est.), until a receipt or a price check says otherwise.",
  "units": {
   "bags": "bags",
   "bars": "bars",
@@ -7339,6 +7339,172 @@
       "price": 6.0,
       "label": "Boar's Head Bold Salsalito Turkey, sliced at the Jewel deli: ask for ½ lb ($11.99 a lb on the Nov 15 receipt)",
       "confidence": "paid"
+     }
+    }
+   }
+  },
+  "whiteBeans": {
+   "name": "White beans (great northern or cannellini), 15.5 oz cans",
+   "unit": "cans",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "white beans",
+    "great northern beans",
+    "cannellini beans",
+    "canned white beans",
+    "navy beans"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 1.19,
+      "label": "Signature Select great northern beans, 15.5 oz can (est.)"
+     },
+     "name": {
+      "size": 1,
+      "price": 1.79,
+      "label": "Bush's Best great northern beans, 15.8 oz can (est.)"
+     }
+    }
+   }
+  },
+  "celery": {
+   "name": "Celery",
+   "unit": "bunches",
+   "aisle": "Produce",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "celery",
+    "celery stalks",
+    "celery bunch",
+    "celery hearts",
+    "celery ribs"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 1.99,
+      "label": "Celery, 1 bunch, about 8 ribs (est.)"
+     },
+     "name": {
+      "size": 1,
+      "price": 1.99,
+      "label": "Celery, 1 bunch, about 8 ribs (produce — no name-brand version) (est.)"
+     }
+    }
+   },
+   "organic": {
+    "jewel": {
+     "size": 1,
+     "price": 2.99,
+     "label": "O Organics celery, 1 bunch (est.)",
+     "confidence": "est"
+    }
+   }
+  },
+  "turkeySausage": {
+   "name": "Lean turkey Italian sausage (links)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "meat": true,
+   "aliases": [
+    "turkey italian sausage",
+    "italian turkey sausage",
+    "turkey sausage",
+    "lean turkey sausage links",
+    "sweet italian turkey sausage"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1.22,
+      "price": 5.99,
+      "label": "Jennie-O Lean Sweet Italian Turkey Sausage, 19.5 oz, 5 links (est.)"
+     },
+     "name": {
+      "size": 1.22,
+      "price": 5.99,
+      "label": "Jennie-O Lean Sweet Italian Turkey Sausage, 19.5 oz, 5 links (est.)"
+     }
+    }
+   }
+  },
+  "greenChiles": {
+   "name": "Diced green chiles (mild), 4 oz cans",
+   "unit": "cans",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "green chiles",
+    "diced green chiles",
+    "mild green chiles",
+    "canned green chiles",
+    "chopped green chiles"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 1.29,
+      "label": "Signature Select diced green chiles, mild, 4 oz can (est.)"
+     },
+     "name": {
+      "size": 1,
+      "price": 1.79,
+      "label": "Old El Paso chopped green chiles, mild, 4.5 oz can (est.)"
+     }
+    }
+   }
+  },
+  "beefBroth": {
+   "name": "Beef stock or broth",
+   "unit": "cups",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "beef broth",
+    "beef stock",
+    "beef broth carton",
+    "low sodium beef broth",
+    "kitchen basics beef stock"
+   ],
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 24,
+      "price": 11.98,
+      "label": "Member's Mark beef broth, 6 × 32 oz cartons (est.)"
+     },
+     "name": {
+      "size": 24,
+      "price": 14.98,
+      "label": "Swanson beef broth, 6 × 32 oz cartons (est.)"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 4,
+      "price": 1.99,
+      "label": "Signature Select beef broth, 32 oz carton (est.)"
+     },
+     "name": {
+      "size": 4,
+      "price": 3.99,
+      "label": "Kitchen Basics Original Beef Stock, 32 oz (est.)"
      }
     }
    }

@@ -8,6 +8,7 @@ import { listJoin, midSentence, relativeDay, shortWeekday } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
 import { prepSchedule } from '../prep.js';
+import { fmtMinutes } from '../data.js';
 
 /** Calories are shown when nutrition.json is there and this phone hasn't hidden them. */
 export const showNutrition = (app) => hasNutrition(app.db) && !app.store?.device?.hideNutrition;
@@ -98,7 +99,7 @@ export function sidePhoto(app, s, opts = {}) {
 export function equipment(d, { compact = false } = {}) {
   const eq = (d?.equipment || []).filter((e) => EQUIPMENT_LABELS[e]);
   return html`<ul class="facts ${compact ? 'facts-compact' : ''}">
-    ${d?.minutes ? html`<li>${ic('clock', { size: 18 })}<span>${d.minutes} min</span></li>` : ''}
+    ${d?.minutes ? html`<li>${ic('clock', { size: 18 })}<span>${fmtMinutes(d.minutes)}</span></li>` : ''}
     ${eq.map((e) => html`<li>${ic(EQUIPMENT_ICON[e] || 'stovetop', { size: 18 })}<span>${EQUIPMENT_LABELS[e]}</span></li>`)}
   </ul>`;
 }

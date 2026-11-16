@@ -1,6 +1,8 @@
-// Pure calorie and protein math (SPEC §8.3) and the "lighter idea" suggestions.
-// data/nutrition.json gives kcal and grams of protein per ONE catalog unit.
+// Pure calorie, protein and plate math (SPEC §8.3, docs/spec/18-recipe-box.md) and the "lighter idea" suggestions.
+// data/nutrition.json gives kcal, protein, carbs, fat, fiber (grams) and vegetable servings per ONE catalog unit.
 // Dinner per plate = (entrée + effective sides, after the meat scale) ÷ 5. Lunch = its items.
+// plateHealth() is the one call for planning and display: calories, protein, the other macros,
+// vegetable servings and whether the plate is "lean" (LEAN_RULE).
 
 import { FAMILY } from './config.js';
 import { itemsForNight, effectiveSides, scaleItems, dinnerById, isSideDropped } from './planner.js';
@@ -34,6 +36,91 @@ export function itemsNutrition(db, items, divide = 1) {
 export function plateNutrition(db, state, dinnerId, entry) {
   if (!dinnerById(db, state, dinnerId)) return null;
   return itemsNutrition(db, itemsForNight(db, state, dinnerId, entry), PLATES);
+}
+
+// ---------------------------------------------------------------- the whole plate (docs/spec/18-recipe-box.md)
+
+/**
+ * "Lean" is one plain rule about a dinner plate (main + sides, one of five): no more than
+ * `maxKcal` calories and at least `minProteinG` grams of protein. It describes the plate, never a
+ * person: nobody gets a calorie target, and a plate that isn't lean is just a heartier dinner.
+ */
+export const LEAN_RULE = Object.freeze({ maxKcal: 750, minProteinG: 35 });
+
+/** One vegetable serving = 80 g of vegetables or beans (about ½ cup cooked, or a big handful raw). */
+export const VEG_SERVING_GRAMS = 80;
+
+const MACROS = ['carbs', 'fat', 'fiber'];
+
+/**
+ * Calories, protein, carbs, fat, fiber and vegetable servings for a bag of items.
+ * → { kcal, protein, carbs, fat, fiber, veg, missing: [ids], complete } or null when nothing is known.
+ * carbs / fat / fiber are null unless every item in the bag has that number; veg adds what is known.
+ */
+export function itemsMacros(db, items, divide = 1) {
+  const base = itemsNutrition(db, items, divide);
+  if (!base) return null;
+  const sum = { carbs: 0, fat: 0, fiber: 0 };
+  const have = { carbs: true, fat: true, fiber: true };
+  let veg = 0;
+  for (const [id, qty] of Object.entries(items || {})) {
+    const per = db.nutrition.per[id];
+    if (!per) continue;
+    for (const k of MACROS) { if (per[k] == null) have[k] = false; else sum[k] += per[k] * qty; }
+    veg += (per.veg || 0) * qty;
+  }
+  const out = { ...base, veg: veg / divide };
+  for (const k of MACROS) out[k] = base.complete && have[k] ? sum[k] / divide : null;
+  return out;
+}
+
+/** Macros for one lunch (its items, one person). */
+export function lunchMacros(db, lunch) {
+  if (!lunch || lunch.skip) return null;
+  return itemsMacros(db, lunch.items, 1);
+}
+
+const round1 = (n) => Math.round(n * 10) / 10;
+
+/**
+ * One plate of a night's dinner, summed up for planning and display:
+ * → { kcal, proteinG, carbsG?, fatG?, fiberG?, vegServings, lean, why }, or null when the dinner is
+ * unknown or there is no nutrition data at all.
+ *
+ * The plate is the main plus the sides as they'll be served that night (the family's remembered
+ * substitutions, the night's own sides and the meat setting all count), divided by five.
+ *  - kcal and grams are whole numbers; carbsG / fatG / fiberG are left off when any ingredient on
+ *    the plate has no number for them (never guessed).
+ *  - vegServings: vegetable servings on the plate, to one decimal (80 g each; potatoes and fries
+ *    are the starch, fruit isn't counted).
+ *  - lean: true when the plate is at or under LEAN_RULE.maxKcal calories with at least
+ *    LEAN_RULE.minProteinG grams of protein. False when an ingredient has no calorie data, because
+ *    the total would be short.
+ *  - why: one plain sentence a card can show under the numbers.
+ */
+export function plateHealth(db, state, dinnerId, entry) {
+  if (!hasNutrition(db) || !dinnerById(db, state, dinnerId)) return null;
+  const m = itemsMacros(db, itemsForNight(db, state, dinnerId, entry), PLATES);
+  if (!m) return null;
+  const kcal = Math.round(m.kcal);
+  const proteinG = Math.round(m.protein);
+  const out = { kcal, proteinG };
+  if (m.carbs != null) out.carbsG = Math.round(m.carbs);
+  if (m.fat != null) out.fatG = Math.round(m.fat);
+  if (m.fiber != null) out.fiberG = Math.round(m.fiber);
+  out.vegServings = round1(m.veg);
+  out.lean = m.complete && kcal <= LEAN_RULE.maxKcal && proteinG >= LEAN_RULE.minProteinG;
+  if (!m.complete) {
+    const names = m.missing.map((id) => db.ingredients[id]?.name || state?.custom?.[id]?.name || 'a shelf item');
+    out.why = `About ${fmtKcal(kcal)} cal counted so far. No numbers yet for ${names.slice(0, 2).join(' or ')}.`;
+  } else if (out.lean) {
+    out.why = `A lean plate: ${fmtKcal(kcal)} cal with ${proteinG} g protein.`;
+  } else if (proteinG < LEAN_RULE.minProteinG) {
+    out.why = `Lighter on protein: ${proteinG} g a plate, ${fmtKcal(kcal)} cal.`;
+  } else {
+    out.why = `A heartier plate: ${fmtKcal(kcal)} cal with ${proteinG} g protein.`;
+  }
+  return out;
 }
 
 /** One plate's worth of a single side. null → show "—" (e.g. a shelf item with no data). */

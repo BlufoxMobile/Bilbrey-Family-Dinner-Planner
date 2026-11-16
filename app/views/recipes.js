@@ -7,6 +7,7 @@ import {
 } from '../planner.js';
 import { restoreOps, restoreSideOps } from '../actions.js';
 import { dinnerPhoto, sidePhoto } from './common.js';
+import { fmtMinutes } from '../data.js';
 
 export const title = () => 'Recipes';
 
@@ -71,7 +72,7 @@ function card(app, d) {
     ${dinnerPhoto(app, d, { size: 'card' })}
     <span class="r-body">
       <b class="r-title">${d.title}</b>
-      <span class="r-meta">${d.minutes} min, ${d.category}${when(isFavorite(app.state, d), () => html`<span class="r-fav">${ic('star', { size: 14 })}<span class="sr-only">Family favorite</span></span>`)}</span>
+      <span class="r-meta">${fmtMinutes(d.minutes)}, ${d.category}${when(isFavorite(app.state, d), () => html`<span class="r-fav">${ic('star', { size: 14 })}<span class="sr-only">Family favorite</span></span>`)}</span>
       ${when(v.up || v.down, () => html`<span class="r-votes">${v.up ? html`<span>${ic('up_vote', { size: 14 })}${v.up}</span>` : ''}${v.down ? html`<span class="is-down">${ic('down_vote', { size: 14 })}${v.down}</span>` : ''}</span>`)}
     </span>
   </a></li>`;

@@ -123,7 +123,7 @@ const INSTRUCTIONS = [
   "This is the Bilbrey family's own dinner planner (Jeff, Candi, Knox, Jordan, Jackson; Glen Ellyn, IL, Central time).",
   "Changes you make here show up right away in the family's planner app on everyone's phone.",
   "Start with get_family_profile. House rules for anything you suggest: dinner is one meat main plus two sides for five adult plates;",
-  "never the oven or broiler (Blackstone griddle, air fryer, gas stovetop, electric or outdoor grill, microwave); no tofu; no seafood",
+  "never the oven or broiler (Blackstone griddle, air fryer, gas stovetop, electric or outdoor grill, microwave, Ninja PossibleCooker); no tofu; no seafood",
   "except an occasional snow crab boil with Old Bay; soups now and then; nothing Caesar; no raw cucumbers (pickles are fine), raw onions",
   "or raw tomatoes; organic fruits and vegetables when possible; Knox only eats Cool Ranch Doritos. Budget about $650 a month in 2–3",
   "store trips (Sam's Club in Addison, Jewel-Osco on Roosevelt Rd in Glen Ellyn). Use older food first and lean healthier.",
@@ -406,7 +406,7 @@ const TOOL_DEFS = [
       "Put a dinner on a night in the family plan (it appears in their app right away). Either pick a dinner from the recipe box with " +
       "dinnerId (from list_recipes), or write a new one with recipe: a meat main for five adult plates with side ids from list_recipes " +
       "(two sides; burgers get one, usually 'jewel-fries'). New recipes must follow the house rules or they're refused: no oven or broiler " +
-      "ever (Blackstone griddle, air fryer, stovetop, electric or outdoor grill, microwave), no tofu, no seafood (the one exception is an " +
+      "ever (Blackstone griddle, air fryer, stovetop, electric or outdoor grill, microwave, PossibleCooker slow cooker), no tofu, no seafood (the one exception is an " +
       "occasional snow crab boil with Old Bay), nothing Caesar, no raw cucumbers, raw onions or raw tomatoes (cooked onions and tomato " +
       "sauces are fine), meat in every dinner, and steps that state safe temperatures (chicken and turkey 165°F, ground beef and sausage " +
       "160°F, pork chops 145°F then rest 3 minutes). Recipe items should use recipe-box ingredient ids (from list_recipes with id) where " +
@@ -494,7 +494,7 @@ const TOOLS = {
 const HOUSE_RULES = [
   "Every dinner is one meat main plus two sides, for five full adult plates (Jeff, Candi, Knox, Jordan, Jackson). Burger nights default to one side, a bag of Jewel-Osco frozen fries, with an optional second side.",
   "Meat in every dinner (chicken, beef, pork, turkey, sausage, bacon…). Salads are welcome as long as they have meat on them.",
-  "Never the oven or broiler (it leaks propane). Cook on the Blackstone griddle, air fryer, gas stovetop, indoor electric grill, outdoor grill or microwave.",
+  "Never the oven or broiler (it leaks propane). Cook on the Blackstone griddle, air fryer, gas stovetop, indoor electric grill, outdoor grill, microwave or the Ninja PossibleCooker Pro (slow cook, sear/sauté, braise, steam, rice).",
   "No tofu. No seafood, apart from an occasional (every few months) snow crab boil with Old Bay. Soups now and then are welcome.",
   "Never anything Caesar.",
   "No raw cucumbers (pickles are fine), no raw onions and no raw tomatoes. Cooked onions and tomato sauces are fine; only Candi eats raw tomato.",
@@ -532,7 +532,7 @@ function getFamilyProfile(args, { db, state, today }) {
     today, weekday: weekdayName(today), home: "Glen Ellyn, IL (Central time)",
     people,
     stores,
-    equipment: ["Blackstone griddle (outdoor)", "air fryer", "gas stovetop", "indoor electric grill", "outdoor grill", "microwave", "NO oven"],
+    equipment: ["Blackstone griddle (outdoor)", "air fryer", "gas stovetop", "indoor electric grill", "outdoor grill", "microwave", "Ninja PossibleCooker Pro 6.5 qt (slow cook, sear/sauté, braise, steam, rice, keep warm)", "NO oven"],
     storage: "One large fridge, a small freezer, an outdoor freezer and a full pantry, so bulk buying is easy to store.",
     houseRules: HOUSE_RULES,
     budget,
@@ -1229,7 +1229,7 @@ const MEAT_WORDS = /\b(chicken|beef|steaks?|sirloin|chuck|brisket|pork|ham|bacon
 // Safe temperatures (same as the validator): a recipe with these ids must state the temperature.
 const TEMP_RULES = [
   { ids: ["chicken", "chickenThighs", "fajitaChicken"], temp: "165°F", what: "chicken" },
-  { ids: ["groundTurkey"], temp: "165°F", what: "ground turkey" },
+  { ids: ["groundTurkey", "turkeySausage"], temp: "165°F", what: "ground turkey or turkey sausage" },
   { ids: ["beef", "beefPatties", "groundPork", "italianSausage", "chorizo"], temp: "160°F", what: "ground meat, sausage or patties" },
   { ids: ["eyeRoundSteak"], temp: "145°F", what: "whole-cut beef" },
   { ids: ["pulledPork", "pulledChicken", "smokedSausage", "chickenAlfredoDeli", "roastBeef"], temp: "165°F", what: "fully cooked meat (reheat)" },
