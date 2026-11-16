@@ -3,7 +3,7 @@
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, switchToggle, confirmSheet } from '../ui.js';
 import { resizeImage, LIMITS } from '../images.js';
 import { STORAGE, AISLES } from '../config.js';
-import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween, weekdayName } from '../util.js';
+import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween, weekdayName, chicagoDay } from '../util.js';
 import { setPantryOps, removePantryOps, customItemOps, undoFor } from '../actions.js';
 import { set } from '../state.js';
 import { kindOf } from '../planner.js';
@@ -572,7 +572,7 @@ export const actions = {
       const now = new Date().toISOString();
       const prev = app.state.pantry?.[id];
       const had = prev && !prev.low && (prev.stocked || prev.qty > 0);
-      const since = { ...(had && prev.since ? { since: prev.since } : had ? {} : { since: now.slice(0, 10) }), ...(prev?.place ? { place: prev.place } : {}) };
+      const since = { ...(had && prev.since ? { since: prev.since } : had ? {} : { since: chicagoDay(now) }), ...(prev?.place ? { place: prev.place } : {}) };
       ops.push(set(['pantry', id], staple ? { qty: null, stocked: true, ...label, ...since, by: app.who(), at: now }
         : { qty: Number.isFinite(qty) && qty >= 0 ? round2(qty) : (app.state.pantry?.[id]?.qty ?? 1), stocked: false, ...label, ...since, by: app.who(), at: now }));
       picked.push({ id, r });

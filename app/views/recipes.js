@@ -1,9 +1,8 @@
-// RECIPES: the recipe box — rotation, bench and voted-out dinners, search and filters.
+// RECIPES: the recipe box — rotation, bench and "not for us" dinners, search and filters.
 import { html, ic, when, tf } from '../ui.js';
 import { CATEGORIES, PROTEINS } from '../config.js';
-import { listJoin } from '../util.js';
 import {
-  allDinners, inRotation, isRetired, isPromoted, isFavorite, isHealthier, voteInfo, droppedSides, implicitPromotions, downVoters,
+  allDinners, inRotation, isRetired, isPromoted, isFavorite, isHealthier, droppedSides, implicitPromotions,
 } from '../planner.js';
 import { restoreOps, restoreSideOps } from '../actions.js';
 import { dinnerPhoto, sidePhoto } from './common.js';
@@ -22,33 +21,26 @@ function inTab(app, d, tab) {
   return isRetired(app.state, d.id);
 }
 
-/** Who dropped it: the thumbs-down names, or the parent who retired it by hand. */
-function droppedWhy(app, id) {
-  const who = downVoters(app.state, id);
-  if (who.length) return `Thumbs down from ${listJoin(who)}`;
-  const r = app.state.retired?.[id];
-  return r?.manual && r.by ? `Taken out by ${r.by}` : 'Off the menu';
-}
+/** Why it's here. One shared profile: no names, the family marked it. */
+const DROPPED_WHY = 'Not for us';
 
 function droppedView(app, list) {
   const sides = droppedSides(app.db, app.state);
   if (!list.length && !sides.length) {
-    return html`<p class="empty-body pad">Nothing has been dropped. One thumbs down from anyone takes a dinner or a side off the menu, and it waits here in case you change your minds.</p>`;
+    return html`<p class="empty-body pad">Nothing has been dropped. A thumbs down marks a dinner or a side “not for us” and takes it off the menu; it waits here in case you change your minds.</p>`;
   }
   return html`
     ${when(list.length, () => html`<ul class="dropped-list">${list.map((d) => html`<li class="dropped-row">
-      <a class="dropped-main" href="#/recipe/${d.id}">${dinnerPhoto(app, d, { size: 'thumb' })}<span><b>${d.title}</b><small>${droppedWhy(app, d.id)}</small></span></a>
+      <a class="dropped-main" href="#/recipe/${d.id}">${dinnerPhoto(app, d, { size: 'thumb' })}<span><b>${d.title}</b><small>${DROPPED_WHY}</small></span></a>
       <button type="button" class="btn btn-small btn-secondary" data-action="rec:restore-dinner" data-id="${d.id}">Restore</button>
     </li>`)}</ul>`)}
     ${when(sides.length, () => html`<h2 class="section-title dropped-h">Sides</h2><ul class="dropped-list">${sides.map((s) => {
-      const v = app.state.sideVotes?.[s.id] || {};
-      const who = Object.keys(v).filter((p) => v[p] === -1);
       return html`<li class="dropped-row">
-        <span class="dropped-main">${sidePhoto(app, { parsed: { type: 'side', id: s.id }, info: { kind: s.kind } }, { size: 'thumb' })}<span><b>${s.title}</b><small>Thumbs down from ${listJoin(who)}. Dinners that had it get a similar side.</small></span></span>
+        <span class="dropped-main">${sidePhoto(app, { parsed: { type: 'side', id: s.id }, info: { kind: s.kind } }, { size: 'thumb' })}<span><b>${s.title}</b><small>${DROPPED_WHY}. Dinners that had it get a similar side.</small></span></span>
         <button type="button" class="btn btn-small btn-secondary" data-action="rec:restore-side" data-id="${s.id}">Restore</button>
       </li>`;
     })}</ul>`)}
-    <p class="muted small pad">Restore clears the thumbs-downs, so it can be planned again.</p>`;
+    <p class="muted small pad">Restore puts it back on the menu, so it can be planned again.</p>`;
 }
 
 function filtered(app) {
@@ -66,13 +58,11 @@ function filtered(app) {
 }
 
 function card(app, d) {
-  const v = voteInfo(app.state, d.id);
   return html`<li><a class="r-card" href="#/recipe/${d.id}">
     ${dinnerPhoto(app, d, { size: 'card' })}
     <span class="r-body">
       <b class="r-title">${d.title}</b>
       <span class="r-meta">${d.minutes} min, ${d.category}${when(isFavorite(app.state, d), () => html`<span class="r-fav">${ic('star', { size: 14 })}<span class="sr-only">Family favorite</span></span>`)}</span>
-      ${when(v.up || v.down, () => html`<span class="r-votes">${v.up ? html`<span>${ic('up_vote', { size: 14 })}${v.up}</span>` : ''}${v.down ? html`<span class="is-down">${ic('down_vote', { size: 14 })}${v.down}</span>` : ''}</span>`)}
     </span>
   </a></li>`;
 }

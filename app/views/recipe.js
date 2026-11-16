@@ -28,24 +28,17 @@ export function ingredients(app, items) {
 }
 
 function votes(app, d) {
-  const v = voteInfo(app.state, d.id);
-  const me = app.who();
-  const mine = v.byPerson[me];
+  // One shared profile (docs/spec/20): one signal for the whole family — loved, fine (neither), or not for us.
+  const mine = isRetired(app.state, d.id) ? -1 : isFavorite(app.state, d) ? 1 : 0;
   return html`<section class="votes" aria-labelledby="votes-h">
     <h2 id="votes-h" class="section-title">What the family thinks</h2>
-    <ul class="vote-row">${FAMILY.map((n) => {
-      const val = v.byPerson[n];
-      return html`<li class="vote-person ${val === 1 ? 'is-up' : val === -1 ? 'is-down' : ''}" style="${personStyle(n)}">
-        ${avatar(n, { size: 'md' })}<span class="vote-name">${n}</span>
-        <span class="vote-state">${val === 1 ? html`${ic('up_vote', { size: 16 })}<span class="sr-only">likes it</span>` : val === -1 ? html`${ic('down_vote', { size: 16 })}<span class="sr-only">would skip it</span>` : html`<span class="sr-only">no vote</span>`}</span>
-      </li>`;
-    })}</ul>
-    ${me ? html`<div class="vote-mine" role="group" aria-label="Your vote, ${me}">
-        <button type="button" class="btn vote-btn ${mine === 1 ? 'is-on' : ''}" aria-pressed="${tf(mine === 1)}" data-action="rec:vote" data-dinner="${d.id}" data-value="1">${ic('up_vote', { size: 20 })}Keep it</button>
-        <button type="button" class="btn vote-btn vote-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="rec:vote" data-dinner="${d.id}" data-value="-1">${ic('down_vote', { size: 20 })}Drop it</button>
-      </div>
-      <p class="muted small">Voting as ${me}. A thumbs up keeps it in the rotation, and two make it a family favorite. One thumbs down from anyone takes it off the menu and brings in a dinner from the bench; it waits in Recipes, Dropped, if you change your minds.</p>`
-      : html`<button type="button" class="btn btn-secondary" data-action="sheet:who">Pick who’s using this phone to vote</button>`}
+    <div class="vote-mine" role="group" aria-label="What the family thinks of ${d.title}">
+      <button type="button" class="btn vote-btn ${mine === 1 ? 'is-on' : ''}" aria-pressed="${tf(mine === 1)}" data-action="rec:vote" data-dinner="${d.id}" data-value="1">${ic('up_vote', { size: 20 })}Loved</button>
+      <button type="button" class="btn vote-btn vote-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="rec:vote" data-dinner="${d.id}" data-value="-1">${ic('down_vote', { size: 20 })}Not for us</button>
+    </div>
+    <p class="muted small">${mine === 1 ? 'A family favorite: it gets planned more often. Tap Loved again to go back to fine.'
+      : mine === -1 ? 'Off the menu, and a dinner from the bench took its place. Tap “Not for us” again to bring this one back.'
+        : 'Loved makes it a family favorite, planned more often. Not for us takes it off the menu and brings in a dinner from the bench; it waits in Recipes, Dropped, if you change your minds.'}</p>
   </section>`;
 }
 
@@ -60,7 +53,7 @@ export function render(app) {
   const sides = sidesFor(app, d.id, null);
   const retired = isRetired(app.state, d.id);
   const bench = d.rotation === 'bench' && !isPromoted(app.state, d.id) && !retired && !implicitPromotions(app.db, app.state).has(d.id);
-  const parent = PARENTS.includes(app.who());
+  const parent = true; // one shared profile (docs/spec/20): no parent or kid difference in what can be changed
   const where = findInPlan(app.state, d.id, { from: today });
   const replaced = app.state.promoted?.[d.id]?.replaced || implicitPromotions(app.db, app.state).get(d.id);
   return html`<div class="page page-recipe">
@@ -114,7 +107,7 @@ export function render(app) {
     </div>
     ${votes(app, d)}
     ${when(parent, () => html`<section class="parent-tools">
-      <h2 class="section-title">For Jeff and Candi</h2>
+      <h2 class="section-title">The rotation</h2>
       ${retired ? html`<button type="button" class="btn btn-secondary" data-action="rec:restore" data-dinner="${d.id}">${ic('undo', { size: 20 })}Bring back into the rotation</button>`
         : bench ? html`<button type="button" class="btn btn-secondary" data-action="rec:promote" data-dinner="${d.id}">${ic('plus', { size: 20 })}Add to the rotation</button>`
           : inRotation(app.state, d, app.db) ? html`<button type="button" class="btn btn-quiet" data-action="rec:retire" data-dinner="${d.id}">${ic('trash', { size: 20 })}Retire from the rotation</button>` : ''}

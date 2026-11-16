@@ -2,7 +2,7 @@
 // (SPEC §4/§5). The local view is always: last server state + pending ops applied
 // in order, so offline changes show instantly and survive reloads.
 
-import { clone, uid } from './util.js';
+import { clone, uid, cleanName, SHARED_PROFILE } from './util.js';
 import { DEFAULT_AI_MODEL, isAiModel } from './claude.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
@@ -129,9 +129,30 @@ function validOp(op) {
   return (op.op === 'set' || op.op === 'push') && op.value !== undefined;
 }
 
+/** What this device remembers about itself (never synced). The family shares one profile, so there is no "who". */
+export function normalizeDevice(dev = {}) {
+  const d = dev && typeof dev === 'object' ? dev : {};
+  return {
+    // `who` is left over from one profile per person. Nothing reads it; it is only kept so an
+    // older copy of the app still open on this device finds what it saved.
+    who: typeof d.who === 'string' ? d.who : null,
+    key: d.key || null, localOnly: !!d.localOnly, clientId: d.clientId || uid('c'), dismissedGate: !!d.dismissedGate,
+    theme: ['light', 'dark'].includes(d.theme) ? d.theme : 'auto',
+    textSize: d.textSize === 'large' ? 'large' : 'regular', // "Large" suits a TV across the room
+    // Whose "Today: about 1,350 calories" line Tonight shows on this device ('' = nobody). A device
+    // that used to be one person's keeps showing theirs; a new device shows none until someone picks.
+    todayFor: cleanName(typeof d.todayFor === 'string' ? d.todayFor : typeof d.who === 'string' ? d.who : ''),
+    // Per-device preferences (SPEC §8.4: they live on the device, not in the family's state).
+    hideNutrition: !!d.hideNutrition,
+    dismissed: Array.isArray(d.dismissed) ? d.dismissed.filter((x) => typeof x === 'string').slice(-60) : [],
+  };
+}
+
 /**
- * status: 'local' (this phone only) | 'synced' | 'syncing' | 'offline' |
+ * status: 'local' (this device only) | 'synced' | 'syncing' | 'offline' |
  *         'needs-setup' (no family passcode yet) | 'needs-passcode' | 'error'
+ * `checked` turns true once the family server has answered (or failed to) for the first time,
+ * so a brand-new device can say "looking for the family's plan" instead of guessing.
  */
 export class Store {
   constructor({ storage = makeStorage(), fetchFn = globalThis.fetch?.bind(globalThis), apiBase = '', timeoutMs = 10000, autoSync = true } = {}) {
@@ -141,13 +162,7 @@ export class Store {
     this.timeoutMs = timeoutMs;
     this.autoSync = autoSync;
     this.listeners = new Set();
-    const dev = storage.get(K.device) || {};
-    this.device = {
-      who: dev.who || null, key: dev.key || null, localOnly: !!dev.localOnly, clientId: dev.clientId || uid('c'), dismissedGate: !!dev.dismissedGate, theme: dev.theme || 'auto',
-      // Per-phone preferences (SPEC §8.4: they live on the device, not in the family's state).
-      hideNutrition: !!dev.hideNutrition,
-      dismissed: Array.isArray(dev.dismissed) ? dev.dismissed.filter((x) => typeof x === 'string').slice(-60) : [],
-    };
+    this.device = normalizeDevice(storage.get(K.device));
     const srv = storage.get(K.server);
     this.server = srv && typeof srv === 'object' ? { revision: Number(srv.revision) || 0, state: srv.state || {}, updatedAt: srv.updatedAt || null } : { revision: 0, state: {}, updatedAt: null };
     this.pending = Array.isArray(storage.get(K.pending)) ? storage.get(K.pending).filter(validOp) : [];
@@ -157,6 +172,8 @@ export class Store {
     this.status = this.device.localOnly ? 'local' : 'offline';
     this.statusDetail = '';
     this.health = null;
+    this.checked = false;
+    this.connecting = false;
     this.lastSyncAt = null;
     this.syncing = false;
     this.again = false;
@@ -212,7 +229,7 @@ export class Store {
     this.pushTimer = setTimeout(() => this.sync(), ms);
   }
 
-  async api(method, path, body, { auth = true, timeoutMs = this.timeoutMs } = {}) {
+  async api(method, path, body, { auth = true, timeoutMs = this.timeoutMs, key = this.device.key } = {}) {
     if (!this.fetchFn || !this.apiBase) throw new ApiError(0, 'No connection');
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const t = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
@@ -220,7 +237,7 @@ export class Store {
     try {
       res = await this.fetchFn(this.apiBase + path, {
         method,
-        headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(auth && this.device.key ? { 'X-Family-Key': this.device.key } : {}) },
+        headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(auth && key ? { 'X-Family-Key': key } : {}) },
         body: body ? JSON.stringify(body) : undefined,
         signal: ctrl?.signal,
         cache: 'no-store',
@@ -275,9 +292,20 @@ export class Store {
 
   /** Decides the sync status from health + device and syncs if possible. */
   async connect() {
-    if (this.device.localOnly) { this.setStatus('local'); return this.status; }
+    if (this.device.localOnly) { this.checked = true; this.setStatus('local'); return this.status; }
+    this.connecting = true;
     const h = await this.checkHealth();
-    if (!h) { this.setStatus('offline'); this.scheduleRetry(); return this.status; }
+    this.connecting = false;
+    const first = !this.checked;
+    this.checked = true;
+    if (!h) {
+      // The first-open screen is waiting on `checked`; "still offline" is not a status change, so say so once.
+      const same = this.status === 'offline';
+      this.setStatus('offline');
+      if (first && same) this.emit('status');
+      this.scheduleRetry();
+      return this.status;
+    }
     if (!h.hasPasscode) { this.setStatus('needs-setup'); return this.status; }
     if (!this.device.key) { this.setStatus('needs-passcode'); return this.status; }
     await this.sync();
@@ -297,18 +325,24 @@ export class Store {
     return true;
   }
 
-  async enterPasscode(passcode) {
+  /**
+   * Join the family with the passcode. `dropPending` forgets changes made on this device before it
+   * joined (someone "looking around" on the TV), but only once the passcode is accepted; otherwise
+   * they are sent to the family like any offline change.
+   */
+  async enterPasscode(passcode, { dropPending = false } = {}) {
     const key = await deriveKey(passcode);
-    const prev = this.device.key;
-    this.device.key = key;
     try {
-      const r = await this.api('GET', '/api/state');
+      // The key being tried is sent with this one request and only kept once the server accepts it,
+      // so a wrong passcode never makes the device look connected, even for a moment.
+      const r = await this.api('GET', '/api/state', null, { key });
+      if (dropPending) { this.pending = []; this.inflight = null; }
+      this.device.key = key;
       this.acceptServer(r);
     } catch (e) {
-      this.device.key = prev;
       if (e.status === 401 && e.data?.needsSetup) throw new ApiError(401, 'No family passcode exists yet. Create one instead.', { needsSetup: true });
       if (e.status === 401 && e.data?.locked) throw new ApiError(429, `That passcode doesn't match, and tries are paused for ${waitText(e.retryAfter)}.`);
-      if (e.status === 401) throw new ApiError(401, "That passcode doesn't match. Check with Jeff or Candi.");
+      if (e.status === 401) throw new ApiError(401, "That passcode doesn't match. Check it with Jeff or Candi; capital letters don't matter.");
       if (e.status === 429) throw new ApiError(429, `Too many tries. Wait ${waitText(e.retryAfter)}, then try again.`);
       throw e;
     }
@@ -363,7 +397,7 @@ export class Store {
         try {
           r = await this.api('POST', '/api/ops', {
             ops: batch.map(({ _id, ...op }) => op),
-            by: this.device.who || 'Family',
+            by: SHARED_PROFILE,
             clientId: this.device.clientId,
             batchId: this.inflight.batchId,
           });
@@ -418,7 +452,7 @@ export class Store {
     return this.connect();
   }
 
-  /** Clears everything stored on this phone (the family's server copy is untouched). */
+  /** Clears everything stored on this device (the family's server copy is untouched). */
   resetLocal({ keepDevice = false } = {}) {
     this.storage.remove(K.server);
     this.storage.remove(K.pending);
@@ -428,7 +462,7 @@ export class Store {
     this.inflight = null;
     if (!keepDevice) {
       this.storage.remove(K.device);
-      this.device = { who: null, key: null, localOnly: false, clientId: uid('c'), dismissedGate: false, theme: 'auto', hideNutrition: false, dismissed: [] };
+      this.device = normalizeDevice();
       this.saveDevice();
     }
     this.recompute();

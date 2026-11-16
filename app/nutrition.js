@@ -64,7 +64,7 @@ export function lunchItemNutrition(db, item) {
  * Breakfast and snacks aren't tracked.
  */
 export function dayNutrition(db, state, name, date) {
-  if (!hasNutrition(db) || !FAMILY.includes(name)) return null;
+  if (!hasNutrition(db) || !name) return null; // anyone who packs a lunch, not only the five names
   const e = state?.plan?.[date];
   const dinner = e?.dinner && e.status !== 'away' ? plateNutrition(db, state, e.dinner, e) : null;
   const lunchObj = lunchFor(db, state, name, date);

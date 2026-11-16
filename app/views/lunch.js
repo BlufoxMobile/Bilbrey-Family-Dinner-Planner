@@ -1,21 +1,23 @@
-// LUNCH (SPEC §8): packed lunches per person — rotations per slot, weekdays by default,
-// per-day swaps and skips, an editor for each person, lighter ideas for the grown-ups.
-import { html, ic, when, openSheet, closeSheet, renderSheet, avatar, personStyle, photo, switchToggle, tf } from '../ui.js';
-import { FAMILY, PARENTS } from '../config.js';
-import { addDays, dateRange, money, rangeLabel, shortDate, startOfWeek, weekday, weekdayName, diffDays, dayWord } from '../util.js';
+// LUNCH (SPEC §8, docs/spec/20): packed lunches for whoever packs one — Jeff and Knox to start
+// with, plus anyone the family adds. Rotations per slot, weekdays by default, per-day swaps and
+// skips, an editor for each person (pause or remove them there), lighter ideas where wanted.
+import { html, ic, when, openSheet, closeSheet, renderSheet, avatar, personStyle, photo, switchToggle, tf, confirmSheet } from '../ui.js';
+import { addDays, dateRange, money, rangeLabel, shortDate, startOfWeek, weekday, weekdayName, diffDays, dayWord, listJoin } from '../util.js';
 import {
-  lunchPeople, personConfig, lunchFor, lunchLibrary, lunchSlots, lunchItem, isKid, SKIP_REASONS, hasLunchDay, lunchVote,
+  lunchPackers, personConfig, lunchFor, lunchLibrary, lunchSlots, lunchItem, SKIP_REASONS, hasLunchDay, lunchVote, newPackerName,
 } from '../lunch.js';
 import { lunchNutrition, lunchItemNutrition, lunchSwaps, fmtKcal } from '../nutrition.js';
 import { lunchFoodCost } from '../shopping.js';
 import {
   skipLunchOps, unskipLunchOps, pickLunchOps, resetLunchPickOps, toggleLunchItemOps, toggleLunchDayOps, setLunchEnabledOps,
-  applyLunchSwapOps, addCustomLunchOps,
+  applyLunchSwapOps, addCustomLunchOps, addLunchPersonOps, pauseLunchPersonOps, removeLunchPersonOps, setLunchIdeasOps,
 } from '../actions.js';
 import { nutri, showNutrition, lighterChip, isDismissed, thumbs } from './common.js';
 
 export const title = () => 'Lunch';
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const WEEKDAYS = [1, 2, 3, 4, 5];
 
 /** The week the Lunch page opens on: this one, or next week once it's the weekend. */
 export function lunchWeekStart(app) {
@@ -25,12 +27,11 @@ export function lunchWeekStart(app) {
   return startOfWeek(wd === 0 || wd === 6 ? addDays(today, 2) : today, 1);
 }
 
-function currentPerson(app) {
-  const people = lunchPeople(app.db, app.state, app.who());
-  const enabled = people.filter((p) => p.cfg.enabled);
+/** Whose week is showing: the one tapped, else the first person who packs (a paused one if that's all there is). */
+function currentPerson(app, people) {
   const want = app.ui.lunchWho;
-  if (want && enabled.some((p) => p.name === want)) return want;
-  return enabled[0]?.name || null;
+  if (want && people.some((p) => p.name === want)) return want;
+  return people[0]?.name || null;
 }
 
 function lunchPhoto(app, item, slot, size = 'thumb') {
@@ -68,10 +69,12 @@ function dayCard(app, name, date) {
 
 const SWAP_KIND = { lighter: 'Lighter idea', protein: 'More protein', idea: 'Idea' };
 
-/** Swap ideas: every one inside the editor; on the week page one at a time (dismiss shows the next). */
+/**
+ * Swap ideas, only for a person whose lunches have them switched on (the grown-ups to start with;
+ * never pushed at a kid's lunch). Every one inside the editor; on the week page one at a time
+ * (dismiss shows the next).
+ */
 function swapIdeas(app, name, { inEditor = false } = {}) {
-  // Kids' lunches get ideas only when a parent opens the editor (never on their week page, or on their own phone).
-  if (isKid(name) && (!inEditor || !PARENTS.includes(app.who()))) return '';
   const key = (sw) => `lunch:${name}:${sw.from}>${sw.to}`;
   let sws = lunchSwaps(app.db, app.state, name);
   if (!inEditor) sws = sws.filter((sw) => !isDismissed(app, key(sw))).slice(0, 1);
@@ -91,33 +94,53 @@ function swapIdeas(app, name, { inEditor = false } = {}) {
   }));
 }
 
+const daysText = (cfg) => (cfg.days.length === 5 && WEEKDAYS.every((d) => cfg.days.includes(d)) ? 'Weekdays' : DAY_ORDER.filter((d) => cfg.days.includes(d)).map((d) => DAY_SHORT[d]).join(', ') || 'No days picked');
+
+/** "Jeff and Knox" — the people lunch groceries are being bought for right now. */
+export function packingLine(app) {
+  return listJoin(lunchPackers(app.db, app.state).filter((p) => !p.paused).map((p) => p.name));
+}
+
+function pausedCard(name) {
+  return html`<section class="lunch-person lunch-paused" aria-labelledby="lp-h">
+    <h2 id="lp-h" class="section-title">${name}’s lunches are paused</h2>
+    <p class="muted">Nothing is packed for ${name}, and their lunch groceries are off the shopping list. What ${name} likes is kept for when lunches start again.</p>
+    <div class="lp-paused-actions">
+      <button type="button" class="btn btn-primary" data-action="lunch:resume" data-who="${name}">Start ${name}’s lunches again</button>
+      <button type="button" class="btn btn-secondary" data-action="lunch:edit" data-who="${name}">${ic('edit', { size: 18 })}Edit</button>
+      <button type="button" class="btn btn-danger-quiet" data-action="lunch:remove" data-who="${name}">Remove ${name}</button>
+    </div>
+  </section>`;
+}
+
 export function render(app) {
   const today = app.today();
   const start = lunchWeekStart(app);
   const week = dateRange(start, 7);
-  const people = lunchPeople(app.db, app.state, app.who());
-  const enabled = people.filter((p) => p.cfg.enabled);
-  const off = people.filter((p) => !p.cfg.enabled);
-  const name = currentPerson(app);
   if (!app.db.lunch?.available) {
     return html`<div class="page page-lunch"><header class="page-head"><h1 class="page-title">Lunch</h1></header>
       <div class="empty"><span class="empty-ic">${ic('lunch', { size: 28 })}</span><h3 class="empty-title">The lunch library hasn’t loaded</h3>
       <p class="empty-body">Check the connection and open this page again. Dinners, the list and everything else still work.</p></div></div>`;
   }
-  const cfg = name ? personConfig(app.db, app.state, name) : null;
-  const days = name ? week.filter((d) => hasLunchDay(cfg, d)) : [];
+  const people = lunchPackers(app.db, app.state);
+  const name = currentPerson(app, people);
+  const person = people.find((p) => p.name === name) || null;
+  const cfg = person?.cfg || null;
+  const days = person && !person.paused ? week.filter((d) => hasLunchDay(cfg, d)) : [];
   const lunches = days.map((d) => lunchFor(app.db, app.state, name, d)).filter((l) => l && !l.skip && !l.empty);
   const food = lunches.reduce((t, l) => t + lunchFoodCost(app.db, app.state, l), 0);
   const isThisWeek = week.includes(today) || (start > today && diffDays(start, today) <= 2);
+  const packing = packingLine(app);
   return html`<div class="page page-lunch">
     <header class="page-head"><h1 class="page-title">Lunch</h1></header>
     <div class="people" role="tablist" aria-label="Whose lunches">
-      ${enabled.map((p) => html`<button type="button" role="tab" class="person ${p.name === name ? 'is-on' : ''}" style="${personStyle(p.name)}" aria-selected="${tf(p.name === name)}" data-action="lunch:who" data-who="${p.name}">${avatar(p.name, { size: 'sm' })}<span>${p.name}</span></button>`)}
-      ${when(off.length, () => html`<button type="button" class="person person-add" data-action="lunch:add">${ic('plus', { size: 18 })}<span>Add a person</span></button>`)}
+      ${people.map((p) => html`<button type="button" role="tab" class="person ${p.name === name ? 'is-on' : ''} ${p.paused ? 'is-paused' : ''}" style="${personStyle(p.name)}" aria-selected="${tf(p.name === name)}" data-action="lunch:who" data-who="${p.name}">${avatar(p.name, { size: 'sm' })}<span>${p.name}${p.paused ? html`<small> · paused</small>` : ''}</span></button>`)}
+      <button type="button" class="person person-add" data-action="lunch:add">${ic('plus', { size: 18 })}<span>Add a person</span></button>
     </div>
-    ${!name ? html`<div class="empty"><span class="empty-ic">${ic('lunch', { size: 28 })}</span><h3 class="empty-title">No one’s lunches are planned</h3>
-        <p class="empty-body">Lunches are optional. Add a person and pick what they like; it repeats every school or work day.</p>
+    ${!person ? html`<div class="empty"><span class="empty-ic">${ic('lunch', { size: 28 })}</span><h3 class="empty-title">No one’s lunches are planned</h3>
+        <p class="empty-body">Lunches are optional. Add whoever packs one and pick what they like; it repeats every school or work day, and its groceries join the shopping list.</p>
         <div class="empty-actions"><button type="button" class="btn btn-primary" data-action="lunch:add">Add a person</button></div></div>`
+      : person.paused ? pausedCard(name)
       : html`
       <div class="period-nav period-nav-sm">
         <button type="button" class="icon-btn" data-action="lunch:shift" data-dir="-1" aria-label="Previous week">${ic('left')}</button>
@@ -127,21 +150,22 @@ export function render(app) {
       <section class="lunch-person" aria-labelledby="lp-h">
         <div class="lp-head">
           <div><h2 id="lp-h" class="section-title">${name}’s lunches</h2>
-            <p class="muted small">${lunches.length} packed this week${food > 0 ? `, about ${money(food)} of food` : ''}. ${cfg.days.length === 5 && [1, 2, 3, 4, 5].every((d) => cfg.days.includes(d)) ? 'Weekdays.' : `${cfg.days.map((d) => DAY_SHORT[d]).join(', ') || 'No days picked'}.`}</p></div>
+            <p class="muted small">${lunches.length} packed this week${food > 0 ? `, about ${money(food)} of food` : ''}. ${daysText(cfg)}.</p></div>
           <button type="button" class="btn btn-small btn-secondary" data-action="lunch:edit" data-who="${name}">${ic('edit', { size: 18 })}Edit ${name}’s lunches</button>
         </div>
         ${swapIdeas(app, name)}
         ${days.length ? html`<div class="lunch-days">${days.map((d) => dayCard(app, name, d))}</div>`
           : html`<p class="empty-body pad">No lunch days picked for ${name}. Edit ${name}’s lunches to choose days.</p>`}
-      </section>
-      <p class="muted small lunch-foot">${showNutrition(app) ? 'Calories count packed lunches and dinners at home; breakfast and snacks aren’t tracked. ' : ''}Lunch groceries are on the <a href="#/list" data-action="lunch:tolist">shopping list</a>, marked Lunch.</p>`}
+      </section>`}
+    ${when(person, () => html`<p class="muted small lunch-foot">${showNutrition(app) ? 'Calories count packed lunches and dinners at home; breakfast and snacks aren’t tracked. ' : ''}${packing
+      ? html`Lunch groceries are on the <a href="#/list" data-action="lunch:tolist">shopping list</a>, marked Lunch, for ${packing} only.`
+      : html`No lunches are being packed, so no lunch groceries are on the <a href="#/list" data-action="lunch:tolist">shopping list</a>.`}</p>`)}
   </div>`;
 }
 
 // ---------------------------------------------------------------- sheets
 
 function openEditor(app, name) {
-  const st = { custom: false };
   openSheet({
     id: `lunch-edit:${name}`,
     live: true,
@@ -150,12 +174,15 @@ function openEditor(app, name) {
     subtitle: 'Pick items for each spot. They rotate in the order you pick them, one per lunch day.',
     render: () => {
       const cfg = personConfig(app.db, app.state, name);
+      if (cfg.removed) return html`<p class="sheet-text">${name} is off the lunch plan. Tap Undo on the message, or add them again from the Lunch page.</p>`;
       return html`
-        <div class="set-row"><span class="set-label">Pack lunches for ${name}<small>${cfg.enabled ? 'On. Groceries go on the list.' : 'Off. Nothing is packed or bought.'}</small></span>
+        <div class="set-row"><span class="set-label">Pack lunches for ${name}<small>${cfg.enabled ? 'On. Groceries go on the list.' : 'Paused. Nothing is packed or bought.'}</small></span>
           ${switchToggle({ on: cfg.enabled, action: 'lunch:enable', data: { who: name }, label: `Pack lunches for ${name}` })}</div>
         <fieldset class="field"><legend class="field-label">Days</legend><div class="chip-grid days-pick">
-          ${[1, 2, 3, 4, 5, 6, 0].map((d) => html`<button type="button" class="chip ${cfg.days.includes(d) ? 'is-on' : ''}" aria-pressed="${tf(cfg.days.includes(d))}" data-action="lunch:day" data-who="${name}" data-day="${d}">${DAY_SHORT[d]}</button>`)}
+          ${DAY_ORDER.map((d) => html`<button type="button" class="chip ${cfg.days.includes(d) ? 'is-on' : ''}" aria-pressed="${tf(cfg.days.includes(d))}" data-action="lunch:day" data-who="${name}" data-day="${d}">${DAY_SHORT[d]}</button>`)}
         </div></fieldset>
+        <div class="set-row"><span class="set-label">Lighter swap ideas<small>${cfg.ideas ? `On. A gentle idea now and then for ${name}’s lunches.` : `Off. No swap ideas for ${name}’s lunches.`}</small></span>
+          ${switchToggle({ on: cfg.ideas, action: 'lunch:ideas', data: { who: name }, label: `Lighter swap ideas for ${name}’s lunches` })}</div>
         ${swapIdeas(app, name, { inEditor: true })}
         ${lunchSlots(app.db).map((sl) => {
           const list = cfg.slots[sl.id] || [];
@@ -179,7 +206,11 @@ function openEditor(app, name) {
           <select class="input" name="slot" aria-label="Which spot">${lunchSlots(app.db).map((sl) => html`<option value="${sl.id}">${sl.label}</option>`)}</select>
           <button type="submit" class="btn btn-secondary btn-block">Add to ${name}’s lunches</button>
           <p class="muted small">It goes on the shopping list without a price; tap it there to add one.</p>
-        </form>`;
+        </form>
+        <div class="ed-remove">
+          <button type="button" class="btn btn-danger-quiet btn-block" data-action="lunch:remove" data-who="${name}">${ic('trash', { size: 18 })}Remove ${name} from lunches</button>
+          <p class="muted small">To stop for a while and keep these picks, switch “Pack lunches for ${name}” off instead.</p>
+        </div>`;
     },
   });
 }
@@ -223,17 +254,67 @@ function openSkip(app, name, date) {
   });
 }
 
+// ---------------------------------------------------------------- add a person (docs/spec/20)
+
+/** What's been filled in on the "Add a person" sheet so far (it redraws as spots and items are tapped). */
+let adding = null;
+const freshAdd = () => ({ name: '', days: [...WEEKDAYS], on: { main: true, drink: true }, slots: {}, error: '' });
+
 function openAdd(app) {
+  adding = freshAdd();
   openSheet({
     id: 'lunch-add',
+    size: 'tall',
     title: 'Add a person',
-    subtitle: 'Lunches are optional. Each person picks their own.',
+    subtitle: 'Anyone who packs a lunch. Their items join the shopping list; change, pause or remove them any time.',
+    onClose: () => { adding = null; },
     render: () => {
-      const off = lunchPeople(app.db, app.state, app.who()).filter((p) => !p.cfg.enabled);
-      return off.length ? html`<div class="who-grid">${off.map((p) => html`<button type="button" class="who-pick" style="${personStyle(p.name)}" data-action="lunch:enable-new" data-who="${p.name}">${avatar(p.name, { size: 'lg' })}<span>${p.name}</span></button>`)}</div>`
-        : html`<p class="sheet-text">Everyone already packs lunch.</p>`;
+      const st = adding || freshAdd();
+      const slots = lunchSlots(app.db);
+      const count = slots.reduce((t, sl) => t + (st.on[sl.id] ? (st.slots[sl.id] || []).length : 0), 0);
+      return html`<form class="form add-person" data-submit="lunch:add-save" autocomplete="off">
+        <label class="field"><span class="field-label">Name</span>
+          <input class="input" id="lunch-add-name" name="name" required maxlength="24" value="${st.name}" placeholder="Candi" data-input="lunch:add-name" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" autofocus></label>
+        <fieldset class="field"><legend class="field-label">Lunch days</legend><div class="chip-grid days-pick">
+          ${DAY_ORDER.map((d) => html`<button type="button" class="chip ${st.days.includes(d) ? 'is-on' : ''}" aria-pressed="${tf(st.days.includes(d))}" data-action="lunch:add-day" data-day="${d}">${DAY_SHORT[d]}</button>`)}
+        </div></fieldset>
+        <fieldset class="field"><legend class="field-label">What they pack<small> Tap a spot to add it, then pick from the lunch list.</small></legend><div class="chip-grid">
+          ${slots.map((sl) => html`<button type="button" class="chip ${st.on[sl.id] ? 'is-on' : ''}" aria-pressed="${tf(!!st.on[sl.id])}" data-action="lunch:add-slot" data-slot="${sl.id}">${sl.label}</button>`)}
+        </div></fieldset>
+        ${slots.filter((sl) => st.on[sl.id]).map((sl) => {
+          const list = st.slots[sl.id] || [];
+          return html`<section class="ed-slot" aria-labelledby="add-${sl.id}">
+            <h3 id="add-${sl.id}" class="sheet-h">${sl.label}<small>${list.length > 1 ? `${list.length} in rotation` : list.length ? 'Every day' : 'Pick one or more'}</small></h3>
+            <ul class="ed-list">${lunchLibrary(app.db, app.state, sl.id).map((it) => {
+              const pos = list.indexOf(it.id);
+              const n = lunchItemNutrition(app.db, it);
+              return html`<li><button type="button" class="ed-item ${pos >= 0 ? 'is-on' : ''}" aria-pressed="${tf(pos >= 0)}" data-action="lunch:add-item" data-slot="${sl.id}" data-id="${it.id}">
+                <span class="ed-pos" aria-hidden="true">${pos >= 0 ? pos + 1 : ''}</span>
+                ${lunchPhoto(app, it, sl.id)}
+                <span class="ed-main"><b>${it.title}</b><small>${[it.subtitle, showNutrition(app) && n ? `${fmtKcal(n.kcal)} cal, ${Math.round(n.protein)} g protein` : ''].filter(Boolean).join(' ')}</small></span>
+              </button></li>`;
+            })}</ul>
+          </section>`;
+        })}
+        ${when(st.error, () => html`<p class="form-error" role="alert">${st.error}</p>`)}
+        <div class="sheet-actions add-person-actions">
+          <button type="submit" class="btn btn-primary btn-block">${st.name.trim() ? `Add ${st.name.trim()}` : 'Add this person'}${count ? ` with ${count} ${count === 1 ? 'item' : 'items'}` : ''}</button>
+        </div>
+      </form>`;
     },
   });
+}
+
+async function removePerson(app, name) {
+  const ok = await confirmSheet({
+    title: `Remove ${name} from lunches?`,
+    body: `${name}’s lunches come off the plan and their lunch groceries come off the shopping list. Their picks are forgotten; to keep them, pause instead.`,
+    confirm: `Remove ${name}`,
+    danger: true,
+  });
+  if (!ok) return;
+  if (app.commit(removeLunchPersonOps(app.db, app.state, { name })) && app.ui.lunchWho === name) app.ui.lunchWho = null;
+  app.render();
 }
 
 export const actions = {
@@ -241,16 +322,60 @@ export const actions = {
   'lunch:shift': (app, el) => { app.ui.lunchAnchor = addDays(lunchWeekStart(app), 7 * Number(el.dataset.dir)); app.render(); },
   'lunch:edit': (app, el) => openEditor(app, el.dataset.who),
   'lunch:add': (app) => openAdd(app),
-  'lunch:enable-new': (app, el) => {
-    const name = el.dataset.who;
-    app.commit(setLunchEnabledOps(app.db, app.state, { name, enabled: true }));
-    app.ui.lunchWho = name;
-    openEditor(app, name);
+  'lunch:add-name': (app, el) => {
+    if (!adding) return;
+    adding.name = el.value;
+    // Only the button's words follow the typing; redrawing the sheet would fight the keyboard.
+    const btn = el.form?.querySelector('button[type=submit]');
+    const n = Object.entries(adding.slots).reduce((t, [k, v]) => t + (adding.on[k] ? v.length : 0), 0);
+    if (btn) btn.textContent = `${el.value.trim() ? `Add ${el.value.trim()}` : 'Add this person'}${n ? ` with ${n} ${n === 1 ? 'item' : 'items'}` : ''}`;
   },
+  'lunch:add-day': (app, el) => {
+    if (!adding) return;
+    const d = Number(el.dataset.day);
+    adding.days = adding.days.includes(d) ? adding.days.filter((x) => x !== d) : [...adding.days, d].sort();
+    renderSheet();
+  },
+  'lunch:add-slot': (app, el) => {
+    if (!adding) return;
+    adding.on[el.dataset.slot] = !adding.on[el.dataset.slot];
+    renderSheet();
+  },
+  'lunch:add-item': (app, el) => {
+    if (!adding) return;
+    const { slot, id } = el.dataset;
+    const list = adding.slots[slot] || [];
+    adding.slots[slot] = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+    adding.error = '';
+    renderSheet();
+  },
+  'lunch:add-save': (app, form) => {
+    if (!adding) return;
+    delete form.dataset.submitted;
+    adding.name = String(new FormData(form).get('name') || adding.name || '');
+    const check = newPackerName(app.db, app.state, adding.name);
+    const slots = Object.fromEntries(Object.entries(adding.slots).filter(([k]) => adding.on[k]));
+    const res = check.error ? { error: true, message: check.error } : addLunchPersonOps(app.db, app.state, { name: adding.name, days: adding.days, slots, at: new Date() });
+    if (res.error) { adding.error = res.message; renderSheet(); return; }
+    const { name, count } = res;
+    closeSheet();
+    app.commit(res);
+    app.ui.lunchWho = name;
+    app.render();
+    if (!count) openEditor(app, name); // nothing picked yet: go straight to choosing
+  },
+  // An older page still open may send this: it lands on the same "Add a person" sheet.
+  'lunch:enable-new': (app) => openAdd(app),
   'lunch:enable': (app, el) => {
     const name = el.dataset.who;
     const on = personConfig(app.db, app.state, name).enabled;
     app.commit(setLunchEnabledOps(app.db, app.state, { name, enabled: !on }));
+  },
+  'lunch:resume': (app, el) => app.commit(pauseLunchPersonOps(app.db, app.state, { name: el.dataset.who, paused: false })),
+  'lunch:remove': (app, el) => removePerson(app, el.dataset.who),
+  'lunch:ideas': (app, el) => {
+    const name = el.dataset.who;
+    app.commit(setLunchIdeasOps(app.db, app.state, { name, on: !personConfig(app.db, app.state, name).ideas }), { quiet: true });
   },
   'lunch:day': (app, el) => app.commit(toggleLunchDayOps(app.db, app.state, { name: el.dataset.who, day: Number(el.dataset.day) }), { quiet: true }),
   'lunch:toggle': (app, el) => app.commit(toggleLunchItemOps(app.db, app.state, { name: el.dataset.who, slot: el.dataset.slot, id: el.dataset.id }), { quiet: true }),
@@ -275,4 +400,4 @@ export const actions = {
   'lunch:tolist': (app, el, ev) => { ev.preventDefault(); app.ui.listFilter = 'lunches'; app.navigate('#/list'); },
 };
 
-export { FAMILY, lunchItem };
+export { lunchItem };

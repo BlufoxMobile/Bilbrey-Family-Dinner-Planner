@@ -15,6 +15,7 @@ const SHELL_FILES = [
   'styles/tokens.css',
   'styles/app.css',
   'styles/print.css',
+  'styles/parts/profile.css',
   'app/main.js',
   'app/config.js',
   'app/util.js',

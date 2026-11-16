@@ -5,6 +5,7 @@ import http from 'node:http';
 import { createHash, randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { chicagoMonth } from '../app/util.js';
 
 const keyFor = (pass) => createHash('sha256').update('bilbrey-dinner-planner:' + pass.trim().toLowerCase()).digest('hex');
 
@@ -134,7 +135,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     const url = new URL(req.url, 'http://x');
     if (req.method === 'OPTIONS') { res.writeHead(204, cors(req)); return res.end(); }
     const p = url.pathname;
-    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests, receiptCalls: db.receiptCalls || 0, lastReceipt: db.lastReceipt || null, ideasCalls: db.ideasCalls, lastIdeas: db.lastIdeas, mcpToken: db.mcpToken });
+    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests, lastOpsBy: db.lastOpsBy || null, receiptCalls: db.receiptCalls || 0, lastReceipt: db.lastReceipt || null, ideasCalls: db.ideasCalls, lastIdeas: db.lastIdeas, mcpToken: db.mcpToken });
     if (p === '/__mock/reset' && req.method === 'POST') { const b = await readBody(req); reset(b?.passcode || null); return send(res, req, 200, { ok: true }); }
     if (p === '/api/health') return send(res, req, 200, { ok: true, hasPasscode: !!db.hash, ai, revision: db.revision });
     if (p === '/api/setup' && req.method === 'POST') {
@@ -168,6 +169,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     if (p === '/api/ops' && req.method === 'POST') {
       const b = await readBody(req);
       db.opsRequests++;
+      db.lastOpsBy = typeof b?.by === 'string' ? b.by : null; // one shared profile: the app always says "Family"
       if (!b || !Array.isArray(b.ops) || !b.ops.length) return send(res, req, 400, { error: 'ops must be a non-empty array' });
       if (b.ops.length > 200) return send(res, req, 400, { error: 'At most 200 ops per request' });
       const bad = b.ops.findIndex((op) => !op || !['set', 'del', 'push'].includes(op.op) || !Array.isArray(op.path) || !op.path.length || (op.op !== 'del' && op.value === undefined));
@@ -256,7 +258,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
       const c = db.claude;
       return send(res, req, 200, {
         keySet: !!c.keySet, engine: claudeOn() ? 'claude' : 'workers-ai', model: claudeModel(), models: MOCK_MODELS,
-        month: new Date().toISOString().slice(0, 7), spentUsd: c.spentUsd, capUsd: c.capUsd, capped: !!c.capped,
+        month: chicagoMonth(), spentUsd: c.spentUsd, capUsd: c.capUsd, capped: !!c.capped,
       });
     }
     if (p === '/api/ideas' && req.method === 'POST') {

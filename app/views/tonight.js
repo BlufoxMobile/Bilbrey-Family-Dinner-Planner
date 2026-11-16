@@ -70,7 +70,7 @@ function hero(app, today) {
         <a class="btn btn-primary btn-lg" href="#/cook/${today}">${ic('flame', { size: 20 })}Start cooking</a>
       </div>
       ${when(!(cooked && howWasDate(app) === today), () => html`<div class="hero-rate">
-        <p class="rate-h">Thumbs up keeps it coming. One thumbs down from anyone takes it off the menu.</p>
+        <p class="rate-h">Thumbs up: loved, a family favorite. Thumbs down: not for us, and it’s off the menu.</p>
         ${rateList(app, d, sides)}
       </div>`)}
       <div class="quick" role="group" aria-label="Tonight’s options">
@@ -143,7 +143,7 @@ export function freezerNote(f) {
 }
 
 function todayLine(app, today) {
-  const who = app.who();
+  const who = app.todayFor?.(); // one shared profile: this device's pick in Family & settings, or nobody
   if (!who || !showNutrition(app)) return '';
   const n = dayNutrition(app.db, app.state, who, today);
   if (!n) return '';
@@ -176,7 +176,7 @@ function howWas(app, today) {
     <div class="howwas-head">
       ${dinnerPhoto(app, d, { size: 'thumb' })}
       <div><h2 id="hw-h" class="section-title">How was dinner?</h2>
-        <p class="muted small">${d.title}, ${date === today ? 'tonight' : `last night (${weekdayName(date)})`}. Thumbs up keeps it coming; one thumbs down and it’s off the menu.</p></div>
+        <p class="muted small">${d.title}, ${date === today ? 'tonight' : `last night (${weekdayName(date)})`}. Thumbs up for loved; thumbs down for not for us, and it’s off the menu.</p></div>
     </div>
     ${rateList(app, d, sides)}
     <div class="howwas-actions"><button type="button" class="btn btn-secondary btn-small" data-action="lighter:dismiss" data-key="howwas:${date}">Done</button></div>

@@ -1,13 +1,13 @@
 // Sheets shared by Tonight, Plan and Recipes: a night's actions, picking a dinner,
-// moving/swapping, not eating at home, substituting sides, who's on this phone, sync.
-import { html, ic, when, openSheet, closeSheet, toast, avatar, personStyle, renderSheet, confirmSheet, stepper, sheetId, tf } from '../ui.js';
-import { AWAY_REASONS, FAMILY } from '../config.js';
+// moving/swapping, not eating at home, substituting sides, the family's signal, sync.
+import { html, ic, when, openSheet, closeSheet, toast, renderSheet, confirmSheet, stepper, sheetId, tf } from '../ui.js';
+import { AWAY_REASONS } from '../config.js';
 import {
-  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate,
+  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate, byLabel,
 } from '../util.js';
 import {
   dinnerById, rotationList, findInPlan, openNights, parseSideRef, shelfRef, sideInfo, isFavorite, kindOf,
-  dinnerFeasibleAt, sideSlotsFor, isRetired, isSideDropped, downVoters,
+  dinnerFeasibleAt, sideSlotsFor, isRetired, isSideDropped,
 } from '../planner.js';
 import {
   placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps,
@@ -75,8 +75,8 @@ function nightBody(app, date) {
       </div>
       ${thumbs(app, { kind: 'dinner', id: d.id, label: d.title })}
     </div>
-    ${when(isRetired(app.state, d.id) && !cooked, () => html`<p class="hint">${ic('down_vote', { size: 18 })}<span>${droppedBy(app, d.id)} gave ${d.title} a thumbs down, so it won’t be planned again. <button type="button" class="link-btn" data-action="night:pick" data-date="${date}">Swap this night</button></span></p>`)}
-    ${when(cooked, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked${e.cookedBy ? ` by ${e.cookedBy}` : ''}.</p>`)}
+    ${when(isRetired(app.state, d.id) && !cooked, () => html`<p class="hint">${ic('down_vote', { size: 18 })}<span>${d.title} is marked “not for us”, so it won’t be planned again. <button type="button" class="link-btn" data-action="night:pick" data-date="${date}">Swap this night</button></span></p>`)}
+    ${when(cooked, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.</p>`)}
     <h3 class="sheet-h">Sides</h3>
     <ul class="side-rows">
       ${sides.map((s) => html`<li class="side-row">
@@ -112,12 +112,10 @@ function nightBody(app, date) {
     </div>`;
 }
 
-/** "Knox", "Knox and Jordan", or "Someone" (a parent retired it by hand). */
-export function droppedBy(app, dinnerId) {
-  const who = downVoters(app.state, dinnerId);
-  return who.length ? listJoinNames(who) : app.state.retired?.[dinnerId]?.by && FAMILY.includes(app.state.retired[dinnerId].by) ? app.state.retired[dinnerId].by : 'Someone';
+/** Who dropped a dinner. With one shared profile it is always the family. */
+export function droppedBy() {
+  return 'The family';
 }
-const listJoinNames = (a) => (a.length < 2 ? a.join('') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`);
 
 // ---------------------------------------------------------------- pick a dinner
 
@@ -375,17 +373,13 @@ function subBody(app, d, slot, st, date) {
         </form>`}`;
 }
 
-// ---------------------------------------------------------------- who's on this phone
+// ---------------------------------------------------------------- one shared profile (docs/spec/20)
 
-export function openWho(app, { onDone } = {}) {
-  openSheet({
-    id: 'who',
-    title: 'Who’s using this phone?',
-    subtitle: 'Votes and changes show your name.',
-    render: () => html`<div class="who-grid">${FAMILY.map((n) => html`<button type="button" class="who-pick ${app.who() === n ? 'is-on' : ''}" style="${personStyle(n)}" data-action="who:set" data-who="${n}" aria-pressed="${tf(app.who() === n)}">${avatar(n, { size: 'lg' })}<span>${n}</span></button>`)}</div>`,
-  });
-  openWho.onDone = onDone;
-}
+/**
+ * There is no "who's using this phone" any more: the family shares one profile. Kept as a no-op
+ * because the recipe page still imports it; it never opens anything.
+ */
+export function openWho() {}
 
 // ---------------------------------------------------------------- sync
 
@@ -398,11 +392,11 @@ export function openSync(app) {
       const s = app.store;
       const pending = s.pending.length;
       const text = {
-        synced: 'Everyone in the family sees the same plan, votes, pantry and list.',
+        synced: 'Every phone, computer and the TV show the same plan, favorites, pantry and list.',
         syncing: 'Sending your changes to the family…',
-        offline: `No connection to the family server right now. ${pending ? `${pending} change${pending === 1 ? ' is' : 's are'} saved on this phone and will sync when you’re back online.` : 'Changes you make are saved on this phone and sync later.'}`,
-        local: 'This phone keeps its own plan. Nothing is shared with the family.',
-        'needs-setup': 'The family passcode hasn’t been created yet. Create it once; everyone else enters it on their phone.',
+        offline: `No connection to the family server right now. ${pending ? `${pending} change${pending === 1 ? ' is' : 's are'} saved on this device and will sync when you’re back online.` : 'Changes you make are saved on this device and sync later.'}`,
+        local: 'This device keeps its own plan. Nothing is shared with the family.',
+        'needs-setup': 'The family passcode hasn’t been created yet. Create it once, then type it on every other phone and the TV.',
         'needs-passcode': s.statusDetail || 'Enter the family passcode to share the plan with everyone.',
         error: s.statusDetail || 'Sync is paused.',
       }[s.status] || '';
@@ -493,24 +487,16 @@ export const actions = {
     app.commit(substituteOps(app.db, app.store.state, { dinnerId: form.dataset.dinner, slot: Number(form.dataset.slot), ref: shelfRef('custom', c.id, qty) }));
     closeSheet();
   },
-  'who:set': (app, el) => {
-    app.store.setDevice({ who: el.dataset.who });
-    closeSheet();
-    toast(`Hi, ${el.dataset.who}. This phone is yours.`);
-    openWho.onDone?.();
-    openWho.onDone = null;
-    if (!app.store.health && !app.store.device.localOnly) app.store.connect();
-  },
-  'sheet:who': (app) => openWho(app),
-  // Thumbs everywhere (SPEC §9.2). Every vote's message has Undo.
+  // A button from before the shared profile (an older page still open) lands on settings instead of a dead tap.
+  'sheet:who': (app) => { closeSheet(); app.navigate('#/family'); },
+  // The family's signal, everywhere (SPEC §9.2, docs/spec/20): thumbs up = loved, thumbs down = not
+  // for us, neither = fine. One signal for the whole family; every change's message has Undo.
   'vote:dinner': (app, el) => {
-    if (!app.who()) { openWho(app); return; }
-    app.commit(voteOps(app.db, app.state, { dinnerId: el.dataset.id, who: app.who(), value: Number(el.dataset.value), today: app.today() }));
+    app.commit(voteOps(app.db, app.state, { dinnerId: el.dataset.id, value: Number(el.dataset.value), today: app.today() }));
     renderSheet();
   },
   'vote:side': (app, el) => {
-    if (!app.who()) { openWho(app); return; }
-    app.commit(sideVoteOps(app.db, app.state, { sideId: el.dataset.id, who: app.who(), value: Number(el.dataset.value) }));
+    app.commit(sideVoteOps(app.db, app.state, { sideId: el.dataset.id, value: Number(el.dataset.value) }));
     renderSheet();
   },
   'vote:lunch': (app, el) => {

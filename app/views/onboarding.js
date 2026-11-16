@@ -1,56 +1,96 @@
-// First launch: who's using this phone, then the family passcode (create or enter).
-import { html, avatar, personStyle, when } from '../ui.js';
-import { FAMILY } from '../config.js';
+// First open on a phone, a computer or the TV (docs/spec/20): what the planner is, then the
+// family passcode — create it once, type it on every other device. The family shares one
+// profile, so nobody is asked who they are. The screen never guesses: it says it is looking for
+// the family's plan, and if the server can't be reached it says so and offers a way in anyway.
+import { html, ic, when } from '../ui.js';
+import { isTV } from '../util.js';
 import { passcodeForm, actions as familyActions } from './family.js';
 
+/** The first-open screen shows until this device has the passcode, is set to work alone, or was waved through. */
 export function gateActive(app) {
   const d = app.store.device;
-  if (!d.who) return true;
-  if (d.dismissedGate || d.localOnly || d.key) return false;
-  return app.store.status === 'needs-setup' || app.store.status === 'needs-passcode';
+  return !(d.key || d.localOnly || d.dismissedGate);
 }
+
+/** Which of the four first-open screens: 'checking' | 'create' | 'enter' | 'offline'. */
+export function gateStep(app) {
+  const s = app.store;
+  if (s.status === 'needs-setup') return 'create';
+  if (s.status === 'needs-passcode') return 'enter';
+  // Only the first look, or a tap on "Try again", shows "looking": the quiet retries in the
+  // background must not swap the buttons out from under a thumb or a TV remote.
+  return s.checked && !app.ui.gateBusy ? 'offline' : 'checking';
+}
+
+const POINTS = [
+  ['plan', 'Dinner for five, planned for the week: a main and two sides, nothing that needs an oven.'],
+  ['list', 'One shopping list for Sam’s Club and Jewel-Osco, minus what’s already in the pantry.'],
+  ['family', 'Every phone and the TV show the same plan. There are no separate profiles.'],
+];
+
+function intro() {
+  return html`<ul class="gate-points">${POINTS.map(([icon, text]) => html`<li>${ic(icon, { size: 20 })}<span>${text}</span></li>`)}</ul>`;
+}
+
+const altButtons = () => html`<div class="gate-alt">
+  <button type="button" class="btn btn-quiet btn-block" id="gate-later" data-action="gate:later">Look around first</button>
+  <button type="button" class="btn btn-quiet btn-block" id="gate-local" data-action="gate:local">Use on this device only</button>
+</div>`;
 
 export function render(app) {
-  const d = app.store.device;
-  if (!d.who) {
-    return html`<section class="gate gate-who" aria-labelledby="gate-h">
-      <div class="gate-card">
-        <span class="wm-mark wm-lg" aria-hidden="true"></span>
-        <h1 id="gate-h" class="gate-title">The Bilbrey Family Dinner Planner</h1>
-        <p class="gate-text">Dinner for five, planned around Sam’s Club and Jewel-Osco.</p>
-        <h2 class="gate-q">Who’s using this phone?</h2>
-        <div class="who-grid">${FAMILY.map((n) => html`<button type="button" class="who-pick" style="${personStyle(n)}" data-action="gate:who" data-who="${n}">${avatar(n, { size: 'lg' })}<span>${n}</span></button>`)}</div>
-      </div>
-    </section>`;
-  }
-  const creating = app.store.status === 'needs-setup';
-  return html`<section class="gate" aria-labelledby="gate-h">
+  const step = gateStep(app);
+  // Two parts, so a wide, short screen (a TV, a laptop) can put them side by side and keep the
+  // passcode box on screen without scrolling.
+  const card = (title, about, main) => html`<section class="gate gate-${step}" aria-labelledby="gate-h">
     <div class="gate-card">
-      <span class="wm-mark wm-lg" aria-hidden="true"></span>
-      <h1 id="gate-h" class="gate-title">${creating ? 'Create the family passcode' : 'Enter the family passcode'}</h1>
-      <p class="gate-text">${creating
-        ? `${d.who === 'Jeff' ? 'You’re the first one here, Jeff.' : `You’re the first one here, ${d.who}.`} Pick a passcode the whole family will share, so every phone sees the same plan, votes and pantry.`
-        : `Hi ${d.who}. Type the passcode Jeff set up, and this phone joins the family plan.`}</p>
-      ${passcodeForm(app, creating ? 'create' : 'enter', { compact: true })}
-      <div class="gate-alt">
-        <button type="button" class="btn btn-quiet btn-block" data-action="gate:later">Decide later</button>
-        <button type="button" class="btn btn-quiet btn-block" data-action="gate:local">Use on this phone only</button>
+      <div class="gate-about">
+        <span class="wm-mark wm-lg" aria-hidden="true"></span>
+        <p class="gate-kicker">The Bilbrey Family Dinner Planner</p>
+        <h1 id="gate-h" class="gate-title">${title}</h1>
+        ${about}
       </div>
-      ${when(creating, () => html`<p class="muted small">It never leaves the phone in plain text. Capital letters don’t matter.</p>`)}
+      <div class="gate-main">${main}</div>
     </div>
   </section>`;
+  if (step === 'checking') {
+    return card('Dinner, lunches and one shopping list', intro(), html`
+      <p class="gate-status" role="status"><span class="gate-spin" aria-hidden="true"></span>Looking for the family’s plan…</p>`);
+  }
+  if (step === 'offline') {
+    return card('Can’t reach the family’s plan', html`
+      <p class="gate-text">This device is offline, or the family server isn’t answering. Check the Wi-Fi and try again.</p>`, html`
+      <p class="gate-text">You can also look around now: the recipes are all here, and anything you change is kept on this device until it connects.</p>
+      <button type="button" class="btn btn-primary btn-block" id="gate-retry" data-action="gate:retry">${ic('refresh', { size: 20 })}Try again</button>
+      ${altButtons()}`);
+  }
+  const creating = step === 'create';
+  return card(creating ? 'Create the family passcode' : 'Enter the family passcode', intro(), html`
+    <p class="gate-text">${creating
+      ? 'You’re the first one here. Pick a passcode the whole family will share; it’s typed once on each phone and on the TV.'
+      : 'Type the passcode the family set up, and this device joins the plan. Capital letters don’t matter.'}</p>
+    ${passcodeForm(app, creating ? 'create' : 'enter', { compact: true })}
+    ${when(isTV() && !app.ui.passErr, () => html`<p class="muted small gate-remote">With a remote: move to the box and press OK or Select for the on-screen keyboard. “Show the passcode” lets you check it before you choose ${creating ? 'Create' : 'Join'}.</p>`)}
+    ${altButtons()}
+    ${when(creating, () => html`<p class="muted small">It never leaves the device in plain text. Capital letters don’t matter.</p>`)}`);
 }
 
+/** Called when a first-open screen appears (not on every redraw, so a TV remote's focus isn't yanked back). */
 export function mount(app, root) {
-  root.querySelector('.gate input[type=password]')?.focus({ preventScroll: true });
+  const el = root.querySelector('#pc-enter, #pc-new') || root.querySelector('#gate-retry');
+  if (!el) return;
+  el.focus({ preventScroll: true });
+  el.scrollIntoView?.({ block: 'nearest' }); // on a short screen the box must be in view, not below the fold
 }
 
 export const actions = {
-  'gate:who': (app, el) => {
-    app.store.setDevice({ who: el.dataset.who });
-    app.store.connect();
-  },
   'gate:later': (app) => { app.store.setDevice({ dismissedGate: true }); },
   'gate:local': (app) => { app.store.useLocalOnly(); app.store.setDevice({ dismissedGate: true }); },
+  'gate:retry': (app) => {
+    app.ui.gateBusy = true;
+    app.render();
+    app.store.connect().finally(() => { app.ui.gateBusy = false; app.render(); });
+  },
+  // A "who's using this phone" button from before the shared profile (an older page still open): nothing to pick any more.
+  'gate:who': (app) => { app.store.connect(); },
   ...familyActions,
 };

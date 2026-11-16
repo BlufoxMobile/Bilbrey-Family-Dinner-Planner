@@ -121,34 +121,37 @@ test('substituting a side is remembered for that dinner on every future night, a
   assert.equal(effectiveSides(db, s, 'chix-grill', s.plan['2026-11-24'])[0].ref, 'broc');
 });
 
-test('one thumbs-down drops a dinner and promotes the best bench dinner (SPEC §9.2)', () => {
+test('“not for us” drops a dinner and promotes the best bench dinner (SPEC §9.2, one family signal)', () => {
   let s = week();
   s.plan['2026-11-25'] = { dinner: 'beef-bowl', sides: [], status: 'planned' };
   const r = voteOps(db, s, { ...ctx, dinnerId: 'beef-bowl', who: 'Knox', value: -1 });
   assert.equal(r.retired, true);
   assert.equal(r.promoted, 'bench-beef', 'same category + protein wins');
-  assert.match(r.message, /^Knox gave it a thumbs down, so beef-bowl is off the menu\. bench-beef takes its place in the rotation and on its 2 planned nights\.$/);
+  assert.match(r.message, /^beef-bowl is marked “not for us”, so it’s off the menu\. bench-beef takes its place in the rotation and on its 2 planned nights\.$/);
+  assert.deepEqual(r.ops[0], { op: 'set', path: ['votes', 'beef-bowl'], value: { Family: -1 } }, 'one voice, whoever the old caller says is asking');
   s = run(s, r);
   assert.ok(isRetired(s, 'beef-bowl'));
-  assert.equal(isFavorite(s, { ...db.dinners['beef-bowl'], tags: ['family favorite'] }), false, 'a dropped dinner is nobody’s favorite');
+  assert.equal(isFavorite(s, { ...db.dinners['beef-bowl'], tags: ['family favorite'] }), false, 'a dropped dinner is not a favorite');
   assert.ok(rotationList(db, s).some((d) => d.id === 'bench-beef'));
   assert.equal(s.plan['2026-11-18'].dinner, 'bench-beef', 'future planned nights get the new dinner');
   assert.equal(s.plan['2026-11-25'].dinner, 'bench-beef');
   assert.ok(!benchList(db, s).some((d) => d.id === 'bench-beef'));
   const back = run(s, restoreOps(db, s, { dinnerId: 'beef-bowl' }));
   assert.ok(!isRetired(back, 'beef-bowl'));
-  assert.equal(Object.values(back.votes['beef-bowl']).filter((v) => v === -1).length, 0, 'fresh start on votes');
+  assert.equal(back.votes?.['beef-bowl'], undefined, 'a fresh start: nothing saved');
 });
 
-test('votes toggle, need a person, and two thumbs-up make a favorite', () => {
+test('the thumbs toggle the family’s signal: nobody has to say who they are, and one “loved” makes a favorite', () => {
   let s = {};
-  assert.equal(voteOps(db, s, { dinnerId: 'chix-grill', who: null, value: 1 }).needsWho, true);
-  s = run(s, voteOps(db, s, { dinnerId: 'chix-grill', who: 'Jeff', value: 1 }));
-  s = run(s, voteOps(db, s, { dinnerId: 'chix-grill', who: 'Jeff', value: 1 }));
-  assert.equal(s.votes['chix-grill'].Jeff, undefined, 'tapping again clears');
-  s = run(s, voteOps(db, s, { dinnerId: 'chix-grill', who: 'Jeff', value: 1 }));
-  const r = voteOps(db, s, { dinnerId: 'chix-grill', who: 'Candi', value: 1 });
-  assert.equal(r.favorite, true);
+  const first = voteOps(db, s, { dinnerId: 'chix-grill', who: null, value: 1 });
+  assert.ok(!first.error && !first.needsWho, 'no “pick who’s using this phone” any more');
+  assert.equal(first.favorite, true);
+  s = run(s, first);
+  assert.deepEqual(s.votes['chix-grill'], { Family: 1 });
+  assert.ok(isFavorite(s, db.dinners['chix-grill']));
+  s = run(s, voteOps(db, s, { dinnerId: 'chix-grill', value: 1 }));
+  assert.equal(s.votes['chix-grill'], undefined, 'tapping again goes back to fine, with nothing saved');
+  assert.ok(!isFavorite(s, db.dinners['chix-grill']));
 });
 
 test('marking cooked deducts measured ingredients from the pantry; un-cooking puts them back', () => {
