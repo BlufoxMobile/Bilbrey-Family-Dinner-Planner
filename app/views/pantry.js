@@ -9,6 +9,7 @@ import { set } from '../state.js';
 import { kindOf } from '../planner.js';
 import { unitText, buildList } from '../shopping.js';
 import { pantryCoverage } from '../coverage.js';
+import { pantryStretch } from '../planahead.js';
 import { unsyncedReceipts, receiptPantryOps } from '../receipts.js';
 import { currentRange } from './plan.js';
 import { scanQtyIn } from '../scanqty.js';
@@ -114,6 +115,7 @@ function coverageCard(app) {
     <h2 id="cov-h" class="section-title">What the pantry covers</h2>
     ${cov.total ? html`<p class="cover-big"><b>${cov.ready}</b><span>of ${cov.total} planned ${cov.total === 1 ? 'dinner is' : 'dinners are'} fully stocked<small>${rangeLabel(dates[0], dates[dates.length - 1])}, main and sides for five</small></span></p>
       <div class="cover-meter" role="img" aria-label="${cov.ready} of ${cov.total} dinners stocked">${cov.rows.map((r) => html`<span class="cover-pip ${r.ready ? 'is-on' : ''}" title="${shortWeekday(r.date)}: ${r.title}"></span>`)}</div>
+      ${(() => { const s = pantryStretch(app.db, app.state, { start: dates[0], end: dates[dates.length - 1] }); return s.coveredThrough ? html`<p class="small cover-stretch">At this rate the pantry carries you through <b>${s.coveredThrough === today ? 'tonight' : `${weekdayName(s.coveredThrough)}, ${shortDate(s.coveredThrough)}`}</b>${s.gapReason === 'short' ? '.' : ', as far as the plan goes.'}</p>` : ''; })()}
       <details class="cover-more" ${cov.total <= 8 ? 'open' : ''}><summary>Night by night</summary>
         <ul class="cover-list">${cov.rows.map((r) => html`<li class="${r.ready ? 'is-ready' : ''}"><span class="cover-day">${r.date === today ? 'Tonight' : `${shortWeekday(r.date)} ${shortDate(r.date)}`}</span><span class="cover-what"><b>${r.title}</b><small>${r.ready ? 'Everything’s here' : `Needs ${listJoin(r.missing.map((m) => m.name.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()))}`}</small></span></li>`)}</ul>
       </details>

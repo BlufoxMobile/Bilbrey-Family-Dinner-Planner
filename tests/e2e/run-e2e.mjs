@@ -610,6 +610,86 @@ test('two-tap swap on the planner trades two nights', async () => {
   assert.equal(s.plan['2026-11-22'].dinner, a);
 });
 
+test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the list for that stretch', async () => {
+  // Candi's phone fills in the freezer: thighs from early September, a steak and corn from October.
+  const key = await page.evaluate(() => JSON.parse(localStorage.getItem('bfdp.v2.device')).key);
+  const item = (qty, since, extra = {}) => ({ qty, stocked: false, since, at: `${since}T18:00:00.000Z`, by: 'Candi', ...extra });
+  const seed = Object.entries({
+    chickenThighs: item(4.5, '2026-09-03'), eyeRoundSteak: item(2.5, '2026-10-20'), cornCobs: item(10, '2026-10-20'),
+    tikka: item(30, '2026-11-02'), basmati: item(8, '2026-11-02'), naan: item(10, '2026-11-14'), butter: item(16, '2026-11-14'),
+    potatoes: item(5, '2026-11-14'), milk: item(8, '2026-11-14'),
+    turmeric: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' }, cajunSeasoning: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' }, soy: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' },
+  }).map(([id, value]) => ({ op: 'set', path: ['pantry', id], value }));
+  const sent = await fetch(`${apiBase}/api/ops`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Family-Key': key }, body: JSON.stringify({ ops: seed, by: 'Candi', clientId: 'e2e-candi', batchId: 'freezer' }) });
+  assert.equal(sent.status, 200);
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await waitFor(async () => (await familyState(page)).state.pantry?.eyeRoundSteak?.qty === 2.5);
+
+  await go(page, '#/plan', '.page-plan');
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await page.click('[data-action="ahead:open"]');
+  await page.waitForSelector('dialog[open] [data-action="ahead:go"]');
+  const end = '2026-11-29';
+  await page.click(`dialog[open] [data-action="ahead:quick"][data-end="${end}"]`);
+  await page.waitForSelector(`dialog[open] [data-action="ahead:quick"][data-end="${end}"][aria-pressed="true"]`);
+  assert.equal(await page.inputValue('dialog[open] #ahead-end'), end, 'the 2-week chip sets the last night');
+  assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:pantry"]', 'aria-checked'), 'true', '“Use what we have first” is on by default');
+  assert.equal(await page.getAttribute('dialog[open] #ahead-end', 'max'), '2026-12-17', 'no more than a month out');
+  await page.waitForTimeout(400);
+  await shot(page, 'e2e-31-plan-ahead-sheet');
+  await page.click('dialog[open] [data-action="ahead:go"]');
+  await toastMatch(page, /^Planned \d+ dinners? through Sunday, Nov 29: \d+ straight from the pantry/);
+  await page.waitForSelector('#ahead-card');
+  const s = (await familyState(page)).state;
+  for (let d = 23; d <= 29; d++) assert.ok(s.plan[`2026-11-${d}`]?.dinner, `Nov ${d} is planned`);
+  const thighNight = Object.entries(s.plan).find(([d, e]) => d >= '2026-11-23' && e.dinner === 'tikka-masala');
+  assert.ok(thighNight, 'the September chicken thighs make a tikka masala night next week');
+  const card = await page.textContent('#ahead-card');
+  assert.match(card, /Your pantry covers \d+ dinners?/);
+  assert.match(card, /Uses up the boneless skinless chicken thighs from Sep 3/);
+  assert.match(card, /Still needs groceries/);
+  assert.ok(!/\bNaN\b|undefined|\bnull\b/.test(card));
+  assert.ok(await noOverflow(page), 'the card fits 390px');
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await page.evaluate(() => { const el = document.getElementById('ahead-card'); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 84); });
+  await page.waitForTimeout(400);
+  await shot(page, 'e2e-32-plan-ahead-result');
+  await page.locator('#ahead-card').screenshot({ path: path.join(SHOTS, 'e2e-32b-plan-ahead-card.png'), style: '.topbar, .tabbar { visibility: hidden !important; }' });
+  // Desktop: everything is planned now, so it just shows how far the pantry goes.
+  const desk = await newPage(ctx, DESKTOP);
+  await go(desk, '#/plan', '.page-plan');
+  await desk.click('[data-action="ahead:open"]');
+  await desk.click(`dialog[open] [data-action="ahead:quick"][data-end="${end}"]`);
+  await desk.click('dialog[open] [data-action="ahead:go"]');
+  await desk.waitForSelector('#ahead-card');
+  await toastMatch(desk, /Every night through Sunday, Nov 29 is already planned/);
+  assert.ok(await noOverflow(desk));
+  await desk.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await desk.evaluate(() => { const el = document.getElementById('ahead-card'); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 140); });
+  await desk.waitForTimeout(400);
+  await shot(desk, 'e2e-33-plan-ahead-result-1280');
+  await desk.close();
+  // The pantry page says how far the pantry carries the plan when it covers tonight.
+  await go(page, '#/pantry', '.page-pantry');
+  assert.ok(await page.$('.cover-card'));
+  // Make the shopping list: a trip list, both stores, today through the planned day.
+  await go(page, '#/plan', '.page-plan');
+  await page.waitForSelector('#ahead-card');
+  await page.click('[data-action="ahead:list"]');
+  await page.waitForSelector('.page-list .trip-bar');
+  const trip = (await familyState(page)).state.settings.trip;
+  assert.deepEqual([trip.start, trip.end, trip.store, trip.by], [TODAY, end, 'both', 'Jeff']);
+  assert.match(await page.textContent('.trip-bar'), /Sam’s Club and Jewel-Osco/);
+  assert.ok(await noOverflow(page));
+  await toastMatch(page, /Shopping list for both stores, through Sunday, Nov 29/);
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await page.waitForTimeout(400);
+  await shot(page, 'e2e-34-plan-ahead-list');
+  await page.click('[data-action="trip:end"]'); // back to the week for the tests that follow
+  await waitFor(async () => !(await familyState(page)).state.settings?.trip);
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
 test('offline: changes are saved on the phone and sync when the connection returns', async () => {
   const { state } = await familyState(page);
   const d = state.plan[TODAY].dinner;

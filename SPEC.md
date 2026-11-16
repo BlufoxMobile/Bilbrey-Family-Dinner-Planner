@@ -613,3 +613,61 @@ sweet potatoes get cinnamon.
    it comes home: keep what the next two days need, freeze the rest in meal-size bags.
 5. After the trip: once a receipt from the trip is saved, the trip list shows what it bought that the
    list didn't ask for.
+
+## 16. Plan ahead, pantry first
+
+> Open the app, pick how far ahead to plan (any day up to a month out), fill dinners and packed
+> lunches from what's already in the pantry first, oldest and soonest-to-spoil food first (Jeff just
+> threw out freezer-burnt steak and corn), see how far the pantry stretches, then shop only for what's
+> missing over the rest of that time.
+
+### 16.1 The sheet (Plan page, "Plan ahead")
+- Plan through: 1 week, 2 weeks, 3 weeks or a month (to the day before the same date next month), or
+  any day from tonight to 31 days out. It shows how many of those nights are still open.
+- "Use what we have first" (on by default). Off, it plans the open nights exactly like "Plan open
+  nights" does.
+- Only open nights are filled. Cooked, away and already-planned nights (by hand or by the planner) are
+  never touched.
+
+### 16.2 How it plans (`app/planahead.js`, pure)
+`planAheadOps(db, state, { start, end, who, today, at, pantryFirst = true })` → `{ ops, undo, message,
+count, fromPantry: [date], lunchPicks: [{ date, name, slot, id, instead }], unfilled, start, end }`.
+1. What's on the shelf is `coverage.js onHand` (salt, pepper and oil assumed; "running low" doesn't
+   count; within 5% counts as enough). Food that already-planned nights are fully stocked for is set
+   aside for them first.
+2. Pantry nights: each open night, in date order, gets a dinner the shelf fully covers (main and
+   sides for five), chosen with every planner rule (rotation, votes and dropped dinners, burger and
+   pizza nights, the rice limit, the Asian cap, no repeats within two weeks, the plan-from store)
+   through `generatePlan`'s hooks. Its food comes off the shelf before the next night, so one pack
+   never covers two nights. A night with no covered dinner that keeps every rule is left for step 4.
+3. Scoring adds 2.5 × the sum of each ingredient's urgency (meat counts 1.5×):
+   - fridge and counter food by its estimated use-by (§13.4): past it by that night 6+ (use it now),
+     due that night 4, within two days 3–2, within a week 1, later ¼;
+   - freezer food by age: 60+ days is "use soon" (2, plus a point a month), younger is age ÷ 60, so
+     the oldest always goes first; past its freezer use-by (4 months for meat, 6 otherwise) adds 4;
+   - no came-home date, or shelf goods that keep for months: 0.
+4. The rest: the usual planner (rules relax as they always do), counting every kept and pantry night's
+   food first and favoring dinners with the fewest and cheapest things to buy (twice the usual cost
+   weight, and 0.12 off for each item to buy).
+5. Lunches: on each lunch day, a slot whose rotation item the shelf can't cover takes another item
+   from that person's own list for the slot that it can (the one most in need of eating first, else
+   the list's order), written as that day's pick. Picks and skips set by hand stay.
+
+### 16.3 How far the pantry stretches
+`pantryStretch(db, state, { start, end })` → `{ coveredThrough, firstGap, gapReason: 'short'|'open'|null,
+dinnersCovered, dinners, lunchesCovered, lunches, nights: [{ date, covered, missing, dinnerMissing,
+lunchMissing, dinner, title, lunches, open, away, cooked }], usesUp: [{ id, name, since, place, date }] }`.
+Day by day, packed lunches then dinner take their food off the shelf. A day is covered when every
+planned dinner and packed lunch is fully stocked; away and cooked nights need nothing; a night with
+nothing planned ends the run (the plan stops there). `usesUp`: frozen or perishable food the plan eats,
+oldest first.
+
+### 16.4 After planning
+- A card on the Plan page: "Your pantry covers N dinners and M packed lunches", "Without a trip to the
+  store, it carries you through Thursday, Nov 19", a pip per day, "Uses up the boneless skinless chicken
+  thighs from Sep 3…", the nights that still need groceries and what each needs, and **Make the
+  shopping list**: `settings.trip = { start: today, end, store: 'both', by, at }` (a §12.1 trip list;
+  a different trip's check-offs and skips are cleared, the same trip keeps them), then the List.
+- Undo on the message takes the plan and the lunch picks back.
+- The Pantry page's "What the pantry covers" adds "At this rate the pantry carries you through …"
+  (", as far as the plan goes" when the run ends at an unplanned night or the end of the period).

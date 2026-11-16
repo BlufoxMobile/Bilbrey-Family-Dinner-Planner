@@ -564,11 +564,12 @@ class Ledger {
     let cost = 0;
     let reuse = 0;
     let waste = 0;
+    let buys = 0; // how many different things it sends to the store
     for (const [id, need] of Object.entries(items)) {
       const kind = kindOf(this.db, this.state, id);
       const up = unitPrice(this.db, this.state, id, this.planStore);
       if (kind === 'staple') {
-        if (!pantryCovers(this.db, this.state, id, need)) cost += need * up;
+        if (!pantryCovers(this.db, this.state, id, need)) { cost += need * up; buys++; }
         continue;
       }
       const have = this.rem[id] || 0;
@@ -577,6 +578,7 @@ class Ledger {
       const short = need - fromHave;
       if (short > 1e-9) {
         cost += short * up;
+        buys++;
         const store = storeFor(this.db, this.state, id, this.planStore);
         const p = packFor(this.db, this.state, id, store);
         if (p) {
@@ -588,7 +590,7 @@ class Ledger {
         }
       }
     }
-    return { cost, reuse, waste };
+    return { cost, reuse, waste, buys };
   }
 
   consume(items) {
@@ -609,12 +611,34 @@ class Ledger {
 // ---------------------------------------------------------------- the generator
 
 /**
+ * The generator's rule levels, strictest first; it uses the first level that leaves a candidate.
+ * The first three keep the night's type (burger, pizza), the rice limit and the Asian cap.
+ */
+const LEVELS = [
+  { type: true, repeat: 14, rice: true, cap: true, force: true },
+  { type: true, repeat: 14, rice: true, cap: true, force: false },
+  { type: true, repeat: 7, rice: true, cap: true, force: false },
+  { type: true, repeat: 7, rice: true, cap: false, force: false },
+  { type: false, repeat: 7, rice: true, cap: false, force: false },
+  { type: false, repeat: 2, rice: false, cap: false, force: false },
+];
+
+/**
  * Fills (mode "fill") or re-plans (mode "replan") the given dates.
  * Keeps away/cooked nights and anything the family set by hand. Never touches past nights.
  * Deterministic: the same state + dates + seedKey always produce the same plan.
  * Returns { entries: { date: entry }, unfilled: [date] }.
+ *
+ * Optional hooks (SPEC §16, plan ahead; leaving them out changes nothing):
+ *   accept(date, dinner, items) → false keeps a candidate out (e.g. "the pantry doesn't cover it")
+ *   bonus(date, dinner, items, { cost, reuse, waste, buys }) → added to its score
+ *   onPlace(date, entry, items) after each night is placed
+ *   strict: only the levels that keep night types, the rice limit and the Asian cap (a night with
+ *           no such candidate is left open rather than bending a rule)
+ *   reserve: count every kept night's food first, so an open night never "uses" food a later
+ *            kept night needs
  */
-export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', at = '', seedKey, today }) {
+export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', at = '', seedKey, today, accept = null, bonus = null, onPlace = null, strict = false, reserve = false }) {
   const st = settingsOf(state);
   const plan = state?.plan || {};
   const planStore = st.planStore;
@@ -626,6 +650,7 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
   const pool = rotationList(db, state).sort((a, b) => a.id.localeCompare(b.id));
   const dateSet = new Set(sorted);
   const ledger = new Ledger(db, state, planStore);
+  if (reserve) for (const d of sorted) if (!fillable.has(d) && eaten(merged[d])) ledger.consume(itemsForNight(db, state, merged[d].dinner, merged[d]));
   const entries = {};
   const unfilled = [];
 
@@ -642,7 +667,7 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
   for (const date of sorted) {
     if (!fillable.has(date)) {
       const e = merged[date];
-      if (eaten(e)) ledger.consume(itemsForNight(db, state, e.dinner, e));
+      if (eaten(e) && !reserve) ledger.consume(itemsForNight(db, state, e.dinner, e));
       continue;
     }
     const type = nightType(date, st);
@@ -663,18 +688,13 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
     const feasible = [];
     for (const d of pool) {
       const sides = feasibleSides(db, state, d, planStore, null);
-      if (sides) feasible.push({ d, sides });
+      if (!sides) continue;
+      if (accept && !accept(date, d, itemsForNight(db, state, d.id, { sides }))) continue;
+      feasible.push({ d, sides });
     }
 
     const typeOk = (d) => (type === 'pizza' ? isPizza(d) : type === 'burger' ? isBurger(d) && !isPizza(d) : !isBurger(d) && !isPizza(d));
-    const levels = [
-      { type: true, repeat: 14, rice: true, cap: true, force: true },
-      { type: true, repeat: 14, rice: true, cap: true, force: false },
-      { type: true, repeat: 7, rice: true, cap: true, force: false },
-      { type: true, repeat: 7, rice: true, cap: false, force: false },
-      { type: false, repeat: 7, rice: true, cap: false, force: false },
-      { type: false, repeat: 2, rice: false, cap: false, force: false },
-    ];
+    const levels = strict ? LEVELS.slice(0, 3) : LEVELS;
     let candidates = [];
     for (const L of levels) {
       candidates = feasible.filter(({ d, sides }) => {
@@ -694,7 +714,8 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
     for (const c of candidates) {
       const { d } = c;
       const items = itemsForNight(db, state, d.id, { sides: c.sides });
-      const { cost, reuse, waste } = ledger.evaluate(items);
+      const money = ledger.evaluate(items);
+      const { cost, reuse, waste } = money;
       const v = voteInfo(state, d.id);
       let score = seeded(`${seed}|${planStore}|${date}|${d.id}`) * 0.8;
       if (isFavorite(state, d)) score += 1.0;
@@ -713,12 +734,15 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
       if (!isBurger(d) && sameProteinWeek > 1) score -= 0.45 * (sameProteinWeek - 1);
       if (monIndex(date) < 4 && d.minutes > 45) score -= 0.3;
       if (lastUse(d.id, date, 28) !== null) score -= 0.6;
+      if (bonus) score += bonus(date, d, items, money) || 0;
       if (!best || score > best.score + 1e-9 || (Math.abs(score - best.score) <= 1e-9 && d.id < best.c.d.id)) best = { score, c };
     }
     const entry = { dinner: best.c.d.id, sides: storedSides(state, best.c.d, best.c.sides), status: 'planned', by, at };
     entries[date] = entry;
     merged[date] = entry;
-    ledger.consume(itemsForNight(db, state, entry.dinner, entry));
+    const used = itemsForNight(db, state, entry.dinner, entry);
+    ledger.consume(used);
+    onPlace?.(date, entry, used);
   }
   return { entries, unfilled };
 }

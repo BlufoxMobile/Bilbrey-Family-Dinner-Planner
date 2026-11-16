@@ -1,7 +1,7 @@
 // PLAN: 1–3 weeks or a month, plan-from store, day cards with sides,
-// two-tap swap, drag-and-drop on desktop, plan / re-plan.
-import { html, ic, when, segmented, toast } from '../ui.js';
-import { addDays, diffDays, money, rangeLabel, shortDate, startOfWeek, monthName, weekday, monthOnly } from '../util.js';
+// two-tap swap, drag-and-drop on desktop, plan / re-plan, and plan ahead, pantry first (SPEC §16).
+import { html, ic, when, segmented, toast, openSheet, closeSheet, renderSheet, switchToggle, tf } from '../ui.js';
+import { addDays, diffDays, money, rangeLabel, shortDate, startOfWeek, monthName, weekday, monthOnly, datesBetween, weekdayName, midSentence } from '../util.js';
 import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage, isRetired, defaultAnchor as defaultAnchorFor } from '../planner.js';
 import { listJoin } from '../util.js';
 import { buildList } from '../shopping.js';
@@ -10,6 +10,7 @@ import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition, thumbs, pre
 import { plateNutrition, fmtKcal } from '../nutrition.js';
 import { openNight } from './sheets.js';
 import { veggieCheck } from '../health.js';
+import { AHEAD_QUICK, aheadEnd, aheadLimit, clampAheadEnd, planAheadOps, pantryStretch, shoppingTripOps } from '../planahead.js';
 
 export const title = () => 'Plan';
 
@@ -128,11 +129,14 @@ export function render(app) {
       return html`<p class="hint">${ic('store', { size: 18 })}<span>${cov.ok} of ${cov.total} dinners can be made from ${name} alone (or with what’s in the pantry), so only those get planned.${cov.missing.length ? ` The others need something ${name} doesn’t carry, like ${listJoin(cov.missing.map((m) => m.toLowerCase()))}. Mark those stocked in the pantry and more dinners qualify.` : ''}${auto ? ' Re-plan to apply this to nights already planned.' : ''}</span></p>`;
     })}
     <div class="plan-actions">
-      ${open ? html`<button type="button" class="btn btn-primary" data-action="plan:fill">${ic('sparkle', { size: 20 })}Plan ${open} open ${open === 1 ? 'night' : 'nights'}</button>` : ''}
+      <button type="button" class="btn btn-primary" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}Plan ahead</button>
+      ${/* The "What can I make?" button (its own workstream) goes right here, after Plan ahead. */ ''}
+      ${open ? html`<button type="button" class="btn btn-secondary" data-action="plan:fill">${ic('plus', { size: 20 })}Plan ${open} open ${open === 1 ? 'night' : 'nights'}</button>` : ''}
       ${auto ? html`<button type="button" class="btn btn-secondary" data-action="plan:replan">${ic('refresh', { size: 20 })}Re-plan this period</button>` : ''}
       <button type="button" class="btn ${app.ui.swapMode ? 'btn-primary' : 'btn-secondary'}" data-action="plan:swapmode" aria-pressed="${app.ui.swapMode ? 'true' : 'false'}">${ic('swap', { size: 20 })}${app.ui.swapMode ? 'Done swapping' : 'Swap two nights'}</button>
     </div>
     ${when(app.ui.swapMode, () => html`<p class="swap-banner" role="status">${app.ui.swapPick ? html`Now tap the night to trade with <b>${shortDate(app.ui.swapPick)}</b>.` : 'Tap the first night, then the night to trade with.'}</p>`)}
+    ${aheadCard(app)}
     <p class="plan-summary">${planned} ${planned === 1 ? 'dinner' : 'dinners'} planned${away ? `, ${away} ${away === 1 ? 'night' : 'nights'} away` : ''}. About <a href="#/list">${money(list.total)} in groceries</a>${list.nights.length ? `, ${money(list.perDinner)} a dinner` : ''}.</p>
     ${veggieCard(app, range)}
     ${grid(app, range)}
@@ -203,6 +207,34 @@ export const actions = {
     app.ui.swapMode = false;
     if (!app.commit(res)) app.render();
   },
+  // ---------------------------------------------------------------- plan ahead (SPEC §16)
+  'ahead:open': (app) => openPlanAhead(app),
+  'ahead:quick': (app, el) => { if (openPlanAhead.state) openPlanAhead.state.end = clampAheadEnd(app.today(), el.dataset.end); renderSheet(); },
+  'ahead:end': (app, el) => {
+    if (!openPlanAhead.state || !el.value) return;
+    openPlanAhead.state.end = clampAheadEnd(app.today(), el.value);
+    renderSheet();
+  },
+  'ahead:pantry': (app) => { if (openPlanAhead.state) openPlanAhead.state.pantryFirst = !openPlanAhead.state.pantryFirst; renderSheet(); },
+  'ahead:go': (app) => {
+    const st = openPlanAhead.state;
+    if (!st) return;
+    const today = app.today();
+    const end = clampAheadEnd(today, st.end);
+    const res = planAheadOps(app.db, app.state, { start: today, end, who: app.who(), today, pantryFirst: st.pantryFirst });
+    closeSheet();
+    app.ui.planAhead = { start: today, end, pantryFirst: st.pantryFirst };
+    // Undo takes the plan back, and the summary with it.
+    if (!app.commit(res, { onUndo: () => { app.ui.planAhead = null; } })) app.render();
+    setTimeout(() => document.getElementById('ahead-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+  },
+  'ahead:list': (app) => {
+    const a = app.ui.planAhead;
+    if (!a) return;
+    app.commit(shoppingTripOps(app.state, { today: app.today(), end: a.end, who: app.who() }));
+    app.navigate('#/list');
+  },
+  'ahead:close': (app) => { app.ui.planAhead = null; app.render(); },
 };
 
 export { addDays, startOfWeek, monthOnly };
@@ -224,3 +256,77 @@ function veggieCard(app, range) {
 }
 
 const weekdayShort = (iso) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][weekday(iso)];
+
+// ---------------------------------------------------------------- plan ahead, pantry first (SPEC §16)
+
+const dayText = (iso, today) => (iso === today ? 'tonight' : `${weekdayName(iso)}, ${shortDate(iso)}`);
+/** "Lean ground beef (93/7)" → "lean ground beef", brands keep their capitals. */
+const foodName = (name) => midSentence(String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/,.*$/, '').trim());
+const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+/** Choose how far ahead (a quick pick or any day up to a month out) and whether the pantry goes first. */
+function openPlanAhead(app) {
+  const today = app.today();
+  const last = app.ui.planAhead;
+  const st = (openPlanAhead.state = {
+    end: last && last.end >= today ? last.end : aheadEnd(today, 'two'),
+    pantryFirst: last ? last.pantryFirst !== false : true,
+  });
+  openSheet({
+    id: 'plan-ahead',
+    title: 'Plan ahead',
+    subtitle: 'Dinners and packed lunches from tonight through the night you pick.',
+    render: () => {
+      const dates = datesBetween(today, st.end);
+      const open = dates.filter((d) => isFillable(app.state.plan?.[d], 'fill')).length;
+      return html`
+        <h3 class="sheet-h" id="ahead-through-h">Plan through</h3>
+        <div class="ahead-quick" role="group" aria-labelledby="ahead-through-h">
+          ${AHEAD_QUICK.map((q) => {
+            const e = aheadEnd(today, q.id);
+            const on = e === st.end;
+            return html`<button type="button" class="chip chip-lg ${on ? 'is-on' : ''}" aria-pressed="${tf(on)}" data-action="ahead:quick" data-end="${e}">${q.label}<small>to ${weekdayShort(e)} ${shortDate(e)}</small></button>`;
+          })}
+        </div>
+        <label class="field ahead-date"><span class="field-label">Or pick the last night</span>
+          <input class="input" type="date" id="ahead-end" min="${today}" max="${aheadLimit(today)}" value="${st.end}" data-change="ahead:end"></label>
+        <p class="muted small ahead-count">${count(dates.length, 'night')}, ${open ? `${open} still open to plan` : 'every one already planned'}. Nights set by hand, cooked or away stay as they are.</p>
+        <div class="set-row ahead-switch"><span class="set-label">Use what we have first<small>Dinners the pantry already covers go first, oldest food first, so nothing sits until it’s freezer-burnt.</small></span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
+        <button type="button" class="btn btn-primary btn-block" data-action="ahead:go">${ic('sparkle', { size: 20 })}Plan it</button>`;
+    },
+  });
+}
+
+/** After planning: how far the pantry carries the plan, the old food it uses up, what still needs the store. */
+function aheadCard(app) {
+  const a = app.ui.planAhead;
+  const today = app.today();
+  if (!a || a.end < today) return '';
+  const start = a.start > today ? a.start : today;
+  const s = pantryStretch(app.db, app.state, { start, end: a.end });
+  const need = s.nights.filter((n) => n.dinner && n.dinnerMissing.length);
+  const lunchDays = s.nights.filter((n) => n.lunchMissing.length).length;
+  const oldest = s.usesUp.slice(0, 3);
+  const covers = [s.dinnersCovered ? count(s.dinnersCovered, 'dinner') : '', s.lunchesCovered ? count(s.lunchesCovered, 'packed lunch', 'packed lunches') : ''].filter(Boolean);
+  const gap = s.firstGap ? s.nights.find((n) => n.date === s.firstGap) : null;
+  const row = (n) => html`<li><span class="cover-day">${n.date === today ? 'Tonight' : `${weekdayShort(n.date)} ${shortDate(n.date)}`}</span><span class="cover-what"><b>${n.title}</b><small>Needs ${listJoin(n.dinnerMissing.slice(0, 4).map((m) => foodName(m.name)))}${n.dinnerMissing.length > 4 ? ` and ${n.dinnerMissing.length - 4} more` : ''}</small></span></li>`;
+  return html`<section class="ahead-card" id="ahead-card" aria-labelledby="ahead-h">
+    <div class="ahead-head">
+      <h2 id="ahead-h" class="section-title">${ic('pantry', { size: 22 })}<span>${s.dinnersCovered || s.lunchesCovered ? `Your pantry covers ${listJoin(covers)}` : 'The pantry doesn’t cover a whole meal yet'}</span></h2>
+      <button type="button" class="icon-btn" data-action="ahead:close" aria-label="Close this summary">${ic('close', { size: 20 })}</button>
+    </div>
+    <p class="ahead-through">${s.coveredThrough
+      ? html`Without a trip to the store, it carries you through <b>${dayText(s.coveredThrough, today)}</b>${s.firstGap ? '.' : ', the whole plan.'}`
+      : gap?.open ? html`Nothing is planned for ${dayText(gap.date, today)} yet.`
+        : html`${dayText(s.firstGap, today).replace(/^./, (c) => c.toUpperCase())} already needs ${gap?.dinnerMissing.length ? 'groceries' : 'groceries for packed lunches'}.`}</p>
+    <div class="cover-meter" role="img" aria-label="${s.nights.filter((n) => n.covered).length} of ${s.nights.length} days covered by the pantry">${s.nights.map((n) => html`<span class="cover-pip ${n.covered ? 'is-on' : ''} ${n.away ? 'is-away' : ''}" title="${weekdayShort(n.date)} ${shortDate(n.date)}: ${n.away ? 'away' : n.covered ? 'covered' : n.open ? 'nothing planned' : 'needs groceries'}"></span>`)}</div>
+    ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
+    ${need.length ? html`<h3 class="ahead-sub">Still needs groceries<span class="count">${count(need.length, 'night')}</span></h3>
+      <ul class="cover-list ahead-list">${need.slice(0, 5).map(row)}</ul>
+      ${when(need.length > 5, () => html`<details class="cover-more"><summary>${need.length - 5} more ${need.length - 5 === 1 ? 'night' : 'nights'}</summary><ul class="cover-list ahead-list">${need.slice(5).map(row)}</ul></details>`)}`
+      : html`<p class="small">${s.dinners ? `Every planned dinner through ${dayText(a.end, today)} comes from the pantry.` : 'No dinners are planned in this stretch yet.'}</p>`}
+    ${when(lunchDays, () => html`<p class="muted small">Packed lunches need something from the store on ${count(lunchDays, 'day')}.</p>`)}
+    <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}Make the shopping list</button>
+    <p class="muted small">One list for ${start === a.end ? shortDate(start) : rangeLabel(start, a.end)}, both stores, with only what the pantry doesn’t cover.</p>
+  </section>`;
+}
