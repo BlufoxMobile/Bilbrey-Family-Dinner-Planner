@@ -11,7 +11,7 @@ import { weekSummary } from '../cooking.js';
 import { isDismissed } from './common.js';
 import {
   shownWeek, dueWeek, moneyCheckin, moneyCheckedOps, moneyUncheckedOps, checkinDay, weekOf, weekSpend,
-  WEIGH_GOALS, weighTrend, sharedWeighIns, weighOps, removeWeighOps, weighGoalOps, shareWeighOps, forgetWeighOps, parseLb, fmtLb, weighSeries,
+  WEIGH_GOALS, weighTrend, weighProgress, progressLine, sharedWeighIns, weighOps, removeWeighOps, weighGoalOps, shareWeighOps, forgetWeighOps, parseLb, fmtLb, weighSeries,
   LB_MIN, LB_MAX,
 } from '../checkin.js';
 
@@ -65,7 +65,7 @@ function weekBars(history, share) {
 
 /** Weekly weigh-ins as a line (the last twelve), first and last labeled. */
 function weighLine(weeks, name) {
-  const pts = weeks.slice(-12);
+  const pts = weeks.slice(-26);
   if (!pts.length) return '';
   const W = 320; const H = 120; const left = 26; const right = 30; const top = 22; const bottom = 92;
   const lo = Math.min(...pts.map((p) => p.lb)); const hi = Math.max(...pts.map((p) => p.lb));
@@ -77,7 +77,7 @@ function weighLine(weeks, name) {
   return html`<figure class="ck-chart ck-chart-weigh">
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${possessive(name)} weekly weigh-ins, ${shortDate(first.date)} to ${shortDate(last.date)}: ${fmtLb(first.lb)} to ${fmtLb(last.lb)}.">
       <line class="ck-base" x1="8" x2="${W - 8}" y1="${bottom + 10}" y2="${bottom + 10}"></line>
-      ${when(pts.length > 1, () => html`<polyline class="ck-line" points="${pts.map((p) => `${x(p).toFixed(1)},${y(p).toFixed(1)}`).join(' ')}"></polyline>`)}
+      ${when(pts.length > 1, () => html`<polyline class="ck-line" pathLength="1" points="${pts.map((p) => `${x(p).toFixed(1)},${y(p).toFixed(1)}`).join(' ')}"></polyline>`)}
       ${pts.map((p) => html`<g class="ck-pt"><title>${shortDate(p.date)}: ${fmtLb(p.lb)}</title><circle class="ck-hit" cx="${x(p).toFixed(1)}" cy="${y(p).toFixed(1)}" r="12"></circle><circle class="ck-dot" cx="${x(p).toFixed(1)}" cy="${y(p).toFixed(1)}" r="4.5"></circle></g>`)}
       ${when(pts.length > 1, () => html`<text class="ck-val" x="${x(first).toFixed(1)}" y="${(y(first) - 10).toFixed(1)}" text-anchor="middle">${fmtLb(first.lb).replace(' lb', '')}</text>`)}
       <text class="ck-val" x="${x(last).toFixed(1)}" y="${(y(last) - 10).toFixed(1)}" text-anchor="middle">${fmtLb(last.lb).replace(' lb', '')}</text>
@@ -97,9 +97,10 @@ function moneyCard(app, m, week) {
     <h2 id="ckm-h" class="section-title">${ic('budget', { size: 22 })}Groceries</h2>
     <p class="trips-big"><b>${money(w.total)}</b><span>${w.done ? 'spent that week' : 'spent so far this week'}<small>${w.trips ? `${w.trips} store ${w.trips === 1 ? 'trip' : 'trips'}` : 'no receipts logged'}${m.last.total ? `, ${money(m.last.total)} the week before` : ''}</small></span></p>
     ${weekBars(m.history, w.share)}
-    <details class="cover-more"><summary>The numbers, week by week</summary>
-      <table class="ck-table"><thead><tr><th scope="col">Week</th><th scope="col">Trips</th><th scope="col">Spent</th></tr></thead>
-        <tbody>${m.history.map((h) => html`<tr><th scope="row">${shortDate(h.start)} to ${shortDate(h.end)}</th><td>${h.trips}</td><td>${money(h.total)}</td></tr>`)}</tbody></table>
+    <details class="cover-more ck-record"><summary>The record: the last ${m.record.length} weeks</summary>
+      <table class="ck-table"><thead><tr><th scope="col">Week</th><th scope="col">Trips</th><th scope="col">Spent</th><th scope="col">Against ${money(w.share, { whole: true })}</th></tr></thead>
+        <tbody>${m.record.map((h) => html`<tr><th scope="row">${shortDate(h.start)} to ${shortDate(h.end)}${h.checked ? html` <span class="ck-checked" title="Checked in">${ic('check', { size: 14 })}<span class="sr-only">checked in</span></span>` : ''}</th><td>${h.trips}</td><td>${money(h.total)}</td><td>${h.total ? `${h.diff > 0 ? '+' : '−'}${money(Math.abs(h.diff), { whole: true })}` : '—'}</td></tr>`)}</tbody></table>
+      ${when(m.average != null, () => html`<p class="muted small">Since the first receipt in this record, the average is ${money(m.average)} a week.</p>`)}
     </details>
     <h3 class="ck-sub">The month so far</h3>
     <ul class="legend">
@@ -169,10 +170,23 @@ function setupForm(app, shared) {
   </form>`;
 }
 
+/** Signed pounds for the record: "−0.8", "+1.2", "0". */
+const signed = (n) => (n == null ? '' : Math.abs(n) < 0.05 ? '0' : `${n < 0 ? '−' : '+'}${fmtLb(n).replace(' lb', '')}`);
+
+/** The record: every week's weigh-in, newest first, with the change that week and since the start. */
+function progressTable(weights, day, { remove = false } = {}) {
+  const rows = weighProgress(weights, day);
+  if (!rows.length) return '';
+  return html`<details class="cover-more ck-record" ${rows.length > 1 ? 'open' : ''}><summary>Week by week (${rows.length} ${rows.length === 1 ? 'weigh-in' : 'weigh-ins'})</summary>
+    <table class="ck-table ck-progress"><thead><tr><th scope="col">Weighed</th><th scope="col">Weight</th><th scope="col">That week</th><th scope="col">Since start</th>${remove ? html`<th scope="col"><span class="sr-only">Remove</span></th>` : ''}</tr></thead>
+      <tbody>${rows.map((r) => html`<tr><th scope="row">${shortDate(r.date)}</th><td>${fmtLb(r.lb)}</td><td>${r.change == null ? 'start' : signed(r.change)}</td><td>${r.change == null ? '' : signed(r.total)}</td>
+        ${remove ? html`<td><button type="button" class="icon-btn" data-action="weigh:remove" data-date="${r.date}" aria-label="Remove the weigh-in from ${shortDate(r.date)}">${ic('trash', { size: 18 })}</button></td>` : ''}</tr>`)}</tbody></table>
+  </details>`;
+}
+
 function myWeighCard(app, me, today) {
   const weights = myWeights(app, me);
   const t = weighTrend(weights, { today, goal: me.goal, day: checkinDay(app.state) });
-  const all = weighSeries(weights).reverse();
   const thisWeek = t.doneThisWeek ? t.latest : null;
   return html`<section class="ck-card ck-weigh" id="ck-weigh" aria-labelledby="ckw-h">
     <div class="section-head"><h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}${possessive(me.name)} weigh-in</h2>
@@ -185,9 +199,7 @@ function myWeighCard(app, me, today) {
       <button type="submit" class="btn btn-primary">${thisWeek ? 'Update' : 'Save'}</button>
     </form>
     <p class="muted small">Once a week is plenty: same day, same time of day, same scale. Skipping a week is fine.</p>
-    ${when(all.length, () => html`<details class="cover-more"><summary>Every weigh-in (${all.length})</summary>
-      <ul class="receipt-list">${all.map((p) => html`<li class="receipt-row"><span><b>${fmtLb(p.lb)}</b><small>${weekdayName(p.date)}, ${mediumDate(p.date)}</small></span><span></span>
-        <button type="button" class="icon-btn" data-action="weigh:remove" data-date="${p.date}" aria-label="Remove the weigh-in from ${shortDate(p.date)}">${ic('trash', { size: 20 })}</button></li>`)}</ul></details>`)}
+    ${progressTable(weights, checkinDay(app.state), { remove: true })}
     <details class="cover-more ck-settings"><summary>Weigh-in settings</summary>
       <div class="opt"><span class="opt-label">Working toward</span>${segmented('weighGoal', WEIGH_GOALS, me.goal, { label: 'Working toward', action: 'weigh:goal', small: true })}</div>
       <div class="opt"><span class="opt-label">Kept</span>${segmented('weighKeep', [{ id: 'family', label: 'With the family' }, { id: 'device', label: 'Only on this phone' }], me.keep, { label: 'Where the weigh-ins are kept', action: 'weigh:keep', small: true })}</div>
@@ -202,6 +214,7 @@ function sharedCard(app, s, today, canClaim) {
     <div class="section-head"><h2 class="section-title">${ic('chart', { size: 22 })}${possessive(s.name)} weigh-in</h2><span class="ck-where">${ic('cloud', { size: 16 })}Shared by ${s.name}</span></div>
     ${trendBlock({ ...t, doctor: '' })}
     ${weighLine(t.weeks, s.name)}
+    ${progressTable(s.weights, checkinDay(app.state))}
     ${when(canClaim, () => html`<button type="button" class="btn btn-secondary btn-small" data-action="weigh:claim" data-name="${s.name}">This is me: weigh in from this phone</button>`)}
   </section>`;
 }
@@ -212,8 +225,16 @@ function weighSection(app, today) {
       <p class="small">Weigh-ins are turned off for the TV. Open the planner on a phone to add or see them.</p></section>`;
   }
   const me = app.store.device.weigh;
-  const shared = sharedWeighIns(app.state).filter((s) => !(me && me.keep === 'family' && s.name === me.name));
+  const everyone = sharedWeighIns(app.state);
+  const shared = everyone.filter((s) => !(me && me.keep === 'family' && s.name === me.name));
+  const day = checkinDay(app.state);
+  const lines = everyone.map((s) => ({ name: s.name, line: progressLine(s.weights, day) })).filter((x) => x.line);
+  if (me && me.keep === 'device' && progressLine(me.weights, day)) lines.unshift({ name: me.name, line: progressLine(me.weights, day) });
   return html`
+    ${when(lines.length >= 2, () => html`<section class="ck-card ck-together" id="ck-together" aria-labelledby="ckt-h">
+      <h2 id="ckt-h" class="section-title">${ic('heart', { size: 22 })}Progress so far</h2>
+      <ul class="ck-progress-list">${lines.map((x) => html`<li><b>${x.name}</b><span>${x.line}</span></li>`)}</ul>
+    </section>`)}
     ${me ? myWeighCard(app, me, today)
     : html`<section class="ck-card ck-weigh" id="ck-weigh" aria-labelledby="ckw-h">
         <h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}A weekly weigh-in, if you want one</h2>

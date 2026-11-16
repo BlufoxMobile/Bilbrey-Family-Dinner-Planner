@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { realDb } from './helpers.mjs';
 import {
   weekOf, dueWeek, shownWeek, checkinDay, weekSpend, weeklyShare, moneyCheckin, moneyCheckedOps, moneyUncheckedOps, isChecked,
-  parseLb, weighSeries, weeklySeries, weighTrend, weighOps, removeWeighOps, shareWeighOps, forgetWeighOps, sharedWeighIns, WEIGH_GOALS,
+  parseLb, weighSeries, weeklySeries, weighTrend, weighProgress, progressLine, weighOps, removeWeighOps, shareWeighOps, forgetWeighOps, sharedWeighIns, WEIGH_GOALS,
 } from '../app/checkin.js';
 import { easyTonight, EASY_MAX_WORK, EASY_MAX_TOTAL } from '../app/easy.js';
 import { applyOps, normalizeDevice, normalizeWeigh } from '../app/state.js';
@@ -52,6 +52,9 @@ test('money check-in: the week, the month against the target, and something to d
   assert.equal(m.last.total, 212);
   assert.equal(m.history.length, 6);
   assert.equal(m.history.at(-1).total, 176.46);
+  assert.equal(m.record.length, 12);
+  assert.deepEqual([m.record[0].total, m.record[0].diff, m.record[1].total], [176.46, 26.46, 212], 'the record is newest first, against the weekly share');
+  assert.equal(m.average, 194.23, 'averaged since the first receipt in the record');
   assert.equal(m.month.spent, 388.46);
   assert.ok(['on', 'tight', 'over'].includes(m.status));
   assert.ok(m.verdict.length > 20);
@@ -87,6 +90,11 @@ test('weigh-ins: a number a week, and only plain words about it', () => {
   assert.equal(weighTrend({ ...w, [MON]: 209.9 }, { today: MON, goal: 'lose' }).doneThisWeek, true);
   assert.match(weighTrend({ '2026-11-09': 150 }, { today: MON }).headline, /150 lb to start/);
   assert.equal(weighTrend({}, { today: MON }).headline, 'No weigh-ins yet.');
+  // The written record: a row a week, newest first, with the change that week and since the start.
+  assert.deepEqual(weighProgress(w).map((r) => [r.date, r.lb, r.change, r.total]), [['2026-11-09', 209.8, -0.8, -1.7], ['2026-11-02', 210.6, -0.9, -0.9], ['2026-10-28', 211.5, null, 0]]);
+  assert.equal(progressLine(w), 'Down 1.7 lb in 2 weeks.');
+  assert.equal(progressLine({ '2026-11-09': 150 }), 'First weigh-in is in.');
+  assert.equal(progressLine({}), '');
 });
 
 test('weigh-ins: what each direction hears', () => {
@@ -145,6 +153,9 @@ test('the check-in page: weigh-ins are shared in the open, the TV included, unle
   const tv = checkinView.render(fakeApp({ state: shared, tv: true })).s;
   assert.match(tv, /Jeff’s weigh-in/);
   assert.match(tv, /Down 1\.5 lb since last week/);
+  assert.match(tv, /Week by week \(2 weigh-ins\)/, 'the record is there to track progress');
+  const both = { ...shared, checkin: { people: { ...shared.checkin.people, Candi: { goal: 'gain' } }, weights: { ...shared.checkin.weights, Candi: { '2026-11-02': 117.4, '2026-11-09': 118.6 } } } };
+  assert.match(checkinView.render(fakeApp({ state: both })).s, /Progress so far[\s\S]*Candi[\s\S]*Up 1\.2 lb in 1 week[\s\S]*Jeff[\s\S]*Down 1\.5 lb in 1 week/);
   // The family can turn the TV off for weigh-ins: groceries stay, no weight and no name shows.
   const off = { ...shared, settings: { ...state.settings, weighOnTv: false } };
   const hidden = checkinView.render(fakeApp({ state: off, weigh, tv: true })).s;
@@ -195,6 +206,16 @@ test('easy tonight: the least work, from what is in the house', () => {
   const bare = easyTonight(db, {}, MON);
   assert.equal(bare.picks.length, 3, 'the quickest dinners still show');
   assert.ok(bare.picks.every((p) => !p.ready && p.missing.length > 0), 'each saying what it needs');
+  // Last night's dinner isn't offered again, and a missing side doesn't rule a dinner out.
+  const ate = easyTonight(db, { pantry, plan: { '2026-11-15': { dinner: first, status: 'cooked' } } }, MON, { hour: 17 });
+  assert.ok(!ate.picks.some((p) => p.dinner.id === first));
+  const d0 = e.picks[0].dinner;
+  const sideOnly = Object.keys(db.sides[String(d0.sides[0]).replace(/^side:/, '')]?.items || {}).filter((id) => !(id in d0.items) && db.ingredients[id]?.kind !== 'staple');
+  if (sideOnly.length) {
+    const p2 = { ...pantry, [sideOnly[0]]: { qty: 0 } };
+    const pick = easyTonight(db, { pantry: p2 }, MON, { hour: 17, limit: 40 }).picks.find((p) => p.dinner.id === d0.id);
+    if (pick) { assert.equal(pick.ready, true); assert.ok(pick.sideOut.length >= 1); }
+  }
   // Leftovers and ready-made meals are the no-cooking options.
   const l = easyTonight(db, { pantry, leftovers: { '2026-11-15': { title: 'Chicken tacos', servings: 3, saved: 3, useBy: '2026-11-18' } } }, MON);
   assert.deepEqual(l.leftovers, [{ date: '2026-11-15', title: 'Chicken tacos', servings: 3 }]);
@@ -206,4 +227,14 @@ test('one dinner, two plates: a lighter one and a fuller one', () => {
   assert.match(g, /A lighter plate, if you want one/);
   assert.match(g, /A fuller plate, if you need one/);
   assert.doesNotMatch(g, /calor/i);
+});
+
+test('cinematic motion: numbers count up to exactly what was written', async () => {
+  const { parseNumber, formatNumber } = await import('../app/fx.js');
+  assert.deepEqual(parseNumber('$1,176.46'), { prefix: '$', value: 1176.46, decimals: 2 });
+  assert.deepEqual(parseNumber('5'), { prefix: '', value: 5, decimals: 0 });
+  assert.equal(parseNumber('5 of 6'), null, 'only plain numbers are animated');
+  assert.equal(parseNumber('≈ 770'), null);
+  assert.equal(formatNumber(1176.46, parseNumber('$1,176.46')), '$1,176.46');
+  assert.equal(formatNumber(0, parseNumber('$176.46')), '$0.00');
 });

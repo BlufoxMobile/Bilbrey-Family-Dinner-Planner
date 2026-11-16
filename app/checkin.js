@@ -71,8 +71,9 @@ export function weekSpend(state, week) {
 /** What a week can cost and still land on the monthly target (52 weeks, 12 months). */
 export const weeklyShare = (target) => round2((Number(target) * 12) / 52);
 
-/** How many of the weeks before this one the chart shows. */
+/** How many weeks the chart shows, and how many the written record keeps on the page. */
 export const HISTORY_WEEKS = 6;
+export const RECORD_WEEKS = 12;
 
 /**
  * The money check-in for one week (the one that's due, or the week in progress).
@@ -121,9 +122,16 @@ export function moneyCheckin(db, state, today, week = shownWeek(state, today)) {
   if (status !== 'over' && w.total > share * 1.5 && month.tripsLeft >= 0 && !month.tripsOver) tips.push({ text: `A big week (${money(w.total)}) is normal after a stock-up trip. What matters is the month, and it’s still on track.` });
   if (!tips.length) tips.push({ text: status === 'on' ? 'Nothing to change. Keep shopping from the list.' : 'Stick to the list on the next trip and the month lands on target.' });
 
+  // The record: twelve weeks, newest first, each with whether the family checked in on it.
+  const record = Array.from({ length: RECORD_WEEKS }, (_, k) => {
+    const s = weekSpend(state, { start: addDays(week.start, -7 * k), end: addDays(week.end, -7 * k) });
+    return { start: s.start, end: s.end, total: s.total, trips: s.trips, diff: round2(s.total - share), checked: isChecked(state, s.start) };
+  });
+  const oldest = record.map((r) => r.total > 0).lastIndexOf(true); // the first week with a receipt
+  const average = oldest >= 0 ? round2(record.slice(0, oldest + 1).reduce((t, r) => t + r.total, 0) / (oldest + 1)) : null;
   return {
     week: { ...w, share, over: w.total > share, done: week.end < today },
-    last, history, month,
+    last, history, record, average, month,
     year: { year: b.pace.year, yearTarget: b.pace.yearTarget, overYear: b.pace.overYear },
     waste, status, verdict, tips: tips.slice(0, 3),
     checked: state?.checkin?.money?.[week.start] || null,
@@ -226,6 +234,26 @@ export function weighTrend(weights, { today, goal = 'steady', day = CHECKIN_DAY 
   }
   out.note = out.note.trim();
   return out;
+}
+
+/**
+ * The written record of a person's weigh-ins: one row a week, newest first.
+ * → [{ week, date, lb, change (since the row before; null on the first), total (since the first) }]
+ */
+export function weighProgress(weights, day = CHECKIN_DAY) {
+  const weeks = weeklySeries(weighSeries(weights), day);
+  const r1 = (n) => Math.round(n * 10) / 10;
+  return weeks.map((w, i) => ({ ...w, change: i ? r1(w.lb - weeks[i - 1].lb) : null, total: r1(w.lb - weeks[0].lb) })).reverse();
+}
+
+/** "Down 3.6 lb in 3 weeks" / "Up 2.4 lb in 4 weeks" / "Holding steady over 5 weeks" / '' (one weigh-in or none). */
+export function progressLine(weights, day = CHECKIN_DAY) {
+  const rows = weighProgress(weights, day);
+  if (rows.length < 2) return rows.length ? 'First weigh-in is in.' : '';
+  const weeks = Math.max(1, Math.round(diffDays(rows[0].week, rows[rows.length - 1].week) / 7));
+  const span = `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
+  const t = rows[0].total;
+  return Math.abs(t) < SAME_LB ? `Holding steady over ${span}.` : `${t < 0 ? 'Down' : 'Up'} ${fmtLb(t)} in ${span}.`;
 }
 
 /** The weigh-ins the family's storage holds (only people who chose to keep theirs there). → [{ name, goal, weights }] */

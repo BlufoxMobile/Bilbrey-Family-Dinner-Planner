@@ -28,6 +28,7 @@ import * as checkinView from './views/checkin.js';
 import * as easyView from './views/easy.js';
 import * as motion from './motion.js';
 import * as tv from './tv.js';
+import * as fx from './fx.js';
 
 const VIEWS = {
   tonight, plan: planView, list: listView, pantry: pantryView, recipes: recipesView, recipe: recipeView,
@@ -213,6 +214,7 @@ export function render() {
   document.title = v.title ? `${v.title(app)} — The Bilbrey Family Dinner Planner` : 'The Bilbrey Family Dinner Planner';
   if (changedView) {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    fx.enter(main); // a new screen arrives; a re-render never replays it
     if (lastView && lastView !== 'gate') {
       // Driving with a remote or the keyboard from the navigation: stay on it. Otherwise the new screen takes focus: its first
       // control for a remote or a keyboard, the screen itself (for screen readers) for everyone else.
@@ -438,6 +440,7 @@ async function boot() {
   });
   delegate();
   motion.install();
+  fx.install();
   tv.install({ sheetOpen, closeSheet, changed: () => { applyTheme(); scheduleRender(); } });
   applyTheme();
   window.addEventListener('hashchange', onRoute);

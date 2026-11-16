@@ -16,7 +16,7 @@ function body(app, date) {
         ${dinnerPhoto(app, p.dinner, { size: 'thumb' })}
         <span class="pick-main"><b>${p.dinner.title}</b>
           <small>${p.cooker ? `${fmtMinutes(p.work)} to load the PossibleCooker, then it cooks itself` : `${fmtMinutes(p.work)} of work, on the table in ${fmtMinutes(p.total)}`}${p.loved ? ', a family favorite' : ''}</small>
-          <small class="${p.ready ? 'easy-ready' : 'easy-short'}">${p.ready ? 'Everything is in the house' : `Needs ${listJoin([...p.missing.slice(0, 3).map(lower), ...(p.missing.length > 3 ? [`${p.missing.length - 3} more`] : [])])} from the store`}${p.thaw.length ? `. If the ${listJoin(p.thaw.map(lower))} ${p.thaw.length === 1 ? 'is' : 'are'} still frozen, thaw in cold water first: about 30 minutes a pound` : ''}.</small>
+          <small class="${p.ready ? 'easy-ready' : 'easy-short'}">${p.ready ? (p.sideOut.length ? `The main is all in the house. Out of ${listJoin(p.sideOut.slice(0, 2).map(lower))} for the side: swap in one you have` : 'Everything is in the house') : `Needs ${listJoin([...p.missing.slice(0, 3).map(lower), ...(p.missing.length > 3 ? [`${p.missing.length - 3} more`] : [])])} from the store`}${p.thaw.length ? `. If the ${listJoin(p.thaw.map(lower))} ${p.thaw.length === 1 ? 'is' : 'are'} still frozen, thaw in cold water first: about 30 minutes a pound` : ''}.</small>
           ${costNote(costOf(app, p.dinner.id, null), { short: true, tag: 'small', cls: 'pick-cost' })}</span>
       </button></li>`)}</ul>`
     : html`<p class="hint">${ic('info', { size: 18 })}<span>No quick dinners are in the rotation right now. Pick any dinner, or bring some back from Recipes.</span></p>`}

@@ -1,7 +1,8 @@
 // "Easy tonight" (docs/spec/25 §25.4): on a night nobody has the energy, the least work that is
 // still a real dinner, from what is already in the house. Pure: no DOM, no clock.
 
-import { rotationList, benchList, itemsForNight, isMeat, dinnerSignal } from './planner.js';
+import { rotationList, benchList, itemsForNight, isMeat, dinnerSignal, scaleItems } from './planner.js';
+import { addDays } from './util.js';
 import { onHand, backups, ENOUGH } from './coverage.js';
 import { itemMeta } from './shopping.js';
 import { placeOf } from './freshness.js';
@@ -22,14 +23,16 @@ const plain = (name) => String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').replac
 /**
  * The easiest dinners for tonight, best first. Everything in the house beats a short thing to pick
  * up; nothing frozen solid beats a thaw; then the least hands-on work, with a loved dinner breaking ties.
- * → { picks: [{ dinner, work, total, cooker, ready, missing: [names], thaw: [names], loved }],
+ * → { picks: [{ dinner, work, total, cooker, ready (the main is in the house), missing: [names], sideOut: [names], thaw: [names], loved }],
  *     backups: [{ id, name }] (ready-made meals on the shelf), leftovers: [{ date, title, servings }] }
  */
 export function easyTonight(db, state, today, { limit = 3, hour = 17 } = {}) {
   const rem = onHand(db, state);
   const current = state?.plan?.[today]?.status === 'planned' ? state.plan[today].dinner : null;
+  // What the family just ate isn't an idea for tonight.
+  const recent = new Set([1, 2, 3].map((k) => state?.plan?.[addDays(today, -k)]).filter((e) => e?.dinner && e.status !== 'away').map((e) => e.dinner));
   const rate = (d, bench) => {
-    if (d.id === current) return null;
+    if (d.id === current || recent.has(d.id)) return null;
     const cooker = isSlowCooked(d);
     const work = handsOnMinutes(d);
     const total = Number(d.minutes) || work;
@@ -39,15 +42,17 @@ export function easyTonight(db, state, today, { limit = 3, hour = 17 } = {}) {
     const ids = Object.keys(items);
     if (!ids.length) return null;
     const missing = [];
+    const sideOut = []; // only a side is short: the dinner is still on, with another side
     const thaw = [];
+    const main = scaleItems(db, state, d.items || {});
     for (const id of ids) {
       const have = rem[id] ?? 0;
-      if (!(have === Infinity || have + 1e-9 >= items[id] * ENOUGH)) missing.push(plain(itemMeta(db, state, id).name));
+      if (!(have === Infinity || have + 1e-9 >= items[id] * ENOUGH)) (id in main ? missing : sideOut).push(plain(itemMeta(db, state, id).name));
       else if (isMeat(db, id) && have !== Infinity && placeOf(db, state, id) === 'freezer' && !cooker) thaw.push(plain(itemMeta(db, state, id).name));
     }
     const loved = dinnerSignal(state, d) === 'loved';
-    const score = missing.length * 100 + (thaw.length ? 30 : 0) + work + (bench ? 15 : 0) - (loved ? 8 : 0);
-    return { dinner: d, work, total, cooker, ready: !missing.length, missing, thaw, loved, score };
+    const score = missing.length * 100 + (thaw.length ? 30 : 0) + sideOut.length * 6 + work + (bench ? 15 : 0) - (loved ? 8 : 0);
+    return { dinner: d, work, total, cooker, ready: !missing.length, missing, sideOut, thaw, loved, score };
   };
   const rated = [
     ...rotationList(db, state).map((d) => rate(d, false)),

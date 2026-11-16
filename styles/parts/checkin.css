@@ -41,6 +41,17 @@
 .ck-table th:first-child { text-align: left; }
 .ck-table thead th { font-size: var(--t-xs); font-weight: 700; color: var(--ink-3); }
 .ck-table td:last-child { color: var(--ink); font-weight: 600; }
+.ck-table td, .ck-table th { padding-left: 8px; }
+.ck-table th:first-child { padding-left: 0; }
+.ck-progress td:nth-child(2) { color: var(--ink); font-weight: 600; }
+.ck-progress td:last-child { font-weight: 400; }
+.ck-progress .icon-btn { min-width: 36px; min-height: 36px; margin: -6px 0; }
+.ck-checked { display: inline-flex; vertical-align: -2px; color: var(--sage); }
+.ck-progress-list { display: grid; }
+.ck-progress-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.ck-progress-list li:last-child { border-bottom: 0; }
+.ck-progress-list span { color: var(--ink-2); }
+.ck-together .section-title .ic { color: var(--ember, var(--red)); }
 
 /* ---------------------------------------------------------------- the weigh-in */
 .ck-where { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--r-pill); background: var(--sage-tint); color: var(--ink-2); font-size: var(--t-xs); font-weight: 600; }
