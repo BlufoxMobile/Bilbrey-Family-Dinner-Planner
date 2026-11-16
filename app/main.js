@@ -3,6 +3,7 @@ import { apiBase, VERSION } from './config.js';
 import { loadDb } from './data.js';
 import { Store, settingsOf } from './state.js';
 import { todayISO, SHARED_PROFILE } from './util.js';
+import { followRenames } from './planner.js';
 import {
   html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, sheetOpen,
 } from './ui.js';
@@ -52,7 +53,8 @@ export const app = {
   store: null,
   ui: { anchor: null, swapPick: null, swapMode: false, recipeQuery: '', recipeFilters: {}, recipeTab: 'rotation', pantryQuery: '', listFilter: 'all', lunchWho: null, lunchAnchor: null, productsStore: 'sams', productsQuery: '' },
   route: { view: 'tonight', params: [] },
-  get state() { return this.store.state; },
+  // What every screen reads: the saved state, with replaced dinner ids followed (docs/spec/24 §24.8).
+  get state() { return followRenames(this.db, this.store.state); },
   get settings() { return settingsOf(this.store.state); },
   today() { return todayISO(); },
   /**

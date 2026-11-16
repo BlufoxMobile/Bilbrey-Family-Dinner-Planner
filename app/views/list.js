@@ -533,6 +533,7 @@ function itemSheet(app, key) {
             <button type="button" class="btn btn-small btn-quiet" data-action="item:product" data-store="${i.store}" data-id="${i.id}">Change</button>
           </span>
         </div>
+        ${when(i.store === 'sams' && app.db.ingredients[i.id]?.bulk?.note, () => html`<p class="hint bulk-note">${ic('snow', { size: 18 })}<span><b>${app.db.ingredients[i.id].bulk.freezes ? 'When it comes home:' : 'Keeping it:'}</b> ${app.db.ingredients[i.id].bulk.note}</span></p>`)}
         <div class="kv">
           <p><span>Buying</span><b>${formatPackQty(i)}</b></p>
           <p><span>Price</span><b>${i.cost == null ? '—' : `${money(i.cost)}${i.packs > 1 ? ` (${money(i.pack.price)} each)` : ''}`}</b></p>

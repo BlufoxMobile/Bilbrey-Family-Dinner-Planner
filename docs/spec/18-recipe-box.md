@@ -69,10 +69,13 @@ listings and the MC1101 quick guide (ninjakitchen.com itself refused the request
 Honest limits: the US booklet prints HIGH / MEDIUM / LOW where the recipes say HI / MED / LO. STEAM is a
 named button on some MC1101 panels but only a chart in the US quick-start guide, which lists eight functions
 without it, so the steamed sides were first written with SEAR/SAUTÉ on HI under a lid. **Jeff confirmed on
-2026-11-15 that his cooker has STEAM**, and the two sides that steam in the pot (steamed carrots, steamed
-green beans with lemon) now use it: the step's `setting` is `STEAM`, with the same cup of water, the lid on,
-a time to set (10 and 8 minutes) and the same cues ("about 5 minutes to come up to steam first… 8–10
-minutes of steam: done when a fork slides in"). No dinner steams in the pot. The Worker's kitchen text for Claude (ideas
+2026-11-15 that his cooker has STEAM**, and the sides that steam in the pot (steamed carrots, steamed
+green beans with lemon, and §24's steamed broccoli, cauliflower & carrots) use it: the step's `setting` is
+`STEAM`, with the cup of water, the lid on, a time to set (9, 7 and 7 minutes) and one wording for what the
+machine does ("The cooker brings the water to a boil first, then counts the time down and beeps"), followed
+by the doneness cue. Steamed broccoli and steamed mixed vegetables stay on the stove (the cooker is usually
+busy with the main dish) with a tip that STEAM does them hands-off when it is free (§24.6). No dinner steams
+in the pot. The Worker's kitchen text for Claude (ideas
 and the chat connector) says the STEAM function is there. The pot is nonstick (wooden or silicone tools). The white-rice program's
 length isn't published; the rice side says "about 25 minutes" and lets the cooker finish on its own.
 

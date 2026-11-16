@@ -62,7 +62,43 @@ export function dinnerById(db, state, id) {
   if (!id) return null;
   if (db.dinners[id]) return db.dinners[id];
   const c = state?.customDinners?.[id];
-  return c ? normalizeDinner({ ...c, id, custom: true }) : null;
+  if (c) return normalizeDinner({ ...c, id, custom: true });
+  // An id the recipe box replaced (docs/spec/24: turkey-chili → chicken-bean-chili) finds its successor.
+  const to = db.renamed?.[id];
+  return to ? db.dinners[to] || null : null;
+}
+
+/** The ids a dinner used to have (docs/spec/24 §24.1). */
+export function formerIds(db, id) {
+  return Object.keys(db?.renamed || {}).filter((old) => db.renamed[old] === id);
+}
+
+const FOLLOWED = new WeakMap();
+/**
+ * The family's saved state with replaced dinner ids followed to their successors, for reading.
+ * Nothing saved is rewritten (an older copy of the app still open keeps finding its ids):
+ *   - a night planned under an old id reads as the new dinner, so the planner's variety rules, the
+ *     list and cook mode all see one dinner;
+ *   - "loved" follows the dinner (the family liked the dish). "Not for us" does not: the meat is
+ *     what changed, so the new version gets a fresh start, as do retire and promote records.
+ * Returns `state` itself when there is nothing to follow.
+ */
+export function followRenames(db, state) {
+  const map = db?.renamed;
+  if (!state || typeof state !== 'object' || !map || !Object.keys(map).length) return state;
+  const hit = FOLLOWED.get(state);
+  if (hit && hit.db === db) return hit.out;
+  let out = state;
+  const own = (k) => { if (out === state) out = { ...state }; if (out[k] === state[k]) out[k] = { ...(state[k] || {}) }; return out[k]; };
+  for (const [date, e] of Object.entries(state.plan || {})) {
+    const to = e && typeof e === 'object' && !state.customDinners?.[e.dinner] ? map[e.dinner] : null;
+    if (to) own('plan')[date] = { ...e, dinner: to };
+  }
+  for (const [old, to] of Object.entries(map)) {
+    if (state.votes?.[old] && state.votes?.[to] === undefined && signalOfVotes(state.votes[old]) === 'loved') own('votes')[to] = state.votes[old];
+  }
+  FOLLOWED.set(state, { db, out });
+  return out;
 }
 
 export function allDinners(db, state) {
@@ -641,6 +677,8 @@ class Ledger {
     for (const [id, p] of Object.entries(state?.pantry || {})) {
       if (typeof p?.qty === 'number' && p.qty > 0 && !p.low) this.rem[id] = p.qty;
     }
+    // Packs this plan has sent to the store so far: what is left of them is the "rest of the pack".
+    this.opened = new Set();
   }
 
   /**
@@ -691,8 +729,38 @@ class Ledger {
       const short = need - have;
       const packs = Math.ceil(short / p.size - 1e-9);
       this.rem[id] = have + packs * p.size - need;
+      if (packs > 0) this.opened.add(id);
     }
   }
+}
+
+/**
+ * Making the most of Sam's Club bulk packs (docs/spec/24 §24.5 and §24.8), as a modest nudge on a
+ * candidate dinner's score. It reads the catalog's `bulk` on each ingredient, not the dinner tag
+ * (99 of 105 dinners carry that):
+ *   finish  the plan already bought a bulk pack of this meat for an earlier night, and this dinner
+ *           uses the rest of it, so a 5½-lb tray of thighs becomes two dinners, not one and a bag
+ *           forgotten in the freezer;
+ *   onHand  the bulk meat is already portioned in the freezer;
+ *   side    the same for the big bags that aren't meat (frozen vegetables, potatoes, rice).
+ * Each counts for the share of the dinner's need that the pack covers, and the whole nudge is
+ * capped, so it tips a close call and never outweighs the rules that keep the week varied (a
+ * second chicken dinner in a row still loses 0.5, a repeat inside the window is still not allowed).
+ */
+export const BULK_NUDGE = Object.freeze({ finish: 0.5, onHand: 0.3, side: 0.15, max: 0.8 });
+export function bulkScore(db, state, ledger, items) {
+  let s = 0;
+  for (const [id, need] of Object.entries(items || {})) {
+    const ing = db.ingredients[id];
+    if (!ing?.bulk || !(need > 0)) continue;
+    const have = ledger.rem[id] || 0;
+    if (have <= 1e-9) continue;
+    const share = Math.min(1, have / need);
+    if (!ing.meat) s += BULK_NUDGE.side * share;
+    else if (ledger.opened.has(id)) s += BULK_NUDGE.finish * share;
+    else s += BULK_NUDGE.onHand * share;
+  }
+  return Math.min(BULK_NUDGE.max, s);
 }
 
 // ---------------------------------------------------------------- the generator
@@ -854,6 +922,7 @@ export function generatePlan({ db, state, dates, mode = 'fill', by = 'Family', a
       let first = 0;
       for (const id of Object.keys(items)) if ((ledger.rem[id] || 0) > 0) first += urgency(db, state, id, date) * (isMeatItem(db, state, id) ? 1.5 : 1);
       score += 0.6 * Math.min(8, first);
+      score += bulkScore(db, state, ledger, items);
       if (bonus) score += bonus(date, d, items, money) || 0;
       if (!best || score > best.score + 1e-9 || (Math.abs(score - best.score) <= 1e-9 && d.id < best.c.d.id)) best = { score, c };
     }

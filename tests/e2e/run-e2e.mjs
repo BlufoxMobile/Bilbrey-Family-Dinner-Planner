@@ -449,6 +449,59 @@ test('calories and protein: today’s line on Tonight for whoever this device pi
   await page.waitForSelector('.today-nutri');
 });
 
+test('what a meal costs (docs/spec/24): beside the calories on Tonight, the week, the picker, the recipe box and the recipe', async () => {
+  const COST = /^(about )?\$\d+\.\d\d a serving$/;
+  const FULL = /^(about )?\$\d+\.\d\d a serving · \$\d+\.\d\d for five/;
+  await go(page, '#/tonight', '.page-tonight');
+  const hero = (await page.textContent('.hero .hero-cost')).trim();
+  assert.match(hero, FULL, 'tonight: per serving and for five');
+  const [each, five] = hero.match(/\$(\d+\.\d\d)/g).map((x) => Number(x.slice(1)));
+  assert.ok(Math.abs(each * 5 - five) <= 0.03, `${each} a serving is a fifth of ${five}`);
+  assert.ok((await page.$$eval('.menu-row .menu-cost', (els) => els.map((e) => e.textContent.trim()))).every((t) => COST.test(t)), 'the rest of the week carries the short line');
+  // The week's cards and the summary under them.
+  await go(page, '#/plan', '.page-plan');
+  const cards = await page.$$eval('.day .day-cost', (els) => els.map((e) => e.textContent.trim()));
+  assert.ok(cards.length >= 5 && cards.every((t) => COST.test(t)), `every planned night shows its cost (${cards.length})`);
+  assert.match(await page.textContent('.plan-summary'), /dinners planned(, \d+ nights? away)?: (about )?\$\d+\.\d\d a dinner, \$\d+\.\d\d a plate\. About \$[\d,]+\.\d\d in groceries on the list\./);
+  // The dinner picker: every option can be told apart by price before choosing.
+  await page.click('.day:not(.is-today):not(.is-past) .day-hit');
+  await page.waitForSelector('dialog[open] [data-action="night:pick"]');
+  await page.click('dialog[open] [data-action="night:pick"]');
+  await page.waitForSelector('dialog[open] .pick-row');
+  const picks = await page.$$eval('dialog[open] .pick-row', (els) => els.map((e) => e.querySelector('.pick-cost')?.textContent.trim() || ''));
+  assert.ok(picks.length > 20 && picks.every((t) => COST.test(t)), 'every option in the picker has a cost');
+  assert.ok(new Set(picks).size > 10, 'and they differ');
+  await page.keyboard.press('Escape');
+  await settled(page);
+  // The recipe box: the line on each card, and "Cheapest first".
+  await go(page, '#/recipes', '.page-recipes');
+  assert.ok((await page.$$eval('.r-card .r-cost', (els) => els.map((e) => e.textContent.trim()))).every((t) => COST.test(t)));
+  assert.ok((await page.$$eval('#rf-sort option', (els) => els.map((e) => e.textContent.trim()))).includes('Sort: Cheapest first'));
+  await page.selectOption('#rf-sort', 'cheap');
+  await page.waitForFunction(() => document.querySelector('#rf-sort')?.value === 'cheap');
+  await page.waitForTimeout(200);
+  const prices = await page.$$eval('.r-card .r-cost b', (els) => els.map((e) => Number(e.textContent.replace('$', ''))));
+  assert.ok(prices.length > 20 && prices.every((x, i) => i === 0 || x >= prices[i - 1]), `cheapest plate first: ${prices.slice(0, 12).join(', ')}`);
+  assert.ok(prices[prices.length - 1] > prices[0] * 1.5, `a real spread: $${prices[0]} to $${prices[prices.length - 1]}`);
+  // The recipe: the line at the top, and the list ingredient by ingredient that adds up to it.
+  await page.click('.r-card');
+  await page.waitForSelector('.page-recipe .recipe-cost');
+  const top = (await page.textContent('.page-recipe .recipe-cost')).trim();
+  assert.match(top, FULL);
+  assert.equal(await page.locator('#recipe-cost[open]').count(), 0, 'the list is folded away until asked for');
+  await page.click('#recipe-cost > summary');
+  await page.waitForSelector('#recipe-cost[open] .cost-items li');
+  const rows = await page.$$eval('#recipe-cost .cost-items li:not(.ci-total)', (els) => els.map((e) => ({ name: e.querySelector('.ci-name').firstChild.textContent.trim(), where: e.querySelector('.ci-name small').textContent, cost: e.querySelector('.ci-cost').textContent })));
+  assert.ok(rows.length >= 4 && rows.every((r) => r.name && /Sam’s Club|Jewel-Osco/.test(r.where)), 'each ingredient with its amount and store');
+  const sum = rows.reduce((n, r) => n + (Number((r.cost.match(/\$(\d+\.\d\d)/) || [])[1]) || 0), 0);
+  const total = Number((await page.textContent('#recipe-cost .ci-total .ci-cost')).replace('$', ''));
+  assert.ok(Math.abs(sum - total) <= 0.01 * rows.length, `the lines (${sum.toFixed(2)}) add up to the total (${total})`);
+  assert.ok(Math.abs(total - Number(top.match(/\$(\d+\.\d\d) for five/)[1])) < 0.005, 'the same total as the line at the top');
+  if (/^about/.test(top)) assert.match(await page.textContent('#recipe-cost'), /Prices marked est\. are estimates until a receipt or a price check replaces them\./);
+  assert.ok(await noOverflow(page));
+  assert.ok(await page.$eval('#recipe-cost > summary', (el) => el.getBoundingClientRect().height >= 44), 'a 44 px target');
+});
+
 test('coupons: Clip Jewel coupons and Sam’s Instant Savings, honestly explained', async () => {
   await go(page, '#/list', '.page-list');
   await page.click('[data-action="list:coupons"][data-store="jewel"]');
@@ -485,8 +538,10 @@ test('thumbs: the family’s one signal. Thumbs down on Tonight is “not for us
   s = (await familyState(page)).state;
   assert.equal(s.plan[TODAY].dinner, before);
   assert.ok(!s.retired?.[before] && s.votes?.[before] === undefined);
-  // A thumbs up is “loved”: a family favorite.
-  const wasFav = !!(await page.$('.hero-rate .thumb-up.is-on'));
+  // A thumbs up is “loved”: a family favorite. (Wait for the hero to be tonight's dinner again: the redraw after Undo is not instant.)
+  await page.waitForFunction((id) => document.querySelector('.hero-rate [data-action="vote:dinner"]')?.dataset.id === id, before);
+  await settled(page);
+  const wasFav = !!(await page.$('.hero-rate .rate-row:first-child .thumb-up.is-on'));
   if (wasFav) {
     // The recipe box already calls this one a favorite, so the pressed thumb takes that back: an explicit “fine”.
     await page.locator('.hero-rate [data-action="vote:dinner"][data-value="1"]').click();
@@ -494,6 +549,7 @@ test('thumbs: the family’s one signal. Thumbs down on Tonight is “not for us
     assert.deepEqual((await familyState(page)).state.votes[before], { Family: 0 });
     await page.waitForSelector('.hero-rate .rate-row:first-child .thumb-up:not(.is-on)');
   }
+  await waitFor(() => synced(page), { timeout: 3000, step: 50 }).catch(() => {}); // a sync landing mid-click would redraw the thumb under it
   await page.locator('.hero-rate [data-action="vote:dinner"][data-value="1"]').click();
   await toastMatch(page, /is a family favorite now/);
   await page.waitForSelector('.hero-rate .thumb-up.is-on');

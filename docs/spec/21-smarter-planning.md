@@ -163,3 +163,9 @@ leftovers["<cooked date>"]: { …§22.5, lunches?: [{ name, date }], frozen?: n,
 pantry[id].sinceAbout: "week"|"month"|"older"                // `since` was a rough answer
 custom["custom-leftover-…"]: { name, unit: "plates", aisle, kind, storage: "freezer", each }   // each = a plate's food cost
 ```
+
+### Bulk packs (added with docs/spec/24)
+
+The generator also nudges toward finishing a Sam's Club bulk pack it has already put on the list, and
+toward bulk meat already in the freezer: `bulkScore` / `BULK_NUDGE` in `app/planner.js`, described in
+§24.10 item 7. It is a score nudge only; none of the rules above change.

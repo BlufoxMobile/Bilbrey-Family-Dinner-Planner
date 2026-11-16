@@ -9,7 +9,8 @@ import { listJoin, byLabel } from '../util.js';
 import { buildList, plannedNights, unitText } from '../shopping.js';
 import { generateOps, swapNightsOps, settingOps, markCookedOps, undoFor } from '../actions.js';
 import { del } from '../state.js';
-import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition, thumbs, prepCard, leftoversAskCard, leftoverRows } from './common.js';
+import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition, thumbs, prepCard, leftoversAskCard, leftoverRows, costOf, costNote } from './common.js';
+import { planCost } from '../cost.js';
 import { plateNutrition, fmtKcal } from '../nutrition.js';
 import { openNight } from './sheets.js';
 import { tripAdviceCard } from './budget.js';
@@ -65,6 +66,7 @@ function dayCard(app, date, { compact = false } = {}) {
       ${away ? html`<span class="day-ph day-ph-away">${ic('moon', { size: compact ? 20 : 26 })}</span>` : d ? dinnerPhoto(app, d, { size: compact ? 'thumb' : 'card' }) : html`<span class="day-ph">${ic('plus', { size: 22 })}</span>`}
       <span class="day-title">${label}</span>
       ${when(d && !away && !compact && showNutrition(app), () => { const n = plateNutrition(app.db, app.state, d.id, e); return n ? html`<span class="day-kcal">≈ ${fmtKcal(n.kcal)} cal, ${Math.round(n.protein)} g protein</span>` : ''; })}
+      ${when(d && !away && !compact, () => costNote(costOf(app, d.id, e), { short: true, tag: 'span', cls: 'day-cost' }))}
       ${when(away && e.away?.note, () => html`<span class="day-note">${e.away.note}</span>`)}
       ${when(!d && !away && !past, () => html`<span class="day-note">${type === 'burger' ? 'Burger night' : type === 'pizza' ? 'Pizza night' : 'Open'}</span>`)}
       ${when(cooked, () => html`<span class="day-status">${ic('checkCircle', { size: 16 })}Cooked</span>`)}
@@ -148,7 +150,11 @@ export function render(app) {
     ${catchUpCard(app)}
     ${leftoversCard(app)}
     ${freezerCard(app)}
-    <p class="plan-summary">${planned} ${planned === 1 ? 'dinner' : 'dinners'} planned${away ? `, ${away} ${away === 1 ? 'night' : 'nights'} away` : ''}. About <a href="#/list">${money(list.total)} in groceries</a>${list.nights.length ? `, ${money(list.perDinner)} a dinner` : ''}.</p>
+    <p class="plan-summary">${planned} ${planned === 1 ? 'dinner' : 'dinners'} planned${away ? `, ${away} ${away === 1 ? 'night' : 'nights'} away` : ''}${(() => {
+      // What the food on the plates costs (docs/spec/24 §24.7), which is not what the trip costs: the list buys whole packs, lunches and extras.
+      const pc = planCost(app.db, app.state, range.dates, { today });
+      return pc.dinners && pc.total > 0 ? html`: ${pc.estimated ? 'about ' : ''}<b>${money(pc.perDinner)}</b> a dinner, <b>${money(pc.perServing)}</b> a plate` : '';
+    })()}. About <a href="#/list">${money(list.total)} in groceries</a> on the list.</p>
     ${veggieCard(app, range)}
     ${grid(app, range)}
     ${when(auto, () => html`<p class="muted small center">Re-planning keeps cooked and away nights and anything the family set by hand.</p>`)}
@@ -369,6 +375,7 @@ function aheadCard(app) {
       <p class="ahead-ba-now"><b>About ${money(now.groceries)}</b> in groceries${was && Math.abs(was.groceries - now.groceries) >= 1 ? html` <span class="ahead-was ${now.groceries < was.groceries ? 'is-down' : ''}">${now.groceries < was.groceries ? `down from ${money(was.groceries)}` : `${was.hadOpen ? 'the usual plan' : 'it was'}: ${money(was.groceries)}`}</span>` : ''}</p>
       ${when(was, () => html`<p class="muted small">${aheadVerdict(was, now)}</p>`)}
     </div>`)}
+    ${aheadCost(app, start, a.end)}
     <div class="cover-meter" role="img" aria-label="${s.nights.filter((n) => n.covered).length} of ${s.nights.length} days covered by the pantry">${s.nights.map((n) => html`<span class="cover-pip ${n.covered ? 'is-on' : ''} ${n.away ? 'is-away' : ''}" title="${weekdayShort(n.date)} ${shortDate(n.date)}: ${n.away ? 'away' : n.covered ? 'covered' : n.open ? 'nothing planned' : 'needs groceries'}"></span>`)}</div>
     ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
     ${need.length ? html`<h3 class="ahead-sub">Still needs groceries<span class="count">${count(need.length, 'night')}</span></h3>
@@ -379,6 +386,21 @@ function aheadCard(app) {
     <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}Make the shopping list</button>
     <p class="muted small">One list for ${start === a.end ? shortDate(start) : rangeLabel(start, a.end)}, both stores, with only what the pantry doesn’t cover.</p>
   </section>`;
+}
+
+/**
+ * What the planned dinners cost (docs/spec/24 §24.7): the food on the plates, the average dinner and
+ * plate, how much of it is already in the house, and what the trip for them comes to. The trip is
+ * only ever named as a trip: it buys whole packs, so it is not what the dinners cost.
+ */
+function aheadCost(app, start, end) {
+  const c = planCost(app.db, app.state, datesBetween(start, end), { today: app.today() });
+  if (!c.dinners || !(c.total > 0)) return '';
+  const about = c.estimated ? 'about ' : '';
+  const house = c.pantryValue >= 1 ? `${money(c.pantryValue, { whole: true })} of it is already in the house; ` : '';
+  const trip = c.toBuy >= 1 ? `the trip for them comes to ${about}${money(c.toBuy, { whole: true })}.` : 'nothing more to buy for them.';
+  return html`<p class="ahead-cost cost-line" id="ahead-cost">${c.dinners === 1 ? 'This dinner' : `These ${c.dinners} dinners`}: ${about}<b>${money(c.total, { whole: true })}</b> of food${c.dinners > 1 ? html`, <b>${money(c.perDinner)}</b> a dinner` : ''}, <b>${money(c.perServing)}</b> a plate.
+    <span class="cost-have">${(house + trip).replace(/^./, (ch) => ch.toUpperCase())}</span></p>`;
 }
 
 /** One plain sentence for the before/after. */

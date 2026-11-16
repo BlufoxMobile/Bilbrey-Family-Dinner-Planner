@@ -3,15 +3,16 @@
 // timed together, detailed steps, each side's own method, tips, safe temperatures, leftovers and
 // nutrition per plate. Then the family's signal (loved / not for us), and joining or rejoining the rotation.
 import { html, ic, when, openSheet, tf } from '../ui.js';
-import { addDays, datesBetween, relativeDay, shortDate, dayWord, dayAndDate, listJoin } from '../util.js';
+import { addDays, datesBetween, relativeDay, shortDate, dayWord, dayAndDate, listJoin, money } from '../util.js';
 import { dinnerById, isRetired, isPromoted, isFavorite, findInPlan, implicitPromotions } from '../planner.js';
 import { settingsOf } from '../state.js';
 import { voteOps, restoreOps, promoteOps } from '../actions.js';
 import { unitText } from '../shopping.js';
 import {
   sidesFor, dinnerPhoto, sidePhoto, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote,
-  plate, leanMark, cic, equipIcon, equipLabel, whyList, timelineChart, plateGuide, isDismissed,
+  plate, leanMark, cic, equipIcon, equipLabel, whyList, timelineChart, plateGuide, isDismissed, costOf, costNote,
 } from './common.js';
+import { costLine } from '../cost.js';
 import { entreeNutrition, sideNutrition, lighterSide, fmtKcal, LEAN_RULE } from '../nutrition.js';
 import {
   recipeTimes, recipeTips, leftoversNote, fmtMinutes, stepDetails, equipmentSettings, safeTemps, plateRecipes, cookTracks, cookTimeline,
@@ -23,6 +24,29 @@ import { cookProgress } from './cook.js';
 export const title = (app) => dinnerById(app.db, app.state, app.route.params[0])?.title || 'Recipe';
 
 const PLATE_GUIDE_KEY = 'plate-guide';
+const STORE_NAMES = { sams: 'Sam’s Club', jewel: 'Jewel-Osco' };
+const upFirst = (t) => String(t || '').replace(/^./, (c) => c.toUpperCase());
+
+/**
+ * What the dinner costs, ingredient by ingredient (docs/spec/24 §24.7): the amount used times the
+ * pack's price per unit, at the store the list would buy it from, dearest first. "est." marks a
+ * price nobody has paid or checked yet. Bulk meat says how the Sam's pack is portioned.
+ */
+function costDetail(app, cost) {
+  if (!cost || !(cost.total > 0)) return '';
+  const bulk = cost.items.map((r) => ({ r, ing: app.db.ingredients[r.id] })).filter(({ ing }) => ing?.bulk?.note && ing.meat);
+  return html`<details class="cost-detail" id="recipe-cost">
+    <summary><span class="cost-sum"><b>What it costs</b><small>${costLine(cost)}</small></span></summary>
+    <ul class="cost-items">${cost.items.map((r) => html`<li>
+      <span class="ci-name">${upFirst(plainName(r.name))}<small>${unitText(r.qty, r.unit)}${STORE_NAMES[r.store] ? `, ${STORE_NAMES[r.store]}` : ''}</small></span>
+      <span class="ci-cost">${r.cost == null ? html`<small>no price yet</small>` : html`${money(r.cost)}${r.estimated ? html`<small>est.</small>` : ''}`}</span>
+    </li>`)}
+      <li class="ci-total"><span class="ci-name">For five</span><span class="ci-cost">${money(cost.total)}</span></li>
+    </ul>
+    <p class="muted small">Each line is the amount this dinner uses, at that pack’s price: a 10-lb bag isn’t charged to one dinner.${cost.estimated ? ' Prices marked est. are estimates until a receipt or a price check replaces them.' : ''}</p>
+    ${bulk.map(({ r, ing }) => html`<p class="cost-bulk">${ic('snow', { size: 18 })}<span><b>${upFirst(plainName(r.name))}</b> ${ing.bulk.freezes ? 'comes in a Sam’s bulk pack.' : 'comes in a big Sam’s pack.'} ${ing.bulk.note}</span></p>`)}
+  </details>`;
+}
 
 /** Ingredients for five, each with whether it's already in the house. */
 export function ingredients(app, items, { check = true } = {}) {
@@ -115,6 +139,7 @@ export function render(app) {
   const cookedTonight = isTonight && entry?.status === 'cooked';
   const sides = sidesFor(app, d.id, entry);
   const facts = showNutrition(app) ? plate(app, d.id, entry) : null;
+  const cost = costOf(app, d.id, entry);
   const recs = plateRecipes(app.db, app.state, d.id, entry);
   const tl = cookTimeline(cookTracks(recs));
   const steps = stepDetails(d);
@@ -140,6 +165,7 @@ export function render(app) {
         ${when(why.length, () => html`<div class="recipe-why"><p class="why-h">${isTonight ? 'Why it’s on the plan tonight' : nightOf ? `Why it’s on the plan ${relativeDay(nightOf, today).toLowerCase()}` : 'Why make it'}</p>${whyList(why)}</div>`)}
         ${timeStrip(d, tl)}
         ${when(showNutrition(app), () => html`<p class="recipe-nutri">${nutri(app, facts, { suffix: sides.length ? `a plate with ${sides.length === 1 ? 'its side' : 'both sides'}` : 'a plate' })}</p>`)}
+        ${costNote(cost, { house: true, cls: 'recipe-cost' })}
         ${(() => {
           const idea = lighterSide(app.db, app.state, d.id, entry);
           return idea ? lighterChip(app, {
@@ -186,6 +212,7 @@ export function render(app) {
           <h3 class="sub-title">${d.title}</h3>
           ${ingredients(app, d.items)}
           ${sides.map((s) => html`<h3 class="sub-title">${s.info?.title}</h3>${ingredients(app, s.info?.items || {})}`)}
+          ${costDetail(app, cost)}
         </section>
       </div>
 

@@ -154,6 +154,11 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   assert.match(ba, /About \$[\d,]+\.\d\d in groceries/);
   assert.match(ba, /the usual plan: \d+/);
   assert.match(ba, /Against planning the open nights the usual way: \d+ more dinners? from what’s already here/);
+  // What those dinners cost (docs/spec/24 §24.7): the food, the average dinner and plate, and the trip named as a trip.
+  const cost = (await page.textContent('#ahead-cost')).replace(/\s+/g, ' ').trim();
+  assert.match(cost, /^These 14 dinners: (about )?\$[\d,]+ of food, \$\d+\.\d\d a dinner, \$\d+\.\d\d a plate\. \$[\d,]+ of it is already in the house; the trip for them comes to (about )?\$[\d,]+\.$/);
+  const [food, perDinner, perPlate] = cost.match(/\$[\d,.]+\d/g).map((x) => Number(x.replace(/[$,]/g, '')));
+  assert.ok(Math.abs(food / 14 - perDinner) < 0.6 && Math.abs(perDinner / 5 - perPlate) < 0.01, `${food} of food is ${perDinner} a dinner and ${perPlate} a plate`);
   const card = await page.textContent('#ahead-card');
   assert.match(card, /Your pantry covers \d+ dinners?/);
   assert.match(card, /Uses up the .+ from (Jul 1|Sep 3)/);

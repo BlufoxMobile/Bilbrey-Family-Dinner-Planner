@@ -116,7 +116,8 @@ test('validator: no raw cucumber, onion or tomato in a recipe, a lunch or a pict
 });
 
 test('lunches: the raw-tomato salad bowls are out, and every lunch still resolves', () => {
-  for (const id of ['tf-blt-chicken-bowl', 'bonduelle-chicken-blt']) assert.equal(lunchItem(db, {}, id), null, id);
+  // The Bonduelle BLT bowl came back for Jeff with the tomatoes left out (docs/spec/24, tests/recipes2.test.mjs).
+  assert.equal(lunchItem(db, {}, 'tf-blt-chicken-bowl'), null);
   assert.ok(db.lunch.swaps.every((s) => db.lunch.items[s.from] && db.lunch.items[s.to]));
   for (const cfg of Object.values(db.lunch.defaults)) for (const ids of Object.values(cfg.slots)) for (const id of ids) assert.ok(db.lunch.items[id], id);
   const unknown = check((d) => { d.lunches.items[0].items.madeUpThing = 1; });
@@ -210,12 +211,13 @@ test('validator: cooker settings are real ones, with times the machine allows', 
   assert.ok(says(check((d) => { dinner(d, id).equipment = ['instant pot']; }), /equipment "instant pot" not allowed/));
   for (const s of ['SLOW COOK on LO', 'SLOW COOK on HI', 'SEAR/SAUTÉ on HI', 'SEAR/SAUTÉ on MED', 'BRAISE', 'STEAM', 'WHITE RICE', 'KEEP WARM']) assert.ok(COOKER_SETTING.test(s), s);
   // Jeff's cooker has STEAM (confirmed 2026-11-15): the sides that steam in the pot use it, with the water, the lid and a time.
-  for (const id of ['steamed-carrots', 'cooker-green-beans']) {
+  for (const id of ['steamed-carrots', 'cooker-green-beans', 'steamed-normandy-vegetables']) {
     const steam = db.sides[id].stepDetail.filter((x) => x.setting === 'STEAM');
     assert.equal(steam.length, 1, `${id} steams with STEAM`);
-    assert.match(steam[0].text, /Pour 1 cup of water into the PossibleCooker pot.+put the lid on\. Select STEAM, set the time to \d+ minutes and press START\/STOP /);
-    assert.match(steam[0].text, /about 5 minutes to come up to steam first\)\. The \w+ need \d+–\d+ minutes of steam: they’re done when/);
-    assert.ok(steam[0].minutes >= 10);
+    assert.match(steam[0].text, /Pour 1 cup of water into the PossibleCooker pot.+put the lid on\. Select STEAM, set the time to \d+ minutes and press START\/STOP\./);
+    assert.match(steam[0].text, /The cooker brings the water to a boil first, then counts the time down and beeps\./, 'one wording for the preheat (docs/spec/24 §24.6)');
+    if (id !== 'steamed-normandy-vegetables') assert.match(steam[0].text, /The \w+ are done when/, `${id} keeps its doneness cue`);
+    assert.ok(steam[0].minutes >= 10, 'the step allows for the water coming to a boil');
     assert.doesNotMatch(JSON.stringify(recipes.sides.find((x) => x.id === id)), /SEAR\/SAUTÉ/, `${id}: no sear/sauté workaround left`);
   }
   for (const d of [...db.dinnerList, ...db.sideList]) for (const st of d.stepDetail) if (/\bsteam\b/i.test(st.text) && /PossibleCooker pot/.test(st.text)) assert.equal(st.setting, 'STEAM', `${d.id}: a step that steams in the pot uses STEAM`);
@@ -224,7 +226,8 @@ test('validator: cooker settings are real ones, with times the machine allows', 
 
 test('new ingredients are in the catalog with packs, prices marked as estimates, and nutrition', () => {
   const catalog = read('data/catalog.json').ingredients;
-  for (const id of ['whiteBeans', 'celery', 'turkeySausage', 'greenChiles', 'beefBroth']) {
+  // turkeySausage was one of these until the family said chicken, not turkey (docs/spec/24).
+  for (const id of ['whiteBeans', 'celery', 'greenChiles', 'beefBroth']) {
     const ing = catalog[id];
     assert.ok(ing, id);
     for (const st of Object.keys(ing.packs)) for (const tier of ['generic', 'name']) {
@@ -234,7 +237,8 @@ test('new ingredients are in the catalog with packs, prices marked as estimates,
     assert.ok(db.nutrition.per[id].kcal >= 0 && db.nutrition.per[id].carbs >= 0, `${id} has nutrition`);
     assert.ok(db.dinnerList.some((d) => d.items[id]), `${id} is used`);
   }
-  assert.equal(catalog.turkeySausage.meat, true);
+  assert.equal(catalog.turkeySausage.meat, true, 'the id stays so receipts and the pantry still match');
+  assert.ok(!db.dinnerList.some((d) => d.items.turkeySausage || d.items.groundTurkey), 'no dinner uses turkey');
 });
 
 // ---------------------------------------------------------------- detailed recipes

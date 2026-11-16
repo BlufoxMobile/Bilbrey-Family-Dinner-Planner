@@ -186,7 +186,7 @@ function openEditor(app, name) {
         ${swapIdeas(app, name, { inEditor: true })}
         ${lunchSlots(app.db).map((sl) => {
           const list = cfg.slots[sl.id] || [];
-          const lib = lunchLibrary(app.db, app.state, sl.id);
+          const lib = lunchLibrary(app.db, app.state, sl.id, name);
           return html`<section class="ed-slot" aria-labelledby="ed-${sl.id}">
             <h3 id="ed-${sl.id}" class="sheet-h">${sl.label}<small>${list.length > 1 ? `${list.length} in rotation` : list.length ? 'Every day' : 'None packed'}</small></h3>
             <ul class="ed-list">${lib.map((it) => {
@@ -225,7 +225,7 @@ function openSlot(app, name, date, slot) {
     render: () => {
       const l = lunchFor(app.db, app.state, name, date);
       const cur = l?.slots.find((s) => s.slot === slot);
-      const lib = lunchLibrary(app.db, app.state, slot).filter((it) => lunchVote(app.state, it.id, name) !== -1 || it.id === cur?.id);
+      const lib = lunchLibrary(app.db, app.state, slot, name).filter((it) => lunchVote(app.state, it.id, name) !== -1 || it.id === cur?.id);
       return html`
         ${when(cur?.item, () => html`<div class="rate-row rate-row-lunch"><span class="rate-name"><small>Does ${name} like it?</small><b>${cur.item.title}</b></span>${thumbs(app, { kind: 'lunch', id: cur.id, person: name, label: cur.item.title })}</div>
           <p class="muted small">A thumbs down takes it out of ${name}’s lunches for good (it’s still in the library to add back).</p>`)}
@@ -285,7 +285,7 @@ function openAdd(app) {
           const list = st.slots[sl.id] || [];
           return html`<section class="ed-slot" aria-labelledby="add-${sl.id}">
             <h3 id="add-${sl.id}" class="sheet-h">${sl.label}<small>${list.length > 1 ? `${list.length} in rotation` : list.length ? 'Every day' : 'Pick one or more'}</small></h3>
-            <ul class="ed-list">${lunchLibrary(app.db, app.state, sl.id).map((it) => {
+            <ul class="ed-list">${lunchLibrary(app.db, app.state, sl.id, st.name.trim()).map((it) => {
               const pos = list.indexOf(it.id);
               const n = lunchItemNutrition(app.db, it);
               return html`<li><button type="button" class="ed-item ${pos >= 0 ? 'is-on' : ''}" aria-pressed="${tf(pos >= 0)}" data-action="lunch:add-item" data-slot="${sl.id}" data-id="${it.id}">

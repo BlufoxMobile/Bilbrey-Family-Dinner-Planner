@@ -67,9 +67,9 @@
     "sausage-broccoli-penne": "img/dinners/sausage-broccoli-penne.webp",
     "sausage-pepper-hoagies": "img/dinners/sausage-pepper-hoagies.webp",
     "chicken-cobb-salad": "img/dinners/chicken-cobb-salad.webp",
-    "turkey-taco-salad": "img/dinners/turkey-taco-salad.webp",
+    "chicken-taco-salad": "img/dinners/chicken-taco-salad.webp",
     "asian-chicken-salad": "img/dinners/asian-chicken-salad.webp",
-    "turkey-chili": "img/dinners/turkey-chili.webp",
+    "chicken-bean-chili": "img/dinners/chicken-bean-chili.webp",
     "beef-stroganoff": "img/dinners/beef-stroganoff.webp",
     "bacon-smashburgers": "img/dinners/bacon-smashburgers.webp",
     "chicken-philly": "img/dinners/chicken-philly.webp",
@@ -88,13 +88,23 @@
     "cooker-salsa-chicken-tacos": "img/dinners/cooker-salsa-chicken-tacos.webp",
     "cooker-braised-pork-apples": "img/dinners/cooker-braised-pork-apples.webp",
     "cooker-chicken-noodle-soup": "img/dinners/cooker-chicken-noodle-soup.webp",
-    "cooker-turkey-meatballs": "img/dinners/cooker-turkey-meatballs.webp",
+    "cooker-chicken-meatballs": "img/dinners/cooker-chicken-meatballs.webp",
     "cooker-sausage-minestrone": "img/dinners/cooker-sausage-minestrone.webp",
     "cooker-sesame-ginger-chicken": "img/dinners/cooker-sesame-ginger-chicken.webp",
     "cooker-beef-broccoli": "img/dinners/cooker-beef-broccoli.webp",
     "cooker-lasagna-soup": "img/dinners/cooker-lasagna-soup.webp",
     "cooker-chicken-cacciatore": "img/dinners/cooker-chicken-cacciatore.webp",
-    "cooker-italian-beef": "img/dinners/cooker-italian-beef.webp"
+    "cooker-italian-beef": "img/dinners/cooker-italian-beef.webp",
+    "cooker-beef-tips-gravy": "img/dinners/cooker-beef-tips-gravy.webp",
+    "air-fryer-steak-bites": "img/dinners/air-fryer-steak-bites.webp",
+    "pepper-steak": "img/dinners/pepper-steak.webp",
+    "cooker-pot-roast": "img/dinners/cooker-pot-roast.webp",
+    "griddle-steaks-mushrooms": "img/dinners/griddle-steaks-mushrooms.webp",
+    "honey-mustard-chicken-thighs": "img/dinners/honey-mustard-chicken-thighs.webp",
+    "chicken-vegetable-stir-fry": "img/dinners/chicken-vegetable-stir-fry.webp",
+    "cooker-chunky-beef-chili": "img/dinners/cooker-chunky-beef-chili.webp",
+    "apple-glazed-chicken-thighs": "img/dinners/apple-glazed-chicken-thighs.webp",
+    "cooker-chicken-potatoes-carrots": "img/dinners/cooker-chicken-potatoes-carrots.webp"
   },
   "sides": {
     "jewel-fries": "img/sides/jewel-fries.webp",
@@ -142,10 +152,11 @@
     "cooker-jasmine-rice": "img/sides/cooker-jasmine-rice.webp",
     "steamed-mixed-vegetables": "img/sides/steamed-mixed-vegetables.webp",
     "spinach-apple-salad": "img/sides/spinach-apple-salad.webp",
-    "cooker-mashed-potatoes": "img/sides/cooker-mashed-potatoes.webp"
+    "cooker-mashed-potatoes": "img/sides/cooker-mashed-potatoes.webp",
+    "steamed-normandy-vegetables": "img/sides/steamed-normandy-vegetables.webp"
   },
   "generated": "2026-11-15",
-  "model": "Higgsfield gpt_image_2_6 (GPT Image 2.6). First set: quality medium, 1k. v3 set of 66 pictures (2026-11-15, see dev/photo-jobs.json): quality high, 2k. Dinners 3:2 -> 1200x800 + 640x427 webp, sides and lunch 1:1 -> 640x640 webp",
+  "model": "Higgsfield gpt_image_2_6 (GPT Image 2.6). First set: quality medium, 1k. v3 set of 66 pictures and the 13 for docs/spec/24 (2026-11-15, see dev/photo-jobs.json): quality high, 2k. Dinners 3:2 -> 1200x800 + 640x427 webp, sides and lunch 1:1 -> 640x640 webp",
   "lunch": {
     "bh-black-forest-ham-sandwich": "img/lunch/bh-black-forest-ham-sandwich.webp",
     "bh-genoa-provolone-snack": "img/lunch/bh-genoa-provolone-snack.webp",
@@ -187,6 +198,7 @@
     "bh-buffalo-chicken-sandwich": "img/lunch/bh-buffalo-chicken-sandwich.webp",
     "bonduelle-chicken-queso-fresco": "img/lunch/bonduelle-chicken-queso-fresco.webp",
     "bonduelle-santa-fe": "img/lunch/bonduelle-santa-fe.webp",
-    "bh-salsalito-turkey-sandwich": "img/lunch/bh-salsalito-turkey-sandwich.webp"
+    "bh-salsalito-turkey-sandwich": "img/lunch/bh-salsalito-turkey-sandwich.webp",
+    "bonduelle-chicken-blt": "img/lunch/bonduelle-chicken-blt.webp"
   }
 }

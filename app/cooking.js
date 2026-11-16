@@ -601,7 +601,7 @@ export const ringing = (timers, now) => (timers || []).filter((t) => !t.acked &&
 // ---------------------------------------------------------------- the recipe box: what matters to this family
 
 export const TIME_FILTERS = [{ id: '20', label: '20 min or less' }, { id: '30', label: '30 min or less' }, { id: '45', label: '45 min or less' }];
-export const RECIPE_SORTS = [{ id: 'az', label: 'A to Z' }, { id: 'quick', label: 'Quickest' }, { id: 'protein', label: 'Most protein' }, { id: 'light', label: 'Lightest' }, { id: 'ready', label: 'Closest to ready' }];
+export const RECIPE_SORTS = [{ id: 'az', label: 'A to Z' }, { id: 'quick', label: 'Quickest' }, { id: 'protein', label: 'Most protein' }, { id: 'light', label: 'Lightest' }, { id: 'cheap', label: 'Cheapest first' }, { id: 'ready', label: 'Closest to ready' }];
 
 /** What the recipe box needs to know about one dinner. `rem` = coverage.onHand(db, state), computed once. */
 export function recipeFacts(db, state, d, rem) {
@@ -639,6 +639,8 @@ export function recipeCompare(sort) {
     protein: (a, b) => (b.facts.protein ?? -1) - (a.facts.protein ?? -1),
     light: (a, b) => (a.facts.kcal ?? 1e9) - (b.facts.kcal ?? 1e9),
     ready: (a, b) => a.facts.missing - b.facts.missing,
+    // cost.cheapestFirst's order, kept on the facts as a rank (a dinner nothing can price is last).
+    cheap: (a, b) => (a.facts.cheapRank ?? 1e9) - (b.facts.cheapRank ?? 1e9),
   }[sort];
   return (a, b) => (by ? by(a, b) : 0) || a.d.title.localeCompare(b.d.title);
 }

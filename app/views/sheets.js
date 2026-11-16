@@ -17,7 +17,7 @@ import {
 } from '../actions.js';
 import {
   sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote,
-  plate, leanMark, isLeftoverNight, leftoversQuestion,
+  plate, leanMark, isLeftoverNight, leftoversQuestion, costOf, costNote,
 } from './common.js';
 import { sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
 import { leftoversOnHand, leftoverNightChoices, servingsText, useByText, timeLabel } from '../cooking.js';
@@ -90,6 +90,7 @@ function nightBody(app, date) {
         ${equipment(d, { compact: true })}
         ${favoriteBadge(app, d)}
         ${when(showNutrition(app), () => html`<p class="night-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate', compact: true })}</p>`)}
+        ${costNote(costOf(app, d.id, e), { house: true, cls: 'night-cost' })}
       </div>
       ${thumbs(app, { kind: 'dinner', id: d.id, label: d.title })}
     </div>
@@ -153,7 +154,8 @@ function pickBody(app, { date, query }) {
           ${dinnerPhoto(app, d, { size: 'thumb' })}
           <span class="pick-main"><b>${d.title}</b>
             <small>${timeLabel(d)}${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small>
-            ${when(facts, () => html`<small class="pick-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein a plate${leanMark(facts, { compact: true })}</small>`)}</span>
+            ${when(facts, () => html`<small class="pick-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein a plate${leanMark(facts, { compact: true })}</small>`)}
+            ${costNote(costOf(app, d.id, null), { short: true, tag: 'small', cls: 'pick-cost' })}</span>
         </button></li>`;
       }) : html`<li class="muted pad">${q ? `No dinners match “${query}”. Try another word, or browse the recipe box.` : 'There are no dinners in the rotation. Bring some back from Recipes, Dropped.'}</li>`}
     </ul>`;

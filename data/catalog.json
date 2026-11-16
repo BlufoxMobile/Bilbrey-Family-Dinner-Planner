@@ -1,7 +1,7 @@
 {
  "version": 2,
  "updated": "2026-11-15",
- "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos. 2026-11-15 (v2.5): Jewel salad bowls and the hot-deli chicken sandwich for Jeff’s lunches; organic produce at Jewel (prices read from jewelosco.com, Glen Ellyn, Nov 15) used when the family buys organic; frozen sirloin patties cook from frozen. 2026-11-15 (v2.5.3): Boar’s Head Blazing Buffalo chicken and Miss Vickie’s for Jeff’s sandwich lunches; the hot-deli sandwich is gone. 2026-11-15 (v3): five ingredients for the PossibleCooker dinners (white beans, celery, lean turkey Italian sausage, canned mild green chiles, beef stock). Their packs and prices are estimates, marked (est.), until a receipt or a price check says otherwise.",
+ "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos. 2026-11-15 (v2.5): Jewel salad bowls and the hot-deli chicken sandwich for Jeff’s lunches; organic produce at Jewel (prices read from jewelosco.com, Glen Ellyn, Nov 15) used when the family buys organic; frozen sirloin patties cook from frozen. 2026-11-15 (v2.5.3): Boar’s Head Blazing Buffalo chicken and Miss Vickie’s for Jeff’s sandwich lunches; the hot-deli sandwich is gone. 2026-11-15 (v3): five ingredients for the PossibleCooker dinners (white beans, celery, lean turkey Italian sausage, canned mild green chiles, beef stock). Their packs and prices are estimates, marked (est.), until a receipt or a price check says otherwise. 2026-11-15 night (docs/spec/24-chicken-bulk-and-meal-cost.md): Jeff: the family prefers chicken to turkey and eats little pork, so no dinner uses groundTurkey or turkeySausage any more (both ids stay so receipts and the pantry still match, like groundPork and italianSausage; turkey lunch meat is still Jeff’s). Ranch is Wish-Bone (the Hidden Valley bottle was bought by mistake and still matches by alias). New for the Sam’s Club bulk dinners: stewMeat, sirloinTip, chuckRoast and groundChicken (their Sam’s prices were read from samsclub.com on Nov 15, 2026 and carry \"confidence\": \"listed\" and the page url), chickenSausage (al fresco, Jewel; price estimated), stirFryVeg and normandyVeg (Member’s Mark pack sizes from samsclub.com; prices estimated). \"bulk\": { \"freezes\": true|false, \"portionLb\": pounds in one meal-size freezer bag (lb items only), \"note\": how to portion or keep it } marks an item the family buys as a Sam’s Club bulk pack; it needs a Sam’s pack, and a dinner whose raw meat has it is tagged \"bulk\".",
  "units": {
   "bags": "bags",
   "bars": "bars",
@@ -87,6 +87,11 @@
    "usual": {
     "store": "sams",
     "tier": "generic"
+   },
+   "bulk": {
+    "portionLb": 2.25,
+    "freezes": true,
+    "note": "Already frozen piece by piece: take out about 2¼ lb (5 or 6 breasts) for a dinner the night before and thaw it in the fridge."
    }
   },
   "beef": {
@@ -138,6 +143,11 @@
    "usual": {
     "store": "sams",
     "tier": "generic"
+   },
+   "bulk": {
+    "portionLb": 1,
+    "freezes": true,
+    "note": "Split the pack into 1-lb freezer bags pressed flat; most dinners use two, and flat bags thaw in a bowl of cold water in 20 minutes."
    }
   },
   "pork": {
@@ -180,7 +190,12 @@
      }
     }
    },
-   "meat": true
+   "meat": true,
+   "bulk": {
+    "portionLb": 2.25,
+    "freezes": true,
+    "note": "Split the pack into 2¼-lb freezer bags the day you buy it, press them flat and label them: one bag is one dinner for five. Thaw a bag overnight in the fridge."
+   }
   },
   "eggs": {
    "name": "Large eggs",
@@ -800,6 +815,10 @@
       "label": "Mahatma jasmine rice, 2 lb bag"
      }
     }
+   },
+   "bulk": {
+    "freezes": false,
+    "note": "Keeps a year or more in a sealed bin in the pantry; a 25-lb bag is about 38 dinners’ worth of rice."
    }
   },
   "basmati": {
@@ -895,6 +914,10 @@
      "label": "O Organics gold potatoes, 3 lb bag",
      "confidence": "listed"
     }
+   },
+   "bulk": {
+    "freezes": false,
+    "note": "Keeps 3 to 4 weeks in a cool, dark, airy spot, away from the onions (they make each other sprout). A 10-lb bag is four or five dinners."
    }
   },
   "sweet": {
@@ -975,6 +998,10 @@
       "label": "Birds Eye frozen broccoli florets, 1 lb bag"
      }
     }
+   },
+   "bulk": {
+    "freezes": true,
+    "note": "Steam-in bags that stay frozen; 1½ lb is one side for five."
    }
   },
   "peas": {
@@ -1044,6 +1071,10 @@
       "label": "Birds Eye frozen mixed vegetables, 1 lb bag"
      }
     }
+   },
+   "bulk": {
+    "freezes": true,
+    "note": "Stays frozen: pour out 1½ lb for a side or a pot of fried rice and reseal the bag."
    }
   },
   "corn": {
@@ -1300,6 +1331,10 @@
      "label": "Organic Tender Sweet Carrots, 5 lb bag",
      "confidence": "est"
     }
+   },
+   "bulk": {
+    "freezes": false,
+    "note": "Keeps 3 to 4 weeks in the fridge crisper in its bag. Carrots going soft can be sliced and frozen for soups and stews."
    }
   },
   "onions": {
@@ -1348,6 +1383,10 @@
      "label": "O Organics yellow onions, 2 lb bag",
      "confidence": "listed"
     }
+   },
+   "bulk": {
+    "freezes": false,
+    "note": "Keeps a month or more in a cool, dark, airy spot, away from the potatoes. Extra onions can be diced and frozen flat in a bag for cooking."
    }
   },
   "peppers": {
@@ -2959,7 +2998,12 @@
      }
     }
    },
-   "meat": true
+   "meat": true,
+   "bulk": {
+    "portionLb": 2.25,
+    "freezes": true,
+    "note": "Split the pack into 2¼-lb freezer bags the day you buy it, press them flat and label them: one bag is one dinner for five. Thaw a bag overnight in the fridge."
+   }
   },
   "porkLoin": {
    "name": "Boneless pork loin (whole)",
@@ -3001,7 +3045,12 @@
      }
     }
    },
-   "meat": true
+   "meat": true,
+   "bulk": {
+    "portionLb": 2.25,
+    "freezes": true,
+    "note": "Cut the whole loin into four pieces of about 2¼ lb (or slice some into chops), bag them and freeze: one bag is one dinner for five."
+   }
   },
   "groundPork": {
    "name": "Ground pork",
@@ -3290,7 +3339,7 @@
    }
   },
   "ranch": {
-   "name": "Ranch dressing (Hidden Valley)",
+   "name": "Ranch dressing (Wish-Bone)",
    "unit": "tbsp",
    "aisle": "Condiments & Sauces",
    "storage": "fridge",
@@ -3299,6 +3348,9 @@
    "aliases": [
     "ranch",
     "ranch dressing",
+    "wish-bone ranch",
+    "wishbone ranch",
+    "wish bone ranch",
     "buttermilk ranch",
     "light ranch",
     "ranch salad dressing",
@@ -3315,7 +3367,7 @@
      "name": {
       "size": 80,
       "price": 8.48,
-      "label": "Hidden Valley Original Ranch, 40 oz"
+      "label": "Hidden Valley Original Ranch, 40 oz (Sam’s does not list Wish-Bone ranch)"
      }
     },
     "jewel": {
@@ -3325,13 +3377,13 @@
       "label": "Signature Select ranch dressing, 16 oz"
      },
      "name": {
-      "size": 32,
-      "price": 4.29,
-      "label": "Hidden Valley Original Ranch, 16 oz"
+      "size": 30,
+      "price": 3.99,
+      "label": "Wish-Bone Ranch Dressing, 15 fl oz (= 30 tbsp) (the family’s ranch; price est.)"
      }
     }
    },
-   "brand": "Hidden Valley",
+   "brand": "Wish-Bone",
    "usual": {
     "store": "jewel",
     "tier": "name"
@@ -5471,7 +5523,9 @@
    "aliases": [
     "light ranch",
     "lite ranch",
-    "reduced fat ranch"
+    "reduced fat ranch",
+    "wish-bone light ranch",
+    "hidden valley light ranch"
    ],
    "packs": {
     "sams": {
@@ -5493,9 +5547,9 @@
       "label": "Signature Select Light Ranch, 16 fl oz (= 32 tbsp) (est.)"
      },
      "name": {
-      "size": 32,
-      "price": 4.49,
-      "label": "Hidden Valley Light Ranch, 16 fl oz (= 32 tbsp) (est.)"
+      "size": 30,
+      "price": 3.99,
+      "label": "Wish-Bone Light Ranch, 15 fl oz (= 30 tbsp) (est.)"
      }
     }
    },
@@ -6129,7 +6183,11 @@
      }
     }
    },
-   "cookFromFrozen": true
+   "cookFromFrozen": true,
+   "bulk": {
+    "freezes": true,
+    "note": "Sold frozen and cooked from frozen: take out five or six patties and close the box."
+   }
   },
   "cookedBacon": {
    "name": "Fully cooked bacon (Hormel Black Label)",
@@ -7011,6 +7069,11 @@
       "label": "USDA Choice eye of round steak, ~1.5 lb ($7.49/lb) (est.)"
      }
     }
+   },
+   "bulk": {
+    "portionLb": 2.25,
+    "freezes": true,
+    "note": "Split the pack into 2¼-lb freezer bags the day you buy it, press them flat and label them: one bag is one dinner for five. Thaw a bag overnight in the fridge."
    }
   },
   "chorizo": {
@@ -7330,13 +7393,13 @@
     "jewel": {
      "generic": {
       "size": 0.5,
-      "price": 6.0,
+      "price": 6,
       "label": "Boar's Head Bold Salsalito Turkey, sliced at the Jewel deli: ask for ½ lb ($11.99 a lb on the Nov 15 receipt)",
       "confidence": "paid"
      },
      "name": {
       "size": 0.5,
-      "price": 6.0,
+      "price": 6,
       "label": "Boar's Head Bold Salsalito Turkey, sliced at the Jewel deli: ask for ½ lb ($11.99 a lb on the Nov 15 receipt)",
       "confidence": "paid"
      }
@@ -7505,6 +7568,338 @@
       "size": 4,
       "price": 3.99,
       "label": "Kitchen Basics Original Beef Stock, 32 oz (est.)"
+     }
+    }
+   }
+  },
+  "stewMeat": {
+   "name": "Beef stew meat / beef tips (Member’s Mark Choice Angus)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "meat": true,
+   "aliases": [
+    "beef stew meat",
+    "stew meat",
+    "beef tips",
+    "beef for stew",
+    "stew beef",
+    "beef tip"
+   ],
+   "bulk": {
+    "portionLb": 2.25,
+    "freezes": true,
+    "note": "Split the pack into 2¼-lb freezer bags the day you buy it, press them flat and label them: one bag is one dinner for five. Thaw a bag overnight in the fridge."
+   },
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 3.7,
+      "price": 25.79,
+      "label": "Member's Mark USDA Choice Angus Beef Stew Meat, ~3.7 lb ($6.97/lb; samsclub.com, Nov 15 2026)",
+      "url": "https://www.samsclub.com/ip/Member-s-Mark-USDA-Choice-Angus-Beef-Stew-Meat-priced-per-pound/13624265124",
+      "confidence": "listed"
+     },
+     "name": {
+      "size": 3.7,
+      "price": 25.79,
+      "label": "Member's Mark USDA Choice Angus Beef Stew Meat, ~3.7 lb ($6.97/lb; samsclub.com, Nov 15 2026)",
+      "url": "https://www.samsclub.com/ip/Member-s-Mark-USDA-Choice-Angus-Beef-Stew-Meat-priced-per-pound/13624265124",
+      "confidence": "listed"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 8.99,
+      "label": "USDA Choice beef for stew, ~1 lb ($8.99/lb) (est.)"
+     },
+     "name": {
+      "size": 1,
+      "price": 8.99,
+      "label": "USDA Choice beef for stew, ~1 lb ($8.99/lb) (est.)"
+     }
+    }
+   }
+  },
+  "sirloinTip": {
+   "name": "Sirloin tip roast (Member’s Mark Choice Angus)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "meat": true,
+   "aliases": [
+    "sirloin tip",
+    "sirloin tip roast",
+    "sirloin tip steak",
+    "beef sirloin tip",
+    "round tip roast",
+    "beef knuckle"
+   ],
+   "bulk": {
+    "portionLb": 2.25,
+    "freezes": true,
+    "note": "Cut the roast into two pieces of about 2¼ lb (or slice it into ¾-inch steaks or strips first), bag them flat and freeze: one bag is one dinner for five. Half-thawed, it slices and cubes easily."
+   },
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 4.28,
+      "price": 29.83,
+      "label": "Member's Mark USDA Choice Angus Beef Boneless Sirloin Tip Roast, ~4.3 lb ($6.97/lb; samsclub.com, Nov 15 2026)",
+      "url": "https://www.samsclub.com/ip/Member-s-Mark-USDA-Choice-Angus-Beef-Boneless-Sirloin-Tip-Roast-priced-per-pound/13723851808",
+      "confidence": "listed"
+     },
+     "name": {
+      "size": 4.28,
+      "price": 29.83,
+      "label": "Member's Mark USDA Choice Angus Beef Boneless Sirloin Tip Roast, ~4.3 lb ($6.97/lb; samsclub.com, Nov 15 2026)",
+      "url": "https://www.samsclub.com/ip/Member-s-Mark-USDA-Choice-Angus-Beef-Boneless-Sirloin-Tip-Roast-priced-per-pound/13723851808",
+      "confidence": "listed"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 1.5,
+      "price": 12.74,
+      "label": "USDA Choice beef sirloin tip steak, ~1.5 lb ($8.49/lb) (est.)"
+     },
+     "name": {
+      "size": 1.5,
+      "price": 12.74,
+      "label": "USDA Choice beef sirloin tip steak, ~1.5 lb ($8.49/lb) (est.)"
+     }
+    }
+   }
+  },
+  "chuckRoast": {
+   "name": "Boneless chuck roast (Member’s Mark Choice Angus)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "meat": true,
+   "aliases": [
+    "chuck roast",
+    "boneless chuck roast",
+    "beef chuck roast",
+    "pot roast",
+    "chuck pot roast"
+   ],
+   "bulk": {
+    "portionLb": 2.25,
+    "freezes": true,
+    "note": "A pack is about 3¾ lb: keep 2¼ lb in one piece for a pot roast and freeze the rest, cubed, for chili or stew. Thaw overnight in the fridge."
+   },
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 3.7,
+      "price": 27.64,
+      "label": "Member's Mark USDA Choice Angus Beef Boneless Chuck Roast, ~3.7 lb ($7.47/lb; samsclub.com, Nov 15 2026)",
+      "url": "https://www.samsclub.com/ip/Member-s-Mark-USDA-Choice-Angus-Beef-Boneless-Chuck-Roast-priced-per-pound/13596802079",
+      "confidence": "listed"
+     },
+     "name": {
+      "size": 3.7,
+      "price": 27.64,
+      "label": "Member's Mark USDA Choice Angus Beef Boneless Chuck Roast, ~3.7 lb ($7.47/lb; samsclub.com, Nov 15 2026)",
+      "url": "https://www.samsclub.com/ip/Member-s-Mark-USDA-Choice-Angus-Beef-Boneless-Chuck-Roast-priced-per-pound/13596802079",
+      "confidence": "listed"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 2.5,
+      "price": 22.48,
+      "label": "USDA Choice boneless beef chuck roast, ~2.5 lb ($8.99/lb) (est.)"
+     },
+     "name": {
+      "size": 2.5,
+      "price": 22.48,
+      "label": "USDA Choice boneless beef chuck roast, ~2.5 lb ($8.99/lb) (est.)"
+     }
+    }
+   }
+  },
+  "groundChicken": {
+   "name": "Lean ground chicken",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "meat": true,
+   "aliases": [
+    "ground chicken",
+    "lean ground chicken",
+    "chicken ground",
+    "perdue ground chicken",
+    "ground chicken breast"
+   ],
+   "bulk": {
+    "portionLb": 1,
+    "freezes": true,
+    "note": "Split the 3 lb into 1-lb freezer bags pressed flat (they thaw in a bowl of cold water in 20 minutes); most dinners use two."
+   },
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 3,
+      "price": 11.76,
+      "label": "Perdue Ground Chicken, 3 lb ($3.92/lb; samsclub.com, Nov 15 2026)",
+      "url": "https://www.samsclub.com/ip/Perdue-Ground-Chicken-3-lbs/14207220236",
+      "confidence": "listed"
+     },
+     "name": {
+      "size": 3,
+      "price": 11.76,
+      "label": "Perdue Ground Chicken, 3 lb ($3.92/lb; samsclub.com, Nov 15 2026)",
+      "url": "https://www.samsclub.com/ip/Perdue-Ground-Chicken-3-lbs/14207220236",
+      "confidence": "listed"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 4.99,
+      "label": "Signature Farms ground chicken, 16 oz (est.)"
+     },
+     "name": {
+      "size": 1,
+      "price": 5.99,
+      "label": "Perdue ground chicken, 16 oz (est.)"
+     }
+    }
+   }
+  },
+  "chickenSausage": {
+   "name": "Italian chicken sausage links (fully cooked)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "meat": true,
+   "cooked": true,
+   "aliases": [
+    "chicken sausage",
+    "italian chicken sausage",
+    "chicken italian sausage",
+    "sweet italian chicken sausage",
+    "al fresco chicken sausage"
+   ],
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 0.69,
+      "price": 5.99,
+      "label": "al fresco Sweet Italian Style Chicken Sausage, 11 oz, 4 links, fully cooked (carried by Jewel; price est.)"
+     },
+     "name": {
+      "size": 0.69,
+      "price": 5.99,
+      "label": "al fresco Sweet Italian Style Chicken Sausage, 11 oz, 4 links, fully cooked (carried by Jewel; price est.)"
+     }
+    }
+   }
+  },
+  "stirFryVeg": {
+   "name": "Frozen stir-fry vegetables",
+   "unit": "lb",
+   "aisle": "Frozen",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "aliases": [
+    "stir fry vegetables",
+    "stir-fry vegetables",
+    "stir fry mix",
+    "frozen stir fry",
+    "stir fry blend",
+    "asian vegetable blend"
+   ],
+   "bulk": {
+    "freezes": true,
+    "note": "Comes as five 1-lb bags that stay frozen: two bags are one dinner. Cook them straight from the freezer."
+   },
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 5,
+      "price": 8.98,
+      "label": "Member's Mark Stir Fry Mix, frozen, 5 × 16 oz bags (pack size from samsclub.com; price est.)",
+      "url": "https://www.samsclub.com/ip/members-mark-stir-fry-mix-frozen-16-oz-5-pk/13874200538"
+     },
+     "name": {
+      "size": 5,
+      "price": 8.98,
+      "label": "Member's Mark Stir Fry Mix, frozen, 5 × 16 oz bags (pack size from samsclub.com; price est.)",
+      "url": "https://www.samsclub.com/ip/members-mark-stir-fry-mix-frozen-16-oz-5-pk/13874200538"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 2.49,
+      "label": "Signature Select stir-fry vegetables, 16 oz bag (est.)"
+     },
+     "name": {
+      "size": 0.9,
+      "price": 3.49,
+      "label": "Birds Eye stir-fry vegetables, 14.4 oz bag (est.)"
+     }
+    }
+   }
+  },
+  "normandyVeg": {
+   "name": "Frozen Normandy blend (broccoli, cauliflower & carrots)",
+   "unit": "lb",
+   "aisle": "Frozen",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "aliases": [
+    "normandy blend",
+    "broccoli normandy",
+    "normandy vegetables",
+    "california blend",
+    "broccoli cauliflower carrots"
+   ],
+   "bulk": {
+    "freezes": true,
+    "note": "A 4-lb bag that stays frozen: pour out 1½ lb for a side and put the bag straight back in the freezer."
+   },
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 4,
+      "price": 7.48,
+      "label": "Member's Mark Broccoli Normandy, frozen, 4 lb bag (pack size from samsclub.com; price est.)",
+      "url": "https://www.samsclub.com/ip/13894920187"
+     },
+     "name": {
+      "size": 4,
+      "price": 7.48,
+      "label": "Member's Mark Broccoli Normandy, frozen, 4 lb bag (pack size from samsclub.com; price est.)",
+      "url": "https://www.samsclub.com/ip/13894920187"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 2.49,
+      "label": "Signature Select California blend vegetables, 16 oz bag (est.)"
+     },
+     "name": {
+      "size": 0.75,
+      "price": 2.99,
+      "label": "Birds Eye broccoli, cauliflower & carrots, 12 oz bag (est.)"
      }
     }
    }

@@ -10,7 +10,8 @@ import { restoreOps, restoreSideOps } from '../actions.js';
 import { onHand } from '../coverage.js';
 import { fmtKcal } from '../nutrition.js';
 import { recipeFacts, recipeMatches, recipeCompare, timeLabel, EQUIPMENT, TIME_FILTERS, RECIPE_SORTS } from '../cooking.js';
-import { dinnerPhoto, sidePhoto, showNutrition, leanMark, equipLabel } from './common.js';
+import { dinnerPhoto, sidePhoto, showNutrition, leanMark, equipLabel, costNote } from './common.js';
+import { cheapestFirst } from '../cost.js';
 
 export const title = () => 'Recipes';
 
@@ -52,8 +53,13 @@ function droppedView(app, list) {
 // per change to the family's data: typing in the search box must stay instant.
 let memo = { state: null, db: null, facts: new Map() };
 function factsFor(app, d) {
-  if (memo.state !== app.state || memo.db !== app.db) memo = { state: app.state, db: app.db, facts: new Map(), rem: onHand(app.db, app.state) };
-  if (!memo.facts.has(d.id)) memo.facts.set(d.id, recipeFacts(app.db, app.state, d, memo.rem));
+  if (memo.state !== app.state || memo.db !== app.db) memo = { state: app.state, db: app.db, facts: new Map(), rem: onHand(app.db, app.state), costs: null };
+  // What every dinner costs, cheapest plate first, once (docs/spec/24 §24.7): the card's line and the "Cheapest first" sort.
+  if (!memo.costs) memo.costs = new Map(cheapestFirst(app.db, app.state, allDinners(app.db, app.state), { today: app.today() }).map(({ dinner, cost }, i) => [dinner.id, { cost, rank: i }]));
+  if (!memo.facts.has(d.id)) {
+    const c = memo.costs.get(d.id);
+    memo.facts.set(d.id, { ...recipeFacts(app.db, app.state, d, memo.rem), cost: c?.cost || null, cheapRank: c?.rank ?? null });
+  }
   return memo.facts.get(d.id);
 }
 
@@ -78,6 +84,7 @@ function card(app, { d, facts }) {
       <b class="r-title">${d.title}</b>
       <span class="r-meta">${timeLabel(d)}${facts.minutes ? ', ' : ''}${d.category}${when(isFavorite(app.state, d), () => html`<span class="r-fav">${ic('star', { size: 14 })}<span class="sr-only">Family favorite</span></span>`)}</span>
       ${when(nutri, () => html`<span class="r-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein${leanMark(facts, { compact: true })}</span>`)}
+      ${costNote(facts.cost, { short: true, tag: 'span', cls: 'r-cost' })}
       ${when(facts.total, () => html`<span class="r-pantry ${facts.makeable ? 'is-ready' : ''}">${facts.makeable ? html`${ic('check', { size: 14 })}Everything’s in the pantry` : `${facts.total - facts.missing} of ${facts.total} ingredients on hand`}</span>`)}
     </span>
   </a></li>`;

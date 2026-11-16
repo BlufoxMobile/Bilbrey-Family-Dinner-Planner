@@ -439,8 +439,9 @@ const TOOL_DEFS = [
       "ever (Blackstone griddle, air fryer, stovetop, electric or outdoor grill, microwave, and the Ninja PossibleCooker: equipment " +
       "'possible cooker', for slow cook, sear/sauté, braise, steam, rice and keep warm), no tofu, no seafood (the one exception is an " +
       "occasional snow crab boil with Old Bay), nothing Caesar, no raw cucumbers, raw onions or raw tomatoes (cooked onions and tomato " +
-      "sauces are fine), meat in every dinner, and steps that state safe temperatures (chicken and turkey 165°F, ground beef and sausage " +
-      "160°F, pork chops 145°F then rest 3 minutes). Recipe items should use recipe-box ingredient ids (from list_recipes with id) where " +
+      "sauces are fine), meat in every dinner, and steps that state safe temperatures (chicken 165°F, ground beef and sausage " +
+      "160°F, whole cuts of beef and pork chops 145°F then rest 3 minutes). The family prefers chicken to turkey and eats little pork; " +
+      "dinners built on Sam's Club bulk packs (chicken thighs or breasts, ground chicken, lean ground beef, beef tips, sirloin tip, chuck roast) are welcome. Recipe items should use recipe-box ingredient ids (from list_recipes with id) where " +
       "they exist; names are matched too, and anything else becomes a shelf item so it lands on the shopping list. A new recipe is a " +
       "one-off (kept out of the automatic rotation) unless saveToRecipeBox is true. As in the app, a dinner already planned on another " +
       "night moves to this one (trading places with this night's dinner, if any), a dinner already on the night is replaced, and a night " +
@@ -578,7 +579,10 @@ const TOOLS = {
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 const HOUSE_RULES = [
   "Every dinner is one meat main plus two sides, for five full adult plates (Jeff, Candi, Knox, Jordan, Jackson). Burger nights default to one side, a bag of Jewel-Osco frozen fries, with an optional second side.",
-  "Meat in every dinner (chicken, beef, pork, turkey, sausage, bacon…). Salads are welcome as long as they have meat on them.",
+  "Meat in every dinner (chicken, beef, a little pork, sausage, bacon…). Salads are welcome as long as they have meat on them.",
+  "Chicken, not turkey: the family prefers chicken (ground chicken where a recipe would use ground turkey). Turkey is Jeff's lunch meat and Thanksgiving, nothing else. They eat little pork: keep it occasional.",
+  "Make the most of Sam's Club bulk packs: chicken thighs and breasts, 93/7 ground beef, ground chicken, beef tips (stew meat), sirloin tip and chuck roast, the big bags of frozen vegetables, potatoes, onions, carrots and rice. A pack is split into meal-size freezer bags, so plan dinners that use the rest of a pack.",
+  "Ranch is Wish-Bone.",
   "Never the oven or broiler (it leaks propane). Cook on the Blackstone griddle, air fryer, gas stovetop, indoor electric grill, outdoor grill, microwave or the Ninja PossibleCooker (slow cook, sear/sauté, braise, steam, rice, keep warm).",
   "Lean, high-protein dinners with a vegetable or a salad, for the whole family: leaner cuts, more vegetables, less frying. Lighter never means small portions: three growing kids eat these dinners.",
   "Show calories and protein per plate, but never set a calorie target for anyone and never call a food good or bad.",
@@ -1337,11 +1341,13 @@ const SNOW_CRAB = /snow\s*crab/i;
 const MEAT_WORDS = /\b(chicken|beef|steaks?|sirloin|chuck|brisket|pork|ham|bacon|turkey|sausages?|kielbasa|brats?|bratwurst|chorizo|pepperoni|salami|meatballs?|ribs?|lamb|veal|hot dogs?|franks?|carnitas|barbacoa|prosciutto|pastrami|roast beef|tenderloin|patty|patties)\b/i;
 // Safe temperatures (same as the validator): a recipe with these ids must state the temperature.
 const TEMP_RULES = [
-  { ids: ["chicken", "chickenThighs", "fajitaChicken"], temp: "165°F", what: "chicken" },
+  { ids: ["chicken", "chickenThighs", "groundChicken", "fajitaChicken"], temp: "165°F", what: "chicken" },
   { ids: ["groundTurkey", "turkeySausage"], temp: "165°F", what: "ground turkey or turkey sausage" },
   { ids: ["beef", "beefPatties", "groundPork", "italianSausage", "chorizo"], temp: "160°F", what: "ground meat, sausage or patties" },
-  { ids: ["eyeRoundSteak"], temp: "145°F", what: "whole-cut beef" },
-  { ids: ["pulledPork", "pulledChicken", "smokedSausage", "chickenAlfredoDeli", "roastBeef"], temp: "165°F", what: "fully cooked meat (reheat)" },
+  // Whole cuts are safe at 145°F after a 3-minute rest. The rest is asked for in words (the tool
+  // description), not enforced: beef tips, chili and pot roast cook far past it and never rest.
+  { ids: ["eyeRoundSteak", "sirloinTip", "stewMeat", "chuckRoast"], temp: "145°F", what: "whole-cut beef" },
+  { ids: ["pulledPork", "pulledChicken", "smokedSausage", "chickenSausage", "chickenAlfredoDeli", "roastBeef"], temp: "165°F", what: "fully cooked meat (reheat)" },
   { ids: ["pork", "porkLoin"], temp: "145°F", what: "pork chops or loin", rest: true },
 ];
 const RICE_IDS = ["jasmine", "basmati"];

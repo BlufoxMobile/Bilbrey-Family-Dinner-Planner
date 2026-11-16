@@ -44,7 +44,8 @@ export const STORAGE = [
 ];
 
 export const CATEGORIES = ['Burgers', 'Asian-inspired', 'Pasta', 'Tex-Mex', 'Grill', 'Comfort', 'Salads'];
-export const PROTEINS = ['chicken', 'beef', 'pork', 'turkey', 'sausage', 'mixed'];
+// No dinner in the box is built on turkey (docs/spec/24 §24.1: the family prefers chicken), so it isn't offered.
+export const PROTEINS = ['chicken', 'beef', 'pork', 'sausage', 'mixed'];
 
 export const EQUIPMENT_LABELS = {
   stovetop: 'Stovetop',

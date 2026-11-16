@@ -24,7 +24,10 @@ const SCREENS = [['tonight', '#/tonight', '.page-tonight'], ['plan', '#/plan', '
 const SHEETS = [['ahead', '#/plan', '.page-plan', '[data-action="ahead:open"]'], ['ideas', '#/plan', '.page-plan', '[data-action="ideas:open"]'], ['leftovers', '#/plan', '.page-plan', '[data-action="leftovers:more"]'],
   ['move', '#/plan', '.page-plan', '[data-action="night:move"]'], ['prefs', '#/plan', '.page-plan', '[data-action="plan:prefs"]'], ['night', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]'],
   ['gone', '#/pantry', '.page-pantry', '[data-action="pan:gone"]'], ['item', '#/list', '.page-list', '[data-action="list:item"]'], ['lunch-edit', '#/lunch', '.page-lunch', '[data-action="lunch:edit"]'],
-  ['lunch-add', '#/lunch', '.page-lunch', '[data-action="lunch:add"]'], ['trip', '#/list', '.page-list', '[data-action="trip:new"]'], ['receipt', '#/budget', '.page-budget', '[data-action="rcpt:scan"]']];
+  ['lunch-add', '#/lunch', '.page-lunch', '[data-action="lunch:add"]'], ['trip', '#/list', '.page-list', '[data-action="trip:new"]'], ['receipt', '#/budget', '.page-budget', '[data-action="rcpt:scan"]'],
+  // Not sheets, but opened the same way: the recipe's cost list, the dinner picker, and the card plan-ahead leaves on the Plan.
+  ['cost', '#/recipe/cooker-beef-tips-gravy', '.page-recipe', '#recipe-cost > summary', '#recipe-cost[open]'], ['pick', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]', '.pick-list', '[data-action="night:pick"]'],
+  ['ahead-result', '#/plan', '.page-plan', '[data-action="ahead:open"]', '#ahead-cost', '[data-action="ahead:go"]']];
 
 const staticSrv = await startStatic({ port: 0, quiet: true });
 const api = await startMockApi({ port: 0, quiet: true });
@@ -116,13 +119,15 @@ for (const theme of ['light', 'dark']) {
   // The sheets the feature teams added, each opened from the screen that owns it.
   if (!onlyScreen || onlyScreen === 'sheets') {
     const tiles = [];
-    for (const [name, hash, sel, opener] of SHEETS) {
+    for (const [name, hash, sel, opener, shown = 'dialog[open]', next = null] of SHEETS) {
       try {
         await page.goto(`${base}${hash}`);
         await page.waitForSelector(sel);
         await page.waitForTimeout(500);
         await page.locator(opener).first().click({ timeout: 3000 });
-        if (name !== 'prefs') await page.waitForSelector('dialog[open]', { timeout: 3000 });
+        if (next) { await page.waitForSelector('dialog[open]', { timeout: 3000 }); await page.waitForTimeout(400); await page.locator(next).first().click({ timeout: 3000 }); }
+        if (name !== 'prefs') await page.waitForSelector(shown, { timeout: 6000 });
+        if (shown !== 'dialog[open]') await page.locator(shown).first().scrollIntoViewIfNeeded();
         await page.waitForTimeout(700);
         if (WIDE) await page.screenshot({ path: `dev/screenshots/review-sheet-${name}-${theme}-${wide}.png` });
         else tiles.push((await page.screenshot()).toString('base64'));

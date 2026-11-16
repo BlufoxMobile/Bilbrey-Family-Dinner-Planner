@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updated": "2026-11-15",
-  "notes": "kcal and protein (grams) per ONE catalog unit of each ingredient (the catalog’s \"unit\"; \"basis\" says exactly what one unit is). Generic foods use USDA FoodData Central SR Legacy reference values (fdc.nal.usda.gov; NDB numbers cited where known) converted to the catalog unit; branded/packaged items use typical package labels. Lean meats (chicken, 93/7 turkey, pork chops/loin) use raw values. Ground beef, ground pork, Italian sausage and bacon are counted AS EATEN per pound bought (USDA cooked value × cooking yield), because the recipes spoon off or drain the rendered fat. Oil, butter, mayo and dressings count in full at recipe amounts. Canned vegetables and beans are per can as eaten (drained where the recipe drains). v2.2: items the family buys by brand (93/7 beef, Rao’s, Artesano, Tillamook, whole milk, fast-food-style fries, etc.) use that product’s label; fully cooked/heat-and-serve products use package labels. Values are estimates for planning — a kind guide, not a lab number. 2026-11-15 (v3, docs/spec/18-recipe-box.md): \"carbs\", \"fat\" and \"fiber\" (grams per ONE catalog unit) were added for every id. They are ESTIMATES from the same sources as the calories (USDA FoodData Central SR Legacy reference values for generic foods, typical package labels for branded ones), rounded, and checked so that 4 × protein + 4 × (carbs − fiber) + 2 × fiber + 9 × fat lands within 15% of the listed calories; treat them as a guide. \"veg\" is vegetable servings per catalog unit, where one serving is 80 g of vegetables or beans (about ½ cup cooked, or a big handful raw). Potatoes, sweet potatoes and fries count as the starch, and fruit is not counted, so they have no \"veg\".",
+  "notes": "kcal and protein (grams) per ONE catalog unit of each ingredient (the catalog’s \"unit\"; \"basis\" says exactly what one unit is). Generic foods use USDA FoodData Central SR Legacy reference values (fdc.nal.usda.gov; NDB numbers cited where known) converted to the catalog unit; branded/packaged items use typical package labels. Lean meats (chicken, 93/7 turkey, pork chops/loin) use raw values. Ground beef, ground pork, Italian sausage and bacon are counted AS EATEN per pound bought (USDA cooked value × cooking yield), because the recipes spoon off or drain the rendered fat. Oil, butter, mayo and dressings count in full at recipe amounts. Canned vegetables and beans are per can as eaten (drained where the recipe drains). v2.2: items the family buys by brand (93/7 beef, Rao’s, Artesano, Tillamook, whole milk, fast-food-style fries, etc.) use that product’s label; fully cooked/heat-and-serve products use package labels. Values are estimates for planning — a kind guide, not a lab number. 2026-11-15 (v3, docs/spec/18-recipe-box.md): \"carbs\", \"fat\" and \"fiber\" (grams per ONE catalog unit) were added for every id. They are ESTIMATES from the same sources as the calories (USDA FoodData Central SR Legacy reference values for generic foods, typical package labels for branded ones), rounded, and checked so that 4 × protein + 4 × (carbs − fiber) + 2 × fiber + 9 × fat lands within 15% of the listed calories; treat them as a guide. \"veg\" is vegetable servings per catalog unit, where one serving is 80 g of vegetables or beans (about ½ cup cooked, or a big handful raw). Potatoes, sweet potatoes and fries count as the starch, and fruit is not counted, so they have no \"veg\". 2026-11-15 night (docs/spec/24): ground chicken, Italian chicken sausage, beef stew meat, sirloin tip, chuck roast and the frozen stir-fry and Normandy blends were added; lean whole cuts and ground chicken use raw values.",
   "macrosEstimated": true,
   "vegServingGrams": 80,
   "per": {
@@ -794,7 +794,7 @@
       "fiber": 0,
       "unit": "tbsp",
       "basis": "per 1 tbsp regular ranch dressing",
-      "source": "Typical package label: Hidden Valley Original Ranch, 130 kcal per 2 tbsp"
+      "source": "Typical package label for regular ranch dressing (Wish-Bone, Hidden Valley): about 120–130 kcal per 2 tbsp"
     },
     "riceVinegar": {
       "kcal": 0,
@@ -1916,6 +1916,78 @@
       "unit": "cups",
       "basis": "1 cup beef stock",
       "source": "Package label (typical): Kitchen Basics Original Beef Stock, 20 kcal, 4–5 g protein per cup"
+    },
+    "stewMeat": {
+      "kcal": 581,
+      "protein": 98.7,
+      "carbs": 0,
+      "fat": 18,
+      "fiber": 0,
+      "unit": "lb",
+      "basis": "1 lb raw beef for stew, trimmed",
+      "source": "USDA FoodData Central, SR Legacy: Beef, chuck for stew, separable lean and fat, all grades, raw; ~128 kcal & 21.8 g protein / 100 g"
+    },
+    "sirloinTip": {
+      "kcal": 576,
+      "protein": 96,
+      "carbs": 0,
+      "fat": 18.6,
+      "fiber": 0,
+      "unit": "lb",
+      "basis": "1 lb raw sirloin tip (round tip), trimmed",
+      "source": "USDA FoodData Central, SR Legacy: Beef, round, tip round, separable lean only, trimmed to 0\" fat, choice, raw; ~127 kcal & 21.2 g protein / 100 g"
+    },
+    "chuckRoast": {
+      "kcal": 862,
+      "protein": 86,
+      "carbs": 0,
+      "fat": 57,
+      "fiber": 0,
+      "unit": "lb",
+      "basis": "1 lb raw boneless chuck roast with the thick outside fat trimmed (the fat skimmed off the juices is not subtracted, so this runs a little high)",
+      "source": "USDA FoodData Central, SR Legacy: Beef, chuck eye roast, boneless, separable lean and fat, trimmed to 0\" fat, choice, raw; ~190 kcal & 19 g protein / 100 g (rounded)"
+    },
+    "groundChicken": {
+      "kcal": 640,
+      "protein": 88,
+      "carbs": 0,
+      "fat": 36,
+      "fiber": 0,
+      "unit": "lb",
+      "basis": "1 lb raw ground chicken (four 4 oz servings)",
+      "source": "Package label on samsclub.com: Perdue Ground Chicken, 160 kcal, 9 g fat, 22 g protein per serving, 12 servings per 3 lb"
+    },
+    "chickenSausage": {
+      "kcal": 700,
+      "protein": 76,
+      "carbs": 12,
+      "fat": 35,
+      "fiber": 0,
+      "unit": "lb",
+      "basis": "1 lb fully cooked Italian chicken sausage links (about 6 links)",
+      "source": "Package label (typical): al fresco Sweet Italian Style chicken sausage, about 120 kcal, 6 g fat, 13 g protein per 78 g link"
+    },
+    "stirFryVeg": {
+      "kcal": 150,
+      "protein": 9,
+      "carbs": 30,
+      "fat": 0.5,
+      "fiber": 10,
+      "veg": 5.7,
+      "unit": "lb",
+      "basis": "frozen stir-fry vegetable blend as purchased, per 1 lb",
+      "source": "Package label (typical): frozen stir-fry vegetable blend, about 25–30 kcal per 85 g serving"
+    },
+    "normandyVeg": {
+      "kcal": 125,
+      "protein": 9,
+      "carbs": 24,
+      "fat": 0.5,
+      "fiber": 11,
+      "veg": 5.7,
+      "unit": "lb",
+      "basis": "frozen broccoli, cauliflower and carrots as purchased, per 1 lb",
+      "source": "Package label (typical): frozen Normandy / California blend, about 25 kcal per 85 g serving"
     }
   }
 }

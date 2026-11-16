@@ -231,3 +231,31 @@ test("get_family_profile: lunch packers are whoever the family lists (docs/spec/
   assert.equal(p.people.find((x) => x.name === "Knox").packsLunch, false);
   assert.equal(p.people.find((x) => x.name === "Jordan").packsLunch, false);
 });
+
+// docs/spec/24 §24.8: chicken over turkey, little pork, Sam's bulk cuts, and their safe temperatures.
+test("recipeProblems: the new Sam's bulk meats must state their safe temperature", () => {
+  const r = (ids, step) => recipeProblems({ title: "Dinner", steps: [step], itemIds: ids, itemNames: ids, meat: true });
+  assert.deepEqual(r(["groundChicken"], "Brown the ground chicken to 165°F."), []);
+  assert.match(r(["groundChicken"], "Brown the ground chicken until done.").join(" "), /165°F/);
+  assert.deepEqual(r(["chickenSausage"], "Heat the chicken sausage through to 165°F."), []);
+  assert.match(r(["chickenSausage"], "Warm the sausage.").join(" "), /165°F/);
+  for (const id of ["sirloinTip", "stewMeat", "chuckRoast"]) {
+    assert.deepEqual(r([id], "Sear the beef and cook to at least 145°F."), [], `${id}: 145°F is enough to pass`);
+    assert.match(r([id], "Sear the beef until browned.").join(" "), /145°F/, `${id}: the temperature is required`);
+  }
+  // Beef tips and pot roast cook far past 145°F and never rest, so the rest is not demanded of whole-cut beef.
+  assert.ok(!r(["stewMeat"], "Slow cook the beef tips until they fall apart, well past 145°F.").some((p) => /rest/.test(p)));
+});
+
+test("the house rules Claude is given: chicken over turkey, little pork, Sam's bulk cuts, Wish-Bone", async () => {
+  const p = (await tool("get_family_profile")).data;
+  const rules = JSON.stringify(p);
+  for (const re of [/Chicken, not turkey/, /ground chicken where a recipe would use ground turkey/, /little pork/, /Sam's Club bulk packs/, /beef tips/, /sirloin tip and chuck roast/, /Ranch is Wish-Bone/]) assert.match(rules, re);
+  assert.doesNotMatch(rules, /chicken, beef, pork, turkey/);
+  const { IDEAS_SYSTEM_PROMPT, IDEAS_FORMAT_PROMPT } = await import("../src/claude.js");
+  const sys = `${IDEAS_SYSTEM_PROMPT}\n${typeof IDEAS_FORMAT_PROMPT === "string" ? IDEAS_FORMAT_PROMPT : ""}`;
+  for (const re of [/Chicken over turkey/, /never suggest a turkey dinner/, /little pork/, /Sam's Club bulk packs/, /beef tips \(stew meat\), sirloin tip and chuck roast/]) assert.match(sys, re);
+  assert.doesNotMatch(sys, /ground turkey\)/);
+  const plan = TOOL_LIST.find((t) => t.name === "plan_dinner");
+  assert.match(plan.description, /prefers chicken to turkey and eats little pork/);
+});

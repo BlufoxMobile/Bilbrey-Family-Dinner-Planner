@@ -1,0 +1,47 @@
+/* What a meal costs (docs/spec/24 §24.7): one quiet line beside the calories on every dinner card,
+   and the ingredient-by-ingredient list on the recipe page. A fact, never a verdict: no colour, no
+   target, no "good" or "bad". Tokens only (docs/spec/19). */
+
+.cost-line { margin: 2px 0 0; color: var(--ink-2); font-size: var(--t-sm); line-height: 1.45; font-variant-numeric: tabular-nums; }
+.cost-line b { color: var(--ink); font-weight: 700; }
+.cost-have { color: var(--ink-2); }
+small.cost-line, span.cost-line { display: block; margin: 0; font-size: var(--t-xs); }
+
+/* Tonight: under the plate's calories; the week's rows carry the short line. */
+.hero-cost, .recipe-cost { margin-top: 4px; }
+.menu-cost { line-height: 1.4; }
+/* Plan: the week's cards (the cost sits where the calories do). */
+.day-cost { grid-column: 3; }
+/* From 960 px the week is seven upright cards with one column each (styles/app.css does the same for the calories). */
+@media (min-width: 960px) { .page-plan .week:not(.week-month) .day-cost { grid-column: auto; } }
+html.is-tv .page-plan .week:not(.week-month) .day-cost { grid-column: auto; }
+/* The dinner picker and the recipe box: so a $2.96 stir-fry and a $5.41 pot roast can be told apart. */
+.pick-cost, .r-cost { line-height: 1.6; }
+.night-cost { margin-top: 2px; }
+
+/* Plan ahead: what the planned dinners come to. */
+.ahead-cost { margin: 0; padding: 10px 12px; border-radius: var(--r-ctl); background: color-mix(in srgb, var(--card) 70%, transparent); color: var(--ink); }
+.ahead-cost .cost-have { display: block; margin-top: 2px; }
+
+/* The recipe page: ingredient by ingredient. */
+.cost-detail { margin-top: var(--s5); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.cost-detail > summary { display: flex; align-items: center; min-height: 56px; padding: 8px 16px; }
+.cost-detail > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.cost-sum { display: grid; gap: 1px; min-width: 0; }
+.cost-sum small { color: var(--ink-2); font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+.cost-detail > .muted, .cost-bulk { margin: 0; padding: 0 16px 12px; }
+.cost-items { display: grid; margin: 0; padding: 0 16px 8px; list-style: none; }
+.cost-items li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.ci-name { display: grid; gap: 1px; min-width: 0; }
+.ci-name small { color: var(--ink-2); font-size: var(--t-xs); }
+.ci-cost { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ci-cost small { margin-left: 6px; color: var(--ink-2); font-size: var(--t-xs); font-weight: 600; }
+.ci-total { font-weight: 700; }
+.ci-total .ci-cost { font-size: var(--t-md); }
+.cost-bulk { display: flex; gap: 8px; align-items: flex-start; font-size: var(--t-sm); line-height: 1.45; color: var(--ink-2); }
+.cost-bulk .ic { flex: none; margin-top: 2px; color: var(--pine); }
+.cost-bulk b { color: var(--ink); }
+
+/* The TV: nothing faint from across the room, and the week's cards keep one line each. */
+html.is-tv .cost-line { color: var(--ink-2); }
+html.is-tv .tonight-side .menu-cost { display: none; }

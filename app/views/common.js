@@ -8,10 +8,48 @@ import { listJoin, midSentence, relativeDay, shortWeekday, weekdayName } from '.
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
 import { prepSchedule } from '../prep.js';
+import { dinnerCost, costLine } from '../cost.js';
 import { plateFacts, timeLabel, fmtMinutes, equipmentLabel, LEFTOVER_REASON, leftoversOnHand, leftoversToAsk, leftoverNightChoices, servingsText, useByText } from '../cooking.js';
 
 /** Calories are shown when nutrition.json is there and this phone hasn't hidden them. */
 export const showNutrition = (app) => hasNutrition(app.db) && !app.store?.device?.hideNutrition;
+
+// ---------------------------------------------------------------- what a meal costs (docs/spec/24 §24.7)
+
+const COSTS = new WeakMap();
+/**
+ * What a dinner costs as it would be served that night, worked out once per change to the family's
+ * data (a screen may ask for the same dinner many times, and the recipe box asks for all of them).
+ * → cost.dinnerCost's result, or null for a dinner that isn't there.
+ */
+export function costOf(app, dinnerId, entry = null) {
+  const state = app.state;
+  if (!state || typeof state !== 'object' || !dinnerId) return null;
+  const today = app.today();
+  let m = COSTS.get(state);
+  if (!m || m.db !== app.db || m.today !== today) COSTS.set(state, (m = { db: app.db, today, map: new Map() }));
+  const k = `${dinnerId}|${Array.isArray(entry?.sides) ? entry.sides.join(',') : ''}`;
+  if (!m.map.has(k)) m.map.set(k, dinnerCost(app.db, state, dinnerId, entry, { today }));
+  return m.map.get(k);
+}
+
+const dollarsOf = (n) => `$${(Math.round((Number(n) || 0) * 100) / 100).toFixed(2)}`;
+/**
+ * The cost line for a card: "about $3.26 a serving · $16.30 for five", the plate's price in bold.
+ * `short` is just the serving. `house` adds how much of it is already in the pantry. A fact beside
+ * the calories, never a verdict: no colour, no target. '' when nothing prices the dinner.
+ */
+export function costNote(cost, { short = false, house = false, tag = 'p', cls = '' } = {}) {
+  const text = costLine(cost, { short });
+  if (!text) return '';
+  const at = text.search(/\$[\d.,]+/);
+  const amount = at < 0 ? '' : text.slice(at).match(/^\$[\d.,]+/)[0];
+  const had = house && cost.pantryValue >= 0.5
+    ? (cost.pantryValue >= cost.total - 0.005 ? ' All of it is already in the house.' : ` ${dollarsOf(cost.pantryValue)} of it is already in the house.`)
+    : '';
+  const body = at < 0 ? html`${text}` : html`${text.slice(0, at)}<b>${amount}</b>${text.slice(at + amount.length)}`;
+  return html`<${raw(tag)} class="cost-line ${cls}">${body}${had ? html`<span class="cost-have">${short ? '' : '.'}${had}</span>` : ''}</${raw(tag)}>`;
+}
 
 /** One plate of a dinner as served: calories, protein, lean (SPEC §22.6). null when there's no data. */
 export const plate = (app, dinnerId, entry = null) => plateFacts(app.db, app.state, dinnerId, entry);

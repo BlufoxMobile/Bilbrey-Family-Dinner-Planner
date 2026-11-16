@@ -8,7 +8,7 @@ import { buildList, plannedNights } from '../shopping.js';
 import { generateOps, markCookedOps, awayBlock } from '../actions.js';
 import {
   sidesFor, dinnerPhoto, equipment, favoriteBadge, awayReason, dayStamp, nutri, showNutrition, lighterChip, rateList, isDismissed, replacedText, prepCard,
-  plate, leanMark, whyList, cic, isLeftoverNight, leftoversAskCard, leftoverRows,
+  plate, leanMark, whyList, cic, isLeftoverNight, leftoversAskCard, leftoverRows, costOf, costNote,
 } from './common.js';
 import { dayNutrition, lighterSide, fmtKcal, lunchNutrition } from '../nutrition.js';
 import { lunchPeople, lunchFor } from '../lunch.js';
@@ -87,6 +87,7 @@ function hero(app, today) {
       ${sides.filter((x) => x.replaced).map((x) => html`<p class="hero-replaced">${x.info?.title}: ${replacedText(app, x).replace(/^In/, 'in')}.</p>`)}
       <div class="hero-meta">${equipment(d)}${favoriteBadge(app, d)}</div>
       ${when(showNutrition(app), () => html`<p class="hero-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate' })}</p>`)}
+      ${costNote(costOf(app, d.id, e), { house: true, cls: 'hero-cost' })}
       <div class="hero-actions">
         ${cooked
           ? html`<p class="status-note status-cooked hero-done">${ic('checkCircle', { size: 18 })}<span>Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.${left ? (left.saved ? ` ${servingsText(left.saved)} of leftovers saved.` : ' No leftovers.') : ''}</span></p>
@@ -137,7 +138,7 @@ function weekAhead(app, today) {
           ${dayStamp(date, today)}
           <span class="menu-main">
             ${away ? html`<b>${awayReason(e).label}</b><small>${e.away?.note || 'Not eating at home'}</small>`
-              : d ? html`<b>${d.title}</b><small>${listJoin(sidesFor(app, d.id, e).map((s) => s.info?.title))}</small>${facts ? html`<small class="menu-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein${leanMark(facts, { compact: true })}</small>` : ''}`
+              : d ? html`<b>${d.title}</b><small>${listJoin(sidesFor(app, d.id, e).map((s) => s.info?.title))}</small>${facts ? html`<small class="menu-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein${leanMark(facts, { compact: true })}</small>` : ''}${costNote(costOf(app, d.id, e), { short: true, tag: 'small', cls: 'menu-cost' })}`
                 : html`<b>Nothing planned</b><small>Tap to pick a dinner</small>`}
           </span>
           ${away ? html`<span class="menu-ic">${ic(isLeftoverNight(e) ? 'bowl' : 'moon', { size: 22 })}</span>` : d ? dinnerPhoto(app, d, { size: 'thumb' }) : html`<span class="menu-ic">${ic('plus', { size: 22 })}</span>`}

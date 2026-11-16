@@ -7,7 +7,7 @@ import { clone, listJoin, round2, slugify, uid, weekdayName, shortDate, diffDays
 import { leftoverRecord, leftoversOnHand, servingsText, LEFTOVER_REASON } from './cooking.js';
 import {
   bestBenchFor, dinnerById, effectiveSides, findInPlan, generatePlan, itemsForNight, sideInfo, parseSideRef, kindOf,
-  isRetired, isPromoted, rotationList, isSideDropped, dinnerSignal, sideSignal, votesForSignal, SIGNALS,
+  isRetired, isPromoted, rotationList, isSideDropped, dinnerSignal, sideSignal, votesForSignal, SIGNALS, formerIds,
 } from './planner.js';
 import { boughtToPantry, readableId, dinnerFoodCost } from './shopping.js';
 import { personConfig, lunchItem, swappedConfig, lunchSlots, lunchPackers, isPacker, newPackerName, packingNames, lunchFor } from './lunch.js';
@@ -456,6 +456,8 @@ export function rateDinnerOps(db, state, { dinnerId, signal, who, at, today }) {
   const rec = votesForSignal(signal, { explicitFine: d.tags.includes('family favorite') });
   if (rec) ops.push(set(['votes', dinnerId], rec));
   else if (state?.votes?.[dinnerId] !== undefined) ops.push(del(['votes', dinnerId]));
+  // A "loved" that followed the dinner from the id it replaced (planner.followRenames) is settled here.
+  for (const old of formerIds(db, dinnerId)) if (state?.votes?.[old] !== undefined) ops.push(del(['votes', old]));
   if (signal === 'no') {
     const b = retireBundle(db, state, { dinnerId, by: who, at: at || new Date().toISOString(), today });
     return result(state, [...ops, ...b.ops], b.message, { retired: true, promoted: b.promoted, signal });
@@ -566,6 +568,7 @@ export function restoreOps(db, state, { dinnerId }) {
   const ops = [];
   if (state?.retired?.[dinnerId]) ops.push(del(['retired', dinnerId]));
   if (state?.votes?.[dinnerId] !== undefined) ops.push(del(['votes', dinnerId]));
+  for (const old of formerIds(db, dinnerId)) if (state?.votes?.[old] !== undefined) ops.push(del(['votes', old]));
   if (d?.rotation === 'bench' && !isPromoted(state, dinnerId)) ops.push(set(['promoted', dinnerId], { replaced: null, at: new Date().toISOString() }));
   return result(state, ops, `${d?.title || 'That dinner'} is back on the menu, with a fresh start.`);
 }

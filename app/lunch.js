@@ -31,9 +31,18 @@ export function lunchItem(db, state, id) {
   return c ? normalizeLunchItem({ ...c, id }, { custom: true }) : null;
 }
 
-/** Everything that can go in a slot: the library first, then the family's own items. */
-export function lunchLibrary(db, state, slot) {
-  const lib = (db?.lunch?.itemList || []).filter((x) => x.slot === slot);
+/** True when a lunch item is offered to this person: an item with `people` is only for the people it names (docs/spec/24 §24.3). */
+export function lunchItemFor(item, name) {
+  return !item?.people?.length || (!!name && item.people.includes(name));
+}
+
+/**
+ * Everything that can go in a slot: the library first, then the family's own items.
+ * `forName` (when given, even as '') leaves out the items that are only for someone else: the
+ * BLT bowl with the tomatoes left out is Jeff's, so Knox's editor doesn't offer it.
+ */
+export function lunchLibrary(db, state, slot, forName) {
+  const lib = (db?.lunch?.itemList || []).filter((x) => x.slot === slot && (forName === undefined || lunchItemFor(x, forName)));
   const custom = Object.entries(state?.lunch?.custom || {})
     .map(([id, c]) => normalizeLunchItem({ ...c, id }, { custom: true }))
     .filter((x) => x && x.slot === slot);

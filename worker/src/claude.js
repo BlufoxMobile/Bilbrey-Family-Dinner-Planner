@@ -329,6 +329,7 @@ const EQUIPMENT_ALIASES = new Map(Object.entries({
   crockpot: "possible cooker", "crock pot": "possible cooker", "crock-pot": "possible cooker",
   multicooker: "possible cooker", "multi-cooker": "possible cooker", "multi cooker": "possible cooker",
 }));
+// "turkey" is still understood (an idea that slips through is filed, not dropped), but the prompt asks for chicken instead.
 const PROTEINS = ["chicken", "beef", "pork", "turkey", "sausage", "bacon", "mixed", "crab"];
 
 /**
@@ -532,8 +533,10 @@ export const IDEAS_SYSTEM_PROMPT = [
   "They shop at Sam's Club (Addison) and Jewel-Osco (599 E Roosevelt Rd), two or three trips a month, on about $650 a month for groceries. They want to save money on groceries, waste less food (use older food first) and eat lighter.",
   "",
   "HOW THEY WANT TO EAT:",
-  "- Lean, high-protein dinners for the whole family: leaner cuts (chicken breast, pork loin, 90% lean or leaner ground beef, ground turkey), more vegetables, less frying. Air-fry, grill, griddle, sear, braise or slow cook instead of deep- or pan-frying, and go easy on butter, cream and cheese.",
+  "- Lean, high-protein dinners for the whole family: leaner cuts (chicken breast, chicken thighs, ground chicken, 90% lean or leaner ground beef, sirloin tip, eye of round), more vegetables, less frying. Air-fry, grill, griddle, sear, braise or slow cook instead of deep- or pan-frying, and go easy on butter, cream and cheese.",
   "- A vegetable or a salad with every dinner: at least one of the two sides, or plenty of vegetables cooked into the main.",
+  "- Chicken over turkey: they prefer chicken, so use ground chicken where you would reach for ground turkey, and never suggest a turkey dinner. They eat little pork: suggest it only now and then.",
+  "- Make the most of Sam's Club bulk packs: boneless skinless chicken thighs and breasts, 93/7 ground beef, ground chicken, beef tips (stew meat), sirloin tip and chuck roast (the cheaper steak and roast cuts), big bags of frozen vegetables, potatoes, onions, carrots and jasmine rice. Prefer dinners that use up a pack already bought or in the freezer.",
   "- Lighter never means small: three growing kids eat these dinners, so every plate is a full adult portion. Never label a food good or bad, never set calorie targets, and don't mention dieting.",
   "",
   "THE KITCHEN (cook only with these; the equipment ids are in quotes):",
@@ -542,7 +545,7 @@ export const IDEAS_SYSTEM_PROMPT = [
   "",
   "HOUSE RULES (never break one):",
   "- NO OVEN, ever (it leaks propane): no baking, roasting in an oven, broiling or sheet-pan dinners.",
-  "- Every dinner is one meat main plus two sides, sized for five full adult plates. Meat in every dinner (chicken, beef, pork, turkey, sausage, bacon). No vegetarian dinners.",
+  "- Every dinner is one meat main plus two sides, sized for five full adult plates. Meat in every dinner (chicken, beef, sometimes pork, sausage, bacon). No vegetarian dinners.",
   "- No tofu. No seafood or fish of any kind (no shrimp, salmon, tuna, tilapia, fish sauce, oyster sauce, Worcestershire). The ONE exception: an occasional snow-crab boil with Old Bay, every few months — suggest it only if the family's note asks for crab or seafood.",
   "- Never anything Caesar.",
   "- No raw cucumbers (pickles are fine), no raw onions, no raw tomatoes. Cooked onions, tomato sauce, crushed or canned tomatoes and salsa from a jar are fine.",
@@ -586,7 +589,7 @@ export const IDEAS_FORMAT_PROMPT = (() => {
     '- "title", "subtitle" (one appetizing sentence), "why" (one sentence: what on hand it uses up, and why now).',
     '- "prepMinutes": hands-on time. "cookMinutes": time it cooks on its own (a slow cook can be hours). "minutes": the total, start to table.',
     `- "equipment": from ${IDEA_EQUIPMENT.join(", ")}.`,
-    '- "protein": chicken, beef, pork, turkey, sausage, bacon or mixed. "category": e.g. Burgers, Asian-inspired, Pasta, Tex-Mex, Grill, Comfort, Salads, Soups.',
+    '- "protein": chicken, beef, pork, sausage, bacon or mixed. "category": e.g. Burgers, Asian-inspired, Pasta, Tex-Mex, Grill, Comfort, Salads, Soups.',
     '- "items": the MAIN dish ingredients for five adults, each { name, qty, unit, matchId } where matchId is an id from CATALOG or null. Never invent an id.',
     '- "sides": exactly two ids from SIDES (the family\'s own sides) that go with it; at least one a vegetable or a salad unless the main is full of vegetables.',
     `- "steps": short, plain steps in order. A step is a sentence, or { "text", "minutes", "setting" } when it has a time or a setting worth showing: "setting" is what the equipment is set to (for the possible cooker one of ${POSSIBLE_COOKER_SETTINGS.join(", ")}, plus low or high; a heat level or a temperature for the others). State safe temperatures in the text (chicken and turkey 165°F, ground beef and sausage 160°F, pork 145°F plus a 3-minute rest). No oven.`,

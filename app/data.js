@@ -90,8 +90,16 @@ export function normalizeIngredient(id, raw) {
     ...(raw?.buyOnDay ? { buyOnDay: true } : {}),
     // Cooks straight from frozen (frozen burger patties), so the prep schedule doesn't thaw it.
     ...(raw?.cookFromFrozen ? { cookFromFrozen: true } : {}),
+    // Bought as a Sam's Club bulk pack (docs/spec/24 §24.5): whether it lives in the freezer, the
+    // meal-size bag it is split into, and a line on how to portion or keep it.
+    ...(cleanBulk(raw?.bulk) ? { bulk: cleanBulk(raw.bulk) } : {}),
     packs,
   };
+}
+
+function cleanBulk(b) {
+  if (!b || typeof b !== 'object') return null;
+  return { freezes: !!b.freezes, ...(Number(b.portionLb) > 0 ? { portionLb: Number(b.portionLb) } : {}), note: b.note ? String(b.note) : '' };
 }
 
 function cleanItems(items) {
@@ -335,6 +343,8 @@ export function normalizeLunchItem(raw, extra = {}) {
     prep: raw.prep ? String(raw.prep) : '',
     // v2.5: a once-a-week job for the prep schedule ("Split the party bag into snack bags").
     ...(raw.batch ? { batch: String(raw.batch) } : {}),
+    // The only people this item is for (docs/spec/24 §24.3: the BLT bowl, tomatoes left out, is Jeff's). Left off = anyone.
+    ...(Array.isArray(raw.people) && raw.people.length ? { people: raw.people.map(String) } : {}),
     ...extra,
   };
 }
@@ -449,6 +459,10 @@ export function buildDb({ catalog, recipes, prices = null, stores = null, photos
   const dinnerList = (recipes?.dinners || []).filter((d) => d && d.id).map(normalizeDinner);
   const sideList = (recipes?.sides || []).filter((s) => s && s.id).map(normalizeSide);
   const dinners = Object.fromEntries(dinnerList.map((d) => [d.id, d]));
+  // Ids that were replaced (docs/spec/24 §24.1: the turkey dinners became chicken): old id → the
+  // dinner that took its place, so a saved night, a favorite or a link still finds it.
+  const renamed = {};
+  for (const [from, to] of Object.entries(recipes?.renamed || {})) if (!dinners[from] && dinners[to]) renamed[from] = String(to);
   const sides = Object.fromEntries(sideList.map((s) => [s.id, s]));
 
   const ph = { dinners: {}, sides: {}, lunches: {} };
@@ -471,6 +485,7 @@ export function buildDb({ catalog, recipes, prices = null, stores = null, photos
     dinnerList,
     sides,
     sideList,
+    renamed,
     photos: ph,
     stores: normalizeStores(stores),
     pricesUpdated,
