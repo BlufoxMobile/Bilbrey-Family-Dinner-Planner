@@ -112,8 +112,8 @@ export function rawProduce(text, { picture = false } = {}) {
 // Ninja Foodi Everyday PossibleCooker Pro 6.5 qt, MC1101. Functions and limits from Ninja's own
 // quick-start guide and FAQ for the MC1100 series: SLOW COOK runs on HI or LO (LO 6–12 hours,
 // HI 2–12 hours), SEAR/SAUTÉ on HI / MED / LO, BRAISE picks its own temperature (about 210°F),
-// the grain programs set their own time. STEAM is printed on some panels; recipes that steam carry
-// the SEAR/SAUTÉ fallback in a tip.
+// the grain programs set their own time. STEAM: Jeff confirmed his cooker has it (2026-11-15), so
+// the steamed sides use it (a cup of water, lid on, a time).
 export const COOKER_SETTING = /^(SLOW COOK on (LO|HI)|SEAR\/SAUTÉ on (HI|MED|LO)|BRAISE|STEAM|WHITE RICE|BROWN RICE|OATS|PASTA|KEEP WARM)$/;
 const SLOW_LIMITS = { LO: [360, 720], HI: [120, 720] };
 

@@ -209,6 +209,16 @@ test('validator: cooker settings are real ones, with times the machine allows', 
   assert.ok(says(check((d) => { dinner(d, 'tikka-masala').steps[3].setting = 'SLOW COOK on HI'; }), /equipment does not list "possible cooker"/));
   assert.ok(says(check((d) => { dinner(d, id).equipment = ['instant pot']; }), /equipment "instant pot" not allowed/));
   for (const s of ['SLOW COOK on LO', 'SLOW COOK on HI', 'SEAR/SAUTÉ on HI', 'SEAR/SAUTÉ on MED', 'BRAISE', 'STEAM', 'WHITE RICE', 'KEEP WARM']) assert.ok(COOKER_SETTING.test(s), s);
+  // Jeff's cooker has STEAM (confirmed 2026-11-15): the sides that steam in the pot use it, with the water, the lid and a time.
+  for (const id of ['steamed-carrots', 'cooker-green-beans']) {
+    const steam = db.sides[id].stepDetail.filter((x) => x.setting === 'STEAM');
+    assert.equal(steam.length, 1, `${id} steams with STEAM`);
+    assert.match(steam[0].text, /Pour 1 cup of water into the PossibleCooker pot.+put the lid on\. Select STEAM, set the time to \d+ minutes and press START\/STOP /);
+    assert.match(steam[0].text, /about 5 minutes to come up to steam first\)\. The \w+ need \d+–\d+ minutes of steam: they’re done when/);
+    assert.ok(steam[0].minutes >= 10);
+    assert.doesNotMatch(JSON.stringify(recipes.sides.find((x) => x.id === id)), /SEAR\/SAUTÉ/, `${id}: no sear/sauté workaround left`);
+  }
+  for (const d of [...db.dinnerList, ...db.sideList]) for (const st of d.stepDetail) if (/\bsteam\b/i.test(st.text) && /PossibleCooker pot/.test(st.text)) assert.equal(st.setting, 'STEAM', `${d.id}: a step that steams in the pot uses STEAM`);
   for (const s of ['PRESSURE COOK', 'AIR FRY', 'SLOW COOK', 'BAKE']) assert.ok(!COOKER_SETTING.test(s), s);
 });
 

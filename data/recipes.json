@@ -6409,14 +6409,14 @@
       "steps": [
         "Peel the 1½ lb of carrots and cut into ½-inch coins.",
         {
-          "text": "Pour 1 cup of water into the PossibleCooker pot, add the carrots and put the lid on. Select SEAR/SAUTÉ, set it to HI and press START/STOP. Once steam is coming from under the lid (about 5 minutes), cook 8–10 minutes more, until a fork slides into a coin easily. Press START/STOP.",
+          "text": "Pour 1 cup of water into the PossibleCooker pot, add the carrots and put the lid on. Select STEAM, set the time to 10 minutes and press START/STOP (it takes about 5 minutes to come up to steam first). The carrots need 8–10 minutes of steam: they’re done when a fork slides into a coin easily. Press START/STOP when they are.",
           "minutes": 13,
-          "setting": "SEAR/SAUTÉ on HI"
+          "setting": "STEAM"
         },
         "Drain well, toss with the butter and salt, and serve."
       ],
       "tips": [
-        "If your panel has a STEAM button, use it with the same water and time; SEAR/SAUTÉ with the lid on steams just as well on every model."
+        "Leave the lid on while it steams: every peek lets the steam out and adds a minute."
       ],
       "photo": "A bowl of bright orange steamed carrot coins glistening with a little melted butter."
     },
@@ -6437,14 +6437,14 @@
       "steps": [
         "Trim the stem ends off the 1½ lb of green beans.",
         {
-          "text": "Pour 1 cup of water into the PossibleCooker pot, add the beans and put the lid on. Select SEAR/SAUTÉ, set it to HI and press START/STOP. Once steam is coming from under the lid (about 5 minutes), cook 6–8 minutes more, until they are bright green and bend without snapping. Press START/STOP.",
+          "text": "Pour 1 cup of water into the PossibleCooker pot, add the beans and put the lid on. Select STEAM, set the time to 8 minutes and press START/STOP (it takes about 5 minutes to come up to steam first). The beans need 6–8 minutes of steam: they’re done when they are bright green and bend without snapping. Press START/STOP when they are.",
           "minutes": 11,
-          "setting": "SEAR/SAUTÉ on HI"
+          "setting": "STEAM"
         },
         "Drain well and toss with the butter, the salt and the juice of half the lemon. Cut the other half into wedges for the table."
       ],
       "tips": [
-        "If your panel has a STEAM button, use it with the same water and time; SEAR/SAUTÉ with the lid on steams just as well on every model."
+        "Leave the lid on while it steams: every peek lets the steam out and adds a minute."
       ],
       "photo": "A platter of bright green steamed whole green beans glistening with butter, with lemon wedges."
     },

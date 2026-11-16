@@ -538,7 +538,7 @@ export const IDEAS_SYSTEM_PROMPT = [
   "",
   "THE KITCHEN (cook only with these; the equipment ids are in quotes):",
   '- "stovetop" (gas burners), "blackstone" (outdoor Blackstone griddle), "electric grill" (indoor), "outdoor grill", "air fryer", "microwave".',
-  '- "possible cooker": a Ninja 10-in-1 Everyday PossibleCooker Pro, 6.5 quart. Use it to slow cook, sear/sauté, braise, steam, cook rice and keep warm. It sears and then slow cooks or braises in the same pot, so it is the right tool for chili, stews, soups, pulled chicken or pork, braised lean cuts and rice for five.',
+  '- "possible cooker": a Ninja 10-in-1 Everyday PossibleCooker Pro, 6.5 quart. Use it to slow cook, sear/sauté, braise, steam, cook rice and keep warm. It has a STEAM function (a cup of water in the pot, lid on) for vegetables. It sears and then slow cooks or braises in the same pot, so it is the right tool for chili, stews, soups, pulled chicken or pork, braised lean cuts and rice for five.',
   "",
   "HOUSE RULES (never break one):",
   "- NO OVEN, ever (it leaks propane): no baking, roasting in an oven, broiling or sheet-pan dinners.",

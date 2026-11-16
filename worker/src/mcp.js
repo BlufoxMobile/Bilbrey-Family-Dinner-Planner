@@ -640,7 +640,7 @@ function getFamilyProfile(args, { db, state, today }) {
       id: "possible cooker",
       name: "Ninja 10-in-1 Everyday PossibleCooker Pro, 6.5 qt (MC1101)",
       usedFor: POSSIBLE_COOKER_SETTINGS,
-      goodFor: "Sear then slow cook or braise in the same pot: chili, stews, soups, pulled chicken or pork, braised lean cuts, and rice for five. It replaces a slow cooker and a Dutch oven; it is never put in an oven.",
+      goodFor: "Sear then slow cook or braise in the same pot: chili, stews, soups, pulled chicken or pork, braised lean cuts, and rice for five. Its STEAM function (a cup of water in the pot, lid on) does vegetables. It replaces a slow cooker and a Dutch oven; it is never put in an oven.",
     },
     storage: "One large fridge, a small freezer, an outdoor freezer and a full pantry, so bulk buying is easy to store.",
     houseRules: HOUSE_RULES,

@@ -64,13 +64,16 @@ listings and the MC1101 quick guide (ninjakitchen.com itself refused the request
 | BRAISE | Picks its own temperature (about 210°F, a gentle bubble); you set the time; lid on | Pork loin 45 min, meatballs 40 min, chicken thighs 35 min |
 | WHITE RICE / BROWN RICE / OATS / PASTA | Set their own time, then KEEP WARM | 1 cup white rice to 1½ cups water; up to 4 cups of rice or 1 lb of pasta |
 | KEEP WARM | Counts up; a finished program drops into it | Dinner holds if someone is late |
-| Steaming | 1 cup of water, lid on (Ninja's steam chart: broccoli, carrots, green beans 5–10 min) | Steamed carrots and green beans |
+| STEAM | 1 cup of water, lid on, set a time (Ninja's steam chart: broccoli, carrots, green beans 5–10 min) | Steamed carrots and green beans |
 
-Honest limits: the US booklet prints HIGH / MEDIUM / LOW where the recipes say HI / MED / LO; and STEAM is a
+Honest limits: the US booklet prints HIGH / MEDIUM / LOW where the recipes say HI / MED / LO. STEAM is a
 named button on some MC1101 panels but only a chart in the US quick-start guide, which lists eight functions
-without it. So the steamed sides are written for every model: a cup of water, lid on, SEAR/SAUTÉ on HI, timed
-from the first steam, with "use STEAM if your panel has it" as the tip. `STEAM` stays a valid setting for the
-day someone confirms the button. The pot is nonstick (wooden or silicone tools). The white-rice program's
+without it, so the steamed sides were first written with SEAR/SAUTÉ on HI under a lid. **Jeff confirmed on
+2026-11-15 that his cooker has STEAM**, and the two sides that steam in the pot (steamed carrots, steamed
+green beans with lemon) now use it: the step's `setting` is `STEAM`, with the same cup of water, the lid on,
+a time to set (10 and 8 minutes) and the same cues ("about 5 minutes to come up to steam first… 8–10
+minutes of steam: done when a fork slides in"). No dinner steams in the pot. The Worker's kitchen text for Claude (ideas
+and the chat connector) says the STEAM function is there. The pot is nonstick (wooden or silicone tools). The white-rice program's
 length isn't published; the rice side says "about 25 minutes" and lets the cooker finish on its own.
 
 - `possible cooker` is in `EQUIPMENT_LABELS` ("PossibleCooker") and `EQUIPMENT_ICON` (a new `cooker` icon) in
