@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>The Bilbrey Family Dinner Planner</title>
   <meta name="description" content="Dinners for the five Bilbreys, planned around bulk buys at Sam's Club and top-ups at Jewel-Osco.">
-  <meta name="theme-color" content="#F3EAD7" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#131C17" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#F3F5F0" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1311" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="light dark">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -17,14 +17,27 @@
   <meta name="apple-mobile-web-app-title" content="Bilbrey Dinners">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="format-detection" content="telephone=no">
-  <link rel="preload" href="fonts/young-serif-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/big-shoulders-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/atkinson-next-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/atkinson-next-700.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/app.css">
+  <link rel="stylesheet" href="styles/parts/design.css">
+  <link rel="stylesheet" href="styles/parts/tv.css">
   <link rel="stylesheet" href="styles/print.css" media="print">
   <script>
-    // Apply this device's chosen appearance and text size before first paint.
-    try { var d = JSON.parse(localStorage.getItem('bfdp.v2.device') || '{}'); if (d.theme === 'light' || d.theme === 'dark') document.documentElement.dataset.theme = d.theme; if (d.textSize === 'large') document.documentElement.dataset.text = 'large'; } catch (e) {}
+    // Before first paint: this device's appearance and text size, and whether it is the living-room TV
+    // (the "TV display" switch, or a Fire TV / smart-TV browser). app/tv.js does the full check.
+    try {
+      var e = document.documentElement;
+      var d = JSON.parse(localStorage.getItem('bfdp.v2.device') || '{}');
+      var v = JSON.parse(localStorage.getItem('bfdp.v2.display') || '{}').tv;
+      var q = /[?&]tv=(1|on)\b/.test(location.search) ? 'on' : /[?&]tv=(0|off)\b/.test(location.search) ? 'off' : v;
+      var tv = q === 'on' || (q !== 'off' && /\bAFT[A-Z0-9]{1,8}\b|Fire ?TV|SmartTV|Android TV|GoogleTV|Tizen|Web0S|BRAVIA|CrKey/i.test(navigator.userAgent));
+      if (tv) { e.classList.add('is-tv'); e.style.setProperty('--tv-zoom', Math.max(0.6, Math.min(4, innerWidth / 960))); }
+      if (d.theme === 'light' || d.theme === 'dark') e.dataset.theme = d.theme; else if (tv) e.dataset.theme = 'dark';
+      if (d.textSize === 'large') e.dataset.text = 'large';
+    } catch (err) {}
   </script>
   <script type="module" src="app/main.js"></script>
   <link rel="stylesheet" href="styles/parts/cook.css">
@@ -34,7 +47,14 @@
 </head>
 <body>
   <div id="app" class="app is-boot" aria-busy="true">
-    <div class="boot"><span class="wm-mark wm-lg" aria-hidden="true"></span><p>The Bilbrey Family Dinner Planner</p></div>
+    <!-- The shape of Tonight while the recipes load. -->
+    <div class="boot-sk" role="status" aria-label="Loading The Bilbrey Family Dinner Planner">
+      <div class="boot-sk-bar"><span class="wm-mark" aria-hidden="true"></span><span class="wm-text">Bilbrey Dinners</span></div>
+      <span class="sk sk-hero"></span>
+      <span class="sk sk-line sk-title"></span>
+      <span class="sk sk-line"></span>
+      <span class="sk sk-line sk-short"></span>
+    </div>
   </div>
   <noscript><p class="noscript">The Bilbrey Family Dinner Planner needs JavaScript turned on.</p></noscript>
 </body>

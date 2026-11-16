@@ -72,6 +72,8 @@ async function next(p) {
   await waitFor(async () => (await stepKey(p)) !== was);
 }
 const cards = (p) => p.$$eval('.r-card', (els) => els.length);
+/** A TV remote's Back button (Playwright has no key of that name, so the event is sent as the remote sends it). */
+const pressBack = (p) => p.evaluate(() => (document.activeElement || document.body).dispatchEvent(new KeyboardEvent('keydown', { key: 'GoBack', bubbles: true, cancelable: true })));
 /** A second device joins the family and waits for the plan to arrive. */
 async function join(context, viewport) {
   const p = await newPage(context, viewport);
@@ -332,6 +334,75 @@ test('cook mode on a laptop and on the TV: big type, the step beside what it nee
     await p.click('[data-action="cook:timer-cancel"]');
     await p.evaluate(() => localStorage.removeItem('bfdp.cook.session'));
     await p.close();
+  }
+  assert.equal(errors.length, 0, errors.join('\n'));
+});
+
+test('the TV (the 960 × 540 canvas a Fire TV reports, and a 1080p panel): cook mode fits the screen and the remote drives it', async () => {
+  for (const [vp, name, zoom] of [[{ width: 960, height: 540 }, 'firetv', '1'], [TV, 'tv-1080p', '2']]) {
+    const c = await browser.newContext({ viewport: vp, deviceScaleFactor: 1, serviceWorkers: 'block', storageState: await big.storageState().then(async (st) => (st.origins.length ? st : ctx.storageState())) });
+    await c.addInitScript(() => { try { localStorage.setItem('bfdp.v2.display', '{"tv":"on"}'); localStorage.removeItem('bfdp.cook.session'); } catch { /* first load */ } });
+    const p = await newPage(c, vp);
+    await p.goto(`${base}?api=${encodeURIComponent(apiBase)}#/tonight`);
+    await p.waitForSelector('.page-tonight, #pc-enter');
+    if (await p.locator('#pc-enter').count()) { await p.fill('#pc-enter', 'tacos tuesday'); await p.click('form[data-submit="fam:enter"] button[type=submit]'); }
+    await p.waitForSelector('.page-tonight .hero-photo');
+    assert.equal(await p.evaluate(() => document.documentElement.classList.contains('is-tv')), true, 'the TV layout is on');
+    assert.equal(await p.evaluate(() => getComputedStyle(document.documentElement).zoom), zoom, `${name}: the 960-wide canvas`);
+    // Tonight on the TV: one kitchen display (the photograph on the left, the cards beside it), never three squeezed columns.
+    const board = await p.evaluate(() => {
+      const r = (sel) => document.querySelector(sel)?.getBoundingClientRect();
+      return { photo: r('.hero-photo'), side: r('.tonight-side'), prep: r('.tonight-side .prep-card'), cols: getComputedStyle(document.querySelector('.tonight-side')).gridTemplateColumns.split(' ').length, vw: innerWidth };
+    });
+    assert.ok(board.side.left >= board.photo.right, 'the cards sit beside the photograph');
+    assert.equal(board.cols, 1, 'one column of cards beside it');
+    assert.ok(board.prep.width >= board.vw * 0.3, `the prep card is wide enough to read (${Math.round(board.prep.width)} of ${board.vw})`);
+    assert.ok(await noOverflow(p));
+    // Into cook mode with the remote: Start cooking is reachable with the arrows and Enter.
+    await go(p, `#/cook/${TODAY}`, '.cook.is-ready');
+    await waitFor(() => p.evaluate(() => document.activeElement?.id === 'cook-next'));
+    const fits = await p.evaluate(() => { const c2 = document.querySelector('.cook-v3').getBoundingClientRect(); const n = document.querySelector('.cook-nav').getBoundingClientRect(); return { h: c2.height, vh: innerHeight, navBottom: n.bottom }; });
+    assert.ok(Math.abs(fits.h - fits.vh) <= 2 && fits.navBottom <= fits.vh + 1, `${name}: cook mode is exactly one screen tall, Next on it (${Math.round(fits.h)} of ${fits.vh})`);
+    assert.ok(await noOverflow(p));
+    await shot(p, `tv-ready-${name}`);
+    await p.keyboard.press('Enter');
+    await p.waitForSelector('.cook.is-step');
+    assert.equal(await stepKey(p), 'main:0');
+    // Left and right are the steps; focus stays on Next.
+    await p.keyboard.press('ArrowRight');
+    await waitFor(async () => (await stepKey(p)) === 'side0:0');
+    await p.keyboard.press('ArrowRight');
+    await waitFor(async () => (await stepKey(p)) === 'side0:1');
+    assert.equal(await p.evaluate(() => document.activeElement?.id), 'cook-next');
+    const size = await p.$eval('.cook-step-text', (el) => parseFloat(getComputedStyle(el).fontSize) * parseFloat(getComputedStyle(document.documentElement).zoom));
+    assert.ok(size >= 26 * Number(zoom), `${name}: step text is ${size}px on the glass`);
+    assert.ok(await p.evaluate(() => document.querySelector('.cook-nav').getBoundingClientRect().bottom <= innerHeight + 1), 'Next and Back are on the screen');
+    await shot(p, `tv-step-${name}`);
+    // Up walks to the step's own controls (its timer), Enter starts it, Down comes back to Next.
+    await p.keyboard.press('ArrowUp');
+    const up = await p.evaluate(() => ({ id: document.activeElement?.id, cls: document.activeElement?.className || '', inCook: !!document.activeElement?.closest('.cook') }));
+    assert.ok(up.inCook && up.id !== 'cook-next', `Up moves the focus off Next (${up.cls})`);
+    await p.keyboard.press('MediaPlayPause');
+    await p.waitForSelector('.cook-timer.is-running');
+    // Along the top bar the arrows walk the buttons, so every one of them can be reached.
+    await p.focus('.cook-bar [data-action="cook:steps"]');
+    const before = await stepKey(p);
+    await p.keyboard.press('ArrowRight');
+    assert.equal(await stepKey(p), before, 'right on the top bar does not change the step');
+    assert.ok(await p.evaluate(() => !!document.activeElement?.closest('.cook-bar') && document.activeElement?.dataset.action !== 'cook:steps'), 'it moves along the bar');
+    await p.keyboard.press('ArrowLeft');
+    assert.equal(await p.evaluate(() => document.activeElement?.dataset.action), 'cook:steps');
+    // Enter opens the step list; Back closes it; Back again leaves cook mode.
+    await p.keyboard.press('Enter');
+    await p.waitForSelector('dialog[open] .cook-step');
+    await pressBack(p);
+    await waitFor(async () => !(await p.locator('dialog[open]').count()));
+    assert.ok(await p.locator('.cook.is-step').count(), 'Back closed the sheet, not cook mode');
+    await p.click('[data-action="cook:timer-cancel"]');
+    await pressBack(p);
+    await p.waitForSelector('.page-tonight');
+    await p.evaluate(() => localStorage.removeItem('bfdp.cook.session'));
+    await c.close();
   }
   assert.equal(errors.length, 0, errors.join('\n'));
 });

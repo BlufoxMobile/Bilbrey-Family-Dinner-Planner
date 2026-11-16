@@ -32,11 +32,17 @@ Top to bottom (and in focus order for a remote):
    nights out and open nights in one line. Facts only: no target, no score, no colour-coding.
 8. The rest of the week (each row with calories, protein and Lean), and the grocery estimate.
 
-**Kitchen display.** At 1700 px and wider (a TV) Tonight widens to the full screen: dinner on the left
-with a shorter photo so Start cooking is on screen without scrolling, the cards in a second column and
-the week in a third. `styles/parts/cook.css` also steps the type tokens up one size inside
-`.page-tonight` and `.cook-v3` at that width; if the design system scales type on a TV itself, delete
-those two token blocks and keep the layout.
+**Wide window.** At 1700 px and wider (a big monitor, or a TV browser with the TV display off)
+Tonight widens to the full screen: dinner on the left with a shorter photo so Start cooking is on
+screen without scrolling, the cards in a second column and the week in a third. Every one of these
+rules is written `html:not(.is-tv) …`.
+
+**The TV** (the "TV display" switch, on by itself on a Fire TV; docs/spec/19 §19.5) lays every
+screen out on a 960 × 540 canvas and scales it to the panel, so the type is sized there and the two
+blocks that used to step the type tokens up at 1700 px are gone. Tonight is the design system's
+kitchen display (photo left, these cards in one column on the right), and cook mode has its own TV
+rules at the end of `styles/parts/cook.css`: the whole step, its setting, ingredients and timers,
+and Back / Next fit one screen, with Next focused.
 
 ### 22.2 The recipe page (`#/recipe/<id>`)
 - Photo, category and protein, title, subtitle.

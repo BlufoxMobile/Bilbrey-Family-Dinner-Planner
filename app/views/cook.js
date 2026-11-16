@@ -240,6 +240,10 @@ if (HAS_DOM) {
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     const onControl = tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY';
     const k = ev.key;
+    // With a remote or a keyboard walking the screen (app/tv.js), the arrows belong to it along the
+    // top bar, so every button there can be reached; everywhere else left and right are the steps.
+    const walking = document.documentElement.classList.contains('is-tv') || document.documentElement.dataset.input === 'keys';
+    if ((k === 'ArrowLeft' || k === 'ArrowRight') && walking && ev.target?.closest?.('.cook-bar')) return;
     let act = null;
     if (k === 'ArrowRight' || k === 'PageDown' || k === 'MediaTrackNext' || k === 'MediaFastForward' || (k === ' ' && !onControl)) act = 'cook:next';
     else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'MediaTrackPrevious' || k === 'MediaRewind') act = 'cook:back';

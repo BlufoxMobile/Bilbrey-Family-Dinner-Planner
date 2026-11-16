@@ -2,6 +2,7 @@
 // shopping and budget, stores, who packs a lunch, Claude, this screen's display options, data.
 // Nothing here is about one person, except the list of who packs a lunch.
 import { html, ic, raw, when, toast, avatar, personStyle, confirmSheet, segmented, stepper, switchToggle, tf, copyText } from '../ui.js';
+import { tvSettingRow } from '../tv.js';
 import { VERSION } from '../config.js';
 import { mediumDate, listJoin, cleanName } from '../util.js';
 import { lunchPackers } from '../lunch.js';
@@ -251,7 +252,8 @@ function display(app) {
     <h2 id="disp-h" class="section-title">Display on this device</h2>
     <p class="muted small">These stay on this phone, computer or TV. Everything else on this page is shared by the whole family.</p>
     <div class="set-row set-col"><span class="set-label">Appearance</span>${segmented('theme', [{ id: 'auto', label: 'Match device' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }], d.theme || 'auto', { label: 'Appearance', action: 'fam:theme', small: true })}</div>
-    <div class="set-row set-col"><span class="set-label">Text size<small>Large is easier to read on a TV from across the room.</small></span>${segmented('textSize', [{ id: 'regular', label: 'Regular' }, { id: 'large', label: 'Large' }], d.textSize || 'regular', { label: 'Text size', action: 'fam:text', small: true })}</div>
+    ${raw(tvSettingRow())}
+    <div class="set-row set-col"><span class="set-label">Text size<small>Large makes everything a step bigger. A TV gets its own big layout from TV display, above.</small></span>${segmented('textSize', [{ id: 'regular', label: 'Regular' }, { id: 'large', label: 'Large' }], d.textSize || 'regular', { label: 'Text size', action: 'fam:text', small: true })}</div>
     <div class="set-row"><span class="set-label">Show calories and protein<small>Lunches and dinners; breakfast and snacks aren’t tracked.</small></span>${switchToggle({ on: !d.hideNutrition, action: 'fam:nutrition', label: 'Show calories and protein on this device' })}</div>
     ${when(!d.hideNutrition, () => html`<div class="set-row set-col"><span class="set-label">Today’s total on Tonight<small>One line adding up a packed lunch and a dinner plate for one person. Pick whose shows on this device.</small></span>${segmented('todayFor', todayOpts, d.todayFor || '', { label: 'Whose daily total shows on Tonight', action: 'fam:today', small: true })}</div>`)}
   </section>`;

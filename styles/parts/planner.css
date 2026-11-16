@@ -5,11 +5,14 @@
 /* ---------------------------------------------------------------- plan: preferences */
 .plan-prefs { border: 1px solid var(--line); border-radius: var(--r-card); background: color-mix(in srgb, var(--card) 70%, transparent); }
 .plan-prefs-head { display: flex; align-items: baseline; gap: 10px; width: 100%; min-height: 44px; padding: 10px 14px; border: 0; border-radius: var(--r-card); background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
-.plan-prefs-head::after { content: ""; flex: none; width: 8px; height: 8px; margin-left: auto; align-self: center; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); transition: transform .2s var(--ease); }
+.plan-prefs-head::after { content: ""; flex: none; width: 8px; height: 8px; margin-left: auto; align-self: center; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); transition: transform var(--dur-fast) var(--ease); }
 .plan-prefs.is-open .plan-prefs-head::after { transform: rotate(-135deg); }
 .plan-prefs-head:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .plan-prefs-now { font-size: var(--t-sm); font-weight: 600; color: var(--ink); }
 .plan-prefs-body { display: grid; gap: 12px; padding: 2px 14px 14px; }
+/* Beside "Plan from" on a wide screen or the TV: sit on the control's line instead of stretching to the label above it. */
+.plan-opts > .plan-prefs { align-self: end; }
+.plan-opts > .opt { align-self: start; } /* and when the panel is open and tall, the store control keeps its own height */
 .plan-prefs .set-row { width: auto; }
 .plan-prefs .set-label { display: grid; gap: 2px; font-weight: 600; }
 .plan-prefs .set-label small { font-weight: 400; color: var(--ink-3); font-size: var(--t-xs); line-height: 1.35; }
@@ -19,10 +22,10 @@
 
 /* ---------------------------------------------------------------- plan ahead: before and after */
 .ahead-switch + .ahead-switch { margin-top: var(--s2); }
-.ahead-ba { display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--sage-tint) 70%, var(--card)); }
+.ahead-ba { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-ctl); background: color-mix(in srgb, var(--sage-tint) 70%, var(--card)); }
 .ahead-ba-now { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: var(--t-md); color: var(--ink); }
-.ahead-ba-now b { font-family: var(--font-display); font-weight: 400; font-size: var(--t-lg); font-variant-numeric: tabular-nums; }
-.ahead-was { padding: 1px 8px; border-radius: 999px; background: var(--card); color: var(--ink-2); font-size: var(--t-xs); font-weight: 600; white-space: nowrap; }
+.ahead-ba-now b { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--display-tracking); font-size: var(--t-lg); font-variant-numeric: tabular-nums; }
+.ahead-was { padding: 1px 8px; border-radius: var(--r-pill); background: var(--card); color: var(--ink-2); font-size: var(--t-xs); font-weight: 600; white-space: nowrap; }
 .ahead-was.is-down { background: var(--sage); color: var(--pine-ink); }
 
 /* ---------------------------------------------------------------- freezer watch */
@@ -75,7 +78,7 @@
 /* ---------------------------------------------------------------- budget: trips, year, waste */
 .trips-card, .year-card, .waste-card { display: grid; gap: 10px; padding: 18px; margin-bottom: var(--s5); border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1); }
 .trips-big { display: flex; align-items: center; gap: 12px; }
-.trips-big b { font-family: var(--font-display); font-weight: 400; font-size: var(--t-3xl); line-height: 1; font-variant-numeric: tabular-nums; color: var(--pine); }
+.trips-big b { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--display-tracking); font-size: var(--t-3xl); line-height: 1; font-variant-numeric: tabular-nums; color: var(--pine); }
 .trips-big.is-over b { color: var(--red); }
 .trips-big span { display: grid; color: var(--ink-2); }
 .trips-big small { color: var(--ink-3); font-size: var(--t-xs); }
@@ -100,6 +103,8 @@
 .trip-advice-line .ic { flex: none; margin-top: 2px; color: var(--pine); }
 .trip-split { color: var(--ink-2); }
 
+html.is-tv .plan-opts > .opt { min-width: max-content; }
+@media (min-width: 960px) { .plan-opts > .opt { min-width: max-content; } }
 @media (min-width: 700px) {
   .left-row, .catch-card { grid-template-columns: auto 1fr auto; }
   .left-acts { grid-column: auto; flex-wrap: nowrap; }

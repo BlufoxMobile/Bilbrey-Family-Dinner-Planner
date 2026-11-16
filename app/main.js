@@ -23,6 +23,8 @@ import { importStorePhotos, fetchStorePhoto } from './photos.js';
 import * as onboarding from './views/onboarding.js';
 import * as sheets from './views/sheets.js';
 import * as ideasView from './views/ideas.js';
+import * as motion from './motion.js';
+import * as tv from './tv.js';
 
 const VIEWS = {
   tonight, plan: planView, list: listView, pantry: pantryView, recipes: recipesView, recipe: recipeView,
@@ -39,7 +41,7 @@ const TABS = [
 const MORE = [
   { id: 'recipes', label: 'Recipes', icon: 'recipes' },
   { id: 'budget', label: 'Budget', icon: 'budget' },
-  { id: 'family', label: 'Family & settings', icon: 'family' },
+  { id: 'family', label: 'Family & settings', short: 'Family', icon: 'family' },
 ];
 
 const ACTIONS = {};
@@ -104,6 +106,9 @@ function syncPill() {
   </button>`;
 }
 
+// The short bar that marks the current section; it slides between sections during a page transition.
+const NAV_MARK = html`<i class="nav-mark" aria-hidden="true"></i>`;
+
 function shell() {
   const active = { recipe: 'recipes', products: 'list', receipts: 'budget' }[app.route.view] || app.route.view;
   const tabActive = active === 'recipes' ? 'plan' : active;
@@ -112,7 +117,7 @@ function shell() {
     <aside class="rail" aria-label="Sections">
       <a class="wordmark" href="#/tonight"><span class="wm-mark" aria-hidden="true"></span><span class="wm-text">The Bilbrey<br>Family Dinners</span></a>
       <nav class="rail-nav">
-        ${[...TABS, ...MORE].map((t) => html`<a class="rail-link ${active === t.id ? 'is-on' : ''}" href="#/${t.id}" ${active === t.id ? html`aria-current="page"` : ''}>${ic(t.icon)}<span>${t.label}</span></a>`)}
+        ${[...TABS, ...MORE].map((t) => html`<a class="rail-link ${active === t.id ? 'is-on' : ''}" href="#/${t.id}" ${active === t.id ? html`aria-current="page"` : ''}>${active === t.id ? NAV_MARK : ''}${ic(t.icon)}<span ${t.short ? html`data-short="${t.short}"` : ''}>${t.label}</span></a>`)}
       </nav>
       <div class="rail-foot">${syncPill()}</div>
     </aside>
@@ -126,7 +131,7 @@ function shell() {
     </header>
     <main id="view" class="view view-${app.route.view}" tabindex="-1"></main>
     <nav class="tabbar" aria-label="Sections">
-      ${TABS.map((t) => html`<a class="tab ${tabActive === t.id ? 'is-on' : ''}" href="#/${t.id}" ${tabActive === t.id ? html`aria-current="page"` : ''}>${ic(t.icon, { size: 24 })}<span>${t.label}</span></a>`)}
+      ${TABS.map((t) => html`<a class="tab ${tabActive === t.id ? 'is-on' : ''}" href="#/${t.id}" ${tabActive === t.id ? html`aria-current="page"` : ''}>${tabActive === t.id ? NAV_MARK : ''}${ic(t.icon, { size: 24 })}<span>${t.label}</span></a>`)}
     </nav>`;
 }
 
@@ -170,6 +175,7 @@ export function render() {
     const snap = lastView === 'gate' ? snapshotForms(root) : [];
     const wasFocused = same && root.contains(document.activeElement) ? document.activeElement.id : '';
     root.className = 'app is-gate';
+    root.removeAttribute('aria-busy');
     setHTML(root, onboarding.render(app));
     restoreForms(root, snap);
     // A redraw of the same screen keeps the focus where a thumb or a TV remote left it; only a new
@@ -186,27 +192,34 @@ export function render() {
   const v = VIEWS[app.route.view];
   const changedView = lastView !== `${app.route.view}/${app.route.params.join('/')}`;
   const y = window.scrollY;
-  const act = document.activeElement;
-  let keep = null;
-  if (act && act.id && root.contains(act)) {
-    keep = { id: act.id, start: null, end: null };
-    try { keep.start = act.selectionStart; keep.end = act.selectionEnd; } catch { /* inputs without a caret */ }
-  }
+  // What has focus, and where every row and number sits, so both survive the redraw.
+  const focus = tv.captureFocus(root);
+  const moves = changedView ? null : motion.snapshot(root.querySelector('#view'));
   const snap = changedView ? [] : snapshotForms(root);
   root.className = `app ${app.route.view === 'cook' ? 'is-cook' : ''}`;
+  root.removeAttribute('aria-busy');
   setHTML(root, shell());
   const main = root.querySelector('#view');
   setHTML(main, v.render(app));
   restoreForms(main, snap);
   v.mount?.(app, main);
+  tv.injectSettingRow(main);
+  tv.decorate(main);
   document.title = v.title ? `${v.title(app)} — The Bilbrey Family Dinner Planner` : 'The Bilbrey Family Dinner Planner';
-  if (changedView) { window.scrollTo(0, 0); if (lastView && lastView !== 'gate') main.focus({ preventScroll: true }); }
-  else window.scrollTo(0, y);
-  lastView = `${app.route.view}/${app.route.params.join('/')}`;
-  if (keep && !changedView) {
-    const el = document.getElementById(keep.id);
-    if (el) { el.focus({ preventScroll: true }); try { if (keep.start != null) el.setSelectionRange(keep.start, keep.end); } catch { /* not a text input */ } }
+  if (changedView) {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (lastView && lastView !== 'gate') {
+      // Driving with a remote or the keyboard from the navigation: stay on it. Otherwise the new screen takes focus: its first
+      // control for a remote or a keyboard, the screen itself (for screen readers) for everyone else.
+      const onNav = tv.keysMode() && focus?.nav && tv.restoreFocus(root, focus, { nearest: false, only: '.rail, .tabbar, .topbar' });
+      if (!onNav && !(tv.keysMode() && tv.focusFirst(main))) main.focus({ preventScroll: true });
+    } else if (tv.tvOn()) tv.focusFirst(main);
+  } else {
+    window.scrollTo({ top: y, behavior: 'instant' });
+    if (!sheetOpen()) tv.restoreFocus(root, focus);
+    motion.play(main, moves);
   }
+  lastView = `${app.route.view}/${app.route.params.join('/')}`;
   focusNext();
 }
 
@@ -220,12 +233,31 @@ function focusNext() {
   el.focus({ preventScroll: true }); // the text is left as typed, not selected: one slipped letter shouldn't cost the whole passcode
 }
 
+// How deep a screen sits, so a transition knows whether it is going in, coming back, or moving sideways.
+const DEPTH = { recipe: 1, products: 1, receipts: 1, cook: 2 };
+function onRoute() {
+  if (sheetOpen()) closeSheet({ instant: true });
+  motion.flushClose();
+  const to = parseRoute();
+  const from = (lastView || '').split('/')[0];
+  if (!from || from === 'gate' || lastView === `${to.view}/${to.params.join('/')}`) { render(); return; }
+  const a = DEPTH[from] || 0; const b = DEPTH[to.view] || 0;
+  motion.page(render, { dir: b > a ? 'forward' : b < a ? 'back' : 'tab' });
+}
+
+const THEME_COLOR = { light: '#F3F5F0', dark: '#0E1311' };
+/** Light, dark, or the system's choice. A TV left on "match" is dark: it is a lamp in the living room. */
 function applyTheme() {
   const { theme: t, textSize } = app.store.device;
-  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  const chosen = t === 'light' || t === 'dark' ? t : tv.tvOn() ? 'dark' : null;
+  if (chosen) document.documentElement.dataset.theme = chosen;
   else delete document.documentElement.dataset.theme;
   if (textSize === 'large') document.documentElement.dataset.text = 'large';
   else delete document.documentElement.dataset.text;
+  // The browser's own chrome (status bar, task switcher) follows the choice too.
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+    m.content = chosen ? THEME_COLOR[chosen] : THEME_COLOR[/dark/.test(m.media) ? 'dark' : 'light'];
+  });
 }
 
 function delegate() {
@@ -251,6 +283,12 @@ function delegate() {
 }
 
 ACTIONS['sheet:close'] = () => closeSheet();
+// The "TV display" switch: kept on this device (app/tv.js), never in the family's shared state.
+ACTIONS['tv:toggle'] = () => {
+  const on = !tv.tvOn();
+  tv.setTvSetting(on === tv.tvDetected() ? 'auto' : on ? 'on' : 'off');
+  toast(on ? 'TV display is on for this screen.' : 'TV display is off for this screen.');
+};
 
 /**
  * A small console door for importing past purchase history (SPEC §9.4). Each receipt goes
@@ -394,7 +432,10 @@ async function boot() {
     lastStatus = now;
   });
   delegate();
-  window.addEventListener('hashchange', () => { if (sheetOpen()) closeSheet(); render(); });
+  motion.install();
+  tv.install({ sheetOpen, closeSheet, changed: () => { applyTheme(); scheduleRender(); } });
+  applyTheme();
+  window.addEventListener('hashchange', onRoute);
   render();
   app.store.connect(); // every device, from the first open: there is no "who are you" step to wait for
   const resync = () => { if (document.visibilityState === 'visible' && app.store.device.key && !app.store.device.localOnly) app.store.sync(); };

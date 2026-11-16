@@ -1,8 +1,10 @@
-/* The Bilbrey Family Dinner Planner — design tokens.
-   Idea: the family recipe box. Card-stock paper, deep pine enamel, and one thin
-   red margin rule like a 3×5 index card — used only for tonight and cook mode. */
+/* The Bilbrey Family Dinner Planner — design tokens (v3 design system, docs/spec/19-design.md).
+   Idea: the pass. A quiet porcelain (light) or seasoned-steel (dark) surface that lets the food
+   photography carry the color, pine as the one brand color, an ember dot for "tonight", and
+   Big Shoulders — Chicago's own sign-painter's face — for dinner names you can read across the room.
+   Every custom property name from v2 still works; only the values changed. New names are additions. */
 
-@font-face { font-family: 'Young Serif'; src: url('../fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Big Shoulders'; src: url('../fonts/big-shoulders-var.woff2') format('woff2'); font-weight: 100 900; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Atkinson Next'; src: url('../fonts/atkinson-next-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Atkinson Next'; src: url('../fonts/atkinson-next-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: 'Atkinson Next'; src: url('../fonts/atkinson-next-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
@@ -10,31 +12,47 @@
 
 :root {
   color-scheme: light;
-  --paper: #F3EAD7;
-  --paper-2: #EADFC6;
-  --card: #FFFBF2;
-  --card-2: #F8F0DF;
-  --ink: #2A2620;
-  --ink-2: #5B5548;
-  --ink-3: #6F6757;
-  --line: #E2D5BA;
-  --line-2: #CDBC9A;
-  --pine: #1F3B2D;
-  --pine-2: #2B5040;
-  --pine-ink: #F8F1E1;
-  --sage: #557260;
-  --sage-tint: #DFE7D7;
-  --red: #BF3A2F;
-  --red-tint: #F5DCD5;
-  --butter: #D9A93E;
-  --butter-tint: #F5E6BC;
-  --dusk: #343E5A;
-  --dusk-2: #46527A;
-  --dusk-ink: #F3EEE3;
-  --dusk-text: #46527A; /* away-night labels on paper/card */
+  --paper: #F3F5F0;
+  --paper-2: #E7EAE2;
+  --card: #FFFFFF;
+  --card-2: #F7F9F4;
+  --ink: #17211B;
+  --ink-2: #414D45;
+  --ink-3: #5A665E;
+  --line: #E0E4DA;
+  --line-2: #C3C9BC;
+  --pine: #1C4A36;
+  --pine-2: #27604A;
+  --pine-ink: #F6FAF4;
+  --sage: #45705A;
+  --sage-tint: #E1ECE3;
+  --red: #BC3A26;
+  --red-tint: #FBE4DD;
+  --butter: #DDA11F;
+  --butter-tint: #FAEEC8;
+  --dusk: #2B3557;
+  --dusk-2: #3F4C7C;
+  --dusk-ink: #F2F0EA;
+  --dusk-text: #3F4C7C; /* away-night labels on paper/card */
   --rule-blue: rgba(79, 115, 160, 0.13);
-  --focus: #2E6BD6;
-  --scrim: rgba(36, 28, 14, 0.42);
+  --focus: #1553D9;
+  --scrim: rgba(12, 18, 14, 0.52);
+
+  /* v3 additions */
+  --control-line: #7D887F;        /* borders of inputs, checkboxes, switch tracks: 3:1 on card and paper */
+  --on-red: #FFFFFF;              /* text on a --red fill */
+  --on-sage: #FFFFFF;             /* text on a --sage fill */
+  --on-butter: #2A2005;           /* text on a --butter fill */
+  --ember: #E8552D;               /* the "tonight" dot and live accents; never text on paper */
+  --feature: #1C4A36;             /* a filled feature panel (scan the pantry): deep green in both themes */
+  --feature-2: #2A6950;
+  --feature-ink: #F6FAF4;
+  --photo-ink: #FFFFFF;           /* text set on a photograph (always over --photo-scrim) */
+  --photo-scrim: linear-gradient(to top, rgba(8, 12, 10, 0.9) 0%, rgba(8, 12, 10, 0.68) 26%, rgba(8, 12, 10, 0.28) 52%, rgba(8, 12, 10, 0) 72%);
+  --glass: color-mix(in srgb, var(--paper) 84%, transparent);
+  --hover: color-mix(in srgb, var(--pine) 7%, transparent);
+  --press: color-mix(in srgb, var(--pine) 13%, transparent);
+  --shimmer: rgba(255, 255, 255, 0.22);
 
   /* Each person's color: a fill, the ink for initials on it (AA, 4.5:1), and a line for rings and
      borders on card or paper (3:1). Jeff and Candi share the green; Candi points at Jeff's tokens
@@ -45,63 +63,98 @@
   --p-knox: #EEC032;    --p-knox-ink: #2A2620;    --p-knox-line: #8F6B0E;
   --p-candi: var(--p-jeff); --p-candi-ink: var(--p-jeff-ink); --p-candi-line: var(--p-jeff-line);
 
-  --sh-1: 0 1px 0 rgba(84, 62, 28, 0.06), 0 2px 8px -3px rgba(84, 62, 28, 0.16);
-  --sh-2: 0 1px 0 rgba(84, 62, 28, 0.05), 0 14px 34px -14px rgba(64, 44, 16, 0.34);
-  --sh-3: 0 24px 60px -18px rgba(48, 32, 10, 0.45);
+  /* Elevation: 1 resting card, 2 raised (hero, sticky, hover), 3 floating (sheet, toast). */
+  --sh-1: 0 0 0 1px rgba(23, 33, 27, 0.05), 0 1px 2px rgba(23, 33, 27, 0.05), 0 4px 12px -6px rgba(23, 33, 27, 0.10);
+  --sh-2: 0 0 0 1px rgba(23, 33, 27, 0.05), 0 2px 4px rgba(23, 33, 27, 0.05), 0 18px 40px -18px rgba(23, 33, 27, 0.28);
+  --sh-3: 0 0 0 1px rgba(23, 33, 27, 0.06), 0 28px 70px -20px rgba(10, 16, 12, 0.5);
 
-  --font-display: 'Young Serif', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-display: 'Big Shoulders', 'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue Condensed', system-ui, sans-serif;
   --font-text: 'Atkinson Next', 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display-weight: 750;          /* Big Shoulders is a variable font: display text sits between bold and extra-bold */
+  --display-tracking: 0.004em;
 
   --t-xs: 0.8125rem;  /* 13 */
   --t-sm: 0.9375rem;  /* 15 */
   --t-md: 1.0625rem;  /* 17 */
-  --t-lg: 1.25rem;    /* 20 */
-  --t-xl: 1.5rem;     /* 24 */
-  --t-2xl: 1.875rem;  /* 30 */
-  --t-3xl: 2.375rem;  /* 38 */
-  --t-4xl: 2.875rem;  /* 46 */
+  --t-lg: 1.3125rem;  /* 21 */
+  --t-xl: 1.625rem;   /* 26 */
+  --t-2xl: 2.125rem;  /* 34 */
+  --t-3xl: 2.875rem;  /* 46 */
+  --t-4xl: 3.75rem;   /* 60 */
 
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px; --s12: 48px;
 
-  --r-index: 6px;
-  --r-btn: 12px;
-  --r-card: 12px;
-  --r-photo: 14px;
-  --r-sheet: 22px;
+  /* Radii step with size: controls < cards < photos < sheets. Chips and pills are fully round. */
+  --r-index: 20px;
+  --r-btn: 14px;
+  --r-card: 18px;
+  --r-photo: 26px;
+  --r-sheet: 28px;
+  --r-ctl: 12px;      /* inputs, steppers, small tiles */
+  --r-thumb: 12px;    /* small square photos */
+  --r-pill: 999px;
 
   --gutter: 16px;
   --tabbar-h: 64px;
   --header-h: 56px;
+  --rail-w: 252px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
-  --ease: cubic-bezier(.2, .7, .2, 1);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --hit: 44px;        /* the smallest thing a finger (or a remote) has to land on */
+
+  /* Motion. One place for every duration and curve (docs/spec/19-design.md §3). */
+  --dur-press: 110ms;   /* a control acknowledging a finger */
+  --dur-fast: 180ms;    /* small state changes: checks, chips, switches, hovers */
+  --dur-base: 280ms;    /* things entering or leaving: toasts, list rows, sheet close */
+  --dur-slow: 420ms;    /* big moves: pages, sheets opening, a photo travelling to its sheet */
+  --ease: cubic-bezier(.2, .7, .2, 1);            /* the default: quick out, soft landing */
+  --ease-out: cubic-bezier(.16, 1, .3, 1);        /* entrances */
+  --ease-in: cubic-bezier(.5, 0, .9, .4);         /* exits */
+  --ease-spring: cubic-bezier(.3, 1.3, .5, 1);    /* a small overshoot where linear() is missing */
+  --stagger: 28ms;
+
+  /* The focus ring, in one place. */
+  --ring-w: 3px;
+  --ring-gap: 2px;
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    /* A real spring (stiffness 300, damping 26): 1.5% past the mark, then home. */
+    --ease-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
+  }
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --paper: #131C17; --paper-2: #0F1612; --card: #1B2620; --card-2: #212D26;
-    --ink: #EFE7D6; --ink-2: #C3BCAA; --ink-3: #A39D8B; --line: #2B3931; --line-2: #3C4C42;
-    --pine: #A9D0B3; --pine-2: #BEDEC6; --pine-ink: #12201A; --sage: #93B49E; --sage-tint: #233629;
-    --red: #E5695D; --red-tint: #3E2420; --butter: #E2C176; --butter-tint: #3A3220;
-    --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --dusk-text: #C9D0EA; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
+    --paper: #0E1311; --paper-2: #090D0B; --card: #171E1A; --card-2: #1E2722;
+    --ink: #EEF2EB; --ink-2: #BEC8BF; --ink-3: #9AA69D; --line: #262F2A; --line-2: #3A463F;
+    --pine: #9CD9B2; --pine-2: #B7E8C8; --pine-ink: #0B1D14; --sage: #86BA9B; --sage-tint: #1C2F25;
+    --red: #FF8068; --red-tint: #3B1D17; --butter: #F1C45A; --butter-tint: #3A2F13;
+    --dusk: #29325A; --dusk-2: #3B4780; --dusk-ink: #EFEDE6; --dusk-text: #C5CDF0; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #FFD466; --scrim: rgba(0, 0, 0, 0.66);
+    --control-line: #6F7C73; --on-red: #2A0B05; --on-sage: #08170F; --on-butter: #2A2005; --ember: #FF6B3D; --feature: #163426; --feature-2: #1F4A37; --feature-ink: #EAF5EC;
+    --glass: color-mix(in srgb, var(--paper) 82%, transparent); --hover: color-mix(in srgb, var(--pine) 9%, transparent); --press: color-mix(in srgb, var(--pine) 16%, transparent); --shimmer: rgba(255, 255, 255, 0.10);
     --p-jeff: #7DB394; --p-jeff-ink: #16201A; --p-jackson: #EA6355; --p-jackson-ink: #16201A;
     --p-jordan: #7FAAE2; --p-jordan-ink: #16201A; --p-knox: #F0CB55; --p-knox-ink: #16201A; --p-knox-line: var(--p-knox);
-    --sh-1: 0 1px 0 rgba(0, 0, 0, 0.25), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
-    --sh-2: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -14px rgba(0, 0, 0, 0.7);
-    --sh-3: 0 24px 60px -18px rgba(0, 0, 0, 0.8);
+    --sh-1: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
+    --sh-2: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 18px 40px -16px rgba(0, 0, 0, 0.75);
+    --sh-3: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 28px 70px -18px rgba(0, 0, 0, 0.85);
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #131C17; --paper-2: #0F1612; --card: #1B2620; --card-2: #212D26;
-  --ink: #EFE7D6; --ink-2: #C3BCAA; --ink-3: #A39D8B; --line: #2B3931; --line-2: #3C4C42;
-  --pine: #A9D0B3; --pine-2: #BEDEC6; --pine-ink: #12201A; --sage: #93B49E; --sage-tint: #233629;
-  --red: #E5695D; --red-tint: #3E2420; --butter: #E2C176; --butter-tint: #3A3220;
-  --dusk: #2A3350; --dusk-2: #3A4670; --dusk-ink: #EEE9DE; --dusk-text: #C9D0EA; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #8DB7FF; --scrim: rgba(0, 0, 0, 0.58);
+  --paper: #0E1311; --paper-2: #090D0B; --card: #171E1A; --card-2: #1E2722;
+  --ink: #EEF2EB; --ink-2: #BEC8BF; --ink-3: #9AA69D; --line: #262F2A; --line-2: #3A463F;
+  --pine: #9CD9B2; --pine-2: #B7E8C8; --pine-ink: #0B1D14; --sage: #86BA9B; --sage-tint: #1C2F25;
+  --red: #FF8068; --red-tint: #3B1D17; --butter: #F1C45A; --butter-tint: #3A2F13;
+  --dusk: #29325A; --dusk-2: #3B4780; --dusk-ink: #EFEDE6; --dusk-text: #C5CDF0; --rule-blue: rgba(140, 170, 210, 0.10); --focus: #FFD466; --scrim: rgba(0, 0, 0, 0.66);
+  --control-line: #6F7C73; --on-red: #2A0B05; --on-sage: #08170F; --on-butter: #2A2005; --ember: #FF6B3D; --feature: #163426; --feature-2: #1F4A37; --feature-ink: #EAF5EC;
+  --glass: color-mix(in srgb, var(--paper) 82%, transparent); --hover: color-mix(in srgb, var(--pine) 9%, transparent); --press: color-mix(in srgb, var(--pine) 16%, transparent); --shimmer: rgba(255, 255, 255, 0.10);
   --p-jeff: #7DB394; --p-jeff-ink: #16201A; --p-jackson: #EA6355; --p-jackson-ink: #16201A;
   --p-jordan: #7FAAE2; --p-jordan-ink: #16201A; --p-knox: #F0CB55; --p-knox-ink: #16201A; --p-knox-line: var(--p-knox);
-  --sh-1: 0 1px 0 rgba(0, 0, 0, 0.25), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
-  --sh-2: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -14px rgba(0, 0, 0, 0.7);
-  --sh-3: 0 24px 60px -18px rgba(0, 0, 0, 0.8);
+  --sh-1: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
+  --sh-2: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 18px 40px -16px rgba(0, 0, 0, 0.75);
+  --sh-3: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 28px 70px -18px rgba(0, 0, 0, 0.85);
 }
