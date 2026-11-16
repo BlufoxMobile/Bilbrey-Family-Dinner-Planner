@@ -899,3 +899,16 @@ scanner. The app side:
 - `dev/mock-api.mjs` mocks `/api/ai`, `/api/ideas` (ideas built from the request's pantry and side ids,
   plus one seafood idea the app must drop), `/api/mcp/link` and `/api/mcp/rotate`, and scans and
   receipts report `engine`/`model`.
+
+## 18–24. Version 3 (2026-11-15)
+
+Version 3 is specified in separate files under `docs/spec/`, one per workstream; `docs/MISSION.md` has the
+brief they were built to. Where they differ from the sections above, they win.
+
+- `docs/spec/18-recipe-box.md` — house-rule audit, lighter dinners, PossibleCooker recipes, detailed steps, nutrition (`plateHealth`, `LEAN_RULE`)
+- `docs/spec/19-design.md` — design system tokens and components, motion, TV layout and remote navigation
+- `docs/spec/20-shared-profile.md` — one shared family profile, family signal (loved / fine / not for us), lunch packers, Chicago dates
+- `docs/spec/21-smarter-planning.md` — re-planning from the pantry, lean and busy nights, waste log, trips and yearly pace
+- `docs/spec/22-recipes-and-cook-mode.md` — recipe page, cook mode, leftovers, nutrition on screens
+- `docs/spec/23-product-photos-and-claude-costs.md` — store product photos, prompt caching, backups and server hardening
+- `docs/spec/24-chicken-bulk-and-meal-cost.md` — chicken over turkey, Sam's bulk cuts, estimated cost per meal (`app/cost.js`)
