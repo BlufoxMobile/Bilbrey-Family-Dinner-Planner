@@ -3,7 +3,7 @@
 import { html, ic, when, segmented, toast, openSheet, closeSheet, renderSheet, switchToggle, tf } from '../ui.js';
 import { addDays, diffDays, money, rangeLabel, shortDate, startOfWeek, monthName, weekday, monthOnly, datesBetween, weekdayName, midSentence } from '../util.js';
 import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage, isRetired, defaultAnchor as defaultAnchorFor } from '../planner.js';
-import { listJoin } from '../util.js';
+import { listJoin, byLabel } from '../util.js';
 import { buildList } from '../shopping.js';
 import { generateOps, swapNightsOps, settingOps } from '../actions.js';
 import { sidesFor, dinnerPhoto, awayReason, dayStamp, showNutrition, thumbs, prepCard } from './common.js';
@@ -63,7 +63,7 @@ function dayCard(app, date, { compact = false } = {}) {
       ${when(!d && !away && !past, () => html`<span class="day-note">${type === 'burger' ? 'Burger night' : type === 'pizza' ? 'Pizza night' : 'Open'}</span>`)}
       ${when(cooked, () => html`<span class="day-status">${ic('checkCircle', { size: 16 })}Cooked</span>`)}
       ${when(d && !away && !cooked && !past && isRetired(app.state, d.id), () => html`<span class="day-status day-status-warn">${ic('down_vote', { size: 16 })}Thumbs down: tap to swap</span>`)}
-      ${when(e?.manual && !away && !cooked && d && !isRetired(app.state, d.id), () => html`<span class="day-status day-status-quiet">Set by ${e.by || 'the family'}</span>`)}
+      ${when(e?.manual && !away && !cooked && d && !isRetired(app.state, d.id), () => html`<span class="day-status day-status-quiet">Set by ${byLabel(e.by) || 'the family'}</span>`)}
     </button>
     ${when(sides.length && !compact, () => html`<ul class="day-sides">
       ${sides.map((s) => html`<li><span class="day-side">${s.info?.title}${when(s.remembered, () => html`<span class="sr-only"> (remembered)</span>`)}</span>

@@ -50,7 +50,10 @@ export function catalogForIdeas(db, state) {
   return out.slice(0, 400);
 }
 
-/** POST /api/ideas body. */
+/**
+ * POST /api/ideas body. `detail: true` asks for hands-on and cook times, timed steps with their
+ * settings, tips, and totals past four hours (an all-day slow cook) (docs/spec/23).
+ */
 export function buildIdeasRequest(db, state, { images = [], note = '', count = IDEA_COUNT } = {}) {
   return {
     images: (Array.isArray(images) ? images : []).filter((x) => typeof x === 'string' && x.startsWith('data:image/')).slice(0, MAX_IDEA_PHOTOS),
@@ -59,6 +62,7 @@ export function buildIdeasRequest(db, state, { images = [], note = '', count = I
     sides: sidesForIdeas(db, state),
     catalog: catalogForIdeas(db, state),
     count: Math.max(1, Math.min(6, Number(count) || IDEA_COUNT)),
+    detail: true,
   };
 }
 
@@ -80,6 +84,27 @@ function cleanEquipment(list) {
   return out.length ? out : ['stovetop'];
 }
 
+/** Whole minutes from 1 to `max`, or null. */
+const mins = (v, max) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n > 0 && n <= max ? n : null; };
+
+/** The server's timed steps: [{ text, minutes?, setting? }], or plain sentences from an older server. */
+function cleanSteps(raw) {
+  const out = [];
+  for (const s of Array.isArray(raw) ? raw : []) {
+    const o = s && typeof s === 'object' && !Array.isArray(s) ? s : null;
+    const text = str(o ? o.text : s, 500);
+    if (!text) continue;
+    const step = { text };
+    const m = o ? mins(o.minutes, 720) : null;
+    if (m) step.minutes = m;
+    const setting = o ? str(o.setting, 40) : '';
+    if (setting) step.setting = setting;
+    out.push(step);
+    if (out.length >= 14) break;
+  }
+  return out;
+}
+
 const known = (db, state, id) => typeof id === 'string' && !!(db.ingredients[id] || state?.custom?.[id]);
 
 function cleanLine(db, state, x) {
@@ -98,11 +123,17 @@ export function normalizeIdea(db, state, raw) {
   if (!title) return null;
   const items = (Array.isArray(raw.items) ? raw.items : []).map((x) => cleanLine(db, state, x)).filter(Boolean).slice(0, 30);
   const missing = (Array.isArray(raw.missing) ? raw.missing : []).map((x) => cleanLine(db, state, x)).filter(Boolean).slice(0, 30);
-  const steps = (Array.isArray(raw.steps) ? raw.steps : []).map((s) => str(s, 500)).filter(Boolean).slice(0, 14);
+  // Timed steps when the server sends them (stepDetails); the plain sentences are always the same steps.
+  const timed = cleanSteps(Array.isArray(raw.stepDetails) && raw.stepDetails.length ? raw.stepDetails : raw.steps);
+  const steps = timed.map((s) => s.text);
+  const tips = (Array.isArray(raw.tips) ? raw.tips : typeof raw.tips === 'string' ? [raw.tips] : []).map((t) => str(t, 240)).filter(Boolean).slice(0, 5);
   const words = [title, raw.subtitle, ...items.map((i) => i.name), ...missing.map((i) => i.name)].join(' ');
-  if (NOT_FOR_US.test(words) || steps.some((s) => OVEN.test(s))) return null;
+  if (NOT_FOR_US.test(words) || [...steps, ...timed.map((s) => s.setting || '')].some((s) => OVEN.test(s))) return null;
   const sides = [...new Set((Array.isArray(raw.sides) ? raw.sides : []).filter((id) => typeof id === 'string' && db.sides[id] && !isSideDropped(state, id)))].slice(0, 2);
-  const minutes = Math.round(Number(raw.minutes));
+  // Hands-on time and time on the heat; a slow cook can run all day (12 hours at most).
+  const prepMinutes = mins(raw.prepMinutes, 240);
+  const cookMinutes = mins(raw.cookMinutes, 720);
+  const minutes = mins(raw.minutes, 720) ?? (prepMinutes || cookMinutes ? Math.min(720, (prepMinutes || 0) + (cookMinutes || 0)) : null);
   const category = CATEGORIES.find((c) => c.toLowerCase() === String(raw.category || '').toLowerCase()) || 'Comfort';
   const protein = PROTEINS.includes(String(raw.protein || '').toLowerCase()) ? String(raw.protein).toLowerCase() : 'mixed';
   const pantry = state?.pantry || {};
@@ -110,13 +141,18 @@ export function normalizeIdea(db, state, raw) {
     title,
     subtitle: str(raw.subtitle, 160),
     why: str(raw.why, 280),
-    minutes: minutes > 0 && minutes <= 240 ? minutes : 30,
+    minutes: minutes ?? 30,
+    prepMinutes,
+    cookMinutes,
     equipment: cleanEquipment(raw.equipment),
     protein,
     category,
     items,
     sides,
     steps: steps.length ? steps : ['Cook the main on the stovetop until done (chicken to 165°F, ground beef to 160°F, pork to 145°F), then plate with the sides.'],
+    // Only when a step carries a time or a setting worth keeping; otherwise the sentences say it all.
+    stepDetails: timed.some((s) => s.minutes || s.setting) ? timed : [],
+    tips,
     usesPantry: [...new Set((Array.isArray(raw.usesPantry) ? raw.usesPantry : []).filter((id) => typeof id === 'string' && pantry[id]))],
     missing,
   };
@@ -297,7 +333,14 @@ export function dinnerFromIdea(db, state, idea, { rotation = 'bench', who, at } 
     items,
     sides: fillSides(db, st, idea.sides || [], idea.category),
     sideSlots: 2,
+    // `steps` stays plain sentences (every screen and older copies of the app read them); the timed
+    // version, the tips and the two times sit beside them for the recipe page and cook mode, under
+    // the same names the Claude chat connector saves (docs/spec/23).
     steps: [...idea.steps],
+    ...((idea.stepDetails || []).length ? { stepDetails: idea.stepDetails.map((s) => ({ ...s })) } : {}),
+    ...((idea.tips || []).length ? { tips: [...idea.tips] } : {}),
+    ...(idea.prepMinutes ? { prepMinutes: idea.prepMinutes } : {}),
+    ...(idea.cookMinutes ? { cookMinutes: idea.cookMinutes } : {}),
     source: 'claude',
     ...(idea.why ? { why: idea.why } : {}),
     by: who || 'Family',

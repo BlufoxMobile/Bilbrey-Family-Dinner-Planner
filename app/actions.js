@@ -3,15 +3,14 @@
 // Pure: (db, state, args) → { ops, undo, message, ... }. No DOM.
 
 import { set, del, push, applyOps as applyOpsPure } from './state.js';
-import { clone, listJoin, round2, slugify, uid, weekdayName, shortDate, diffDays } from './util.js';
+import { clone, listJoin, round2, slugify, uid, weekdayName, shortDate, diffDays, chicagoDay, SHARED_PROFILE } from './util.js';
 import { leftoverRecord, servingsText, LEFTOVER_REASON } from './cooking.js';
-import { FAMILY } from './config.js';
 import {
   bestBenchFor, dinnerById, effectiveSides, findInPlan, generatePlan, itemsForNight, sideInfo, parseSideRef, kindOf,
-  voteInfo, isRetired, isPromoted, rotationList, isSideDropped, FAVORITE_UPS,
+  isRetired, isPromoted, rotationList, isSideDropped, dinnerSignal, sideSignal, votesForSignal, SIGNALS,
 } from './planner.js';
 import { boughtToPantry, readableId } from './shopping.js';
-import { personConfig, lunchItem, swappedConfig } from './lunch.js';
+import { personConfig, lunchItem, swappedConfig, lunchSlots, lunchPackers, isPacker, newPackerName } from './lunch.js';
 import { addDays } from './util.js';
 
 function getPath(obj, path) {
@@ -48,12 +47,14 @@ export function nightName(date, today) {
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const titleOf = (db, state, id) => dinnerById(db, state, id)?.title || 'That dinner';
 
-const stamp = (who, at) => ({ by: who || 'Family', at: at || new Date().toISOString() });
+// One shared profile: the app stamps every change "Family". `who` is only still passed by callers
+// that are not a person at a screen (the Claude chat connector stamps its own name).
+const stamp = (who, at) => ({ by: who || SHARED_PROFILE, at: at || new Date().toISOString() });
 
 // ---------------------------------------------------------------- planning
 
 export function generateOps(db, state, { dates, mode = 'fill', who, at, today, seedKey }) {
-  const { entries, unfilled } = generatePlan({ db, state, dates, mode, by: who || 'Family', at: at || new Date().toISOString(), today, seedKey });
+  const { entries, unfilled } = generatePlan({ db, state, dates, mode, by: who || SHARED_PROFILE, at: at || new Date().toISOString(), today, seedKey });
   const ops = Object.entries(entries).map(([d, e]) => set(['plan', d], e));
   const n = ops.length;
   const message = n === 0
@@ -219,7 +220,7 @@ export function markCookedOps(db, state, { date, who, at, today }) {
     ops.push(set(['pantry', id, 'qty'], next));
     ops.push(set(['pantry', id, 'at'], at || new Date().toISOString()));
   }
-  ops.unshift(set(['plan', date], { ...clone(e), status: 'cooked', cookedAt: at || new Date().toISOString(), cookedBy: who || 'Family', deducted }));
+  ops.unshift(set(['plan', date], { ...clone(e), status: 'cooked', cookedAt: at || new Date().toISOString(), cookedBy: who || SHARED_PROFILE, deducted }));
   const n = Object.keys(deducted).length;
   const message = `${titleOf(db, state, e.dinner)} marked cooked.${n ? ` Took ${n} ${n === 1 ? 'item' : 'items'} out of the pantry.` : ''}`;
   return result(state, ops, message, { deducted });
@@ -321,15 +322,15 @@ export function resetSideOps(db, state, { dinnerId, slot }) {
   return result(state, [del(['substitutions', dinnerId, String(slot)])], message);
 }
 
-// ---------------------------------------------------------------- votes, retire, promote
+// ---------------------------------------------------------------- the family's signal, retire, promote (docs/spec/20)
 
-function retireBundle(db, state, { dinnerId, by, at, today, manual, voter }) {
-  const ops = [set(['retired', dinnerId], { by: by || 'votes', at, ...(manual ? { manual: true } : {}) })];
+function retireBundle(db, state, { dinnerId, by, at, today }) {
+  const ops = [set(['retired', dinnerId], { by: by || SHARED_PROFILE, at })];
   const bench = bestBenchFor(db, state, dinnerId);
   const d = dinnerById(db, state, dinnerId);
   let message;
   const name = d?.title || 'That dinner';
-  const lead = manual ? `${name} is out of the rotation.` : `${voter || 'Someone'} gave it a thumbs down, so ${name} is off the menu.`;
+  const lead = `${name} is marked “not for us”, so it’s off the menu.`;
   if (bench) {
     ops.push(set(['promoted', bench.id], { replaced: dinnerId, at }));
     const future = Object.entries(state?.plan || {}).filter(([date, e]) => e?.dinner === dinnerId && e.status === 'planned' && (!today || date >= today));
@@ -343,45 +344,47 @@ function retireBundle(db, state, { dinnerId, by, at, today, manual, voter }) {
 }
 
 /**
- * Tap thumbs up/down as `who`. Tapping the same thumb again clears it.
- * SPEC §9.2: ONE thumbs-down from anyone drops the dinner (a bench dinner takes its place);
- * two thumbs-up make it a family favorite.
+ * Set the family's one signal for a dinner: 'loved' | 'fine' | 'no'.
+ * "Not for us" retires it (a bench dinner takes its place, on its planned nights too); moving off
+ * "not for us" brings it back. The saved record is replaced whole, so thumbs left over from one
+ * profile per person can't outvote what the family just said.
  */
-export function voteOps(db, state, { dinnerId, who, value, at, today }) {
-  if (!FAMILY.includes(who)) return result(state, [], 'Pick who’s using this phone first.', { error: true, needsWho: true });
+export function rateDinnerOps(db, state, { dinnerId, signal, who, at, today }) {
   const d = dinnerById(db, state, dinnerId);
   if (!d) return result(state, [], "That dinner isn't in the recipe box.", { error: true });
-  const current = state?.votes?.[dinnerId]?.[who];
-  const clearing = current === value;
-  const ops = [clearing ? del(['votes', dinnerId, who]) : set(['votes', dinnerId, who], value)];
-  const nextVotes = { ...(state?.votes?.[dinnerId] || {}) };
-  if (clearing) delete nextVotes[who]; else nextVotes[who] = value;
-  const down = Object.values(nextVotes).filter((v) => v === -1).length;
-  const up = Object.values(nextVotes).filter((v) => v === 1).length;
-  const wasUp = voteInfo(state, dinnerId).up;
-  const wasDropped = isRetired(state, dinnerId);
-  let message = clearing ? `Cleared ${who}’s vote on ${d.title}.` : value === 1 ? `${who} gave ${d.title} a thumbs up. It stays in the rotation.` : `${who} gave ${d.title} a thumbs down.`;
-  let extra = {};
-  if (!clearing && value === -1 && !wasDropped) {
-    const b = retireBundle(db, state, { dinnerId, by: 'votes', at: at || new Date().toISOString(), today, voter: who });
-    ops.push(...b.ops);
-    message = b.message;
-    extra = { retired: true, promoted: b.promoted };
-  } else if (!clearing && value === -1) {
-    message = `${who} gave ${d.title} a thumbs down too. It’s already off the menu.`;
-  } else if (value === -1 && clearing && down === 0 && state?.retired?.[dinnerId] && !state.retired[dinnerId].manual) {
-    // Taking back the only thumbs-down brings the dinner back (the dinner that came in stays too).
-    ops.push(del(['retired', dinnerId]));
-    message = `${d.title} is back on the menu.`;
-    extra = { restored: true };
-  } else if (!clearing && value === 1 && up >= FAVORITE_UPS && wasUp < FAVORITE_UPS) {
-    message = `${who} gave ${d.title} a thumbs up, so it’s a family favorite now.`;
-    extra = { favorite: true };
+  if (!SIGNALS.includes(signal)) return result(state, [], 'Pick loved, fine or not for us.', { error: true });
+  const was = dinnerSignal(state, d);
+  if (was === signal) return result(state, [], '', { kind: 'same' });
+  const ops = [];
+  const rec = votesForSignal(signal, { explicitFine: d.tags.includes('family favorite') });
+  if (rec) ops.push(set(['votes', dinnerId], rec));
+  else if (state?.votes?.[dinnerId] !== undefined) ops.push(del(['votes', dinnerId]));
+  if (signal === 'no') {
+    const b = retireBundle(db, state, { dinnerId, by: who, at: at || new Date().toISOString(), today });
+    return result(state, [...ops, ...b.ops], b.message, { retired: true, promoted: b.promoted, signal });
   }
-  return result(state, ops, message, extra);
+  if (state?.retired?.[dinnerId]) ops.push(del(['retired', dinnerId]));
+  if (was === 'no') {
+    // The dinner that came in from the bench stays too.
+    return result(state, ops, signal === 'loved' ? `${d.title} is back on the menu, as a family favorite.` : `${d.title} is back on the menu.`, { restored: true, favorite: signal === 'loved', signal });
+  }
+  if (signal === 'loved') return result(state, ops, `${d.title} is a family favorite now. It gets planned more often.`, { favorite: true, signal });
+  return result(state, ops, `${d.title} is back to fine: still in the rotation, just not a favorite.`, { signal });
 }
 
-// ---------------------------------------------------------------- side votes (§9.2)
+/**
+ * The two-button call the screens use (the name and arguments other modules import are kept):
+ * value 1 switches "loved" on or off, value -1 switches "not for us" on or off. `signal` sets one directly.
+ */
+export function voteOps(db, state, { dinnerId, value, signal, who, at, today }) {
+  const d = dinnerById(db, state, dinnerId);
+  if (!d) return result(state, [], "That dinner isn't in the recipe box.", { error: true });
+  const want = signal || (value === 1 ? 'loved' : value === -1 ? 'no' : 'fine');
+  const next = !signal && dinnerSignal(state, d) === want ? 'fine' : want;
+  return rateDinnerOps(db, state, { dinnerId, signal: next, who, at, today });
+}
+
+// ---------------------------------------------------------------- side signal (§9.2, docs/spec/20)
 
 /** What replaces a dropped side, for the dinners in the rotation that use it. */
 function sideReplacements(db, state, sideId) {
@@ -393,41 +396,47 @@ function sideReplacements(db, state, sideId) {
   return out;
 }
 
-export function sideVoteOps(db, state, { sideId, who, value }) {
-  if (!FAMILY.includes(who)) return result(state, [], 'Pick who’s using this phone first.', { error: true, needsWho: true });
+/** Set the family's one signal for a side: 'loved' | 'fine' | 'no' (off the menu; dinners that had it get a similar side). */
+export function rateSideOps(db, state, { sideId, signal }) {
   const s = db.sides[sideId];
   if (!s) return result(state, [], 'That side isn’t in the recipe box.', { error: true });
-  const current = state?.sideVotes?.[sideId]?.[who];
-  const clearing = current === value;
-  const ops = [clearing ? del(['sideVotes', sideId, who]) : set(['sideVotes', sideId, who], value)];
-  const was = isSideDropped(state, sideId);
-  const next = applyOpsPure(state, ops);
-  const now = isSideDropped(next, sideId);
+  if (!SIGNALS.includes(signal)) return result(state, [], 'Pick loved, fine or not for us.', { error: true });
+  const was = sideSignal(state, sideId);
+  if (was === signal) return result(state, [], '', { kind: 'same' });
+  const rec = votesForSignal(signal);
+  const ops = [rec ? set(['sideVotes', sideId], rec) : del(['sideVotes', sideId])];
   let message;
-  if (!was && now) {
-    const reps = [...new Set(sideReplacements(db, next, sideId).values())].map((id) => db.sides[id]?.title).filter(Boolean);
-    message = `${who} gave ${s.title} a thumbs down, so it’s off the menu.`;
+  if (signal === 'no') {
+    const reps = [...new Set(sideReplacements(db, applyOpsPure(state, ops), sideId).values())].map((id) => db.sides[id]?.title).filter(Boolean);
+    message = `${s.title} is marked “not for us”, so it’s off the menu.`;
     if (reps.length === 1) message += ` ${reps[0]} takes its place.`;
     else if (reps.length > 1) message += ` Dinners that had it get a similar side, like ${listJoin(reps.slice(0, 2).map((x) => x.toLowerCase()))}.`;
-  } else if (was && !now) message = `${s.title} is back on the menu.`;
-  else if (clearing) message = `Cleared ${who}’s vote on ${s.title}.`;
-  else if (value === 1) message = `${who} gave ${s.title} a thumbs up.`;
-  else message = `${who} gave ${s.title} a thumbs down too. It’s already off the menu.`;
-  return result(state, ops, message, { dropped: !was && now });
+  } else if (was === 'no') message = signal === 'loved' ? `${s.title} is back on the menu, as a favorite side.` : `${s.title} is back on the menu.`;
+  else if (signal === 'loved') message = `${s.title} is a favorite side now.`;
+  else message = `${s.title} is back to fine.`;
+  return result(state, ops, message, { dropped: signal === 'no', signal });
 }
 
-/** "Restore" from the Dropped list: clears that side's thumbs-downs. */
+/** The two-button call the screens use: value 1 switches "loved" on or off, value -1 switches "not for us" on or off. */
+export function sideVoteOps(db, state, { sideId, value, signal }) {
+  if (!db.sides[sideId]) return result(state, [], 'That side isn’t in the recipe box.', { error: true });
+  const want = signal || (value === 1 ? 'loved' : value === -1 ? 'no' : 'fine');
+  const next = !signal && sideSignal(state, sideId) === want ? 'fine' : want;
+  return rateSideOps(db, state, { sideId, signal: next });
+}
+
+/** "Restore" from the Dropped list: the side is back on the menu, as fine. */
 export function restoreSideOps(db, state, { sideId }) {
-  const ops = Object.entries(state?.sideVotes?.[sideId] || {}).filter(([, v]) => v === -1).map(([p]) => del(['sideVotes', sideId, p]));
   const t = db.sides[sideId]?.title || 'That side';
-  return result(state, ops, ops.length ? `${t} is back on the menu.` : `${t} is already on the menu.`);
+  if (sideSignal(state, sideId) !== 'no') return result(state, [], `${t} is already on the menu.`);
+  return result(state, [del(['sideVotes', sideId])], `${t} is back on the menu.`);
 }
 
-// ---------------------------------------------------------------- lunch votes (§9.2)
+// ---------------------------------------------------------------- lunch thumbs (§9.2)
 
-/** A thumbs-down on a lunch item takes it out of THAT person's rotation only. */
+/** A thumbs-down on a lunch item takes it out of THAT person's lunches only (the people here are the ones who pack). */
 export function lunchVoteOps(db, state, { itemId, person, value }) {
-  if (!FAMILY.includes(person)) return result(state, [], 'Whose lunch is it?', { error: true });
+  if (!isPacker(db, state, person)) return result(state, [], 'Whose lunch is it?', { error: true });
   const it = lunchItem(db, state, itemId);
   if (!it) return result(state, [], 'That lunch item isn’t in the library.', { error: true });
   const current = state?.lunchVotes?.[itemId]?.[person];
@@ -448,19 +457,20 @@ export function lunchVoteOps(db, state, { itemId, person, value }) {
   return result(state, ops, message);
 }
 
+/** "Retire from the rotation" is the same thing as marking the dinner "not for us". */
 export function retireOps(db, state, { dinnerId, who, at, today }) {
   if (isRetired(state, dinnerId)) return result(state, [], 'Already out of the rotation.');
-  const b = retireBundle(db, state, { dinnerId, by: who, at: at || new Date().toISOString(), today, manual: true });
-  return result(state, b.ops, b.message, { promoted: b.promoted });
+  return rateDinnerOps(db, state, { dinnerId, signal: 'no', who, at, today });
 }
 
+/** "Restore" from the Dropped list: back on the menu with a fresh start (a bench dinner joins the rotation). */
 export function restoreOps(db, state, { dinnerId }) {
   const d = dinnerById(db, state, dinnerId);
   const ops = [];
   if (state?.retired?.[dinnerId]) ops.push(del(['retired', dinnerId]));
-  for (const [person, v] of Object.entries(state?.votes?.[dinnerId] || {})) if (v === -1) ops.push(del(['votes', dinnerId, person]));
+  if (state?.votes?.[dinnerId] !== undefined) ops.push(del(['votes', dinnerId]));
   if (d?.rotation === 'bench' && !isPromoted(state, dinnerId)) ops.push(set(['promoted', dinnerId], { replaced: null, at: new Date().toISOString() }));
-  return result(state, ops, `${d?.title || 'That dinner'} is back on the menu, with a fresh start on votes.`);
+  return result(state, ops, `${d?.title || 'That dinner'} is back on the menu, with a fresh start.`);
 }
 
 export function promoteOps(db, state, { dinnerId, at }) {
@@ -478,7 +488,7 @@ export function setPantryOps(db, state, { id, qty, stocked, low, who, at }) {
   if (stocked !== undefined) next.stocked = !!stocked;
   // "Came home" date for use-it-first (SPEC §13): new stock, more of it, or a staple back on the shelf.
   const more = typeof next.qty === 'number' && next.qty > (typeof prev.qty === 'number' && !prev.low ? prev.qty : 0);
-  if (more || (next.stocked && !prev.stocked) || !prev.at) next.since = next.at.slice(0, 10);
+  if (more || (next.stocked && !prev.stocked) || !prev.at) next.since = chicagoDay(next.at); // the family's day, not the UTC one
   // Changing the amount or the stocked toggle counts as restocking, which clears "running low".
   const isLow = low !== undefined ? !!low : !!prev.low && qty === undefined && stocked === undefined;
   if (isLow) next.low = true;
@@ -514,7 +524,7 @@ export function doneShoppingOps(db, state, { list, who, at }) {
   const s = stamp(who, at);
   for (const a of adds) {
     const prev = state?.pantry?.[a.id] || {};
-    const since = s.at.slice(0, 10);
+    const since = chicagoDay(s.at); // an evening shop is dated today in Glen Ellyn, not tomorrow (UTC)
     const keep = { ...(prev.place ? { place: prev.place } : {}) };
     if (a.staple) ops.push(set(['pantry', a.id], { qty: null, stocked: true, since, ...keep, ...s }));
     else ops.push(set(['pantry', a.id], { ...keep, ...(prev.label ? { label: prev.label } : {}), qty: round2((typeof prev.qty === 'number' && !prev.low ? prev.qty : 0) + a.add), stocked: false, since, bought: { qty: a.add, on: since }, ...s }));
@@ -565,7 +575,7 @@ export function notAtStoreOps(db, state, { store, id }) {
 }
 
 export function addReceiptOps(state, { date, store, amount, note, who }) {
-  const r = { id: uid('r'), date, store, amount: round2(Number(amount)), ...(note ? { note } : {}), by: who || 'Family' };
+  const r = { id: uid('r'), date, store, amount: round2(Number(amount)), ...(note ? { note } : {}), by: who || SHARED_PROFILE };
   return { ops: [push(['receipts'], r)], undo: [set(['receipts'], clone(state?.receipts || []))], message: 'Receipt logged.' };
 }
 
@@ -599,14 +609,63 @@ export function cookedPreview(db, state, date) {
     .map(([id, need]) => ({ id, need, name: db.ingredients[id]?.name || state?.custom?.[id]?.name || readableId(id) }));
 }
 
-// ---------------------------------------------------------------- lunches (§8)
+// ---------------------------------------------------------------- lunches (§8, docs/spec/20)
 
 // Each lunch edit writes only the field it changes (see personConfig), so edits from two
-// phones to different parts of the same person's lunches merge instead of overwriting.
+// devices to different parts of the same person's lunches merge instead of overwriting.
 const lunchPath = (name, ...rest) => ['lunch', 'people', name, ...rest];
 
+/**
+ * Add someone who packs a lunch: a name, the days, and what goes in each spot (slot id → lunch
+ * item ids from the lunch list, in rotation order). A spot left empty simply isn't packed.
+ */
+export function addLunchPersonOps(db, state, { name, days = [1, 2, 3, 4, 5], slots = {}, at }) {
+  const r = newPackerName(db, state, name);
+  if (r.error) return result(state, [], r.error, { error: true });
+  const picked = {};
+  let count = 0;
+  for (const sl of lunchSlots(db)) {
+    // Every spot is written, empty ones too, so a returning name never gets the old defaults back.
+    picked[sl.id] = [...new Set((Array.isArray(slots?.[sl.id]) ? slots[sl.id] : []).filter((id) => lunchItem(db, state, id)?.slot === sl.id))];
+    count += picked[sl.id].length;
+  }
+  const dayList = [...new Set((Array.isArray(days) ? days : []).map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort();
+  if (!dayList.length) return result(state, [], 'Pick at least one day.', { error: true });
+  const ops = [set(lunchPath(r.name), { enabled: true, added: chicagoDay(at || new Date()), days: dayList, slots: picked })];
+  // A thumbs-down this name left behind would quietly take a chosen item back out.
+  for (const id of Object.values(picked).flat()) if (state?.lunchVotes?.[id]?.[r.name] === -1) ops.push(del(['lunchVotes', id, r.name]));
+  const message = count
+    ? `${r.name}’s lunches are planned. Their groceries are on the shopping list.`
+    : `${r.name} is added. Pick what goes in the lunches next.`;
+  return result(state, ops, message, { name: r.name, count });
+}
+
+/** Pause: nothing is packed or bought, the picks are kept, and the person stays on the Lunch page. Resume undoes it. */
+export function pauseLunchPersonOps(db, state, { name, paused = true }) {
+  if (!isPacker(db, state, name)) return result(state, [], `${name || 'That person'} isn’t on the lunch plan.`, { error: true });
+  if (paused) {
+    return result(state, [set(lunchPath(name, 'enabled'), false), set(lunchPath(name, 'paused'), true)], `${name}’s lunches are paused. Nothing is packed, and their groceries are off the list.`);
+  }
+  const ops = [set(lunchPath(name, 'enabled'), true)];
+  if (state?.lunch?.people?.[name]?.paused !== undefined) ops.push(del(lunchPath(name, 'paused')));
+  return result(state, ops, `${name}’s lunches are back on. Their groceries are on the list.`);
+}
+
+/** Remove: off the Lunch page and their picks forgotten (Undo is on the message). Days already packed stay as they were. */
+export function removeLunchPersonOps(db, state, { name }) {
+  if (!isPacker(db, state, name)) return result(state, [], `${name || 'That person'} isn’t on the lunch plan.`, { error: true });
+  return result(state, [set(lunchPath(name), { enabled: false, removed: true })], `${name} is off the lunch plan, and their lunch groceries are off the list.`);
+}
+
+/** The "Pack lunches for …" switch: off is a pause, on resumes. */
 export function setLunchEnabledOps(db, state, { name, enabled }) {
+  if (isPacker(db, state, name)) return pauseLunchPersonOps(db, state, { name, paused: !enabled });
   return result(state, [set(lunchPath(name, 'enabled'), !!enabled)], enabled ? `${name}’s lunches are on.` : `${name}’s lunches are off. Their groceries are off the list.`);
+}
+
+/** Lighter-swap ideas for one person's lunches: on for the grown-ups to start with, off for everyone else. */
+export function setLunchIdeasOps(db, state, { name, on }) {
+  return result(state, [set(lunchPath(name, 'ideas'), !!on)], on ? `Lighter swap ideas are on for ${name}’s lunches.` : `No more swap ideas for ${name}’s lunches.`);
 }
 
 export function toggleLunchDayOps(db, state, { name, day }) {

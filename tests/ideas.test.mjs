@@ -143,6 +143,39 @@ test('units: amounts become the catalog’s unit before they’re saved', () => 
   assert.equal(qtyIn(db, {}, 'garlic', 0, 'cloves'), null);
 });
 
+test('detail: the app asks for timed steps, tips and the two times, and saves them on the dinner', () => {
+  const state = pantryState();
+  assert.equal(buildIdeasRequest(db, state, {}).detail, true);
+  const raw = rawIdea({
+    title: 'Slow cooker salsa chicken', minutes: 380, prepMinutes: 20, cookMinutes: 360, equipment: ['possible cooker', 'stovetop'],
+    steps: ['Sear the chicken.', 'Pour in the salsa.', 'Slow cook until it reaches 165°F.'],
+    stepDetails: [{ text: 'Sear the chicken.', minutes: 6, setting: 'sear/sauté, high' }, { text: 'Pour in the salsa.' }, { text: 'Slow cook until it reaches 165°F.', minutes: 360, setting: 'slow cook, low' }, { text: '   ' }, 7],
+    tips: ['Start it by noon for a 6 pm dinner.', '', 42],
+  });
+  const idea = normalizeIdea(db, state, raw);
+  assert.equal(idea.minutes, 380, 'an all-day slow cook keeps its real total (it used to fall back to 30)');
+  assert.equal(idea.prepMinutes, 20);
+  assert.equal(idea.cookMinutes, 360);
+  assert.deepEqual(idea.equipment, ['possible cooker', 'stovetop'], 'the PossibleCooker is a known appliance');
+  assert.deepEqual(idea.steps, ['Sear the chicken.', 'Pour in the salsa.', 'Slow cook until it reaches 165°F.']);
+  assert.deepEqual(idea.stepDetails, [{ text: 'Sear the chicken.', minutes: 6, setting: 'sear/sauté, high' }, { text: 'Pour in the salsa.' }, { text: 'Slow cook until it reaches 165°F.', minutes: 360, setting: 'slow cook, low' }]);
+  assert.deepEqual(idea.tips, ['Start it by noon for a 6 pm dinner.']);
+  const res = saveIdeaOps(db, state, idea, { to: 'box', who: 'Family', at: '2026-11-16T22:00:00Z', today: TODAY });
+  const saved = applyOps(state, res.ops).customDinners[res.id];
+  assert.deepEqual(saved.steps, idea.steps, 'plain sentences stay, for every screen and older copies of the app');
+  assert.deepEqual(saved.stepDetails, idea.stepDetails);
+  assert.deepEqual(saved.tips, idea.tips);
+  assert.deepEqual([saved.minutes, saved.prepMinutes, saved.cookMinutes], [380, 20, 360]);
+  // An older server (plain steps, no times): nothing extra is saved, and a silly total still falls back.
+  const plain = normalizeIdea(db, state, rawIdea({ minutes: 9999 }));
+  assert.equal(plain.minutes, 30);
+  assert.deepEqual([plain.prepMinutes, plain.cookMinutes, plain.stepDetails, plain.tips], [null, null, [], []]);
+  const old = applyOps(state, saveIdeaOps(db, state, plain, { to: 'box', today: TODAY }).ops).customDinners;
+  const o = Object.values(old)[0];
+  assert.ok(!('stepDetails' in o) && !('tips' in o) && !('prepMinutes' in o) && !('cookMinutes' in o));
+  assert.equal(normalizeIdea(db, state, rawIdea({ stepDetails: [{ text: 'Cook the chicken.', setting: 'oven, 400°F' }] })), null, 'no oven in a setting either');
+});
+
 test('Make it tonight: a one-off dinner on tonight, matched items by id, the rest as shelf items for the list', () => {
   const state = { ...pantryState(), plan: { [TODAY]: night('brown-butter-spaghetti') } };
   const idea = normalizeIdea(db, state, rawIdea());

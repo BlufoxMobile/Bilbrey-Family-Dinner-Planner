@@ -2,7 +2,7 @@
 // thaw or prep now, what needs using first (leftovers too), today's lunches, the week's dinners at
 // a glance, and the rest of the week. On a TV-size screen it lays out as a kitchen display.
 import { html, ic, when } from '../ui.js';
-import { addDays, dateRange, longDay, money, relativeDay, rangeLabel, fmtQty, listJoin, hourIn, weekdayName, shortDate, midSentence } from '../util.js';
+import { addDays, dateRange, longDay, money, relativeDay, rangeLabel, fmtQty, listJoin, hourIn, weekdayName, shortDate, midSentence, byLabel } from '../util.js';
 import { dinnerById, periodRange, itemsForNight } from '../planner.js';
 import { buildList, plannedNights } from '../shopping.js';
 import { generateOps, markCookedOps, awayBlock } from '../actions.js';
@@ -89,7 +89,7 @@ function hero(app, today) {
       ${when(showNutrition(app), () => html`<p class="hero-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate' })}</p>`)}
       <div class="hero-actions">
         ${cooked
-          ? html`<p class="status-note status-cooked hero-done">${ic('checkCircle', { size: 18 })}<span>Cooked${e.cookedBy ? ` by ${e.cookedBy}` : ''}.${left ? (left.saved ? ` ${servingsText(left.saved)} of leftovers saved.` : ' No leftovers.') : ''}</span></p>
+          ? html`<p class="status-note status-cooked hero-done">${ic('checkCircle', { size: 18 })}<span>Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.${left ? (left.saved ? ` ${servingsText(left.saved)} of leftovers saved.` : ' No leftovers.') : ''}</span></p>
             <a class="btn btn-secondary" href="#/recipe/${d.id}">${ic('recipes', { size: 20 })}Open the recipe</a>`
           : html`<a class="btn btn-primary btn-lg" id="tonight-cook" href="#/cook/${today}">${ic('flame', { size: 20 })}${going ? `Keep cooking: step ${going.step} of ${going.of}` : 'Start cooking'}</a>
             <a class="btn btn-secondary" href="#/recipe/${d.id}">${ic('recipes', { size: 20 })}See the whole recipe</a>`}
@@ -105,7 +105,7 @@ function hero(app, today) {
         }) : '';
       })}
       ${when(!(cooked && howWasDate(app) === today), () => html`<div class="hero-rate">
-        <p class="rate-h">Thumbs up keeps it coming. One thumbs down from anyone takes it off the menu.</p>
+        <p class="rate-h">Thumbs up: loved, a family favorite. Thumbs down: not for us, and it’s off the menu.</p>
         ${rateList(app, d, sides)}
       </div>`)}
       <div class="quick" role="group" aria-label="Tonight’s options">
@@ -179,7 +179,7 @@ export function freezerNote(f) {
 }
 
 function todayLine(app, today) {
-  const who = app.who();
+  const who = app.todayFor?.(); // one shared profile: this device's pick in Family & settings, or nobody
   if (!who || !showNutrition(app)) return '';
   const n = dayNutrition(app.db, app.state, who, today);
   if (!n) return '';
@@ -234,7 +234,7 @@ function useFirst(app, today) {
 
 function lunches(app, today) {
   if (!app.db.lunch?.available) return '';
-  const people = lunchPeople(app.db, app.state, app.who()).filter((p) => p.cfg.enabled);
+  const people = lunchPeople(app.db, app.state).filter((p) => p.cfg.enabled);
   if (!people.length) return '';
   let date = today;
   let rows = people.map((p) => lunchFor(app.db, app.state, p.name, date)).filter(Boolean);
@@ -305,7 +305,7 @@ function howWas(app, today) {
     <div class="howwas-head">
       ${dinnerPhoto(app, d, { size: 'thumb' })}
       <div><h2 id="hw-h" class="section-title">How was dinner?</h2>
-        <p class="muted small">${d.title}, ${date === today ? 'tonight' : `last night (${weekdayName(date)})`}. Thumbs up keeps it coming; one thumbs down and it’s off the menu.</p></div>
+        <p class="muted small">${d.title}, ${date === today ? 'tonight' : `last night (${weekdayName(date)})`}. Thumbs up for loved; thumbs down for not for us, and it’s off the menu.</p></div>
     </div>
     ${rateList(app, d, sides)}
     <div class="howwas-actions"><button type="button" class="btn btn-secondary btn-small" data-action="lighter:dismiss" data-key="howwas:${date}">Done</button></div>

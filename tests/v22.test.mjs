@@ -36,13 +36,13 @@ function sideDb() {
 
 // ---------------------------------------------------------------- dinners
 
-test('one thumbs-down from anyone drops a dinner; a bench dinner takes its place; Undo puts it back', () => {
+test('“not for us” drops a dinner; a bench dinner takes its place; Undo puts it back', () => {
   const db = tinyDb();
   let s = { plan: { '2026-11-18': { dinner: 'beef-bowl', sides: ['broc', 'beans'], status: 'planned' } } };
   const r = voteOps(db, s, { ...ctx, dinnerId: 'beef-bowl', who: 'Candi', value: -1 });
   assert.equal(r.retired, true);
   assert.equal(r.promoted, 'bench-beef');
-  assert.match(r.message, /^Candi gave it a thumbs down, so beef-bowl is off the menu\. bench-beef takes its place in the rotation and on its planned night\.$/);
+  assert.match(r.message, /^beef-bowl is marked “not for us”, so it’s off the menu\. bench-beef takes its place in the rotation and on its planned night\.$/);
   s = run(s, r);
   assert.ok(isRetired(s, 'beef-bowl'));
   assert.ok(!rotationList(db, s).some((d) => d.id === 'beef-bowl'));
@@ -51,17 +51,18 @@ test('one thumbs-down from anyone drops a dinner; a bench dinner takes its place
   const back = applyOps(s, r.undo);
   assert.ok(!isRetired(back, 'beef-bowl'), 'Undo brings it back');
   assert.equal(back.plan['2026-11-18'].dinner, 'beef-bowl');
-  // A second thumbs-down on a dropped dinner doesn't promote anything else.
+  // There is one signal, so tapping the thumbs-down again takes it back (the dinner that came in stays).
   const again = voteOps(db, s, { ...ctx, dinnerId: 'beef-bowl', who: 'Knox', value: -1 });
-  assert.equal(again.ops.length, 1);
-  assert.match(again.message, /already off the menu/);
-  // Restore clears every thumbs-down.
+  assert.equal(again.restored, true);
+  assert.ok(!isRetired(run(s, again), 'beef-bowl'));
+  assert.ok(rotationList(db, run(s, again)).some((d) => d.id === 'bench-beef'));
+  // Restore (from the Dropped list) is a fresh start: nothing saved.
   const restored = run(s, restoreOps(db, s, { dinnerId: 'beef-bowl' }));
   assert.ok(!isRetired(restored, 'beef-bowl'));
-  assert.equal(Object.values(restored.votes['beef-bowl']).filter((v) => v === -1).length, 0);
+  assert.equal(restored.votes?.['beef-bowl'], undefined);
 });
 
-test('taking back the only thumbs-down brings the dinner back; two thumbs-up make a favorite', () => {
+test('taking back “not for us” brings the dinner back; one “loved” makes a favorite', () => {
   const db = tinyDb();
   let s = run({}, voteOps(db, {}, { ...ctx, dinnerId: 'chix-grill', who: 'Knox', value: -1 }));
   assert.ok(isRetired(s, 'chix-grill'));
@@ -69,8 +70,7 @@ test('taking back the only thumbs-down brings the dinner back; two thumbs-up mak
   assert.equal(r.restored, true);
   s = run(s, r);
   assert.ok(!isRetired(s, 'chix-grill'));
-  s = run(s, voteOps(db, s, { ...ctx, dinnerId: 'chix-pasta', who: 'Jeff', value: 1 }));
-  const fav = voteOps(db, s, { ...ctx, dinnerId: 'chix-pasta', who: 'Candi', value: 1 });
+  const fav = voteOps(db, s, { ...ctx, dinnerId: 'chix-pasta', value: 1 });
   assert.equal(fav.favorite, true);
   assert.ok(isFavorite(run(s, fav), dinnerById(db, s, 'chix-pasta')));
 });
@@ -97,7 +97,8 @@ test('a side thumbs-down drops it everywhere: the best same-kind side replaces i
   let s = { substitutions: { 'chix-pasta': { 1: 'broc' } } };
   const r = sideVoteOps(db, s, { sideId: 'broc', who: 'Jordan', value: -1 });
   assert.equal(r.dropped, true);
-  assert.match(r.message, /^Jordan gave Steamed broccoli a thumbs down, so it’s off the menu\./);
+  assert.match(r.message, /^Steamed broccoli is marked “not for us”, so it’s off the menu\./);
+  assert.deepEqual(r.ops[0].value, { Family: -1 });
   assert.deepEqual(r.ops.map((o) => o.path[0]), ['sideVotes']);
   s = run(s, r);
   assert.ok(isSideDropped(s, 'broc'));

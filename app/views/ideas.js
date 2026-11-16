@@ -12,6 +12,7 @@ import {
   MAX_IDEA_PHOTOS, NOTE_MAX, IDEA_NIGHTS, buildIdeasRequest, normalizeIdeas, missingCost, saveIdeaOps, savedIdeaId,
   openNightsAfter, pantryWords,
 } from '../ideas.js';
+import { fmtMinutes } from '../cooking.js';
 import { awayReason } from './common.js';
 import { loadAiInfo, aiInfo } from './family.js';
 
@@ -26,7 +27,7 @@ export function openIdeas(app, { keepResults = false } = {}) {
     openSheet({
       id: 'ideas-gate',
       title: 'Ideas need the family server',
-      render: () => html`<p class="sheet-text">${app.store.device.localOnly ? 'This phone is set to “this phone only.”' : 'This phone isn’t connected to the family yet.'} Claude reads the photos through the family’s server, so connect with the family passcode first.</p>
+      render: () => html`<p class="sheet-text">${app.store.device.localOnly ? 'This device is set to “this device only.”' : 'This device isn’t connected to the family yet.'} Claude reads the photos through the family’s server, so connect with the family passcode first.</p>
         <div class="sheet-actions"><a class="btn btn-primary btn-block" href="#/family">Family & settings</a></div>`,
     });
     return;
@@ -99,7 +100,12 @@ function ideaStatus(app, idea) {
   return { id, inBox: app.state.customDinners?.[id]?.rotation !== 'bench', nights };
 }
 
-const equipmentText = (list) => listJoin(list.map((e, i) => { const t = EQUIPMENT_LABELS[e] || e; return i ? t.toLowerCase() : t; }));
+/** "30 min", or "20 min hands-on, 6 hr 20 min in all" when most of it cooks on its own (a slow cook). */
+const timeText = (idea) => (idea.prepMinutes && idea.minutes - idea.prepMinutes >= 30 ? `${fmtMinutes(idea.prepMinutes)} hands-on, ${fmtMinutes(idea.minutes)} in all` : fmtMinutes(idea.minutes));
+
+/** "Stovetop and air fryer"; brand names keep their capitals ("Stovetop and PossibleCooker"). */
+const BRAND_GEAR = ['blackstone', 'possible cooker'];
+const equipmentText = (list) => listJoin(list.map((e, i) => { const t = EQUIPMENT_LABELS[e] || e; return i && !BRAND_GEAR.includes(e) ? t.toLowerCase() : t; }));
 
 /** "2 lemons", "1 bunch fresh basil", "1½ lb ground beef": the unit only when the name doesn't say it. */
 function lineText(m) {
@@ -122,7 +128,7 @@ function ideaCard(app, idea, k) {
     <h3 class="idea-title">${idea.title}</h3>
     ${when(idea.subtitle, () => html`<p class="idea-sub">${idea.subtitle}</p>`)}
     ${when(idea.why, () => html`<p class="idea-why">${idea.why}</p>`)}
-    <p class="idea-meta">${ic('clock', { size: 16 })}<span>${idea.minutes} min · ${equipmentText(idea.equipment)}</span></p>
+    <p class="idea-meta">${ic('clock', { size: 16 })}<span>${timeText(idea)} · ${equipmentText(idea.equipment)}</span></p>
     ${when(sideNames.length, () => html`<p class="idea-line"><b>Sides:</b> ${listJoin(sideNames)}</p>`)}
     ${when(uses.length, () => html`<p class="idea-line"><b>Uses from your pantry:</b> ${listJoin(uses)}</p>`)}
     ${idea.missing.length

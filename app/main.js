@@ -2,9 +2,9 @@
 import { apiBase, VERSION } from './config.js';
 import { loadDb } from './data.js';
 import { Store, settingsOf } from './state.js';
-import { todayISO } from './util.js';
+import { todayISO, SHARED_PROFILE } from './util.js';
 import {
-  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, avatar, personStyle, sheetOpen,
+  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, sheetOpen,
 } from './ui.js';
 import * as tonight from './views/tonight.js';
 import * as planView from './views/plan.js';
@@ -53,7 +53,13 @@ export const app = {
   get state() { return this.store.state; },
   get settings() { return settingsOf(this.store.state); },
   today() { return todayISO(); },
-  who() { return this.store.device.who; },
+  /**
+   * One shared profile (docs/spec/20): there is no "who's using this phone". Every screen that
+   * still asks gets the family, so every change is stamped "Family".
+   */
+  who() { return SHARED_PROFILE; },
+  /** The one per-person thing a device can choose: whose daily calories line Tonight shows here (or null). */
+  todayFor() { return this.store.device.todayFor || null; },
   /** Apply an action result: commit ops, show its message with Undo. */
   commit(res, { quiet = false, undoable = true, onUndo } = {}) {
     if (!res) return false;
@@ -84,10 +90,10 @@ function syncPill() {
   const s = app.store;
   const pending = s.pending.length;
   const map = {
-    synced: { label: 'Synced', tone: 'ok', icon: 'cloud', long: 'Everyone sees the same plan.' },
+    synced: { label: 'Synced', tone: 'ok', icon: 'cloud', long: 'Every phone and the TV show the same plan.' },
     syncing: { label: 'Syncing', tone: 'busy', icon: 'refresh', long: 'Sending your changes to the family.' },
-    offline: { label: pending ? 'Saved on this phone' : 'Offline', tone: 'off', icon: 'cloudOff', long: 'Offline — changes are saved on this phone and sync when you reconnect.' },
-    local: { label: 'This phone only', tone: 'off', icon: 'phone', long: 'Using the planner on this phone only.' },
+    offline: { label: pending ? 'Saved here' : 'Offline', tone: 'off', icon: 'cloudOff', long: 'Offline — changes are saved on this device and sync when you reconnect.' },
+    local: { label: 'This device only', tone: 'off', icon: 'phone', long: 'Using the planner on this device only.' },
     'needs-setup': { label: 'Connect', tone: 'warn', icon: 'lock', long: 'Create the family passcode to share the plan.' },
     'needs-passcode': { label: 'Connect', tone: 'warn', icon: 'lock', long: 'Enter the family passcode to share the plan.' },
     error: { label: 'Sync paused', tone: 'warn', icon: 'cloudOff', long: s.statusDetail || 'Sync paused.' },
@@ -99,7 +105,6 @@ function syncPill() {
 }
 
 function shell() {
-  const who = app.who();
   const active = { recipe: 'recipes', products: 'list', receipts: 'budget' }[app.route.view] || app.route.view;
   const tabActive = active === 'recipes' ? 'plan' : active;
   return html`
@@ -109,16 +114,14 @@ function shell() {
       <nav class="rail-nav">
         ${[...TABS, ...MORE].map((t) => html`<a class="rail-link ${active === t.id ? 'is-on' : ''}" href="#/${t.id}" ${active === t.id ? html`aria-current="page"` : ''}>${ic(t.icon)}<span>${t.label}</span></a>`)}
       </nav>
-      <div class="rail-foot">${syncPill()}
-        <button type="button" class="rail-who" data-action="sheet:who">${avatar(who || '?', { size: 'sm' })}<span>${who ? `${who}’s phone` : 'Who’s using this phone?'}</span></button>
-      </div>
+      <div class="rail-foot">${syncPill()}</div>
     </aside>
     <header class="topbar">
       <a class="wordmark wordmark-sm" href="#/tonight" aria-label="The Bilbrey Family Dinner Planner, tonight"><span class="wm-mark" aria-hidden="true"></span><span class="wm-text">Bilbrey Dinners</span></a>
       <div class="topbar-right">
         ${syncPill()}
         <a class="icon-btn ${active === 'budget' ? 'is-on' : ''}" href="#/budget" aria-label="Budget">${ic('budget')}</a>
-        <a class="who-btn ${active === 'family' ? 'is-on' : ''}" style="${personStyle(who)}" href="#/family" aria-label="Family and settings${who ? `, ${who} is using this phone` : ''}">${avatar(who || '?', { size: 'sm' })}</a>
+        <a class="icon-btn settings-btn ${active === 'family' ? 'is-on' : ''}" href="#/family" aria-label="Family and settings">${ic('family')}</a>
       </div>
     </header>
     <main id="view" class="view view-${app.route.view}" tabindex="-1"></main>
@@ -151,6 +154,7 @@ function restoreForms(root, snap) {
 
 let renderQueued = false;
 let lastView = null;
+let lastGateStep = null;
 function scheduleRender() {
   if (renderQueued) return;
   renderQueued = true;
@@ -160,15 +164,22 @@ function scheduleRender() {
 export function render() {
   const root = document.getElementById('app');
   if (!app.db || !app.store) return;
-  if (!app.store.device.who || onboarding.gateActive(app)) {
+  if (onboarding.gateActive(app)) {
+    const step = onboarding.gateStep(app);
+    const same = lastView === 'gate' && lastGateStep === step;
     const snap = lastView === 'gate' ? snapshotForms(root) : [];
-    const wasFocused = lastView === 'gate' && document.activeElement?.id;
+    const wasFocused = same && root.contains(document.activeElement) ? document.activeElement.id : '';
     root.className = 'app is-gate';
     setHTML(root, onboarding.render(app));
     restoreForms(root, snap);
+    // A redraw of the same screen keeps the focus where a thumb or a TV remote left it; only a new
+    // screen moves it (to the passcode box).
     if (wasFocused) document.getElementById(wasFocused)?.focus({ preventScroll: true });
-    else onboarding.mount?.(app, root);
+    else if (!same) onboarding.mount?.(app, root);
+    document.title = 'The Bilbrey Family Dinner Planner';
     lastView = 'gate';
+    lastGateStep = step;
+    focusNext();
     return;
   }
   app.route = parseRoute();
@@ -196,12 +207,25 @@ export function render() {
     const el = document.getElementById(keep.id);
     if (el) { el.focus({ preventScroll: true }); try { if (keep.start != null) el.setSelectionRange(keep.start, keep.end); } catch { /* not a text input */ } }
   }
+  focusNext();
+}
+
+/** A screen can ask for the focus after the next draw (app.ui.focusNext = an element id): a wrong passcode puts it back in the box. */
+function focusNext() {
+  const id = app.ui.focusNext;
+  if (!id) return;
+  app.ui.focusNext = null;
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.focus({ preventScroll: true }); // the text is left as typed, not selected: one slipped letter shouldn't cost the whole passcode
 }
 
 function applyTheme() {
-  const t = app.store.device.theme;
+  const { theme: t, textSize } = app.store.device;
   if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
   else delete document.documentElement.dataset.theme;
+  if (textSize === 'large') document.documentElement.dataset.text = 'large';
+  else delete document.documentElement.dataset.text;
 }
 
 function delegate() {
@@ -248,7 +272,7 @@ function installConsoleHelpers() {
       if (!app.db || !app.store) throw new Error('The planner is still loading.');
       const arr = Array.isArray(list) ? list : [list];
       const { ops, results, state } = importReceipts(app.store.state, arr, {
-        db: app.db, by: by || app.who() || 'Family', source, today: app.today(),
+        db: app.db, by: by || SHARED_PROFILE, source, today: app.today(),
       });
       const ok = results.filter((r) => !r.duplicate && !r.error);
       const productKeys = new Set(ok.flatMap((r) => r.products || []));
@@ -356,15 +380,23 @@ async function boot() {
   }
   app.store = new Store({ apiBase: apiBase() });
   applyTheme();
+  let lastStatus = app.store.status;
   app.store.subscribe((kind) => {
     if (kind === 'device') applyTheme();
     scheduleRender();
     if (kind === 'state') refreshLiveSheet();
+    // A connected device (the TV on the wall) that stops syncing because the passcode changed says so,
+    // instead of quietly showing an old plan behind a small "Connect" pill.
+    const now = app.store.status;
+    if (kind === 'status' && now === 'needs-passcode' && lastStatus !== now && app.store.device.key) {
+      toast('The family passcode changed. Enter the new one to keep this device up to date.', { action: { label: 'Enter it', fn: () => app.navigate('#/family') }, duration: 120000 });
+    }
+    lastStatus = now;
   });
   delegate();
   window.addEventListener('hashchange', () => { if (sheetOpen()) closeSheet(); render(); });
   render();
-  if (app.store.device.who) app.store.connect();
+  app.store.connect(); // every device, from the first open: there is no "who are you" step to wait for
   const resync = () => { if (document.visibilityState === 'visible' && app.store.device.key && !app.store.device.localOnly) app.store.sync(); };
   document.addEventListener('visibilitychange', resync);
   window.addEventListener('online', () => (app.store.device.key ? app.store.sync() : app.store.connect()));
@@ -396,6 +428,12 @@ function watchForUpdates() {
     lastCheck = Date.now();
     reg.update().catch(() => { /* offline: try again next time */ });
   });
+  // A TV shows the planner all day and never "comes back", so it also looks once an hour.
+  setInterval(() => {
+    if (!reg || document.visibilityState !== 'visible' || Date.now() - lastCheck < 30 * 60000) return;
+    lastCheck = Date.now();
+    reg.update().catch(() => { /* offline: try again next hour */ });
+  }, 60 * 60000);
   let handled = false;
   sw.addEventListener('controllerchange', () => {
     // The very first install taking over this page: it's already current. Any later change is an update.

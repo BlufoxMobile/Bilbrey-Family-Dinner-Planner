@@ -5,6 +5,9 @@ import http from 'node:http';
 import { createHash, randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { chicagoMonth } from '../app/util.js';
+import { storeImageRequest } from '../app/photos.js';
+import { MODELS } from '../worker/src/claude.js';
 
 const keyFor = (pass) => createHash('sha256').update('bilbrey-dinner-planner:' + pass.trim().toLowerCase()).digest('hex');
 
@@ -23,12 +26,19 @@ export function applyOpServer(state, op) {
   else if (op.op === 'push') { if (!Array.isArray(o[last])) o[last] = []; o[last].push(op.value); }
 }
 
-// Claude (SPEC §17): the three models the family can pick, priced per million tokens.
-export const MOCK_MODELS = [
-  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5', inUsd: 5, outUsd: 25 },
-  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5', inUsd: 3, outUsd: 15 },
-  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5', inUsd: 1, outUsd: 5 },
-];
+// Claude (SPEC §17): the three models the family can pick, priced per million tokens. The very
+// list the Worker answers GET /api/ai with (cache prices included), so the mock can't drift from it.
+export const MOCK_MODELS = MODELS.map((m) => ({ ...m }));
+
+/** A small picture standing in for a store's product photo (the mock never leaves this computer). */
+function mockStorePicture(req) {
+  const name = decodeURIComponent(req.source.split('/').pop() || '').replace(/[^\w .-]/g, '').slice(0, 24) || 'product';
+  const tint = req.store === 'jewel' ? '#c8102e' : '#0067a0';
+  return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320"><rect width="320" height="320" fill="#fff"/>`
+    + `<rect x="70" y="50" width="180" height="200" rx="18" fill="${tint}" opacity=".14"/><rect x="70" y="50" width="180" height="200" rx="18" fill="none" stroke="${tint}" stroke-width="6"/>`
+    + `<text x="160" y="160" text-anchor="middle" font-family="sans-serif" font-size="22" fill="${tint}">${req.store === 'jewel' ? 'Jewel-Osco' : 'Sam’s Club'}</text>`
+    + `<text x="160" y="290" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#555">${name}</text></svg>`);
+}
 
 /**
  * Deterministic dinner ideas from a /api/ideas body: built from the pantry ids and side ids it
@@ -58,6 +68,10 @@ export function mockIdeas(b) {
   const lemonLine = { name: 'Lemons', qty: 2, unit: lemon?.unit || 'lemons', matchId: lemon?.id || null };
   const basil = { name: 'Fresh basil', qty: 1, unit: 'bunch', matchId: null };
   const b2 = mainFor(1);
+  // What a client that sends detail: true also gets (docs/spec/23): timed steps, tips, the two times.
+  const detail = b?.detail === true;
+  const timed = (steps, extra) => (detail ? { stepDetails: steps.map((text, i) => ({ text, ...(extra[i] || {}) })) } : {});
+  const first = [`Season the ${a.word} with salt and pepper.`, `Sear it in a skillet over medium-high heat until done (165°F for chicken, 160°F ground beef, 145°F pork).`, 'Add butter, garlic and the juice of the lemons; spoon over and finish with torn basil.'];
   return [
     {
       title: `Lemon garlic ${a.word} skillet`,
@@ -66,7 +80,9 @@ export function mockIdeas(b) {
       minutes: 30, equipment: ['stovetop'], protein: protein(a.word), category: 'Comfort',
       items: [a.item, lemonLine, basil, ...others.map((p) => line(p, 1))],
       sides: sidesFor(0),
-      steps: [`Season the ${a.word} with salt and pepper.`, `Sear it in a skillet over medium-high heat until done (165°F for chicken, 160°F ground beef, 145°F pork).`, 'Add butter, garlic and the juice of the lemons; spoon over and finish with torn basil.'],
+      steps: first,
+      ...timed(first, { 1: { minutes: 12, setting: 'medium-high' }, 2: { minutes: 2 } }),
+      ...(detail ? { prepMinutes: 10, cookMinutes: 20, tips: ['Pat the meat dry first so it browns instead of steaming.'] } : {}),
       usesPantry: [...(a.have ? [a.item.matchId] : []), ...others.map((p) => p.id)],
       missing: [...(a.have ? [] : [a.item]), lemonLine, basil],
     },
@@ -134,7 +150,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     const url = new URL(req.url, 'http://x');
     if (req.method === 'OPTIONS') { res.writeHead(204, cors(req)); return res.end(); }
     const p = url.pathname;
-    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests, receiptCalls: db.receiptCalls || 0, lastReceipt: db.lastReceipt || null, ideasCalls: db.ideasCalls, lastIdeas: db.lastIdeas, mcpToken: db.mcpToken });
+    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests, lastOpsBy: db.lastOpsBy || null, receiptCalls: db.receiptCalls || 0, lastReceipt: db.lastReceipt || null, ideasCalls: db.ideasCalls, lastIdeas: db.lastIdeas, mcpToken: db.mcpToken });
     if (p === '/__mock/reset' && req.method === 'POST') { const b = await readBody(req); reset(b?.passcode || null); return send(res, req, 200, { ok: true }); }
     if (p === '/api/health') return send(res, req, 200, { ok: true, hasPasscode: !!db.hash, ai, revision: db.revision });
     if (p === '/api/setup' && req.method === 'POST') {
@@ -168,6 +184,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     if (p === '/api/ops' && req.method === 'POST') {
       const b = await readBody(req);
       db.opsRequests++;
+      db.lastOpsBy = typeof b?.by === 'string' ? b.by : null; // one shared profile: the app always says "Family"
       if (!b || !Array.isArray(b.ops) || !b.ops.length) return send(res, req, 400, { error: 'ops must be a non-empty array' });
       if (b.ops.length > 200) return send(res, req, 400, { error: 'At most 200 ops per request' });
       const bad = b.ops.findIndex((op) => !op || !['set', 'del', 'push'].includes(op.op) || !Array.isArray(op.path) || !op.path.length || (op.op !== 'del' && op.value === undefined));
@@ -189,6 +206,20 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
       const id = randomBytes(16).toString('hex');
       photos.set(id, { mime: req.headers['content-type'] || 'image/jpeg', data });
       return send(res, req, 201, { ok: true, id });
+    }
+    // A store's product picture (docs/spec/23): the same link rules as the Worker, and a small
+    // generated picture instead of a download. The same link again answers with the same picture.
+    if (p === '/api/photo/fetch' && req.method === 'POST') {
+      const b = await readBody(req);
+      if (!b || typeof b !== 'object' || Array.isArray(b)) return send(res, req, 400, { error: 'Body must be a JSON object like { url }.' });
+      const want = storeImageRequest(b.url);
+      if (!want.ok) return send(res, req, 400, { error: want.error });
+      const had = b.refresh === true ? null : [...photos].find(([, ph]) => ph.source === want.source);
+      if (had) return send(res, req, 200, { ok: true, reused: true, id: had[0], bytes: had[1].data.length, mime: had[1].mime, host: want.host, store: want.store });
+      const data = mockStorePicture(want);
+      const id = randomBytes(16).toString('hex');
+      photos.set(id, { mime: 'image/svg+xml', data, source: want.source });
+      return send(res, req, 201, { ok: true, id, bytes: data.length, reused: false, mime: 'image/svg+xml', host: want.host, store: want.store });
     }
     if (p === '/api/photo' && req.method === 'GET') {
       const ph = photos.get(url.searchParams.get('id') || '');
@@ -256,7 +287,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
       const c = db.claude;
       return send(res, req, 200, {
         keySet: !!c.keySet, engine: claudeOn() ? 'claude' : 'workers-ai', model: claudeModel(), models: MOCK_MODELS,
-        month: new Date().toISOString().slice(0, 7), spentUsd: c.spentUsd, capUsd: c.capUsd, capped: !!c.capped,
+        month: chicagoMonth(), spentUsd: c.spentUsd, capUsd: c.capUsd, capped: !!c.capped,
       });
     }
     if (p === '/api/ideas' && req.method === 'POST') {
@@ -268,7 +299,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
       if (!db.claude.keySet) return send(res, req, 503, { error: 'Claude isn’t set up on the family server yet.' });
       if (db.claude.capped) return send(res, req, 402, { error: 'This month’s Claude budget is used up.', capped: true });
       db.ideasCalls++;
-      db.lastIdeas = { images: imgs.length, note: b.note || '', pantry: b.pantry.length, sides: b.sides.length, catalog: b.catalog.length, count: b.count, pantryIds: b.pantry.map((x) => x.id), useBy: b.pantry.filter((x) => x.useBy).length };
+      db.lastIdeas = { detail: b.detail === true, images: imgs.length, note: b.note || '', pantry: b.pantry.length, sides: b.sides.length, catalog: b.catalog.length, count: b.count, pantryIds: b.pantry.map((x) => x.id), useBy: b.pantry.filter((x) => x.useBy).length };
       return send(res, req, 200, { ideas: mockIdeas(b), engine: 'claude', model: claudeModel() });
     }
     if (p === '/api/mcp/link' && req.method === 'GET') return send(res, req, 200, { url: `http://${req.headers.host}/mcp/${db.mcpToken}` });

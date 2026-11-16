@@ -1,10 +1,13 @@
-// Pure lunch logic (SPEC §8): who packs lunch, on which days, and what's in it.
+// Pure lunch logic (SPEC §8, docs/spec/20): who packs lunch, on which days, and what's in it.
 // A person's slot list is a rotation; the day's index counts that person's lunch days
-// from a fixed Sunday, so every phone shows the same lunch for the same day.
+// from a fixed Sunday, so every device shows the same lunch for the same day.
 // No DOM, no clock.
+//
+// The family shares one profile, so the only people the app knows about are the ones who pack a
+// lunch: Jeff and Knox to start with (lunches.json `defaults`), plus anyone the family adds.
 
-import { FAMILY, PARENTS } from './config.js';
-import { diffDays, weekday } from './util.js';
+import { PARENTS } from './config.js';
+import { cleanName, diffDays, weekday } from './util.js';
 import { LUNCH_SLOTS, normalizeLunchItem, normalizeLunchPerson } from './data.js';
 
 /** A Sunday. Lunch day N counts this person's lunch days from here. */
@@ -16,7 +19,6 @@ export const SKIP_REASONS = [
   { id: 'Other', label: 'Other' },
 ];
 
-export const isKid = (name) => !PARENTS.includes(name);
 
 export function lunchSlots(db) {
   return db?.lunch?.slots?.length ? db.lunch.slots : LUNCH_SLOTS;
@@ -49,8 +51,9 @@ export function personConfig(db, state, name) {
   const base = db?.lunch?.defaults?.[name] ?? { enabled: false, days: [1, 2, 3, 4, 5], slots: {} };
   const own = saved && typeof saved === 'object' ? saved : null;
   const has = (k) => !!own && Object.prototype.hasOwnProperty.call(own, k);
+  const removed = own?.removed === true;
   const raw = {
-    enabled: has('enabled') ? own.enabled : base.enabled,
+    enabled: !removed && (has('enabled') ? own.enabled : base.enabled),
     days: has('days') && Array.isArray(own.days) ? own.days : base.days,
     slots: { ...(base.slots || {}), ...(own?.slots && typeof own.slots === 'object' ? own.slots : {}) },
   };
@@ -60,7 +63,66 @@ export function personConfig(db, state, name) {
   if (votes && typeof votes === 'object') {
     for (const k of Object.keys(cfg.slots)) cfg.slots[k] = cfg.slots[k].filter((id) => votes[id]?.[name] !== -1);
   }
-  return { ...cfg, saved: !!own };
+  // Lighter-swap ideas are for the grown-ups' lunches unless the family switches them on for someone.
+  const ideas = has('ideas') ? own.ideas === true : PARENTS.includes(name);
+  return { ...cfg, saved: !!own, removed, ideas };
+}
+
+// ---------------------------------------------------------------- who packs (docs/spec/20)
+
+const START_ORDER = ['Jeff', 'Candi', 'Knox', 'Jordan', 'Jackson'];
+const orderOf = (name) => { const i = START_ORDER.indexOf(name); return i < 0 ? START_ORDER.length : i; };
+
+/** The people lunches.json packs for until the family says otherwise (Jeff and Knox). */
+export function defaultPackers(db) {
+  return Object.entries(db?.lunch?.defaults || {}).filter(([, d]) => d?.enabled).map(([name]) => name);
+}
+
+/**
+ * Everyone the Lunch page lists: the default packers and anyone the family added, unless removed.
+ * A paused person stays listed (nothing packed or bought until resumed). A name that only has an
+ * old "off" record from the days of five profiles is not listed: nobody ever packed for them.
+ * → [{ name, cfg, paused, isDefault }], packing first, then paused; Jeff and Knox lead.
+ */
+export function lunchPackers(db, state) {
+  const defaults = defaultPackers(db);
+  const names = new Set(defaults);
+  for (const [name, p] of Object.entries(state?.lunch?.people || {})) {
+    if (!p || typeof p !== 'object' || cleanName(name) !== name) continue;
+    if (p.enabled === true || p.paused === true) names.add(name);
+  }
+  const out = [];
+  for (const name of names) {
+    const cfg = personConfig(db, state, name);
+    if (cfg.removed) continue;
+    out.push({ name, cfg, paused: !cfg.enabled, isDefault: defaults.includes(name) });
+  }
+  return out.sort((a, b) => (a.paused - b.paused) || orderOf(a.name) - orderOf(b.name) || a.name.localeCompare(b.name));
+}
+
+/** The names lunches are packed (and groceries bought) for right now. */
+export function packingNames(db, state) {
+  return lunchPackers(db, state).filter((p) => !p.paused).map((p) => p.name);
+}
+
+/** Is this someone the Lunch page lists (packing or paused)? */
+export function isPacker(db, state, name) {
+  return lunchPackers(db, state).some((p) => p.name === name);
+}
+
+/**
+ * The name a new packer would be saved under, or why not. A removed person's name can be used
+ * again; a name that differs only in capitals from one already there is the same person.
+ * → { name } | { error }
+ */
+export function newPackerName(db, state, typed) {
+  const name = cleanName(typed);
+  if (!name) return { error: 'Type a name first.' };
+  const lower = name.toLowerCase();
+  const listed = lunchPackers(db, state).find((p) => p.name.toLowerCase() === lower);
+  if (listed) return { error: listed.paused ? `${listed.name}’s lunches are paused. Resume them instead.` : `${listed.name} already packs a lunch.` };
+  const known = [...Object.keys(db?.lunch?.defaults || {}), ...Object.keys(state?.lunch?.people || {})].find((k) => k.toLowerCase() === lower);
+  return { name: known || name };
 }
 
 /** This person's thumbs on a lunch item: 1, -1 or 0. */
@@ -69,10 +131,9 @@ export function lunchVote(state, itemId, name) {
   return v === 1 || v === -1 ? v : 0;
 }
 
-/** The family, enabled people first; the phone's own person leads. */
-export function lunchPeople(db, state, who) {
-  const people = FAMILY.map((name) => ({ name, cfg: personConfig(db, state, name) }));
-  return people.sort((a, b) => (b.cfg.enabled - a.cfg.enabled) || ((b.name === who) - (a.name === who)) || FAMILY.indexOf(a.name) - FAMILY.indexOf(b.name));
+/** The older name for lunchPackers(): everyone listed, the ones packing first. */
+export function lunchPeople(db, state) {
+  return lunchPackers(db, state);
 }
 
 export function hasLunchDay(cfg, date) {
@@ -128,12 +189,13 @@ export function lunchFor(db, state, name, date) {
   return { name, date, skip: !!day.skip, reason: day.reason || '', note: day.note || '', slots, items, empty: !slots.some((s) => s.item) };
 }
 
-/** Every packed (not skipped) lunch for everyone across the dates. */
+/** Every packed (not skipped) lunch for everyone who packs across the dates. */
 export function lunchesIn(db, state, dates) {
   const out = [];
   if (!db?.lunch) return out;
+  const names = packingNames(db, state);
   for (const date of dates) {
-    for (const name of FAMILY) {
+    for (const name of names) {
       const l = lunchFor(db, state, name, date);
       if (l && !l.skip && !l.empty) out.push(l);
     }
@@ -158,7 +220,7 @@ export function lunchNeeds(db, state, dates) {
 /** Lighter swaps that apply to this person's rotation (lunches.json `swaps`). */
 export function lunchSwapsFor(db, state, name) {
   const cfg = personConfig(db, state, name);
-  if (!cfg.enabled) return [];
+  if (!cfg.enabled || !cfg.ideas) return [];
   const out = [];
   for (const sw of db?.lunch?.swaps || []) {
     const from = lunchItem(db, state, sw.from);
@@ -181,6 +243,6 @@ export function swappedConfig(db, state, name, from, to) {
     const v = id === from ? to : id;
     if (!next.includes(v)) next.push(v);
   }
-  const { saved, ...plain } = cfg;
+  const { saved, removed, ideas, ...plain } = cfg;
   return { ...plain, slots: { ...plain.slots, [item.slot]: next } };
 }

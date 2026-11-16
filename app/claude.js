@@ -116,7 +116,7 @@ export function aiStatus(info, modelId = DEFAULT_AI_MODEL) {
 export function claudeErrorText(e) {
   const s = Number(e?.status);
   if (s === 0) return 'This needs an internet connection. Everything else works offline.';
-  if (s === 401) return 'This needs the family passcode on this phone. Enter it in Family & settings.';
+  if (s === 401) return 'This needs the family passcode on this device. Enter it in Family & settings.';
   if (s === 402 || e?.data?.capped) return 'This month’s Claude budget is used up. It’s back on the 1st; the pantry and list work as usual until then.';
   if (s === 503) return 'Claude isn’t turned on yet. Once Jeff adds the Claude key to the family server, this works.';
   if (s === 404) return 'This isn’t on the family server yet. Try again after the next update.';

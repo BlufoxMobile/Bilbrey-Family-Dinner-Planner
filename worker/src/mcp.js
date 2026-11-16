@@ -26,7 +26,7 @@ import {
   allDinners, dinnerById, inRotation, isRetired, downVoters, isSideDropped, effectiveSides, sideInfo, itemsForNight,
   isFavorite, periodRange, defaultAnchor, listKeyFor, isPromoted, nightIsRice, scaleItems,
 } from "../../app/planner.js";
-import { lunchesIn, personConfig } from "../../app/lunch.js";
+import { lunchesIn, lunchPackers } from "../../app/lunch.js";
 import { importReceipts, receiptPantryAdds, receiptPantryOps, parseSize, convertSize, PANTRY_SYNC_DAYS } from "../../app/receipts.js";
 import { customItemOps, setPantryOps, placeDinnerOps, promoteOps } from "../../app/actions.js";
 import { onHand, ENOUGH } from "../../app/coverage.js";
@@ -52,8 +52,8 @@ const DATA_TTL_MS = 5 * 60 * 1000;
 const MAX_BATCH = 20;
 const MAX_PLAN_DAYS = 62;
 const TOKEN_RE = /^[0-9a-f]{32}$/;
-// The family's Ninja PossibleCooker is `possible cooker` (listed here too, so this file doesn't wait on app/config.js).
-const EQUIPMENT = [...new Set([...Object.keys(EQUIPMENT_LABELS), "possible cooker"])];
+// The family's Ninja PossibleCooker is `possible cooker` (app/config.js).
+const EQUIPMENT = Object.keys(EQUIPMENT_LABELS);
 const PLACE_IDS = PLACES.map((p) => p.id);
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
@@ -275,7 +275,7 @@ const TOOL_DEFS = [
     title: "Family profile and house rules",
     description:
       "Who the Bilbrey family is and the house rules for their food: the five people (all eat adult portions; one shared family profile) " +
-      "and who packs lunch, their goals (spend less, waste less, eat lighter: lean, high-protein dinners with a vegetable), " +
+      "and who packs a lunch (lunchPackers: Jeff and Knox unless the family adds someone), their goals (spend less, waste less, eat lighter: lean, high-protein dinners with a vegetable), " +
       "their two stores (Sam's Club in Addison, Jewel-Osco at 599 E Roosevelt Rd, Glen Ellyn), the kitchen equipment (never an oven; " +
       "a Ninja PossibleCooker for slow cooking, searing, braising, steaming and rice), " +
       "what they never eat, the monthly grocery budget with this month's spending so far, and the planner's settings. " +
@@ -611,14 +611,20 @@ function getFamilyProfile(args, { db, state, today }) {
     console.error("MCP budget failed:", err && err.message ? err.message : err);
     budget = { monthlyTarget: st.monthlyTarget };
   }
+  // Who packs a lunch is whoever the family lists on the Lunch page (Jeff and Knox, plus anyone
+  // they add later), not a fixed set of names (docs/spec/20-shared-profile.md §20.3).
+  const lunchDays = (cfg) => (cfg.days || []).map((d) => weekdayName(addDays("2026-01-04", d)));
+  const packers = lunchPackers(db, state);
   const people = FAMILY_NAMES.map((name) => {
-    const cfg = personConfig(db, state, name);
-    return { name, packsLunch: cfg.enabled, ...(cfg.enabled ? { lunchDays: cfg.days.map((d) => weekdayName(addDays("2026-01-04", d))) } : {}) };
+    const p = packers.find((x) => x.name === name);
+    const packs = !!p && !p.paused;
+    return { name, packsLunch: packs, ...(packs ? { lunchDays: lunchDays(p.cfg) } : {}) };
   });
   return {
     today, weekday: weekdayName(today), home: "Glen Ellyn, IL (Central time)",
     profile: "One shared family profile: all five use the same planner, and anything saved from a Claude chat is marked \"Family (Claude chat)\".",
     people,
+    lunchPackers: packers.map((p) => ({ name: p.name, lunchDays: lunchDays(p.cfg), ...(p.paused ? { paused: true, note: "Paused: nothing is packed or bought for them right now." } : {}) })),
     goals: [
       "Save money on groceries: about the monthly target, in 2–3 store trips a month rather than a trip every few days.",
       "Waste less food: cook what's oldest first (get_use_first).",

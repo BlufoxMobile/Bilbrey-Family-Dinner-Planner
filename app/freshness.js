@@ -4,7 +4,7 @@
 // Pure: no DOM, no clock (today is passed in).
 
 import { itemMeta } from './shopping.js';
-import { addDays, diffDays } from './util.js';
+import { addDays, diffDays, chicagoDay } from './util.js';
 
 export const PLACES = [
   { id: 'fridge', label: 'In the fridge' },
@@ -97,8 +97,13 @@ export function keepsDays(db, state, id) {
 
 /** The day an item came into the house: `since` when known, else the last time it was updated. */
 export function sinceOf(p) {
-  const s = String(p?.since || p?.at || '').slice(0, 10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
+  const s = String(p?.since || '').slice(0, 10);
+  const at = typeof p?.at === 'string' && !Number.isNaN(Date.parse(p.at)) ? p.at : null;
+  // Days are the family's (America/Chicago). Until v3 `since` was cut from the UTC timestamp, so
+  // anything put away after 6 pm was dated tomorrow: when `since` is exactly that UTC day, read
+  // the real day off the timestamp instead (nothing is rewritten).
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return at && at.startsWith(s) && chicagoDay(at) < s ? chicagoDay(at) : s;
+  return at ? chicagoDay(at) : null;
 }
 
 /**

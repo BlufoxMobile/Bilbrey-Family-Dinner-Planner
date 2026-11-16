@@ -69,20 +69,68 @@ export function allDinners(db, state) {
   return out;
 }
 
-/** SPEC §9.2: one thumbs-down from anyone drops a dinner (older -1 votes count too, read lazily). */
-export function hasDownVote(state, id) {
-  const v = state?.votes?.[id];
-  return !!v && typeof v === 'object' && Object.values(v).includes(-1);
+// ---------------------------------------------------------------- the family's signal (docs/spec/20)
+//
+// The family shares one profile, so every dinner and every side has ONE signal:
+//   'loved'  a family favorite: planned more often
+//   'fine'   the default
+//   'no'     "not for us": off the menu (a dinner is retired and a bench dinner takes its place)
+// It is saved where the per-person votes used to be, under one name: votes[id] = { Family: 1 | 0 | -1 }
+// (0 is an explicit "fine", only needed to turn down the recipe box's own "family favorite" tag).
+// Votes saved by each person before the shared profile are still there and are read as one voice,
+// with nothing rewritten: any thumbs-down means "not for us" (that was already the rule), otherwise
+// any thumbs-up means "loved". The next time the family sets the signal, the whole record is replaced.
+
+export const SIGNALS = ['loved', 'fine', 'no'];
+/** The name the family's one voice is saved under. */
+export const FAMILY_VOICE = 'Family';
+
+/** A saved votes record (old per-person or new) → 'loved' | 'fine' | 'no'. */
+export function signalOfVotes(v) {
+  if (!v || typeof v !== 'object') return 'fine';
+  const vals = Object.values(v);
+  if (vals.includes(-1)) return 'no';
+  return vals.includes(1) ? 'loved' : 'fine';
 }
-/** Dropped: retired by a parent, or any thumbs-down. */
+const saidFine = (v) => !!v && typeof v === 'object' && Object.values(v).includes(0);
+
+/** The record to save for a signal: null means "nothing saved" (plain fine). */
+export function votesForSignal(signal, { explicitFine = false } = {}) {
+  if (signal === 'loved') return { [FAMILY_VOICE]: 1 };
+  if (signal === 'no') return { [FAMILY_VOICE]: -1 };
+  return explicitFine ? { [FAMILY_VOICE]: 0 } : null;
+}
+
+/** "Not for us" on a dinner (older per-person thumbs-downs count too, read lazily). */
+export function hasDownVote(state, id) {
+  return signalOfVotes(state?.votes?.[id]) === 'no';
+}
+/** Dropped: retired, or marked "not for us". */
 export function isRetired(state, id) { return !!state?.retired?.[id] || hasDownVote(state, id); }
+
+/** The family's signal for a dinner (pass the dinner itself: the recipe box's "family favorite" tag is the starting point). */
+export function dinnerSignal(state, d) {
+  if (!d) return 'fine';
+  if (isRetired(state, d.id)) return 'no';
+  const v = state?.votes?.[d.id];
+  if (signalOfVotes(v) === 'loved') return 'loved';
+  if (saidFine(v)) return 'fine';
+  return d.tags?.includes('family favorite') ? 'loved' : 'fine';
+}
+
+/** The family's signal for a side. */
+export function sideSignal(state, id) {
+  return signalOfVotes(state?.sideVotes?.[id]);
+}
 export const isDropped = isRetired;
 export function isPromoted(state, id) { return !!state?.promoted?.[id]; }
 
-/** Who gave a dinner its thumbs-down(s), in family order. */
-export function downVoters(state, id) {
-  const v = state?.votes?.[id] || {};
-  return Object.keys(v).filter((p) => v[p] === -1);
+/**
+ * Who gave a dinner its thumbs-down. With one shared profile nobody is named any more, so this is
+ * always empty; it stays because other screens import it to decide whether to print names.
+ */
+export function downVoters() {
+  return [];
 }
 
 const implicitCache = new WeakMap();
@@ -127,35 +175,33 @@ export function benchList(db, state) {
   return rawBench(db, state).filter((d) => !implicit.has(d.id));
 }
 
+/**
+ * The saved signal as the numbers the planner scores with: up is 1 when loved, down is 1 when
+ * "not for us" (never more: five people's old votes are one voice now). `signal` is the same thing by name.
+ */
 export function voteInfo(state, id) {
   const v = state?.votes?.[id] || {};
-  let up = 0;
-  let down = 0;
-  for (const val of Object.values(v)) { if (val === 1) up++; else if (val === -1) down++; }
-  return { up, down, byPerson: v };
+  const signal = signalOfVotes(v);
+  return { up: signal === 'loved' ? 1 : 0, down: signal === 'no' ? 1 : 0, signal, byPerson: v };
 }
 
-/** Two thumbs-up (or the recipe box's own tag) make a family favorite. */
-export const FAVORITE_UPS = 2;
+/** One "loved" from the family (or the recipe box's own tag, until the family says otherwise) makes a favorite. */
+export const FAVORITE_UPS = 1;
 export function isFavorite(state, d) {
-  if (!d || isRetired(state, d.id)) return false; // a dropped dinner isn't anyone's favorite right now
-  return voteInfo(state, d.id).up >= FAVORITE_UPS || d.tags.includes('family favorite');
+  return !!d && dinnerSignal(state, d) === 'loved'; // a dropped dinner isn't a favorite right now
 }
 
 // ---------------------------------------------------------------- side votes (§9.2)
 
 export function sideVoteInfo(state, id) {
   const v = state?.sideVotes?.[id] || {};
-  let up = 0;
-  let down = 0;
-  for (const val of Object.values(v)) { if (val === 1) up++; else if (val === -1) down++; }
-  return { up, down, byPerson: v };
+  const signal = signalOfVotes(v);
+  return { up: signal === 'loved' ? 1 : 0, down: signal === 'no' ? 1 : 0, signal, byPerson: v };
 }
 
-/** A side with any thumbs-down is dropped: never a default or a suggestion. */
+/** A side marked "not for us" is dropped: never a default or a suggestion. */
 export function isSideDropped(state, id) {
-  const v = state?.sideVotes?.[id];
-  return !!v && typeof v === 'object' && Object.values(v).includes(-1);
+  return sideSignal(state, id) === 'no';
 }
 
 export function droppedSides(db, state) {

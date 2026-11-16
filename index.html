@@ -23,12 +23,13 @@
   <link rel="stylesheet" href="styles/app.css">
   <link rel="stylesheet" href="styles/print.css" media="print">
   <script>
-    // Apply the phone's chosen appearance before first paint.
-    try { var d = JSON.parse(localStorage.getItem('bfdp.v2.device') || '{}'); if (d.theme === 'light' || d.theme === 'dark') document.documentElement.dataset.theme = d.theme; } catch (e) {}
+    // Apply this device's chosen appearance and text size before first paint.
+    try { var d = JSON.parse(localStorage.getItem('bfdp.v2.device') || '{}'); if (d.theme === 'light' || d.theme === 'dark') document.documentElement.dataset.theme = d.theme; if (d.textSize === 'large') document.documentElement.dataset.text = 'large'; } catch (e) {}
   </script>
   <script type="module" src="app/main.js"></script>
   <link rel="stylesheet" href="styles/parts/cook.css">
   <link rel="stylesheet" href="styles/parts/server.css">
+  <link rel="stylesheet" href="styles/parts/profile.css">
 </head>
 <body>
   <div id="app" class="app is-boot" aria-busy="true">

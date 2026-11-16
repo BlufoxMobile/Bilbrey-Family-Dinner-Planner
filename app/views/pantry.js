@@ -3,7 +3,7 @@
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, switchToggle, confirmSheet } from '../ui.js';
 import { resizeImage, LIMITS } from '../images.js';
 import { STORAGE, AISLES } from '../config.js';
-import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween, weekdayName } from '../util.js';
+import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween, weekdayName, chicagoDay } from '../util.js';
 import { setPantryOps, removePantryOps, customItemOps, undoFor } from '../actions.js';
 import { set } from '../state.js';
 import { kindOf } from '../planner.js';
@@ -181,7 +181,7 @@ export function render(app) {
         ${ic('camera', { size: 22 })}Take or choose photos
         <input type="file" accept="image/*" multiple class="sr-only" data-change="pan:scan" aria-label="Take or choose pantry photos">
       </label>
-      ${when(!canScan, () => html`<p class="muted small">${app.store.device.localOnly ? 'Scanning needs the family server, and this phone is set to “this phone only.” Add items by hand below.' : !app.store.device.key ? 'Scanning needs the family server. Connect with the family passcode, or add items by hand below.' : 'Pantry scanning isn’t available on the family server right now. Add items by hand below.'}</p>`)}
+      ${when(!canScan, () => html`<p class="muted small">${app.store.device.localOnly ? 'Scanning needs the family server, and this device is set to “this device only.” Add items by hand below.' : !app.store.device.key ? 'Scanning needs the family server. Connect with the family passcode, or add items by hand below.' : 'Pantry scanning isn’t available on the family server right now. Add items by hand below.'}</p>`)}
     </section>
     <section class="ideas-cta" aria-label="Dinner ideas from Claude">
       <span class="ideas-cta-ic" aria-hidden="true">${ic('sparkle', { size: 22 })}</span>
@@ -236,7 +236,7 @@ function photoSheet(app, itemId) {
         ${canSave ? html`<label class="btn btn-primary btn-block">${ic('camera', { size: 20 })}${ph ? 'Take a new picture' : 'Take or choose a picture'}
             <input type="file" accept="image/*" class="sr-only" data-change="pan:photo-file" data-id="${itemId}" aria-label="Picture of ${m.name}"></label>
           <p class="muted small">Fill the square with the package so the label shows. Pictures stay in the family’s private storage.</p>`
-          : html`<p class="sheet-text">Pictures are kept on the family server. Connect this phone with the family passcode in Family & settings to add one.</p>`}
+          : html`<p class="sheet-text">Pictures are kept on the family server. Connect this device with the family passcode in Family & settings to add one.</p>`}
         ${when(ph, () => html`<button type="button" class="btn btn-quiet btn-block" data-action="pan:photo-off" data-id="${itemId}">Remove the picture</button>`)}
         <h3 class="sheet-h">Where it’s kept</h3>
         <div class="chip-grid place-pick">${PLACES.map((pl) => html`<button type="button" class="chip ${placeOf(app.db, app.state, itemId) === pl.id ? 'is-on' : ''}" aria-pressed="${placeOf(app.db, app.state, itemId) === pl.id ? 'true' : 'false'}" data-action="pan:place" data-id="${itemId}" data-place="${pl.id}">${pl.label.replace(/^(In|On) the /, '').replace(/^./, (c) => c.toUpperCase())}</button>`)}</div>`;
@@ -273,7 +273,7 @@ function knownList(app) {
 
 function scanErrorText(e) {
   if (e.status === 0) return 'Pantry scan needs an internet connection. You can add items by hand below.';
-  if (e.status === 401) return 'Pantry scan needs the family passcode on this phone. Enter it in Family & settings, or add items by hand.';
+  if (e.status === 401) return 'Pantry scan needs the family passcode on this device. Enter it in Family & settings, or add items by hand.';
   if (e.status === 413) return 'That photo is too large. Try a closer, simpler photo.';
   if (e.status === 429) return 'Too many scans at once. Wait a minute, then try again.';
   if (e.status === 503) return 'Pantry scanning isn’t available on the family server right now. Add items by hand below.';
@@ -284,7 +284,7 @@ function scanErrorText(e) {
 async function runScan(app, files) {
   if (!files.length) return;
   if (app.store.device.localOnly || !app.store.device.key) {
-    openSheet({ title: 'Scanning needs the family server', render: () => html`<p class="sheet-text">${app.store.device.localOnly ? 'This phone is set to “this phone only.”' : 'This phone isn’t connected to the family yet.'} Pantry photos are read by the family’s server, so connect with the family passcode first, or add items by hand.</p>
+    openSheet({ title: 'Scanning needs the family server', render: () => html`<p class="sheet-text">${app.store.device.localOnly ? 'This device is set to “this device only.”' : 'This device isn’t connected to the family yet.'} Pantry photos are read by the family’s server, so connect with the family passcode first, or add items by hand.</p>
       <div class="sheet-actions"><a class="btn btn-primary btn-block" href="#/family">Family & settings</a><button type="button" class="btn btn-quiet btn-block" data-action="pan:manual">Add by hand</button></div>` });
     return;
   }
@@ -572,7 +572,7 @@ export const actions = {
       const now = new Date().toISOString();
       const prev = app.state.pantry?.[id];
       const had = prev && !prev.low && (prev.stocked || prev.qty > 0);
-      const since = { ...(had && prev.since ? { since: prev.since } : had ? {} : { since: now.slice(0, 10) }), ...(prev?.place ? { place: prev.place } : {}) };
+      const since = { ...(had && prev.since ? { since: prev.since } : had ? {} : { since: chicagoDay(now) }), ...(prev?.place ? { place: prev.place } : {}) };
       ops.push(set(['pantry', id], staple ? { qty: null, stocked: true, ...label, ...since, by: app.who(), at: now }
         : { qty: Number.isFinite(qty) && qty >= 0 ? round2(qty) : (app.state.pantry?.[id]?.qty ?? 1), stocked: false, ...label, ...since, by: app.who(), at: now }));
       picked.push({ id, r });

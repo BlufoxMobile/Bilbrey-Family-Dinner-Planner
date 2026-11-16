@@ -10,8 +10,7 @@ import { generatePlan, itemsForNight, dinnerById } from './planner.js';
 import { plannedNights, itemMeta } from './shopping.js';
 import { onHand, ENOUGH } from './coverage.js';
 import { keepsDays, placeOf, sinceOf } from './freshness.js';
-import { lunchFor, lunchItem, personConfig } from './lunch.js';
-import { FAMILY } from './config.js';
+import { lunchFor, lunchItem, personConfig, packingNames } from './lunch.js';
 import { addDays, datesBetween, daysInMonth, diffDays, isISODate, round2, shortDate, weekdayName } from './util.js';
 import { undoFor } from './actions.js';
 
@@ -140,7 +139,7 @@ function setAsideKept(db, state, rem, dates) {
 function lunchPicks(db, state, rem, dates) {
   const out = [];
   for (const date of dates) {
-    for (const name of FAMILY) {
+    for (const name of packingNames(db, state)) {
       const l = lunchFor(db, state, name, date);
       if (!l || l.skip) continue;
       const cfg = personConfig(db, state, name);
@@ -261,7 +260,7 @@ export function pantryStretch(db, state, { start, end }) {
   for (const date of datesBetween(start, end)) {
     const lunchMissing = [];
     let n = 0;
-    for (const name of FAMILY) {
+    for (const name of packingNames(db, state)) {
       const l = lunchFor(db, state, name, date);
       if (!l || l.skip || l.empty) continue;
       n++; lunches++;

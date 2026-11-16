@@ -19,6 +19,7 @@ const P = {
   airfryer: '<path d="M6 20.5h12"/><path d="M7 20.5V9.5a5 5 0 0 1 10 0v11"/><path d="M9.5 13h5v4h-5z"/><path d="M12 6.5v.01"/>',
   stovetop: '<path d="M4 10.5h16"/><path d="M5.5 10.5v6.5a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3v-6.5"/><path d="M2.5 10.5H4"/><path d="M20 10.5h1.5"/><path d="M9.5 7c0-1.2 1.2-1.3 1.2-2.6"/><path d="M13.5 7c0-1.2 1.2-1.3 1.2-2.6"/>',
   grill: '<path d="M4 10h16a8 8 0 0 1-16 0z"/><path d="M8.5 17.5L6.5 21"/><path d="M15.5 17.5l2 3.5"/><path d="M8.5 6.5v1"/><path d="M12 5.5v2"/><path d="M15.5 6.5v1"/>',
+  cooker: '<path d="M4.5 10.5h15v6a3.5 3.5 0 0 1-3.5 3.5H8a3.5 3.5 0 0 1-3.5-3.5z"/><path d="M3 10.5h18"/><path d="M8.5 7.5c0-1.5 3.5-2.5 3.5-2.5s3.5 1 3.5 2.5"/><path d="M12 5V3.5"/><path d="M10.5 15.5h3"/>',
   left: '<path d="M15 5l-7 7 7 7"/>',
   right: '<path d="M9 5l7 7-7 7"/>',
   down: '<path d="M5 9l7 7 7-7"/>',
@@ -91,4 +92,5 @@ export function glyph(category, { size = 56 } = {}) {
 
 export const EQUIPMENT_ICON = {
   stovetop: 'stovetop', blackstone: 'blackstone', 'electric grill': 'grill', 'outdoor grill': 'grill', 'air fryer': 'airfryer', microwave: 'microwave',
+  'possible cooker': 'cooker',
 };

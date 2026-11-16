@@ -9,7 +9,7 @@
 // (lineTotal − discount) ÷ qty, or unitPrice when there's no line total.
 
 import { set, push, applyOps } from './state.js';
-import { round2, isISODate } from './util.js';
+import { round2, isISODate, chicagoDay, SHARED_PROFILE } from './util.js';
 
 export const RECEIPT_STORES = ['sams', 'jewel'];
 export const HISTORY_MAX = 12;
@@ -263,9 +263,9 @@ const validId = (db, state, id) => !!id && (!db || !!db.ingredients?.[id] || !!s
  * `date`, `total` and `error` as extra properties.
  * opts: { by, source: 'scan'|'import', db (to validate matches and convert sizes), at, today }
  */
-export function importReceipt(state, receipt, { by = 'Family', source = null, db = null, at = null, today = null } = {}) {
+export function importReceipt(state, receipt, { by = SHARED_PROFILE, source = null, db = null, at = null, today = null } = {}) {
   const now = at || new Date().toISOString();
-  const r = normalizeReceipt(receipt, { today: today || now.slice(0, 10) });
+  const r = normalizeReceipt(receipt, { today: today || chicagoDay(now) }); // the family's day, not the UTC one
   const src = source || (receipt?.source === 'scan' ? 'scan' : 'import');
   const meta = { id: null, duplicate: false, matched: 0, matchedLines: 0, lines: 0, learned: 0, products: [], counted: false, store: r.store, date: r.date, total: r.total, error: null };
   if (!(r.total > 0) || !r.date) return Object.assign([], meta, { error: 'A receipt needs a date and a total.' });
@@ -300,7 +300,7 @@ export function importReceipt(state, receipt, { by = 'Family', source = null, db
     if (!productStore || !(packSize > 0) || price == null) continue;
     const key = `${store}/${mid}`;
     const prev = state?.myProducts?.[key];
-    const prevDate = prev?.date || (typeof prev?.at === 'string' ? prev.at.slice(0, 10) : '');
+    const prevDate = prev?.date || (typeof prev?.at === 'string' ? chicagoDay(prev.at) : '');
     const unit = db?.ingredients?.[mid]?.unit || state?.custom?.[mid]?.unit || prev?.unit || '';
     if (!prev || r.date >= prevDate) {
       const p = { name: main.product, packSize: round3(packSize), unit, price, at: now, by, source: 'receipt', date: r.date, receipt: id };
@@ -444,14 +444,14 @@ export function receiptPantryAdds(db, state, log) {
 }
 
 /** The ops that put a saved receipt's groceries in the pantry, once (the log remembers). */
-export function receiptPantryOps(db, state, receiptId, { who = 'Family', at = null } = {}) {
+export function receiptPantryOps(db, state, receiptId, { who = SHARED_PROFILE, at = null } = {}) {
   const log = state?.receiptLog?.[receiptId];
   if (!log || log.pantry) return [];
   const now = at || new Date().toISOString();
   const ops = [];
   for (const a of receiptPantryAdds(db, state, log)) {
     const prev = state?.pantry?.[a.id] || {};
-    const since = /^\d{4}-\d{2}-\d{2}$/.test(String(log.date || '')) ? log.date : now.slice(0, 10);
+    const since = /^\d{4}-\d{2}-\d{2}$/.test(String(log.date || '')) ? log.date : chicagoDay(now);
     const keep = { ...(prev.place ? { place: prev.place } : {}) };
     if (a.staple) ops.push(set(['pantry', a.id], { qty: null, stocked: true, since, ...keep, by: who, at: now }));
     else {

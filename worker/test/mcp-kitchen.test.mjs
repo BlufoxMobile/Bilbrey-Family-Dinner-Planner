@@ -202,3 +202,25 @@ test("recipeProblems: \"no oven needed\" is not the oven; the oven is", () => {
   assert.deepEqual(recipeProblems({ ...base, steps: [...base.steps, "No oven needed.", "Use the air fryer instead of the oven."] }), []);
   assert.deepEqual(recipeProblems({ ...base, steps: [...base.steps, "Then bake in the oven."] }), ["it uses the oven", "it uses baking in an oven"]);
 });
+
+test("get_family_profile: lunch packers are whoever the family lists (docs/spec/20), not a fixed five", async () => {
+  let p = (await tool("get_family_profile")).data;
+  assert.deepEqual(p.lunchPackers.map((x) => x.name), ["Jeff", "Knox"]);
+  assert.deepEqual(p.people.filter((x) => x.packsLunch).map((x) => x.name), ["Jeff", "Knox"]);
+  assert.ok(p.lunchPackers.every((x) => x.lunchDays.length > 0 && !x.paused));
+
+  // Someone new is added on the Lunch page, Knox is paused, and an old "off" record lists nobody.
+  const r = await ops([
+    { op: "set", path: ["lunch", "people", "Grandma"], value: { enabled: true, added: today, days: [1, 3], slots: {} } },
+    { op: "set", path: ["lunch", "people", "Knox"], value: { enabled: false, paused: true } },
+    { op: "set", path: ["lunch", "people", "Jordan"], value: { enabled: false } },
+  ]);
+  assert.equal(r.status, 200, r.text);
+  p = (await tool("get_family_profile")).data;
+  assert.deepEqual(p.lunchPackers.map((x) => x.name).sort(), ["Grandma", "Jeff", "Knox"]);
+  assert.deepEqual(p.lunchPackers.find((x) => x.name === "Grandma").lunchDays, ["Monday", "Wednesday"]);
+  assert.equal(p.lunchPackers.find((x) => x.name === "Knox").paused, true);
+  assert.equal(p.people.length, 5, "the five who eat dinner are still the five");
+  assert.equal(p.people.find((x) => x.name === "Knox").packsLunch, false);
+  assert.equal(p.people.find((x) => x.name === "Jordan").packsLunch, false);
+});

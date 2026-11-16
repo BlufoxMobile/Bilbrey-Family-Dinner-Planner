@@ -11,6 +11,31 @@ export function todayISO(now = new Date(), tz = TZ) {
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
+/**
+ * The family's calendar day (YYYY-MM-DD, America/Chicago) that a moment falls on. `when` is a
+ * Date, a timestamp in ms, or an ISO timestamp like the `at` stamps in the family's data; a plain
+ * "YYYY-MM-DD" is already a calendar day and comes back as it is. Anything unreadable → today.
+ *
+ * EVERY calendar day the app saves or compares goes through this (or todayISO). Never use
+ * `new Date().toISOString().slice(0, 10)`: that is the UTC day, which is already tomorrow from
+ * 6 pm Central (7 pm in summer), so an evening shop would be dated the next day.
+ */
+export function chicagoDay(when = new Date(), tz = TZ) {
+  if (typeof when === 'string') {
+    const s = when.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const t = Date.parse(s);
+    return todayISO(Number.isNaN(t) ? new Date() : new Date(t), tz);
+  }
+  const d = when instanceof Date ? when : new Date(when ?? Date.now());
+  return todayISO(Number.isNaN(d.getTime()) ? new Date() : d, tz);
+}
+
+/** The family's calendar month (YYYY-MM, America/Chicago) that a moment falls in. */
+export function chicagoMonth(when = new Date(), tz = TZ) {
+  return chicagoDay(when, tz).slice(0, 7);
+}
+
 /** Hour of day (0–23) in America/Chicago. */
 export function hourIn(now = new Date(), tz = TZ) {
   const h = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', hourCycle: 'h23' }).format(now);
@@ -26,6 +51,7 @@ export function toDate(iso) {
   return new Date(Date.UTC(y, m - 1, d));
 }
 
+/** Only for the UTC-midnight dates toDate() makes (date arithmetic). For "what day is it", use chicagoDay(). */
 export function fromDate(d) {
   return d.toISOString().slice(0, 10);
 }
@@ -226,4 +252,36 @@ export function listJoin(items) {
 export function debounce(fn, ms) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// ---------------------------------------------------------------- one shared profile (docs/spec/20)
+
+/** The family shares one profile: every change made in the app is stamped with this. */
+export const SHARED_PROFILE = 'Family';
+const OLD_PROFILES = ['Jeff', 'Candi', 'Knox', 'Jordan', 'Jackson'];
+
+/**
+ * What to show for a saved `by` stamp. Stamps from the days of one profile per person ("Jeff"),
+ * and the shared "Family" stamp, say nothing useful any more → ''. A stamp that names where a
+ * change came from still means something ("Jeff (Claude chat)" → "Claude chat").
+ */
+export function byLabel(by) {
+  const s = String(by || '').trim();
+  if (!s || s === SHARED_PROFILE || s === 'votes' || OLD_PROFILES.includes(s)) return '';
+  const m = s.match(/\(([^)]+)\)\s*$/);
+  return m ? m[1] : s;
+}
+
+/**
+ * Is this a TV's browser (Fire TV, Android/Google TV, Samsung, LG, Roku and friends)? Used only to
+ * word a hint about typing with a remote; nothing is ever locked to it.
+ */
+export function isTV(ua = globalThis.navigator?.userAgent || '') {
+  return /\bAFT[A-Z0-9]+\b|Fire ?TV|Android ?TV|Google ?TV|GoogleTV|Smart-?TV|SmartTV|Tizen|Web0S|webOS|\bBRAVIA\b|\bRoku\b|\bCrKey\b|AppleTV|HbbTV|NetCast|VIDAA/i.test(String(ua));
+}
+
+/** A person's name as typed, tidied for use as a key in the family's data: "  grandma   jo " → "grandma jo". */
+export function cleanName(name) {
+  const s = String(name || '').normalize('NFKC').replace(/[^\p{L}\p{N} .'’-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 24).trim();
+  return ['__proto__', 'constructor', 'prototype'].includes(s) ? '' : s;
 }

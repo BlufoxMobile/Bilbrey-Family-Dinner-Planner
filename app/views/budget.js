@@ -2,7 +2,7 @@
 // and savings against the old $1,000 month.
 import { html, ic, when, toast } from '../ui.js';
 import { BASELINE_MONTHLY } from '../config.js';
-import { money, monthOnly, mediumDate, shortDate, round2, isISODate } from '../util.js';
+import { money, monthOnly, mediumDate, shortDate, round2, isISODate, byLabel } from '../util.js';
 import { monthBudget } from '../shopping.js';
 import { addReceiptOps, removeReceiptOps, settingOps } from '../actions.js';
 import { segmented } from '../ui.js';
@@ -94,7 +94,7 @@ export function render(app) {
         <button type="submit" class="btn btn-primary btn-block">${ic('receipt', { size: 20 })}Log receipt</button>
       </form>
       ${b.receipts.filter((r) => !r.receiptId || !app.state.receiptLog?.[r.receiptId]).length ? html`<ul class="receipt-list">${b.receipts.filter((r) => !r.receiptId || !app.state.receiptLog?.[r.receiptId]).map((r) => html`<li class="receipt-row">
-          <span><b>${NAMES[r.store] || r.store}</b><small>${shortDate(r.date)}${r.note ? `, ${r.note}` : ''}${r.by ? `, by ${r.by}` : ''}</small></span>
+          <span><b>${NAMES[r.store] || r.store}</b><small>${shortDate(r.date)}${r.note ? `, ${r.note}` : ''}${byLabel(r.by) ? `, by ${byLabel(r.by)}` : ''}</small></span>
           <span class="receipt-amt">${money(Number(r.amount))}</span>
           ${when(r.id, () => html`<button type="button" class="icon-btn" data-action="bud:remove" data-id="${r.id}" aria-label="Remove receipt">${ic('trash', { size: 20 })}</button>`)}
         </li>`)}</ul>`

@@ -1,7 +1,7 @@
 // LIST: the shopping list for the selected period — by store, then aisle — with
 // per-item store, product and price, check-off, the freezer panel, extras, and the store handoff.
 import { html, ic, when, openSheet, closeSheet, toast, copyText, confirmSheet, segmented, renderSheet } from '../ui.js';
-import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate, round2, datesBetween, addDays, weekday, isISODate, weekdayName } from '../util.js';
+import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate, round2, datesBetween, addDays, weekday, isISODate, weekdayName, byLabel } from '../util.js';
 import { listKeyFor, dinnerById } from '../planner.js';
 import { buildList, formatPackQty, formatStoreList, formatAssistantList, formatFullList, unitText, OTHER, productName } from '../shopping.js';
 import {
@@ -517,7 +517,7 @@ function itemSheet(app, key) {
       const both = app.settings.planStore === 'both';
       const fam = i.pack?.source === 'family';
       const ps = priceSource(i.pack);
-      const src = !i.pack ? 'No price yet' : fam ? `Family price${i.pack.by ? ` from ${i.pack.by}` : ''}`
+      const src = !i.pack ? 'No price yet' : fam ? `Family price${byLabel(i.pack.by) ? ` from ${byLabel(i.pack.by)}` : ''}`
         : ps.kind === 'paid' ? (i.pack.date ? `Paid on your ${shortDate(i.pack.date)} receipt` : 'What you paid, from your receipts') : ps.kind === 'typed' ? 'The price you typed in'
           : ps.kind === 'listed' ? `Listed on the ${NAMES[i.store]} site` : 'Estimated';
       return html`

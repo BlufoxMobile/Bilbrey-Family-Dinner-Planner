@@ -2,7 +2,7 @@
 import { html, ic, raw, photo, tf } from '../ui.js';
 import { EQUIPMENT_LABELS } from '../config.js';
 import { EQUIPMENT_ICON } from '../icons.js';
-import { dinnerById, effectiveSides, sideInfo, isFavorite } from '../planner.js';
+import { dinnerById, effectiveSides, sideInfo, isFavorite, dinnerSignal, sideSignal } from '../planner.js';
 import { lunchVote } from '../lunch.js';
 import { listJoin, midSentence, relativeDay, shortWeekday } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
@@ -42,7 +42,6 @@ const COOK_ICONS = {
   steps: '<path d="M9.5 6.5h10"/><path d="M9.5 12h10"/><path d="M9.5 17.5h10"/><path d="M4.5 6.5h.01"/><path d="M4.5 12h.01"/><path d="M4.5 17.5h.01"/>',
   box: '<path d="M4 8.5l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8.5l8 4 8-4"/><path d="M12 12.5v8"/>',
   plate: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/>',
-  cooker: '<path d="M4.5 10.5h15v6a3.5 3.5 0 0 1-3.5 3.5H8a3.5 3.5 0 0 1-3.5-3.5z"/><path d="M3 10.5h18"/><path d="M8.5 7.5c0-1.5 3.5-2.5 3.5-2.5s3.5 1 3.5 2.5"/><path d="M12 5V3.5"/><path d="M10.5 15.5h3"/>',
 };
 /** An icon from the shared set, or one of cook mode's own. */
 export function cic(name, { size = 22 } = {}) {
@@ -69,37 +68,54 @@ export function lighterChip(app, { key, text, why = '', action, data = {}, label
 
 // ---------------------------------------------------------------- thumbs (SPEC §9.2)
 
-/** This phone's person's thumb on a dinner, side or lunch item: 1, -1 or 0. */
-export function myThumb(app, kind, id, person = null) {
-  if (kind === 'lunch') return lunchVote(app.state, id, person);
-  const who = app.who();
-  const v = (kind === 'side' ? app.state.sideVotes : app.state.votes)?.[id]?.[who];
-  return v === 1 || v === -1 ? v : 0;
+/** What each signal is called on screen. */
+export const SIGNAL_LABELS = { loved: 'Loved', fine: 'Fine', no: 'Not for us' };
+
+/** The family's one signal for a dinner or a side: 'loved' | 'fine' | 'no' (docs/spec/20). */
+export function signalFor(app, kind, id) {
+  return kind === 'side' ? sideSignal(app.state, id) : dinnerSignal(app.state, dinnerById(app.db, app.state, id));
 }
 
 /**
- * Thumbs up / thumbs down. Up keeps it in the rotation; one thumbs-down from anyone drops it
- * (Undo is on the message). kind: 'dinner' | 'side' | 'lunch' (lunch thumbs are for `person`).
+ * The pressed thumb: 1, -1 or 0. For a dinner or a side it is the family's signal (loved, not for
+ * us, fine); a lunch item's thumbs belong to the person who packs that lunch.
+ */
+export function myThumb(app, kind, id, person = null) {
+  if (kind === 'lunch') return lunchVote(app.state, id, person);
+  const s = signalFor(app, kind, id);
+  return s === 'loved' ? 1 : s === 'no' ? -1 : 0;
+}
+
+/**
+ * Two thumbs, three answers, one for the whole family: thumbs up = loved (a family favorite),
+ * thumbs down = not for us (off the menu), neither = fine. Tapping the pressed one goes back to
+ * fine, and every change's message has Undo. kind: 'dinner' | 'side' | 'lunch' (a lunch item's
+ * thumbs are for `person`, who packs it).
  */
 export function thumbs(app, { kind, id, label, person = null, compact = false }) {
   const mine = myThumb(app, kind, id, person);
-  const whose = kind === 'lunch' && person ? `${person}’s ` : '';
+  const lunch = kind === 'lunch';
+  const whose = lunch && person ? `${person}’s ` : '';
   const data = `data-id="${String(id).replace(/"/g, '&quot;')}"${person ? ` data-person="${person}"` : ''}`;
-  return html`<span class="thumbs ${compact ? 'thumbs-sm' : ''}" role="group" aria-label="${whose}thumbs for ${label}">
-    <button type="button" class="thumb thumb-up ${mine === 1 ? 'is-on' : ''}" aria-pressed="${tf(mine === 1)}" data-action="vote:${kind}" ${raw(data)} data-value="1" aria-label="Thumbs up: keep ${label}${kind === 'lunch' ? ` in ${whose}lunches` : ' in the rotation'}">${ic('up_vote', { size: compact ? 18 : 20 })}</button>
-    <button type="button" class="thumb thumb-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="vote:${kind}" ${raw(data)} data-value="-1" aria-label="Thumbs down: drop ${label}${kind === 'lunch' ? ` from ${whose}lunches` : ''}">${ic('down_vote', { size: compact ? 18 : 20 })}</button>
+  const state = mine === 1 ? (lunch ? 'liked' : 'loved') : mine === -1 ? (lunch ? 'out' : 'not for us') : (lunch ? 'no thumbs' : 'fine');
+  const up = lunch ? `Thumbs up: keep ${label} in ${whose}lunches` : `Loved: ${label} is a family favorite`;
+  const down = lunch ? `Thumbs down: drop ${label} from ${whose}lunches` : `Not for us: take ${label} off the menu`;
+  return html`<span class="thumbs ${compact ? 'thumbs-sm' : ''}" role="group" data-signal="${state}" aria-label="${lunch ? `${whose}thumbs for ${label}` : `What the family thinks of ${label}: ${state}`}">
+    <button type="button" class="thumb thumb-up ${mine === 1 ? 'is-on' : ''}" aria-pressed="${tf(mine === 1)}" data-action="vote:${kind}" ${raw(data)} data-value="1" aria-label="${up}" title="${lunch ? 'Thumbs up' : 'Loved'}">${ic('up_vote', { size: compact ? 18 : 20 })}</button>
+    <button type="button" class="thumb thumb-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="vote:${kind}" ${raw(data)} data-value="-1" aria-label="${down}" title="${lunch ? 'Thumbs down' : 'Not for us'}">${ic('down_vote', { size: compact ? 18 : 20 })}</button>
   </span>`;
 }
 
-/** The dinner and each recipe side, each with thumbs for this phone's person. */
+/** The dinner and each recipe side, each with the family's thumbs; the row says so once a signal is set. */
 export function rateList(app, d, sides) {
+  const tag = (what, kind, id) => { const s = signalFor(app, kind, id); return s === 'fine' ? what : `${what} · ${SIGNAL_LABELS[s]}`; };
   return html`<ul class="rate-list">
-    <li class="rate-row"><span class="rate-name"><small>Dinner</small><b>${d.title}</b></span>${thumbs(app, { kind: 'dinner', id: d.id, label: d.title })}</li>
-    ${sides.filter((s) => s.parsed.type === 'side' && app.db.sides[s.parsed.id]).map((s) => html`<li class="rate-row"><span class="rate-name"><small>Side</small><b>${s.info?.title}</b></span>${thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side' })}</li>`)}
+    <li class="rate-row"><span class="rate-name"><small>${tag('Dinner', 'dinner', d.id)}</small><b>${d.title}</b></span>${thumbs(app, { kind: 'dinner', id: d.id, label: d.title })}</li>
+    ${sides.filter((s) => s.parsed.type === 'side' && app.db.sides[s.parsed.id]).map((s) => html`<li class="rate-row"><span class="rate-name"><small>${tag('Side', 'side', s.parsed.id)}</small><b>${s.info?.title}</b></span>${thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side' })}</li>`)}
   </ul>`;
 }
 
-/** "In for the corn on the cob, which got a thumbs down" — when a dropped side was swapped on the fly. */
+/** "In for the corn on the cob, which got a thumbs down" — when a side marked "not for us" was swapped on the fly. */
 export function replacedText(app, s) {
   const was = s?.replaced ? app.db.sides[s.droppedId]?.title : '';
   return was ? `In for ${was.charAt(0).toLowerCase() + was.slice(1)}, which got a thumbs down` : '';
@@ -127,9 +143,9 @@ export function sidePhoto(app, s, opts = {}) {
   return photo(app.db, kind, s.parsed?.type === 'side' ? s.parsed.id : '', { sideKind: s.info?.kind || 'vegetable', ...opts });
 }
 
-/** The name and icon for an appliance id, including ones newer than config.js knows (the PossibleCooker). */
+/** The name and icon for an appliance id (a pot for one config.js doesn't know yet). */
 export const equipLabel = (id) => EQUIPMENT_LABELS[id] || equipmentLabel(id);
-export const equipIcon = (id, opts) => (EQUIPMENT_ICON[id] ? ic(EQUIPMENT_ICON[id], opts) : id === 'possible cooker' ? cic('cooker', opts) : ic('stovetop', opts));
+export const equipIcon = (id, opts) => ic(EQUIPMENT_ICON[id] || 'stovetop', opts);
 
 export function equipment(d, { compact = false } = {}) {
   const eq = (d?.equipment || []).filter(Boolean);

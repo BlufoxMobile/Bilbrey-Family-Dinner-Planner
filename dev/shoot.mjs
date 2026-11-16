@@ -18,9 +18,9 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', (e) => errors.push(String(e)));
 await page.goto(`${base}?api=${encodeURIComponent(apiBase)}`);
 await page.waitForSelector('.gate, .page', { timeout: 15000 });
-if (await page.$('.gate-who')) {
+if (await page.$('.gate')) {
+  // One shared profile: the first-open screen goes straight to the family passcode.
   await page.screenshot({ path: `dev/screenshots/${prefix}-0-welcome.png` });
-  await page.click('[data-who="Jeff"]');
   await page.waitForSelector('.gate input[type=password], .page');
   if (await page.$('#pc-new')) {
     await page.screenshot({ path: `dev/screenshots/${prefix}-0-passcode.png` });

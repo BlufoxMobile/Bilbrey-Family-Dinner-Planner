@@ -76,10 +76,9 @@ const cards = (p) => p.$$eval('.r-card', (els) => els.length);
 async function join(context, viewport) {
   const p = await newPage(context, viewport);
   await p.goto(`${base}?api=${encodeURIComponent(apiBase)}`);
-  await p.waitForSelector('.gate-who, .page');
-  if (await p.$('.gate-who')) {
-    await p.click('[data-who="Candi"]');
-    await p.waitForSelector('#pc-enter');
+  // One shared profile (docs/spec/20): a new device needs only the family passcode.
+  await p.waitForSelector('#pc-enter, .page');
+  if (await p.$('#pc-enter')) {
     await p.fill('#pc-enter', 'tacos tuesday');
     await p.click('form[data-submit="fam:enter"] button[type=submit]');
   }
@@ -97,10 +96,9 @@ before(async () => {
   page = await newPage(ctx);
   // A laptop and the TV: no touch screen, same family (the context shares nothing, so it joins with the passcode).
   big = await browser.newContext({ deviceScaleFactor: 1, serviceWorkers: 'block' });
-  // First launch: Jeff, a passcode, a planned week with smashburgers tonight (a dinner with timers and a side).
+  // First launch: the family passcode (nobody picks who they are), a planned week with smashburgers tonight (a dinner with timers and a side).
   await page.goto(`${base}?api=${encodeURIComponent(apiBase)}`);
-  await page.waitForSelector('.gate-who');
-  await page.click('[data-who="Jeff"]');
+  await page.waitForSelector('#pc-new');
   await page.fill('#pc-new', 'Tacos Tuesday');
   await page.fill('#pc-again', 'tacos tuesday');
   await page.click('form[data-submit="fam:create"] button[type=submit]');
@@ -483,7 +481,7 @@ test('a dinner that was cooked but never marked: Tonight asks the next day, then
   assert.match(await page.textContent('.forgot-card'), /Chicken tikka masala was on the plan for Tuesday and isn’t marked cooked/);
   await page.click('.forgot-card [data-action="night:cooked"]');
   const s = await waitFor(async () => { const x = await familyState(page); return x.plan[TOMORROW].status === 'cooked' ? x : null; });
-  assert.equal(s.plan[TOMORROW].cookedBy, 'Jeff');
+  assert.equal(s.plan[TOMORROW].cookedBy, 'Family');
   await waitFor(async () => !(await page.$('.forgot-card')));
   await page.waitForSelector('.lo-card .lo-ask');
   assert.match(await page.textContent('.lo-card'), /Any leftovers from last night\?\s*Chicken tikka masala\./);

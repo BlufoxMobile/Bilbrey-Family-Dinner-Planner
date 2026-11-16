@@ -2,7 +2,7 @@
 // images), check every line, save — the Budget counts it once, prices learned feed the next
 // list, and the exact products land in "My products". Plus the history of saved receipts.
 import { html, ic, when, openSheet, closeSheet, renderSheet, toast, confirmSheet, segmented } from '../ui.js';
-import { money, shortDate, mediumDate, monthName, fmtQty, round2, isISODate } from '../util.js';
+import { money, shortDate, mediumDate, monthName, fmtQty, round2, isISODate, byLabel } from '../util.js';
 import { resizeImage, LIMITS } from '../images.js';
 import {
   normalizeReceipt, importReceipt, packSizeFor, linePaid, suggestMatches, findDuplicate, receiptList, deleteReceiptOps,
@@ -35,7 +35,7 @@ export function openReceiptScan(app) {
     openSheet({
       id: 'rcpt-gate',
       title: 'Scanning needs the family server',
-      render: () => html`<p class="sheet-text">${s.device.localOnly ? 'This phone is set to “this phone only.”' : 'This phone isn’t connected to the family yet.'} Receipts are read by the family’s server, so connect with the family passcode first. You can still log a receipt’s total by hand on the Budget page.</p>
+      render: () => html`<p class="sheet-text">${s.device.localOnly ? 'This device is set to “this device only.”' : 'This device isn’t connected to the family yet.'} Receipts are read by the family’s server, so connect with the family passcode first. You can still log a receipt’s total by hand on the Budget page.</p>
         <div class="sheet-actions"><a class="btn btn-primary btn-block" href="#/family">Family & settings</a><a class="btn btn-quiet btn-block" href="#/budget">Log a total by hand</a></div>`,
     });
     return;
@@ -62,7 +62,7 @@ export function openReceiptScan(app) {
 
 function scanError(e) {
   if (e.status === 0) return 'Reading a receipt needs an internet connection.';
-  if (e.status === 401) return 'This phone needs the family passcode to read receipts. Enter it in Family & settings.';
+  if (e.status === 401) return 'This device needs the family passcode to read receipts. Enter it in Family & settings.';
   if (e.status === 404) return 'Receipt reading isn’t on the family server yet.';
   if (e.status === 413) return 'Those images are too large together. Try fewer, or closer photos.';
   if (e.status === 429) return 'Too many scans at once. Wait a minute, then try again.';
@@ -243,7 +243,7 @@ function lineList(app, r) {
 
 export function receiptDetails(app, r, { open = false } = {}) {
   return html`<details class="rcpt-card" ${open ? 'open' : ''}>
-    <summary><span><b>${STORE_NAMES[r.store] || r.store}</b><small>${shortDate(r.date)} · ${r.lines.length} ${r.lines.length === 1 ? 'line' : 'lines'}${r.source === 'import' ? ' · from purchase history' : r.by ? ` · scanned by ${r.by}` : ''}</small></span><b class="receipt-amt">${money(Number(r.total))}</b></summary>
+    <summary><span><b>${STORE_NAMES[r.store] || r.store}</b><small>${shortDate(r.date)} · ${r.lines.length} ${r.lines.length === 1 ? 'line' : 'lines'}${r.source === 'import' ? ' · from purchase history' : byLabel(r.by) ? ` · scanned by ${byLabel(r.by)}` : ''}</small></span><b class="receipt-amt">${money(Number(r.total))}</b></summary>
     ${lineList(app, r)}
     ${when(r.savings, () => html`<p class="muted small">Savings: ${money(r.savings)}${r.tax != null ? ` · Tax: ${money(r.tax)}` : ''}</p>`)}
     <button type="button" class="btn btn-quiet btn-small" data-action="rcpt:delete" data-id="${r.id}">${ic('trash', { size: 18 })}Delete this receipt</button>

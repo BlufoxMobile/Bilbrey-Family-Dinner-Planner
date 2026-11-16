@@ -53,6 +53,8 @@ export const EQUIPMENT_LABELS = {
   'outdoor grill': 'Outdoor grill',
   'air fryer': 'Air fryer',
   microwave: 'Microwave',
+  // Ninja 10-in-1 Everyday PossibleCooker Pro 6.5 qt (MC1101): slow cook, sear/sauté, braise, steam, rice, keep warm.
+  'possible cooker': 'PossibleCooker',
 };
 
 export const STORE_IDS = ['sams', 'jewel'];

@@ -66,7 +66,10 @@ those two token blocks and keep the layout.
   brings it back): half the plate vegetables or salad, a palm of the meat, a cupped hand of rice, pasta,
   potatoes or bread. General guidance for a grown-up: no calorie targets, no good or bad foods, nothing
   about the kids' plates, and "the recipe still makes five full plates".
-- Votes and Jeff and Candi's tools as before. On a phone a "Start cooking" bar stays at the bottom once
+- **What the family thinks**: two buttons, Loved and Not for us (§20.2: one signal for the whole family, no
+  names). "Not for us" is what retiring a dinner was, so there is no separate "Retire from the rotation"
+  button; a bench dinner has "Add to the rotation" and a dropped one "Bring back into the rotation", on every
+  device (no parent-only tools). On a phone a "Start cooking" bar stays at the bottom once
   the page's own button has scrolled away.
 
 **New recipe fields** (all optional; `app/data.js` must pass them through `normalizeDinner` and

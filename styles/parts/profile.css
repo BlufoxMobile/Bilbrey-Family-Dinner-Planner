@@ -1,0 +1,73 @@
+/* One shared profile (docs/spec/20): the first-open screen, passcode entry that works with a TV
+   remote, the simplified Family & settings page, lunch packers, and the text-size option.
+   Only the existing tokens are used, so the design system restyles these automatically. */
+
+/* ---------------------------------------------------------------- display option: text size */
+/* "Large" for a TV across the room: every type size is in rem, so one step on the root scales it all. */
+:root[data-text="large"] { font-size: 118.75%; }
+@media (min-width: 1200px) { :root[data-text="large"] { font-size: 131.25%; } }
+
+/* On a phone the top bar has no room to grow: the sync pill keeps its dot (and its spoken label)
+   and drops the word, as it already does on the narrowest phones. */
+@media (max-width: 520px) {
+  :root[data-text="large"] .topbar .sync-label { display: none; }
+  :root[data-text="large"] .topbar .sync { padding: 0 13px; }
+}
+
+/* ---------------------------------------------------------------- top bar: settings (was the person's avatar) */
+.settings-btn { border-radius: 50%; }
+
+/* ---------------------------------------------------------------- first open */
+.gate-kicker { color: var(--ink-3); font-size: var(--t-sm); font-weight: 700; letter-spacing: .01em; margin-bottom: calc(-1 * var(--s2)); }
+.gate-points { display: grid; gap: 10px; padding: var(--s3) 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.gate-points li { display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; color: var(--ink-2); font-size: var(--t-sm); line-height: 1.4; }
+.gate-points .ic { color: var(--sage); margin-top: 1px; }
+.gate-status { display: flex; align-items: center; gap: 12px; min-height: 48px; color: var(--ink-2); font-weight: 600; }
+.gate-spin { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 3px solid var(--line-2); border-top-color: var(--pine); animation: gate-spin .9s linear infinite; }
+@keyframes gate-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .gate-spin { animation: none; border-top-color: var(--line-2); border-right-color: var(--pine); } }
+.gate-about, .gate-main { display: grid; gap: var(--s4); align-content: start; min-width: 0; }
+.gate-remote { padding: 10px 12px; border-radius: 11px; background: var(--sage-tint); color: var(--ink); }
+/* A wide, short screen (a TV at 960×540 or 1280×720, a small laptop): what it is on the left, the
+   passcode on the right, so the box and its button are on screen without scrolling. */
+@media (min-width: 860px) and (max-height: 820px) {
+  .gate { padding-top: calc(var(--safe-t) + 16px); padding-bottom: calc(var(--safe-b) + 16px); }
+  .gate-card { width: min(980px, 100%); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s8); align-items: center; }
+  .gate-card .gate-title { font-size: var(--t-2xl); }
+  .gate-main { gap: var(--s3); }
+}
+/* Driven by a remote or a keyboard: a focus ring that reads from the couch. */
+.app.is-gate :focus-visible { outline-width: 4px; outline-offset: 3px; }
+
+/* ---------------------------------------------------------------- passcode forms */
+.input-pass { min-height: 54px; font-size: var(--t-lg); letter-spacing: .02em; }
+.input-pass[type="password"]:not(:placeholder-shown) { letter-spacing: .18em; }
+.input-pass[aria-invalid="true"] { border-color: var(--red); box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 18%, transparent); }
+.pass-show { justify-self: start; gap: 8px; }
+.pass-form .btn[aria-disabled="true"] { opacity: .6; cursor: progress; }
+.pass-form .form-error { padding: 10px 12px; border-radius: 11px; background: var(--red-tint); color: var(--ink); border: 1px solid color-mix(in srgb, var(--red) 45%, transparent); }
+
+/* ---------------------------------------------------------------- Family & settings */
+.set-lead { color: var(--ink-2); margin-bottom: var(--s2); }
+.set-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.packer-list { display: grid; width: 100%; border-top: 1px solid var(--line); }
+.packer { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; min-height: 60px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.packer-name { display: grid; min-width: 0; }
+.packer-name b { font-weight: 600; }
+.packer-name small { color: var(--ink-3); }
+.page-family .set-sec > .sheet-text { margin-bottom: 0; }
+@media (min-width: 960px) {
+  .page-family { max-width: 760px; }
+}
+
+/* ---------------------------------------------------------------- lunch: who packs */
+.person small { font-weight: 400; color: var(--ink-3); }
+.person.is-paused { border-style: dashed; }
+.person.is-paused .avatar { opacity: .55; }
+.lunch-paused { padding: var(--s5); border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1); }
+.lp-paused-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--s2); }
+.ed-remove { display: grid; gap: 8px; margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
+.add-person .field-label small { display: block; }
+/* The Add button stays in reach while the lunch list scrolls under it (the sheet body's own bottom
+   padding is 24px, so the bar reaches down over it). */
+.add-person-actions { position: sticky; bottom: -24px; z-index: 1; margin: 0 -20px -24px; padding: var(--s3) 20px 24px; background: var(--card); border-top: 1px solid var(--line); }
