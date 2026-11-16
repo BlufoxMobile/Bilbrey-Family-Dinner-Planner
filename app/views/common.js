@@ -296,8 +296,9 @@ export function leftoverRows(app) {
 }
 
 /**
- * A lighter plate, in hands and halves. General guidance for whoever wants it: no numbers to hit,
- * no food is off the table, and nothing here is about the kids' plates.
+ * One dinner, two plates (docs/spec/25 §25.5): the same pot feeds the grown-up who wants a lighter
+ * plate and the one who needs a fuller one. In hands and halves: no numbers to hit, no food is off
+ * the table, and nothing here is about the kids' plates.
  */
 export function plateGuide({ dismissKey = '' } = {}) {
   return html`<section class="plate-guide" aria-labelledby="pg-h">
@@ -309,13 +310,20 @@ export function plateGuide({ dismissKey = '' } = {}) {
       <path d="M60 10V110M60 60H110" class="pg-lines"/>
     </svg>
     <div class="pg-text">
-      <h2 id="pg-h" class="section-title">A lighter plate, if you want one</h2>
+      <h2 id="pg-h" class="section-title">One dinner, two plates</h2>
+      <h3 class="pg-sub">A lighter plate, if you want one</h3>
       <ul class="pg-list">
         <li><span class="pg-key pg-key-veg" aria-hidden="true"></span><span><b>Half the plate</b> vegetables or salad</span></li>
         <li><span class="pg-key pg-key-pro" aria-hidden="true"></span><span><b>A palm</b> of the meat</span></li>
         <li><span class="pg-key pg-key-starch" aria-hidden="true"></span><span><b>A cupped hand</b> of rice, pasta, potatoes or bread</span></li>
       </ul>
-      <p class="muted small">A rough guide for a grown-up who wants to eat a little lighter. Nothing to count, and seconds on the vegetables are always fine. The recipe still makes five full plates.</p>
+      <h3 class="pg-sub">A fuller plate, if you need one</h3>
+      <ul class="pg-list pg-fuller">
+        <li><span class="pg-key pg-key-starch" aria-hidden="true"></span><span><b>Start with what sounds best</b>, and take a full scoop of the rice, pasta, potatoes or bread</span></li>
+        <li><span class="pg-key pg-key-pro" aria-hidden="true"></span><span><b>Add something rich</b>: butter or cheese on the vegetables, extra sauce, a glass of milk</span></li>
+        <li><span class="pg-key pg-key-veg" aria-hidden="true"></span><span><b>A small plate still counts</b>: eat what you can now and have the rest as a snack later</span></li>
+      </ul>
+      <p class="muted small">Rough guides for the grown-ups, from the same pot. Nothing to count, seconds are always fine, and the recipe still makes five full plates.</p>
       ${dismissKey ? html`<button type="button" class="btn btn-small btn-quiet" data-action="lighter:dismiss" data-key="${dismissKey}">Got it</button>` : ''}
     </div>
   </section>`;

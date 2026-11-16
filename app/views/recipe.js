@@ -263,7 +263,7 @@ export function render(app) {
     </div>
 
     ${nutritionSection(app, d, entry, sides, facts)}
-    ${when(showNutrition(app) && isDismissed(app, PLATE_GUIDE_KEY), () => html`<p class="pg-again"><button type="button" class="link-btn" data-action="rec:plate-guide">A lighter plate: the half-plate guide</button></p>`)}
+    ${when(showNutrition(app) && isDismissed(app, PLATE_GUIDE_KEY), () => html`<p class="pg-again"><button type="button" class="link-btn" data-action="rec:plate-guide">One dinner, two plates: a lighter one and a fuller one</button></p>`)}
     ${votes(app, d)}
     ${when(retired || bench, () => html`<section class="parent-tools">
       <h2 class="section-title">The rotation</h2>
@@ -315,7 +315,7 @@ export const actions = {
   'rec:place': (app, el) => place(app, { dinnerId: el.dataset.dinner, date: el.dataset.to }),
   'rec:restore': (app, el) => app.commit(restoreOps(app.db, app.state, { dinnerId: el.dataset.dinner })),
   'rec:promote': (app, el) => app.commit(promoteOps(app.db, app.state, { dinnerId: el.dataset.dinner })),
-  'rec:plate-guide': () => openSheet({ id: 'plate-guide', title: 'A lighter plate', render: () => plateGuide() }),
+  'rec:plate-guide': () => openSheet({ id: 'plate-guide', title: 'One dinner, two plates', render: () => plateGuide() }),
 };
 
 export { isFavorite };

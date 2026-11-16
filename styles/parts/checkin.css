@@ -1,0 +1,82 @@
+/* The weekly check-in, Easy tonight and the two-plate guide (docs/spec/25). Only the app's own
+   tokens, so the design system and the TV layout restyle all of it. */
+
+/* ---------------------------------------------------------------- the page */
+.ck-week { margin-top: 4px; }
+.ck-grid { display: grid; gap: var(--s5); align-items: start; }
+.ck-col { display: grid; gap: var(--s5); min-width: 0; }
+.ck-card { display: grid; gap: 12px; padding: 20px; border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1); min-width: 0; }
+.ck-card .section-title { margin: 0; }
+.ck-card .section-title .ic { color: var(--sage); }
+.ck-card .section-head { align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.ck-sub { font-size: var(--t-sm); font-weight: 700; color: var(--ink-2); margin: 4px 0 -6px; }
+.ck-card .trips-big small { color: var(--ink-3); font-size: var(--t-xs); }
+.ck-card .budget-verdict.is-tight { color: var(--ink); }
+.ck-tips { display: grid; gap: 8px; }
+.ck-tips .hint { margin: 0; }
+.ck-tips .text-link { white-space: nowrap; }
+.ck-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 4px; }
+.ck-actions .status-note { margin: 0; }
+.ck-day .chip { min-width: 48px; min-height: 40px; justify-content: center; }
+
+/* ---------------------------------------------------------------- charts: one series each, marks thin, text in text tokens */
+.ck-chart { margin: 0; display: grid; gap: 6px; }
+.ck-chart svg { display: block; width: 100%; height: auto; max-height: 220px; overflow: visible; }
+.ck-base { stroke: var(--line-2); stroke-width: 1; }
+.ck-hit { fill: transparent; stroke: none; }
+.ck-fill { fill: color-mix(in srgb, var(--sage) 55%, var(--card)); transition: fill var(--dur-fast) var(--ease); }
+.ck-bar.is-now .ck-fill { fill: var(--pine); }
+.ck-none { fill: var(--line-2); }
+@media (hover: hover) { .ck-bar:hover .ck-fill { fill: var(--sage); } .ck-bar.is-now:hover .ck-fill { fill: var(--pine-2, var(--pine)); } .ck-pt:hover .ck-dot { r: 6px; } }
+.ck-target { stroke: var(--ink-2); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.ck-target-label, .ck-tick { fill: var(--ink-3); font-size: 10px; font-weight: 600; }
+.ck-target-label { fill: var(--ink-2); paint-order: stroke; stroke: var(--card); stroke-width: 3px; }
+.ck-val { fill: var(--ink); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--card); stroke-width: 3px; }
+.ck-line { fill: none; stroke: var(--pine); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ck-dot { fill: var(--pine); stroke: var(--card); stroke-width: 2; transition: r var(--dur-fast) var(--ease); }
+.ck-chart-weigh svg { max-height: 170px; }
+.ck-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+.ck-table th, .ck-table td { padding: 8px 0; border-bottom: 1px solid var(--line); text-align: right; font-weight: 400; color: var(--ink-2); }
+.ck-table th:first-child { text-align: left; }
+.ck-table thead th { font-size: var(--t-xs); font-weight: 700; color: var(--ink-3); }
+.ck-table td:last-child { color: var(--ink); font-weight: 600; }
+
+/* ---------------------------------------------------------------- the weigh-in */
+.ck-where { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--r-pill); background: var(--sage-tint); color: var(--ink-2); font-size: var(--t-xs); font-weight: 600; }
+.ck-headline { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--display-tracking); font-size: var(--t-2xl); line-height: 1.05; }
+.ck-note { color: var(--ink-2); margin-top: -6px; }
+.ck-doctor { margin: 0; }
+.ck-entry { align-items: flex-end; }
+.ck-entry .ck-lb { flex: 1; min-width: 0; }
+.ck-lb .input { font-variant-numeric: tabular-nums; }
+.ck-setup { display: grid; gap: 14px; }
+.ck-setup fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; min-width: 0; }
+.ck-other { margin-top: 2px; }
+.ck-settings[open] { display: grid; gap: 12px; }
+.ck-settings .btn { justify-self: start; }
+.ck-shared .ck-headline { font-size: var(--t-xl); }
+
+/* ---------------------------------------------------------------- Tonight: the reminder, and the easy-night link */
+.checkin-card { display: grid; gap: 8px; }
+.ck-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.easy-ask { margin-top: 14px; text-align: center; }
+.easy-ask .link-btn { min-height: var(--hit); font-size: var(--t-sm); }
+
+/* ---------------------------------------------------------------- the Easy tonight sheet */
+.easy-list .pick-main { gap: 1px; }
+.pick-row .pick-main small.easy-ready { color: var(--sage); font-weight: 600; }
+.pick-row .pick-main small.easy-short { color: var(--ink-2); }
+.easy-sub { margin: var(--s4) 0 6px; font-size: var(--t-sm); font-weight: 700; color: var(--ink-2); }
+.easy-none { display: grid; }
+.easy-none li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-height: 52px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
+.easy-none .ic { color: var(--sage); }
+
+/* ---------------------------------------------------------------- one dinner, two plates */
+.pg-sub { font-size: var(--t-sm); font-weight: 700; color: var(--ink-2); margin-top: 4px; }
+.pg-fuller li { align-items: start; }
+.pg-fuller .pg-key { margin-top: 4px; }
+
+@media (min-width: 900px) {
+  .ck-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--s6, 28px); }
+  .ck-card { padding: 24px; }
+}

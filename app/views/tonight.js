@@ -17,6 +17,7 @@ import { whyThisDinner, weekSummary, leftoversOnHand, servingsText, useByText, p
 import { openPick, openAway, openNight } from './sheets.js';
 import { defaultAnchor, catchUpCard } from './plan.js';
 import { cookProgress } from './cook.js';
+import { checkinCard } from './checkin.js';
 
 export const title = () => 'Tonight';
 
@@ -68,6 +69,7 @@ function hero(app, today) {
         <div class="hero-actions">
           <button type="button" class="btn btn-primary btn-lg" data-action="tonight:plan-week">${ic('sparkle', { size: 20 })}Plan this week</button>
           <button type="button" class="btn btn-secondary" data-action="night:pick" data-date="${today}">Pick tonight’s dinner</button>
+          <button type="button" class="btn btn-quiet" id="easy-open" data-action="easy:open" data-date="${today}">The easiest dinner in the house</button>
         </div>
       </div>
     </article>`;
@@ -116,6 +118,7 @@ function hero(app, today) {
           ? html`<button type="button" class="quick-btn" data-action="night:uncook" data-date="${today}">${ic('undo')}<span>Not cooked</span></button>`
           : html`<button type="button" class="quick-btn" data-action="tonight:cooked" data-date="${today}">${ic('checkCircle')}<span>Mark cooked</span></button>`}
       </div>
+      ${when(!cooked, () => html`<p class="easy-ask"><button type="button" class="link-btn" id="easy-open" data-action="easy:open" data-date="${today}">Low on energy tonight? See the easiest dinners in the house</button></p>`)}
     </div>
   </article>`;
 }
@@ -313,6 +316,7 @@ export function render(app) {
     <div class="tonight-grid">
       <div class="tonight-main">${hero(app, today)}${leftoversAskCard(app)}${when(howWasDate(app) === today, () => howWas(app, today))}</div>
       <div class="tonight-side">
+        ${checkinCard(app)}
         ${prepCard(app, { days: 2, title: 'Thaw and prep now', empty: true, emptyText: 'Nothing to thaw or pack for tonight or tomorrow.' })}
         ${useFirst(app, today)}
         ${lunches(app, today)}

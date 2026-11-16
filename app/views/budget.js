@@ -116,7 +116,7 @@ export function render(app) {
   const over = b.projected > b.target;
   const month = monthOnly(today);
   return html`<div class="page page-budget">
-    <header class="page-head"><h1 class="page-title">Budget</h1></header>
+    <header class="page-head"><h1 class="page-title">Budget</h1><a class="text-link" href="#/checkin">Weekly check-in</a></header>
     <section class="budget-card" aria-labelledby="bud-h">
       <h2 id="bud-h" class="budget-month">${month} groceries</h2>
       <p class="budget-big"><span class="budget-num">${money(b.projected)}</span><span class="budget-of">projected of ${money(b.target)}</span></p>

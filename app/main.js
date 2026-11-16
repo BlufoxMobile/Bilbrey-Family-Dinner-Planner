@@ -24,12 +24,14 @@ import { importStorePhotos, fetchStorePhoto } from './photos.js';
 import * as onboarding from './views/onboarding.js';
 import * as sheets from './views/sheets.js';
 import * as ideasView from './views/ideas.js';
+import * as checkinView from './views/checkin.js';
+import * as easyView from './views/easy.js';
 import * as motion from './motion.js';
 import * as tv from './tv.js';
 
 const VIEWS = {
   tonight, plan: planView, list: listView, pantry: pantryView, recipes: recipesView, recipe: recipeView,
-  budget: budgetView, family: familyView, cook: cookView, lunch: lunchView, receipts: receiptsView, products: productsView,
+  budget: budgetView, family: familyView, cook: cookView, lunch: lunchView, receipts: receiptsView, products: productsView, checkin: checkinView,
 };
 // Phone: five tabs. Recipes live under Plan there; the desktop sidebar lists everything.
 const TABS = [
@@ -42,16 +44,17 @@ const TABS = [
 const MORE = [
   { id: 'recipes', label: 'Recipes', icon: 'recipes' },
   { id: 'budget', label: 'Budget', icon: 'budget' },
+  { id: 'checkin', label: 'Weekly check-in', short: 'Check-in', icon: 'chart' },
   { id: 'family', label: 'Family & settings', short: 'Family', icon: 'family' },
 ];
 
 const ACTIONS = {};
-for (const m of [...Object.values(VIEWS), onboarding, sheets, ideasView]) Object.assign(ACTIONS, m.actions || {});
+for (const m of [...Object.values(VIEWS), onboarding, sheets, ideasView, easyView]) Object.assign(ACTIONS, m.actions || {});
 
 export const app = {
   db: null,
   store: null,
-  ui: { anchor: null, swapPick: null, swapMode: false, recipeQuery: '', recipeFilters: {}, recipeTab: 'rotation', pantryQuery: '', listFilter: 'all', lunchWho: null, lunchAnchor: null, productsStore: 'sams', productsQuery: '' },
+  ui: { anchor: null, swapPick: null, swapMode: false, recipeQuery: '', recipeFilters: {}, recipeTab: 'rotation', weighSetup: false, pantryQuery: '', listFilter: 'all', lunchWho: null, lunchAnchor: null, productsStore: 'sams', productsQuery: '' },
   route: { view: 'tonight', params: [] },
   // What every screen reads: the saved state, with replaced dinner ids followed (docs/spec/24 §24.8).
   get state() { return followRenames(this.db, this.store.state); },

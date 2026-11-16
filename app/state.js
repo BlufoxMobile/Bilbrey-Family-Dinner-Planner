@@ -145,7 +145,27 @@ export function normalizeDevice(dev = {}) {
     // Per-device preferences (SPEC §8.4: they live on the device, not in the family's state).
     hideNutrition: !!d.hideNutrition,
     dismissed: Array.isArray(d.dismissed) ? d.dismissed.filter((x) => typeof x === 'string').slice(-60) : [],
+    // This person's weekly weigh-in (docs/spec/25): theirs alone unless they choose the family's storage.
+    weigh: normalizeWeigh(d.weigh),
   };
+}
+
+/**
+ * A device's weigh-in setup, or null when nobody has set one up here.
+ * keep: 'device' (the numbers live in `weights`, on this phone only) or 'family' (they live in the
+ * family's private storage and `weights` stays empty).
+ */
+export function normalizeWeigh(w) {
+  if (!w || typeof w !== 'object') return null;
+  const name = cleanName(typeof w.name === 'string' ? w.name : '');
+  if (!name) return null;
+  const weights = {};
+  for (const [date, lb] of Object.entries(w.weights && typeof w.weights === 'object' ? w.weights : {})) {
+    const n = Number(lb);
+    if (ISO.test(date) && Number.isFinite(n) && n >= 50 && n <= 700) weights[date] = Math.round(n * 10) / 10;
+  }
+  const keep = w.keep === 'family' ? 'family' : 'device';
+  return { name, goal: ['lose', 'gain', 'steady'].includes(w.goal) ? w.goal : 'steady', keep, weights: keep === 'family' ? {} : weights };
 }
 
 /**

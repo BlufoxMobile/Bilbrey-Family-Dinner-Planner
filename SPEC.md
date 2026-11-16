@@ -912,3 +912,4 @@ brief they were built to. Where they differ from the sections above, they win.
 - `docs/spec/22-recipes-and-cook-mode.md` — recipe page, cook mode, leftovers, nutrition on screens
 - `docs/spec/23-product-photos-and-claude-costs.md` — store product photos, prompt caching, backups and server hardening
 - `docs/spec/24-chicken-bulk-and-meal-cost.md` — chicken over turkey, Sam's bulk cuts, estimated cost per meal (`app/cost.js`)
+- `docs/spec/25-weekly-check-in.md` — v3.1.0: the weekly money check-in, a private optional weigh-in (never on the TV), Easy tonight, one dinner on two plates
