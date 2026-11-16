@@ -423,13 +423,19 @@ test('validator: nutrition has to be there, and has to add up', () => {
 // ---------------------------------------------------------------- pictures
 
 test('a dish without a picture shows the placeholder, never a broken image', () => {
-  const waiting = db.dinnerList.filter((d) => !db.photos.dinners[d.id]);
-  assert.ok(waiting.length >= 14, 'the new dinners have no picture yet');
+  // Every dish has its picture now, so take some away in a copy: the PossibleCooker dinners, as on the day they were added.
+  const bare = { ...db, photos: { ...db.photos, dinners: { ...db.photos.dinners } } };
+  const waiting = cookerDinners();
+  assert.ok(waiting.length >= 14);
+  for (const d of waiting) delete bare.photos.dinners[d.id];
   for (const d of waiting) {
-    const htmlText = String(photo(db, 'dinner', d.id, { category: d.category, alt: d.title }));
+    const htmlText = String(photo(bare, 'dinner', d.id, { category: d.category, alt: d.title }));
     assert.ok(htmlText.includes('photo-ph'), `${d.id} has the placeholder`);
     assert.ok(!htmlText.includes('<img'), `${d.id} has no <img> to break`);
+    assert.ok(String(photo(db, 'dinner', d.id, { category: d.category, alt: d.title })).includes('<img'), `${d.id} shows its real picture`);
   }
+  // Whatever is still waiting in the real data (nothing, today) gets the same treatment.
+  for (const d of db.dinnerList.filter((x) => !db.photos.dinners[x.id])) assert.ok(!String(photo(db, 'dinner', d.id, {})).includes('<img'), d.id);
   assert.ok(String(photo(db, 'dinner', 'smashburgers', {})).includes('<img'));
   for (const kind of ['dinners', 'sides', 'lunches']) for (const [id, p] of Object.entries(db.photos[kind])) assert.ok(existsSync(path.join(ROOT, p.src)), `${kind}.${id} → ${p.src}`);
 });
@@ -458,13 +464,18 @@ test('dev/photo-jobs.json queues every dish that needs a picture', () => {
 });
 
 test('validator: pictures on disk, and a job for whatever is missing', () => {
-  const ghost = check((d) => { d.photos.dinners['cooker-beef-stew'] = 'img/dinners/cooker-beef-stew.webp'; });
-  assert.ok(says(ghost, /dinners\.cooker-beef-stew points at img\/dinners\/cooker-beef-stew\.webp, which is not on disk/));
+  // A picture listed in photos.json whose file isn't there.
+  const ghost = check((d) => { d.photos.dinners['cooker-beef-stew'] = 'img/dinners/never-made.webp'; });
+  assert.ok(says(ghost, /dinners\.cooker-beef-stew points at img\/dinners\/never-made\.webp, which is not on disk/));
   const stale = check((d) => { d.photos.dinners['orange-tofu-bowls'] = 'img/dinners/orange-tofu-bowls.webp'; });
   assert.ok(says(stale, /orange-tofu-bowls is a picture of a dinner that isn't in the recipe box/));
-  const forgotten = check((d) => { d.photoJobs = d.photoJobs.filter((j) => j.id !== 'cooker-beef-stew'); });
+  // A dish with no picture: an error with no job, only a warning while one is queued.
+  const forgotten = check((d) => { delete d.photos.dinners['cooker-beef-stew']; d.photoJobs = d.photoJobs.filter((j) => j.id !== 'cooker-beef-stew'); });
   assert.ok(says(forgotten, /dinner cooker-beef-stew: no picture yet and no job/));
-  assert.ok(check().warnings.some((w) => /dinner cooker-beef-stew: no picture yet \(queued/.test(w)), 'queued is a warning, not an error');
+  const queued = check((d) => { delete d.photos.dinners['cooker-beef-stew']; });
+  assert.deepEqual(queued.errors, []);
+  assert.ok(queued.warnings.some((w) => /dinner cooker-beef-stew: no picture yet \(queued/.test(w)), 'queued is a warning, not an error');
+  assert.ok(!check().warnings.some((w) => /no picture yet/.test(w)), 'every dish has its picture today');
   assert.ok(says(check((d) => { d.photoJobs[0].file = 'img/elsewhere.png'; }), /file must be img\//));
   assert.ok(says(check((d) => { d.photoJobs[0].prompt = `${'A plate of noodles with cucumber slices and scallions. '.repeat(2)}No text.`; }), /prompt: no cucumber/));
   assert.ok(says(check((d) => { d.photoJobs.push({ kind: 'dinner', id: 'not-a-dinner', file: 'img/dinners/not-a-dinner.webp', prompt: 'x'.repeat(80) }); }), /there is no dinner with that id/));

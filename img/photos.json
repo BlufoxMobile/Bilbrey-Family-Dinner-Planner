@@ -80,7 +80,21 @@
     "apple-glazed-pork-chops": "img/dinners/apple-glazed-pork-chops.webp",
     "cajun-steak-bites": "img/dinners/cajun-steak-bites.webp",
     "chorizo-nopalitos-tacos": "img/dinners/chorizo-nopalitos-tacos.webp",
-    "pantry-beef-chili": "img/dinners/pantry-beef-chili.webp"
+    "pantry-beef-chili": "img/dinners/pantry-beef-chili.webp",
+    "cooker-chicken-tortilla-soup": "img/dinners/cooker-chicken-tortilla-soup.webp",
+    "cooker-white-chicken-chili": "img/dinners/cooker-white-chicken-chili.webp",
+    "cooker-beef-stew": "img/dinners/cooker-beef-stew.webp",
+    "cooker-bbq-pulled-chicken": "img/dinners/cooker-bbq-pulled-chicken.webp",
+    "cooker-salsa-chicken-tacos": "img/dinners/cooker-salsa-chicken-tacos.webp",
+    "cooker-braised-pork-apples": "img/dinners/cooker-braised-pork-apples.webp",
+    "cooker-chicken-noodle-soup": "img/dinners/cooker-chicken-noodle-soup.webp",
+    "cooker-turkey-meatballs": "img/dinners/cooker-turkey-meatballs.webp",
+    "cooker-sausage-minestrone": "img/dinners/cooker-sausage-minestrone.webp",
+    "cooker-sesame-ginger-chicken": "img/dinners/cooker-sesame-ginger-chicken.webp",
+    "cooker-beef-broccoli": "img/dinners/cooker-beef-broccoli.webp",
+    "cooker-lasagna-soup": "img/dinners/cooker-lasagna-soup.webp",
+    "cooker-chicken-cacciatore": "img/dinners/cooker-chicken-cacciatore.webp",
+    "cooker-italian-beef": "img/dinners/cooker-italian-beef.webp"
   },
   "sides": {
     "jewel-fries": "img/sides/jewel-fries.webp",
@@ -122,10 +136,16 @@
     "old-bay-fries": "img/sides/old-bay-fries.webp",
     "cajun-fries": "img/sides/cajun-fries.webp",
     "crispy-onion-green-beans": "img/sides/crispy-onion-green-beans.webp",
-    "charro-beans": "img/sides/charro-beans.webp"
+    "charro-beans": "img/sides/charro-beans.webp",
+    "steamed-carrots": "img/sides/steamed-carrots.webp",
+    "cooker-green-beans": "img/sides/cooker-green-beans.webp",
+    "cooker-jasmine-rice": "img/sides/cooker-jasmine-rice.webp",
+    "steamed-mixed-vegetables": "img/sides/steamed-mixed-vegetables.webp",
+    "spinach-apple-salad": "img/sides/spinach-apple-salad.webp",
+    "cooker-mashed-potatoes": "img/sides/cooker-mashed-potatoes.webp"
   },
   "generated": "2026-11-15",
-  "model": "Higgsfield gpt_image_2_6 (GPT Image 2.6), quality medium, 1k; dinners 3:2 -> 1200x800 + 640x427 webp, sides 1:1 -> 640x640 webp",
+  "model": "Higgsfield gpt_image_2_6 (GPT Image 2.6). First set: quality medium, 1k. v3 set of 66 pictures (2026-11-15, see dev/photo-jobs.json): quality high, 2k. Dinners 3:2 -> 1200x800 + 640x427 webp, sides and lunch 1:1 -> 640x640 webp",
   "lunch": {
     "bh-black-forest-ham-sandwich": "img/lunch/bh-black-forest-ham-sandwich.webp",
     "bh-genoa-provolone-snack": "img/lunch/bh-genoa-provolone-snack.webp",
@@ -160,6 +180,13 @@
     "bodyarmor-lyte": "img/lunch/bodyarmor-lyte.webp",
     "water-bottle": "img/lunch/water-bottle.webp",
     "sparkling-water": "img/lunch/sparkling-water.webp",
-    "milk-box": "img/lunch/milk-box.webp"
+    "milk-box": "img/lunch/milk-box.webp",
+    "bonduelle-chef-turkey-ham": "img/lunch/bonduelle-chef-turkey-ham.webp",
+    "bonduelle-bbq-chicken": "img/lunch/bonduelle-bbq-chicken.webp",
+    "ritz-crackers-portion": "img/lunch/ritz-crackers-portion.webp",
+    "bh-buffalo-chicken-sandwich": "img/lunch/bh-buffalo-chicken-sandwich.webp",
+    "bonduelle-chicken-queso-fresco": "img/lunch/bonduelle-chicken-queso-fresco.webp",
+    "bonduelle-santa-fe": "img/lunch/bonduelle-santa-fe.webp",
+    "bh-salsalito-turkey-sandwich": "img/lunch/bh-salsalito-turkey-sandwich.webp"
   }
 }
