@@ -93,7 +93,7 @@ async function readReceipt(app) {
   try {
     const body = { images, known: knownList(app) };
     if (st.store) body.store = st.store;
-    const r = await app.store.api('POST', '/api/receipt', body, { timeoutMs: 120000 });
+    const r = await app.store.api('POST', '/api/receipt', body, { timeoutMs: 180000 });
     for (const f of st.files) URL.revokeObjectURL(f.preview);
     review(app, r, st.store);
   } catch (e) {

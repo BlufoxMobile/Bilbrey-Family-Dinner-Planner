@@ -35,19 +35,19 @@ export function pantryForIdeas(db, state) {
     out.push(row);
   }
   // Use-it-first items lead, so they're the ones Claude reads first.
-  return out.sort((a, b) => (a.useBy ? 0 : 1) - (b.useBy ? 0 : 1) || String(a.useBy || '').localeCompare(String(b.useBy || '')) || a.name.localeCompare(b.name));
+  return out.sort((a, b) => (a.useBy ? 0 : 1) - (b.useBy ? 0 : 1) || String(a.useBy || '').localeCompare(String(b.useBy || '')) || a.name.localeCompare(b.name)).slice(0, 150); // the server takes 150 at most
 }
 
 /** The sides in the recipe box Claude may pair with (none that got a thumbs down). */
 export function sidesForIdeas(db, state) {
-  return db.sideList.filter((s) => !isSideDropped(state, s.id)).map((s) => ({ id: s.id, title: s.title, kind: s.kind }));
+  return db.sideList.filter((s) => !isSideDropped(state, s.id)).map((s) => ({ id: s.id, title: s.title, kind: s.kind })).slice(0, 80);
 }
 
 /** Every ingredient the family buys (and their own shelf items), so Claude can name matches. */
 export function catalogForIdeas(db, state) {
   const out = Object.values(db.ingredients).map((i) => ({ id: i.id, name: i.name, unit: i.unit }));
   for (const [id, c] of Object.entries(state?.custom || {})) if (c?.name) out.push({ id, name: c.name, unit: c.unit || 'each' });
-  return out;
+  return out.slice(0, 400);
 }
 
 /** POST /api/ideas body. */

@@ -97,6 +97,10 @@ async function main() {
   check("POST /api/receipt without a key → 401 (v2.2 endpoint is deployed)", rc.status === 401, `status ${rc.status}`);
   const op = await req("/api/ops", { method: "POST", origin: PAGES, headers: { "Content-Type": "application/json" }, body: '{"ops":[]}' });
   check("POST /api/ops without a key → 401", op.status === 401, `status ${op.status}`);
+  const ai = await req("/api/ai", { origin: PAGES });
+  check("GET /api/ai without a key → 401 (Claude endpoints are deployed)", ai.status === 401, `status ${ai.status}`);
+  const ideas = await req("/api/ideas", { method: "POST", origin: PAGES, headers: { "Content-Type": "application/json" }, body: "{}" });
+  check("POST /api/ideas without a key → 401", ideas.status === 401, `status ${ideas.status}`);
 
   // 6. Unknown route
   const nf = await req("/api/does-not-exist", { origin: PAGES });

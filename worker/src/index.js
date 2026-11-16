@@ -9,17 +9,25 @@
  *   POST /api/key    {newKey}  → { ok }       rotate the family key (X-Family-Key = current key)
  *   GET  /api/state?since=N    → { revision, updatedAt, state } | { revision, unchanged: true }
  *   POST /api/ops    {ops,by,clientId[,batchId]} → { revision, updatedAt, state }
- *   POST /api/scan   {image,known}               → { items:[{name,matchId,qty,unit,confidence}], model }
- *   POST /api/receipt {images[≤4],store?,known}  → { store, date, total, subtotal, tax, savings, lines:[…], model }
+ *   POST /api/scan   {image,known}               → { items:[{name,matchId,qty,unit,confidence}], model, engine }
+ *   POST /api/receipt {images[≤4],store?,known}  → { store, date, total, subtotal, tax, savings, lines:[…], model, engine }
+ *   GET  /api/ai                                  → { keySet, engine, model, models, month, spentUsd, capUsd, capped }
+ *   POST /api/ideas  {images?,note?,pantry,sides,catalog,count?} → { ideas:[…], engine:"claude", model }
  *
  * State lives in ONE SQLite-backed Durable Object (`Kitchen`, idFromName("bilbrey")), so every
  * read and write is strongly consistent and ops batches apply atomically, in arrival order.
- * The only Workers AI calls are POST /api/scan and POST /api/receipt. Nothing runs on a schedule.
+ * The only AI calls are POST /api/scan, /api/receipt and /api/ideas. Scans and receipts use Claude
+ * (src/claude.js, SPEC §14) when the ANTHROPIC_API_KEY secret is set and this month's Claude spend is
+ * under AI_MONTHLY_CAP_USD, and Workers AI otherwise (or if Claude fails). Nothing runs on a schedule.
  */
 import { DurableObject } from "cloudflare:workers";
+import {
+  MODELS, callClaude, chicagoDate, chicagoMonth, costUsd, hasClaudeKey, imageBlock, monthlyCap, pickModel, textBlock,
+  tokenCount, extractJsonObject, validateIdeas, ideasUserPrompt, IDEAS_SYSTEM_PROMPT, ClaudeError,
+} from "./claude.js";
 
 const SERVICE = "bilbrey-dinner-planner";
-const VERSION = "2.4.0";
+const VERSION = "2.5.0";
 const KITCHEN_NAME = "bilbrey";
 
 // ── CORS (SPEC §5) ────────────────────────────────────────────────────────────────────────────
@@ -118,6 +126,9 @@ const ROUTES = {
   "/api/receipt": { POST: handleReceipt },
   "/api/photo": { GET: handleGetPhoto, POST: handlePutPhoto },
   "/api/photo/delete": { POST: handleDeletePhoto },
+  // Claude (SPEC §14)
+  "/api/ai": { GET: handleAiStatus },
+  "/api/ideas": { POST: handleIdeas },
 };
 
 async function route(request, env, origin) {
@@ -193,17 +204,25 @@ async function handleOps(request, env, url, origin) {
 }
 
 async function handleScan(request, env, url, origin) {
-  const auth = await kitchen(env).authorize(familyKey(request), clientOf(request));
-  if (auth.status !== 200) return fromResult(auth, origin);
-  if (!hasAI(env)) {
-    throw new HttpError(503, "Pantry scan isn't available: the Workers AI binding (AI) is not configured on this Worker.");
-  }
+  const ai = await aiContext(env, request); // family key + Claude model + this month's Claude spend
+  if (ai.denied) return fromResult(ai.denied, origin);
+  requireSomeAI(env, ai, "Pantry scan isn't available: the Workers AI binding (AI) is not configured on this Worker.");
   const body = parseJson(await readBodyText(request, LIMITS.maxScanBody));
   if (!isPlainObject(body)) throw new HttpError(400, "Body must be a JSON object like { image, known }.");
   const image = validateImage(body.image);
   const known = cleanKnown(body.known);
-  const result = await runScan(env, image, known);
-  return json(200, result, origin);
+  let claudeError = null;
+  if (ai.useClaude) {
+    try {
+      return json(200, await runClaudeScan(env, ai, image, known), origin);
+    } catch (err) {
+      claudeError = claudeProblem(ai, err);
+      console.error("Scan: Claude failed, using Workers AI:", claudeError);
+      if (!hasAI(env)) throw new HttpError(502, "The pantry scan didn't work this time. Try again, or add the items by hand.", { detail: claudeError });
+    }
+  }
+  const result = await runScan(env, image, known, claudeError ? [claudeError] : []);
+  return json(200, { ...result, engine: "workers-ai", ...fallbackNote(ai, claudeError) }, origin);
 }
 
 // ── Pantry photos (v2.5.4): the family's own pictures of what's on the shelf. They live here, in the
@@ -248,11 +267,9 @@ async function handleDeletePhoto(request, env, url, origin) {
 }
 
 async function handleReceipt(request, env, url, origin) {
-  const auth = await kitchen(env).authorize(familyKey(request), clientOf(request));
-  if (auth.status !== 200) return fromResult(auth, origin);
-  if (!hasAI(env)) {
-    throw new HttpError(503, "Receipt scanning isn't available: the Workers AI binding (AI) is not configured on this Worker.");
-  }
+  const ai = await aiContext(env, request);
+  if (ai.denied) return fromResult(ai.denied, origin);
+  requireSomeAI(env, ai, "Receipt scanning isn't available: the Workers AI binding (AI) is not configured on this Worker.");
   const body = parseJson(await readBodyText(request, LIMITS.maxReceiptBody));
   if (!isPlainObject(body)) throw new HttpError(400, "Body must be a JSON object like { images: [...], store, known }.");
   let images = body.images;
@@ -281,7 +298,7 @@ async function handleReceipt(request, env, url, origin) {
     store = body.store;
   }
   const known = cleanKnown(body.known);
-  const result = await runReceipt(env, validated, store, known);
+  const result = await runReceipt(env, validated, store, known, ai);
   return json(200, result, origin);
 }
 
@@ -326,6 +343,13 @@ export class Kitchen extends DurableObject {
       data BLOB NOT NULL,
       bytes INTEGER NOT NULL,
       at TEXT NOT NULL
+    )`);
+    // Claude spend per America/Chicago calendar month (SPEC §14), for the monthly cap.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS ai_usage (
+      month TEXT PRIMARY KEY,
+      input_tokens INTEGER,
+      output_tokens INTEGER,
+      usd REAL
     )`);
     this.doc = null; // in-memory cache of the doc row (this object is the only writer)
     this.authRow = undefined; // undefined = not loaded, null = no passcode yet
@@ -472,6 +496,46 @@ export class Kitchen extends DurableObject {
     }
     this.doc = { json: stateJson, revision, updatedAt, updatedBy: req.by };
     return { status: 200, body: stateBody(this.doc), headers: { "X-Revision": String(revision) } };
+  }
+
+  // ── AI usage (SPEC §14) ──
+  /** Family key check + the family's Claude model + this month's Claude spend, in one round trip. */
+  async aiBegin(key, client) {
+    const denied = await this.#check(key, client);
+    if (denied) return denied;
+    return { status: 200, body: this.#aiSnapshot() };
+  }
+
+  /** Adds one Claude call's tokens and cost to this month's row. Called by the Worker only. */
+  async aiRecord(model, inputTokens, outputTokens) {
+    const input = tokenCount(inputTokens);
+    const output = tokenCount(outputTokens);
+    const usd = costUsd(model, { input_tokens: input, output_tokens: output });
+    this.sql.exec(
+      `INSERT INTO ai_usage (month, input_tokens, output_tokens, usd) VALUES (?, ?, ?, ?)
+       ON CONFLICT(month) DO UPDATE SET input_tokens = input_tokens + excluded.input_tokens,
+         output_tokens = output_tokens + excluded.output_tokens, usd = usd + excluded.usd`,
+      chicagoMonth(), input, output, usd,
+    );
+    return this.#aiSnapshot();
+  }
+
+  #aiSnapshot() {
+    const month = chicagoMonth();
+    const row = this.sql.exec("SELECT input_tokens, output_tokens, usd FROM ai_usage WHERE month = ?", month).toArray()[0];
+    let setting = null;
+    try {
+      // The family setting state.settings.aiModel, read without parsing the whole state in JS.
+      const r = this.sql.exec("SELECT json_extract(state, '$.settings.aiModel') AS m FROM doc WHERE id = 1").toArray()[0];
+      setting = r ? r.m : null;
+    } catch {}
+    return {
+      model: pickModel(setting),
+      month,
+      spentUsd: row ? Math.round(Number(row.usd) * 1e6) / 1e6 : 0,
+      inputTokens: row ? Number(row.input_tokens) : 0,
+      outputTokens: row ? Number(row.output_tokens) : 0,
+    };
   }
 
   // ── internals ──
@@ -964,7 +1028,7 @@ async function visionCall(env, label, request, parse, timeouts) {
   return { value: null, model: null, problems };
 }
 
-async function runScan(env, image, known) {
+async function runScan(env, image, known, priorProblems = []) {
   const request = {
     system: SCAN_SYSTEM_PROMPT,
     text: scanUserPrompt(known),
@@ -978,7 +1042,7 @@ async function runScan(env, image, known) {
   throw new HttpError(
     502,
     "The pantry scan didn't work this time. Try again, or add the items by hand.",
-    { detail: problems.join(" | ").slice(0, 500) },
+    { detail: [...priorProblems, ...problems].join(" | ").slice(0, 500) },
   );
 }
 
@@ -1394,25 +1458,33 @@ const RECEIPT_SCHEMA = {
   additionalProperties: false,
 };
 
-async function runReceipt(env, images, storeHint, known) {
+async function runReceipt(env, images, storeHint, known, ai = null) {
   const kIndex = knownIndex(known);
   const results = await Promise.all(
-    images.map((image, i) =>
-      visionCall(
-        env,
-        `Receipt image ${i + 1}/${images.length}`,
-        {
-          system: RECEIPT_SYSTEM_PROMPT,
-          text: receiptUserPrompt({ index: i + 1, count: images.length, storeHint, known }),
-          image,
-          schema: RECEIPT_SCHEMA,
-          schemaName: "receipt_page",
-          maxTokens: RECEIPT_MAX_TOKENS,
-        },
-        parseReceiptPage,
-        RECEIPT_TIMEOUTS_MS,
-      ),
-    ),
+    images.map(async (image, i) => {
+      const label = `Receipt image ${i + 1}/${images.length}`;
+      const request = {
+        system: RECEIPT_SYSTEM_PROMPT,
+        text: receiptUserPrompt({ index: i + 1, count: images.length, storeHint, known }),
+        image,
+        schema: RECEIPT_SCHEMA,
+        schemaName: "receipt_page",
+        maxTokens: RECEIPT_MAX_TOKENS,
+      };
+      // Claude first when it's on (SPEC §14); a page Claude can't read falls back on its own.
+      let claudeError = null;
+      if (ai && ai.useClaude) {
+        try {
+          return await readReceiptPageWithClaude(env, ai, request);
+        } catch (err) {
+          claudeError = claudeProblem(ai, err);
+          console.error(`${label}: Claude failed, using Workers AI:`, claudeError);
+          if (!hasAI(env)) return { value: null, model: null, engine: null, problems: [claudeError], claudeError };
+        }
+      }
+      const r = await visionCall(env, label, request, parseReceiptPage, RECEIPT_TIMEOUTS_MS);
+      return { ...r, engine: "workers-ai", problems: claudeError ? [claudeError, ...r.problems] : r.problems, claudeError };
+    }),
   );
 
   const warnings = [];
@@ -1435,7 +1507,10 @@ async function runReceipt(env, images, storeHint, known) {
   const merged = mergeReceiptPages(pages, storeHint);
   if (!merged.lines.length) warnings.push("No purchased items were found on this receipt.");
   const models = [...new Set(results.map((r) => r.model).filter(Boolean))];
-  return { ...merged, model: models.join(" + "), images: images.length, warnings };
+  const engines = [...new Set(results.filter((r) => r.value).map((r) => r.engine))];
+  const engine = engines.length === 1 ? engines[0] : "mixed"; // "mixed": some pages fell back to Workers AI
+  const claudeError = results.map((r) => r.claudeError).find(Boolean) || null;
+  return { ...merged, model: models.join(" + "), engine, images: images.length, warnings, ...fallbackNote(ai, claudeError) };
 }
 
 /** Pulls { store, date, …, lines } out of the model's answer; null when nothing usable came back. */
@@ -1884,6 +1959,218 @@ function mergeReceiptPages(pages, storeHint) {
       confidence: l.confidence,
     })),
   };
+}
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// Claude (SPEC §14): engine choice, the monthly cap, scans/receipts via Claude, and recipe ideas.
+// The API call itself, prices, prompts for ideas and the ideas validator live in src/claude.js.
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// Generous, but they leave room for the Workers AI fallback inside the app's own request timeouts.
+const CLAUDE_TIMEOUTS_MS = { scan: 50_000, receipt: 80_000, ideas: 100_000 };
+const IDEAS = {
+  maxImages: 4,
+  maxImagesChars: LIMITS.maxReceiptImagesChars, // all photo data URLs together (4.5 MB); 1.5 MB each
+  maxBody: LIMITS.maxReceiptBody, // 5 MB
+  maxNote: 300,
+  maxPantry: 150,
+  maxSides: 80,
+  maxCatalog: 400,
+  maxCount: 4,
+  defaultCount: 3,
+  maxTokens: 6000,
+};
+
+/**
+ * Checks the family key and gathers what the AI routes need in one Durable Object call:
+ * { model, month, spentUsd, inputTokens, outputTokens, keySet, capUsd, capped, useClaude },
+ * or { denied } (401 / 429) when the key is wrong.
+ */
+async function aiContext(env, request) {
+  const res = await kitchen(env).aiBegin(familyKey(request), clientOf(request));
+  if (res.status !== 200) return { denied: res };
+  const keySet = hasClaudeKey(env);
+  const capUsd = monthlyCap(env);
+  const capped = res.body.spentUsd >= capUsd;
+  return { ...res.body, keySet, capUsd, capped, useClaude: keySet && !capped };
+}
+
+/** Scans and receipts need Claude (key set, under the cap) or the Workers AI binding. */
+function requireSomeAI(env, ai, unavailableMessage) {
+  if (ai.useClaude || hasAI(env)) return;
+  if (ai.keySet && ai.capped) throw cappedError(ai);
+  throw new HttpError(503, unavailableMessage);
+}
+
+function cappedError(ai) {
+  return new HttpError(
+    402,
+    `This month's Claude budget is used up ($${ai.spentUsd.toFixed(2)} of $${ai.capUsd.toFixed(2)}). It starts over on the 1st.`,
+    { capped: true, month: ai.month, spentUsd: ai.spentUsd, capUsd: ai.capUsd },
+  );
+}
+
+/** Why Claude didn't answer, for logs and the response's claudeError (never the key or an image). */
+function claudeProblem(ai, err) {
+  return `${ai.model}: ${err && err.message ? err.message : String(err)}`.slice(0, 300);
+}
+
+/** Extra fields on a scan/receipt answered by Workers AI while Claude is set up. */
+function fallbackNote(ai, claudeError) {
+  if (!ai) return {};
+  return { ...(claudeError ? { claudeError } : {}), ...(ai.keySet && ai.capped ? { capped: true } : {}) };
+}
+
+/** One Claude call that counts toward this month's spend (tokens are billed even if the reply is unusable). */
+async function claudeCall(env, ai, { system, content, maxTokens, timeoutMs }) {
+  const r = await callClaude(env, { model: ai.model, system, content, maxTokens, timeoutMs });
+  try {
+    await kitchen(env).aiRecord(ai.model, r.usage.input_tokens, r.usage.output_tokens);
+  } catch (err) {
+    console.error("Couldn't record Claude usage:", err && err.message ? err.message : String(err));
+  }
+  return r;
+}
+
+/** POST /api/scan through Claude: the same prompt as Workers AI, the same parsing and clean-up. */
+async function runClaudeScan(env, ai, image, known) {
+  const r = await claudeCall(env, ai, {
+    system: SCAN_SYSTEM_PROMPT,
+    content: [imageBlock(image), textBlock(scanUserPrompt(known))],
+    maxTokens: SCAN_MAX_TOKENS,
+    timeoutMs: CLAUDE_TIMEOUTS_MS.scan,
+  });
+  const raw = parseScanItems(r.text);
+  if (!raw) throw new ClaudeError("no usable JSON in the reply");
+  return { items: normalizeScanItems(raw, known), model: ai.model, engine: "claude" };
+}
+
+/** One receipt image through Claude, in visionCall's result shape. */
+async function readReceiptPageWithClaude(env, ai, request) {
+  const r = await claudeCall(env, ai, {
+    system: request.system,
+    content: [imageBlock(request.image), textBlock(request.text)],
+    maxTokens: request.maxTokens,
+    timeoutMs: CLAUDE_TIMEOUTS_MS.receipt,
+  });
+  const value = parseReceiptPage(r.text);
+  if (!value) throw new ClaudeError("no usable JSON in the reply");
+  return { value, model: ai.model, engine: "claude", problems: [], claudeError: null };
+}
+
+async function handleAiStatus(request, env, url, origin) {
+  const ai = await aiContext(env, request);
+  if (ai.denied) return fromResult(ai.denied, origin);
+  return json(200, {
+    keySet: ai.keySet,
+    engine: ai.useClaude ? "claude" : "workers-ai",
+    model: ai.model,
+    models: MODELS,
+    month: ai.month,
+    spentUsd: ai.spentUsd,
+    capUsd: ai.capUsd,
+    capped: ai.capped,
+    inputTokens: ai.inputTokens,
+    outputTokens: ai.outputTokens,
+  }, origin);
+}
+
+async function handleIdeas(request, env, url, origin) {
+  const ai = await aiContext(env, request);
+  if (ai.denied) return fromResult(ai.denied, origin);
+  if (!ai.keySet) throw new HttpError(503, "Recipe ideas need Claude, and no Claude API key is set on this Worker yet.");
+  if (ai.capped) throw cappedError(ai);
+  const req = cleanIdeasRequest(parseJson(await readBodyText(request, IDEAS.maxBody)));
+  let r;
+  try {
+    r = await claudeCall(env, ai, {
+      system: IDEAS_SYSTEM_PROMPT,
+      content: [
+        ...req.images.map(imageBlock),
+        textBlock(ideasUserPrompt({ ...req, imageCount: req.images.length, today: chicagoDate() })),
+      ],
+      maxTokens: IDEAS.maxTokens,
+      timeoutMs: CLAUDE_TIMEOUTS_MS.ideas,
+    });
+  } catch (err) {
+    const detail = claudeProblem(ai, err);
+    console.error("Ideas: Claude failed:", detail);
+    throw new HttpError(502, "Claude couldn't come up with dinner ideas this time. Try again in a minute.", { detail });
+  }
+  const parsed = extractJsonObject(r.text);
+  if (parsed === undefined) {
+    throw new HttpError(502, "Claude's dinner ideas came back unreadable. Try again.", { detail: `${ai.model}: no usable JSON in the reply` });
+  }
+  const { ideas, dropped } = validateIdeas(parsed, req);
+  if (dropped.length) console.log(`Ideas: dropped ${dropped.length} for house rules (${dropped.map((d) => d.rule).join(", ")})`);
+  return json(200, { ideas, engine: "claude", model: ai.model, dropped: dropped.length }, origin);
+}
+
+function cleanIdeasRequest(body) {
+  if (!isPlainObject(body)) {
+    throw new HttpError(400, "Body must be a JSON object like { images, note, pantry, sides, catalog, count }.");
+  }
+  const images = body.images === undefined || body.images === null ? [] : body.images;
+  if (!Array.isArray(images)) throw new HttpError(400, `images must be a list of 0–${IDEAS.maxImages} photos (data URLs).`);
+  if (images.length > IDEAS.maxImages) {
+    throw new HttpError(400, `Too many photos (${images.length}); send at most ${IDEAS.maxImages}.`);
+  }
+  const totalChars = images.reduce((n, img) => n + (typeof img === "string" ? img.length : 0), 0);
+  if (totalChars > IDEAS.maxImagesChars) {
+    throw new HttpError(413, `These photos add up to ${formatBytes(totalChars)}; the limit is 4.5 MB. Resize them to about 1280px JPEG.`);
+  }
+  const validated = images.map((img, i) => {
+    try {
+      return validateImage(img);
+    } catch (err) {
+      if (err instanceof HttpError) throw new HttpError(err.status, `Photo ${i + 1}: ${err.message}`);
+      throw err;
+    }
+  });
+
+  let note = "";
+  if (body.note !== undefined && body.note !== null) {
+    if (typeof body.note !== "string") throw new HttpError(400, "note must be text.");
+    if (body.note.length > IDEAS.maxNote) throw new HttpError(400, `note must be at most ${IDEAS.maxNote} characters.`);
+    note = cleanText(body.note, IDEAS.maxNote);
+  }
+
+  const pantry = cleanIdeaList(body.pantry, "pantry", IDEAS.maxPantry, (e, id) => {
+    const q = typeof e.qty === "number" && Number.isFinite(e.qty) && e.qty >= 0 ? Math.round(e.qty * 100) / 100 : null;
+    const useBy = typeof e.useBy === "string" && /^\d{4}-\d{2}-\d{2}/.test(e.useBy) ? e.useBy.slice(0, 10) : null;
+    return { id, name: cleanText(e.name, 120) || id, qty: q, unit: cleanText(e.unit, 24) || null, useBy };
+  });
+  const sides = cleanIdeaList(body.sides, "sides", IDEAS.maxSides, (e, id) => ({
+    id, title: cleanText(e.title, 120) || id, kind: cleanText(e.kind, 24) || null,
+  }));
+  const catalog = cleanIdeaList(body.catalog, "catalog", IDEAS.maxCatalog, (e, id) => ({
+    id, name: cleanText(e.name, 120) || id, unit: cleanText(e.unit, 24) || null,
+  }));
+
+  let count = IDEAS.defaultCount;
+  if (body.count !== undefined && body.count !== null) {
+    if (!Number.isInteger(body.count) || body.count < 1 || body.count > IDEAS.maxCount) {
+      throw new HttpError(400, `count must be a whole number from 1 to ${IDEAS.maxCount}.`);
+    }
+    count = body.count;
+  }
+  return { images: validated, note, pantry, sides, catalog, count };
+}
+
+/** A list of { id, … } objects: at most `max` (else 400); bad entries and repeated ids are skipped. */
+function cleanIdeaList(v, name, max, map) {
+  if (v === undefined || v === null) return [];
+  if (!Array.isArray(v)) throw new HttpError(400, `${name} must be a list.`);
+  if (v.length > max) throw new HttpError(400, `${name} has ${v.length} entries; send at most ${max}.`);
+  const out = [];
+  const seen = new Set();
+  for (const e of v) {
+    if (!isPlainObject(e)) continue;
+    const id = typeof e.id === "string" ? e.id.trim().slice(0, 80) : "";
+    if (!id || seen.has(id) || /[\u0000-\u001f\u007f]/.test(id)) continue;
+    seen.add(id);
+    out.push(map(e, id));
+  }
+  return out;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════

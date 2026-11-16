@@ -301,7 +301,7 @@ async function runScan(app, files) {
   for (const f of files) {
     try {
       const image = await resize(f);
-      const r = await app.store.api('POST', '/api/scan', { image, known: knownList(app) }, { timeoutMs: 90000 });
+      const r = await app.store.api('POST', '/api/scan', { image, known: knownList(app) }, { timeoutMs: 150000 });
       if (r?.engine || r?.model) st.readBy = readByText(r.engine, r.model);
       st.images.push(image);
       const img = st.images.length - 1;

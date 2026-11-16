@@ -20,21 +20,45 @@ export function familyKey(passcode) {
 
 /**
  * Starts a fresh Worker with empty storage.
- * @param {{ ai?: boolean }} [opts]  ai:false starts it with no AI binding at all.
+ * @param {{ ai?: boolean, anthropic?: boolean, bindings?: Record<string,string> }} [opts]
+ *   ai:false starts it with no AI binding at all.
+ *   anthropic:true intercepts the Worker's outbound fetch: calls to api.anthropic.com go to a
+ *   scriptable mock (setClaude / claudeCalls); any other outbound fetch fails the request.
+ *   bindings: plain-text env vars / secrets, e.g. { ANTHROPIC_API_KEY, AI_MONTHLY_CAP_USD }.
  */
-export async function startWorker({ ai = true } = {}) {
+export async function startWorker({ ai = true, anthropic = false, bindings = undefined } = {}) {
   const calls = [];
   let aiHandler = () => ({ choices: [{ message: { content: '{"items":[]}' } }] });
+  const claudeCalls = [];
+  let claudeHandler = () => claudeReply('{"items":[]}');
 
   const options = {
     modules: [
       { type: "ESModule", path: here("./fixtures/entry.mjs") },
       { type: "ESModule", path: here("../src/index.js") },
+      { type: "ESModule", path: here("../src/claude.js") },
     ],
     modulesRoot: here(".."),
     compatibilityDate: COMPAT_DATE,
     durableObjects: { KITCHEN: { className: "Kitchen", useSQLite: true } },
   };
+  if (bindings) options.bindings = bindings;
+  if (anthropic) {
+    options.outboundService = async (request) => {
+      const url = new URL(request.url);
+      if (url.hostname !== "api.anthropic.com") return new Response(`unexpected outbound fetch to ${url.hostname}`, { status: 599 });
+      const body = await request.json();
+      const headers = Object.fromEntries(request.headers);
+      claudeCalls.push({ url: request.url, headers, body });
+      try {
+        const out = await claudeHandler(body, claudeCalls.length, headers);
+        if (out instanceof Response) return out;
+        return new Response(JSON.stringify(out), { headers: { "Content-Type": "application/json" } });
+      } catch (err) {
+        return new Response(JSON.stringify({ type: "error", error: { type: "api_error", message: String(err && err.message ? err.message : err) } }), { status: 500 });
+      }
+    };
+  }
   if (ai) {
     options.serviceBindings = {
       AI_BACKEND: async (request) => {
@@ -78,7 +102,25 @@ export async function startWorker({ ai = true } = {}) {
     setAI(fn) {
       aiHandler = fn;
     },
+    claudeCalls,
+    /** Script the mock Messages API: fn(body, callNumber, headers) → reply object or Response (throw = 500). */
+    setClaude(fn) {
+      claudeHandler = fn;
+    },
     dispose: () => mf.dispose(),
+  };
+}
+
+/** A Messages API reply carrying `text`, with the token counts the Worker bills by. */
+export function claudeReply(text, { input = 1000, output = 500, model = "claude-opus-5-5", stop = "end_turn" } = {}) {
+  return {
+    id: "msg_test",
+    type: "message",
+    role: "assistant",
+    model,
+    content: [{ type: "text", text: typeof text === "string" ? text : JSON.stringify(text) }],
+    stop_reason: stop,
+    usage: { input_tokens: input, output_tokens: output },
   };
 }
 

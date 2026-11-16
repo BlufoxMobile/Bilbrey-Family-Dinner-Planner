@@ -120,7 +120,7 @@ test("an empty shelf is a valid answer", async () => {
   w.setAI(() => ({ response: '{"items": []}' }));
   const r = await scan({ image: PNG_DATA_URL, known: [] });
   assert.equal(r.status, 200);
-  assert.deepEqual(r.json, { items: [], model: PRIMARY });
+  assert.deepEqual(r.json, { items: [], model: PRIMARY, engine: "workers-ai" });
   assert.equal(w.calls.length, 1);
 });
 
