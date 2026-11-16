@@ -3,6 +3,7 @@
 // in order, so offline changes show instantly and survive reloads.
 
 import { clone, uid } from './util.js';
+import { DEFAULT_AI_MODEL, isAiModel } from './claude.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
   planStore: 'both',
@@ -16,6 +17,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   meatScale: 1, // 1 = hearty (as written), 0.85 = lighter (−15% on catalog items marked meat)
   organic: false, // buy organic produce when the store has it (catalog `organic` packs)
   trip: null, // { start, end, store }: the shopping list for one trip (SPEC §12)
+  aiModel: DEFAULT_AI_MODEL, // the Claude model that reads photos and suggests dinners (SPEC §17)
 });
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -39,6 +41,7 @@ export function settingsOf(state) {
   s.meatScale = Number(s.meatScale) === 0.85 ? 0.85 : 1;
   s.organic = s.organic === true;
   s.trip = normalizeTrip(s.trip);
+  if (!isAiModel(s.aiModel)) s.aiModel = DEFAULT_AI_MODEL;
   return s;
 }
 

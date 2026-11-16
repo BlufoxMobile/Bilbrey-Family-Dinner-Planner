@@ -1,9 +1,10 @@
 // FAMILY & SETTINGS: this phone, family sync + passcode, planner rules, stores, data.
-import { html, ic, when, toast, avatar, personStyle, confirmSheet, segmented, stepper, switchToggle, tf } from '../ui.js';
+import { html, ic, when, toast, avatar, personStyle, confirmSheet, segmented, stepper, switchToggle, tf, copyText } from '../ui.js';
 import { PARENTS, VERSION } from '../config.js';
 import { mediumDate } from '../util.js';
-import { settingOps } from '../actions.js';
+import { settingOps, undoFor } from '../actions.js';
 import { allDinners } from '../planner.js';
+import { AI_MODELS, aiStatus, photoCostHint, modelLabel, claudeErrorText } from '../claude.js';
 
 export const title = () => 'Family & settings';
 export const MEAT_OPTS = [{ id: '1', label: 'Hearty (as written)' }, { id: '0.85', label: 'Lighter (−15%)' }];
@@ -68,6 +69,88 @@ function syncSection(app) {
   </section>`;
 }
 
+// ---------------------------------------------------------------- Claude (SPEC §17)
+
+/** This phone's copy of GET /api/ai and the connector link (never stored: fetched when needed). */
+const ai = { info: null, at: 0, loading: false, error: null, link: '', linkBusy: false, linkError: '' };
+const connected = (app) => !!app.store.device.key && !app.store.device.localOnly;
+
+/** Fetches the family's Claude status (model, this month's spend) at most once a minute unless forced. */
+export async function loadAiInfo(app, { force = false } = {}) {
+  if (!connected(app) || ai.loading) return ai.info;
+  if (!force && ai.at && Date.now() - ai.at < 60000) return ai.info;
+  ai.loading = true;
+  try {
+    ai.info = await app.store.api('GET', '/api/ai', null, { timeoutMs: 8000 });
+    ai.error = null;
+  } catch (e) {
+    ai.error = e;
+  } finally {
+    ai.loading = false;
+    ai.at = Date.now();
+    app.render();
+  }
+  return ai.info;
+}
+export const aiInfo = () => ai.info;
+
+function claudeStatusText(app) {
+  if (!connected(app)) return { tone: 'free', text: app.store.device.localOnly ? 'Claude works through the family server, and this phone is set to “this phone only.”' : 'Claude works through the family server. Connect this phone with the family passcode first.' };
+  if (!ai.info) {
+    if (!ai.at || ai.loading) return { tone: 'unknown', text: 'Checking on Claude…' };
+    return { tone: 'unknown', text: ai.error?.status === 404 ? 'Claude isn’t on the family server yet.' : 'Can’t reach the family server to check on Claude right now.' };
+  }
+  return aiStatus(ai.info, app.settings.aiModel);
+}
+
+function modelPicker(app) {
+  const chosen = app.settings.aiModel;
+  const priced = (m) => ({ ...m, ...(ai.info?.models || []).find((x) => x?.id === m.id) });
+  const note = AI_MODELS.find((m) => m.id === chosen)?.note || '';
+  return html`<div class="set-row set-col"><span class="set-label">Which Claude<small>${note}</small></span>
+    <div class="seg seg-ai" role="radiogroup" aria-label="Which Claude reads photos and suggests dinners">
+      ${AI_MODELS.map(priced).map((m) => html`<button type="button" role="radio" aria-checked="${tf(m.id === chosen)}" class="seg-opt ${m.id === chosen ? 'is-on' : ''}" data-action="ai:model" data-value="${m.id}" aria-label="${modelLabel(m.id)}, ${photoCostHint(m) || m.tag}"><b>${m.short}</b><small>${photoCostHint(m) || m.tag}</small></button>`)}
+    </div></div>`;
+}
+
+function connectBlock(app) {
+  return html`<div class="ai-connect">
+    <h3 class="sheet-h">Connect your Claude chats</h3>
+    <p class="small muted">Use the planner from the Claude app: send a photo of the fridge to update the pantry, or ask what to make.</p>
+    ${ai.link && connected(app) ? html`
+      <div class="ai-link-row">
+        <input class="input ai-link" id="ai-link" readonly value="${ai.link}" aria-label="Your private connector link">
+        <button type="button" class="btn btn-secondary btn-small" data-action="ai:copy">${ic('copy', { size: 18 })}Copy</button>
+      </div>
+      <p class="muted small">Keep this link to yourself: it opens the family’s planner.</p>
+      <ol class="steps-small ai-steps">
+        <li>In Claude, open <b>Settings</b>, then <b>Connectors</b>, and tap <b>Add custom connector</b>.</li>
+        <li>Name it <b>Bilbrey Dinner Planner</b>, paste the link, and tap <b>Add</b>.</li>
+        <li>In any chat, turn it on from the tools menu, then say things like “Here’s our fridge — update the pantry” or “What can we make with these?”</li>
+      </ol>
+      <button type="button" class="btn btn-quiet btn-small" data-action="ai:rotate" ${ai.linkBusy ? 'disabled' : ''}>${ic('refresh', { size: 18 })}Make a new link</button>`
+      : html`<button type="button" class="btn btn-secondary" data-action="ai:link" ${ai.linkBusy || !connected(app) ? 'disabled' : ''}>${ic('link', { size: 20 })}${ai.linkBusy ? 'Getting the link…' : 'Get my connector link'}</button>`}
+    ${when(ai.linkError, () => html`<p class="form-error" role="alert">${ai.linkError}</p>`)}
+  </div>`;
+}
+
+function claudeSection(app) {
+  const parent = PARENTS.includes(app.who());
+  const st = claudeStatusText(app);
+  const spend = connected(app) ? aiStatus(ai.info, app.settings.aiModel).spend : null;
+  return html`<section class="set-sec claude-card" aria-labelledby="ai-h">
+    <h2 id="ai-h" class="section-title">${ic('sparkle', { size: 22 })}Claude</h2>
+    <p class="ai-status ai-${st.tone}" role="status"><span class="ai-dot" aria-hidden="true"></span><span>${st.text}</span></p>
+    ${when(spend, () => html`<div class="ai-spend">
+      <p class="ai-spend-row"><span>This month</span><b>${spend.text}</b></p>
+      <span class="ai-meter ${spend.pct >= 100 ? 'is-full' : ''}" role="img" aria-label="${spend.text} used this month"><span style="width:${spend.pct}%"></span></span>
+      <small class="muted">Starts over on the 1st.</small>
+    </div>`)}
+    ${when(parent, () => modelPicker(app))}
+    ${when(parent, () => connectBlock(app))}
+  </section>`;
+}
+
 function rules(app) {
   const s = app.settings;
   return html`<section class="set-sec" aria-labelledby="rules-h">
@@ -120,6 +203,7 @@ export function render(app) {
       <div class="set-row set-col"><span class="set-label">Appearance</span>${segmented('theme', [{ id: 'auto', label: 'Match phone' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }], theme, { label: 'Appearance', action: 'fam:theme', small: true })}</div>
     </section>
     ${syncSection(app)}
+    ${claudeSection(app)}
     ${rules(app)}
     ${stores(app)}
     <section class="set-sec" aria-labelledby="hl-h">
@@ -137,6 +221,30 @@ export function render(app) {
       <button type="button" class="btn btn-danger-quiet" data-action="fam:reset">${ic('trash', { size: 20 })}Clear this phone’s data</button>
     </section>
   </div>`;
+}
+
+export function mount(app) {
+  loadAiInfo(app);
+}
+
+/** GET /api/mcp/link or POST /api/mcp/rotate → the private connector link on screen. */
+async function fetchLink(app, method, path) {
+  if (!connected(app) || ai.linkBusy) return false;
+  ai.linkBusy = true;
+  ai.linkError = '';
+  app.render();
+  try {
+    const r = await app.store.api(method, path, method === 'POST' ? {} : null);
+    if (!/^https?:\/\/\S+$/.test(String(r?.url || ''))) throw Object.assign(new Error('No link came back'), { status: 502 });
+    ai.link = r.url;
+    return true;
+  } catch (e) {
+    ai.linkError = claudeErrorText(e);
+    return false;
+  } finally {
+    ai.linkBusy = false;
+    app.render();
+  }
 }
 
 async function withBusy(app, fn) {
@@ -214,6 +322,22 @@ export const actions = {
   },
   'fam:organic': (app) => app.commit(settingOps(app.state, 'organic', !app.settings.organic), { quiet: true }),
   'fam:weekstart': (app, el) => app.commit(settingOps(app.state, 'weekStartsOn', Number(el.dataset.value)), { quiet: true }),
+  'ai:model': (app, el) => {
+    const id = el.dataset.value;
+    if (!AI_MODELS.some((m) => m.id === id) || id === app.settings.aiModel) return;
+    const res = settingOps(app.state, 'aiModel', id);
+    app.commit({ ...res, undo: undoFor(app.state, res.ops), message: `${modelLabel(id)} reads your photos and suggests dinners from now on.` });
+  },
+  'ai:link': (app) => fetchLink(app, 'GET', '/api/mcp/link'),
+  'ai:copy': async () => {
+    if (!ai.link) return;
+    toast(await copyText(ai.link) ? 'Link copied. Paste it into Claude’s Add custom connector.' : 'Couldn’t copy. Press and hold the link to copy it.');
+  },
+  'ai:rotate': async (app) => {
+    if (!connected(app) || ai.linkBusy) return;
+    const ok = await confirmSheet({ title: 'Make a new link?', body: 'The old link stops working right away. Any Claude app using it needs the new one pasted in.', confirm: 'Make a new link' });
+    if (ok && await fetchLink(app, 'POST', '/api/mcp/rotate')) toast('New link ready. The old one no longer works.');
+  },
   'fam:reset': async (app) => {
     const ok = await confirmSheet({
       title: 'Clear this phone’s data?',
@@ -224,6 +348,7 @@ export const actions = {
       danger: true,
     });
     if (!ok) return;
+    Object.assign(ai, { info: null, at: 0, error: null, link: '', linkError: '' });
     app.store.resetLocal();
     app.ui.anchor = null;
     toast('This phone’s data is cleared.');

@@ -613,3 +613,66 @@ sweet potatoes get cinnamon.
    it comes home: keep what the next two days need, freeze the rest in meal-size bags.
 5. After the trip: once a receipt from the trip is saved, the trip list shows what it bought that the
    list didn't ask for.
+
+## 17. Claude in settings and "What can I make?"
+
+The family server can use Claude (an Anthropic API key on the Worker) for pantry scans, receipts and
+dinner ideas, with a monthly spending cap; without the key, scans and receipts use the free Workers AI
+scanner. The app side:
+
+### 17.1 The Claude card (Family & settings)
+- Status line from `GET /api/ai` (`{ keySet, engine, model, models: [{ id, label, inUsd, outUsd }],
+  month, spentUsd, capUsd, capped }`): "Claude Opus 5.5 reads your photos" / "Using the free scanner —
+  add the Claude key to turn Claude on" / "This month's $5 is used up; back on the 1st". The model named
+  is the family's choice in settings (so a switch shows at once, before it syncs). Fetched when the page
+  opens, at most once a minute; never stored.
+- This month's spend: "$1.20 of $5.00" with a meter. It starts over on the 1st.
+- Model picker (parents): Opus 5.5 (default) / Sonnet 5.5 / Haiku 5.5, written to the family setting
+  `settings.aiModel` ∈ `claude-opus-5-5 | claude-sonnet-5-5 | claude-haiku-5-5` (`settingsOf` defaults
+  and validates it; the Worker reads it). Each option shows "About N¢ a photo" from the server's prices
+  (USD per million tokens) at an assumed 6,000 tokens in and 800 out per photo (`app/claude.js`
+  `PHOTO_TOKENS`); with no prices it shows "Costs the most / less / the least".
+- Connect your Claude chats (parents): "Get my connector link" fetches `GET /api/mcp/link` → `{ url }`
+  and shows it with Copy and the steps: in Claude, Settings → Connectors → Add custom connector, name it
+  "Bilbrey Dinner Planner", paste the link, Add; then turn it on from a chat's tools menu and say "Here's
+  our fridge — update the pantry" or "What can we make with these?". "Make a new link" (after a
+  confirmation) calls `POST /api/mcp/rotate` → `{ url }`; the old link stops working. The link lives only
+  on screen.
+- Scan and receipt review sheets say who read them: "Read by Claude Opus 5.5" when the response's
+  `engine` is `claude` (or, from an older Worker, its `model` starts with `claude`), else "Read by the
+  free scanner". Nothing when the response says neither.
+
+### 17.2 What can I make?
+- Entry points: a card under the pantry scan card and a button in the Plan page's action row. Needs the
+  family server (a gate sheet points to Family & settings otherwise); warns up front when `/api/ai` says
+  there's no key or the month is spent.
+- The sheet: up to 4 photos (take or choose; resized like pantry scans, shrunk together under the
+  receipts' 4.4 MB total), an optional note (≤ 300 characters), Get ideas. `POST /api/ideas` with
+  `buildIdeasRequest()` (`app/ideas.js`): `images`, `note`, `pantry` (in-stock items: `{ id, name, qty
+  (null for stocked staples), unit, useBy? }`, the use-by from `keepsDays` + the day it came home,
+  use-it-first items first; a package label rides in the name), `sides` (not thumbs-downed: `{ id, title,
+  kind }`), `catalog` (every ingredient and shelf item: `{ id, name, unit }`), `count: 3`.
+- Response `{ ideas: [{ title, subtitle, why, minutes, equipment, protein, category, items: [{ name, qty,
+  unit, matchId }], sides: [sideId, sideId], steps, usesPantry: [ids], missing: [{ name, qty, unit,
+  matchId }] }], engine, model }`. `normalizeIdea()` keeps only known match ids, real sides that aren't
+  dropped, known equipment, a category and protein from the recipe box's lists, and drops any idea with
+  an oven/broiler/baking step, seafood, tofu or Caesar (house rules, even if the server slips).
+- Idea cards: title, why, minutes and equipment, sides, "Uses from your pantry: …", "You'd need: …"
+  with "about $X" (whole packs at the store the family buys each at, priced like the list; items with
+  no price are named), steps, and Make it tonight / Put it on a night… (tonight and the next 30 nights) /
+  Save to the recipe box. A night that has a dinner asks first: replace it, or move it to the next open
+  night within two weeks; a cooked night is left alone; an away night asks "we're home?".
+- Saving (`saveIdeaOps()`): the idea becomes `customDinners[id]` (`id` = slug of the title, `-2`, `-3`…
+  when taken; the same title again reuses the saved dinner, never a duplicate) with `items` in catalog
+  units by `matchId` (weights and spoons converted), unmatched ingredients as shelf items via
+  `customItemOps` (aisle and place guessed from the name) so the list buys them, two sides (Claude's,
+  then a vegetable if missing, then the side most served with that category), `source: 'claude'`,
+  `why`, and the tag "from your pantry" when it uses the pantry. `rotation: 'bench'` for a one-off on a
+  night; `'core'` when saved to the recipe box (saving a one-off later moves it to core). Family-made
+  dinners on the bench are not in the rotation (`inRotation` no longer counts every custom dinner).
+  Plan entries are `{ dinner, sides, status: 'planned', manual: true, by, at }`. Undo restores it all.
+- Errors in plain words (`claudeErrorText`): 503 no Claude key yet, 402 the month's budget is spent
+  (the card refreshes), offline, passcode, too large, busy, and Claude not answering.
+- `dev/mock-api.mjs` mocks `/api/ai`, `/api/ideas` (ideas built from the request's pantry and side ids,
+  plus one seafood idea the app must drop), `/api/mcp/link` and `/api/mcp/rotate`, and scans and
+  receipts report `engine`/`model`.

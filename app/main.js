@@ -21,6 +21,7 @@ import * as productsView from './views/products.js';
 import { importReceipts } from './receipts.js';
 import * as onboarding from './views/onboarding.js';
 import * as sheets from './views/sheets.js';
+import * as ideasView from './views/ideas.js';
 
 const VIEWS = {
   tonight, plan: planView, list: listView, pantry: pantryView, recipes: recipesView, recipe: recipeView,
@@ -41,7 +42,7 @@ const MORE = [
 ];
 
 const ACTIONS = {};
-for (const m of [...Object.values(VIEWS), onboarding, sheets]) Object.assign(ACTIONS, m.actions || {});
+for (const m of [...Object.values(VIEWS), onboarding, sheets, ideasView]) Object.assign(ACTIONS, m.actions || {});
 
 export const app = {
   db: null,

@@ -16,6 +16,7 @@ import { PLACES, KINDS, placeOf, kindOfItem, useSoon } from '../freshness.js';
 import { itemPhoto, hydratePhotos, rememberPhoto, cropItem, photoUrl } from '../photos.js';
 import { del } from '../state.js';
 import { packageOf, packagesFor, plural } from '../packages.js';
+import { readByText } from '../claude.js';
 
 export const title = () => 'Pantry';
 
@@ -180,6 +181,11 @@ export function render(app) {
       </label>
       ${when(!canScan, () => html`<p class="muted small">${app.store.device.localOnly ? 'Scanning needs the family server, and this phone is set to “this phone only.” Add items by hand below.' : !app.store.device.key ? 'Scanning needs the family server. Connect with the family passcode, or add items by hand below.' : 'Pantry scanning isn’t available on the family server right now. Add items by hand below.'}</p>`)}
     </section>
+    <section class="ideas-cta" aria-label="Dinner ideas from Claude">
+      <span class="ideas-cta-ic" aria-hidden="true">${ic('sparkle', { size: 22 })}</span>
+      <p class="small"><b>Food to use up?</b> Snap it, and Claude suggests dinners you can make from it and the pantry.</p>
+      <button type="button" class="btn btn-secondary" data-action="ideas:open">${ic('camera', { size: 20 })}What can I make?</button>
+    </section>
     <section class="pan-add" aria-labelledby="add-h">
       <h2 id="add-h" class="section-title">Add by hand</h2>
       <label class="search">${ic('search', { size: 20 })}<input type="search" id="pantry-search" placeholder="Chicken, rice, green beans…" value="${app.ui.pantryQuery}" data-input="pan:search" aria-label="Search ingredients to add" autocomplete="off"></label>
@@ -294,6 +300,7 @@ async function runScan(app, files) {
     try {
       const image = await resize(f);
       const r = await app.store.api('POST', '/api/scan', { image, known: knownList(app) }, { timeoutMs: 90000 });
+      if (r?.engine || r?.model) st.readBy = readByText(r.engine, r.model);
       st.images.push(image);
       const img = st.images.length - 1;
       for (const it of r?.items || []) st.items.push({ ...it, img });
@@ -364,6 +371,7 @@ function review(app, st) {
     title: `Found ${rows.length} ${rows.length === 1 ? 'item' : 'items'}`,
     subtitle: 'Check each one. Fix names and amounts, or skip it.',
     render: () => html`
+      ${when(st.readBy, () => html`<p class="read-by">${ic('sparkle', { size: 16 })}${st.readBy}</p>`)}
       ${when(st.errors.length, () => html`<p class="hint">${ic('info', { size: 18 })}<span>${st.errors[0]}</span></p>`)}
       <form class="form" data-submit="pan:confirm">
         <ul class="review-list">

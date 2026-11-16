@@ -23,10 +23,84 @@ export function applyOpServer(state, op) {
   else if (op.op === 'push') { if (!Array.isArray(o[last])) o[last] = []; o[last].push(op.value); }
 }
 
+// Claude (SPEC §17): the three models the family can pick, priced per million tokens.
+export const MOCK_MODELS = [
+  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5', inUsd: 5, outUsd: 25 },
+  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5', inUsd: 3, outUsd: 15 },
+  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5', inUsd: 1, outUsd: 5 },
+];
+
+/**
+ * Deterministic dinner ideas from a /api/ideas body: built from the pantry ids and side ids it
+ * was sent, the catalog for matches, plus one seafood idea the app must drop (house rules).
+ */
+export function mockIdeas(b) {
+  const pantry = Array.isArray(b?.pantry) ? b.pantry : [];
+  const sides = Array.isArray(b?.sides) ? b.sides : [];
+  const catalog = Array.isArray(b?.catalog) ? b.catalog : [];
+  const cat = (re) => catalog.find((c) => re.test(c.name)) || null;
+  const MEAT = /\b(chicken|beef|pork|turkey|sausage|bacon|steak|chorizo)\b/i;
+  const meats = pantry.filter((p) => MEAT.test(p.name));
+  const others = pantry.filter((p) => !MEAT.test(p.name) && p.qty !== null).slice(0, 2);
+  const veg = sides.filter((s) => s.kind === 'vegetable');
+  const starch = sides.filter((s) => s.kind === 'starch');
+  const sidesFor = (i) => [veg[i % Math.max(1, veg.length)]?.id, starch[(i + 1) % Math.max(1, starch.length)]?.id].filter(Boolean);
+  const line = (p, qty) => ({ name: p.name, qty, unit: p.unit, matchId: p.id });
+  const chicken = cat(/^boneless chicken breast/i) || cat(/chicken/i);
+  const mainFor = (i) => {
+    const m = meats[i % Math.max(1, meats.length)];
+    if (m) return { item: line(m, 2), have: true, word: (m.name.match(MEAT) || ['chicken'])[0].toLowerCase() };
+    return { item: { name: chicken?.name || 'Chicken breast', qty: 2, unit: chicken?.unit || 'lb', matchId: chicken?.id || null }, have: false, word: 'chicken' };
+  };
+  const protein = (w) => (['chicken', 'beef', 'pork', 'turkey', 'sausage'].includes(w) ? w : 'mixed');
+  const lemon = cat(/^lemons?\b/i);
+  const a = mainFor(0);
+  const lemonLine = { name: 'Lemons', qty: 2, unit: lemon?.unit || 'lemons', matchId: lemon?.id || null };
+  const basil = { name: 'Fresh basil', qty: 1, unit: 'bunch', matchId: null };
+  const b2 = mainFor(1);
+  return [
+    {
+      title: `Lemon garlic ${a.word} skillet`,
+      subtitle: `Golden ${a.word} in a quick lemon-butter pan sauce.`,
+      why: b?.note ? `You asked: “${String(b.note).slice(0, 80)}”. This uses it up tonight.` : `Uses the ${a.word} before it’s past its best.`,
+      minutes: 30, equipment: ['stovetop'], protein: protein(a.word), category: 'Comfort',
+      items: [a.item, lemonLine, basil, ...others.map((p) => line(p, 1))],
+      sides: sidesFor(0),
+      steps: [`Season the ${a.word} with salt and pepper.`, `Sear it in a skillet over medium-high heat until done (165°F for chicken, 160°F ground beef, 145°F pork).`, 'Add butter, garlic and the juice of the lemons; spoon over and finish with torn basil.'],
+      usesPantry: [...(a.have ? [a.item.matchId] : []), ...others.map((p) => p.id)],
+      missing: [...(a.have ? [] : [a.item]), lemonLine, basil],
+    },
+    {
+      title: `Smoky ${b2.word} rice bowls`,
+      subtitle: 'Everything from the shelves, on the table in 25 minutes.',
+      why: 'Nothing to buy: it all comes from the pantry.',
+      minutes: 25, equipment: ['stovetop', 'microwave'], protein: protein(b2.word), category: 'Tex-Mex',
+      items: [b2.item],
+      sides: sidesFor(1),
+      steps: [`Brown the ${b2.word} in a skillet with smoked paprika and cumin.`, 'Warm the sides.', 'Serve in bowls.'],
+      usesPantry: b2.have ? [b2.item.matchId] : [],
+      missing: b2.have ? [] : [b2.item],
+    },
+    {
+      title: 'Garlic butter shrimp',
+      subtitle: 'Not for this family: the app should never show it.',
+      why: 'Quick.', minutes: 15, equipment: ['stovetop'], protein: 'mixed', category: 'Comfort',
+      items: [{ name: 'Shrimp', qty: 2, unit: 'lb', matchId: null }], sides: sidesFor(2), steps: ['Cook the shrimp.'], usesPantry: [], missing: [{ name: 'Shrimp', qty: 2, unit: 'lb', matchId: null }],
+    },
+  ].slice(0, Math.max(1, Math.min(6, Number(b?.count) || 3)));
+}
+
 export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = false, latency = 0 } = {}) {
   const db = { salt: null, hash: null, revision: 0, updatedAt: null, state: {}, fails: 0, lastFail: 0, batches: new Map(), opsRequests: 0 };
   const setKey = (key) => { db.salt = randomBytes(8).toString('hex'); db.hash = createHash('sha256').update(db.salt + key).digest('hex'); };
-  const reset = (pc) => { db.salt = db.hash = null; db.revision = 0; db.updatedAt = null; db.state = {}; db.fails = 0; db.batches = new Map(); db.opsRequests = 0; if (pc) setKey(keyFor(pc)); };
+  const reset = (pc) => {
+    db.salt = db.hash = null; db.revision = 0; db.updatedAt = null; db.state = {}; db.fails = 0; db.batches = new Map(); db.opsRequests = 0;
+    // Claude: the key is set, $1.20 of this month's $5 spent. Tests can change db.claude.
+    db.claude = { keySet: true, spentUsd: 1.2, capUsd: 5, capped: false };
+    db.mcpToken = randomBytes(12).toString('hex');
+    db.ideasCalls = 0; db.lastIdeas = null;
+    if (pc) setKey(keyFor(pc));
+  };
   reset(passcode);
 
   const cors = (req) => {
@@ -46,6 +120,10 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
   const readBody = (req) => new Promise((resolve) => {
     let s = ''; req.on('data', (c) => { s += c; }); req.on('end', () => { try { resolve(s ? JSON.parse(s) : {}); } catch { resolve(null); } });
   });
+  const claudeModel = () => (MOCK_MODELS.some((m) => m.id === db.state.settings?.aiModel) ? db.state.settings.aiModel : 'claude-opus-5-5');
+  const claudeOn = () => db.claude.keySet && !db.claude.capped;
+  /** Who reads a photo: Claude when its key is set and the month isn't spent, else the free scanner. */
+  const reader = () => (claudeOn() ? { engine: 'claude', model: claudeModel() } : { engine: 'workers-ai', model: '@cf/mock/vision' });
   const authed = (req) => {
     const k = req.headers['x-family-key'];
     return !!(k && db.hash && createHash('sha256').update(db.salt + k).digest('hex') === db.hash);
@@ -56,7 +134,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     const url = new URL(req.url, 'http://x');
     if (req.method === 'OPTIONS') { res.writeHead(204, cors(req)); return res.end(); }
     const p = url.pathname;
-    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests, receiptCalls: db.receiptCalls || 0, lastReceipt: db.lastReceipt || null });
+    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests, receiptCalls: db.receiptCalls || 0, lastReceipt: db.lastReceipt || null, ideasCalls: db.ideasCalls, lastIdeas: db.lastIdeas, mcpToken: db.mcpToken });
     if (p === '/__mock/reset' && req.method === 'POST') { const b = await readBody(req); reset(b?.passcode || null); return send(res, req, 200, { ok: true }); }
     if (p === '/api/health') return send(res, req, 200, { ok: true, hasPasscode: !!db.hash, ai, revision: db.revision });
     if (p === '/api/setup' && req.method === 'POST') {
@@ -145,7 +223,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
         }
         return { ...s, matchId: best ? best.id : null };
       });
-      return send(res, req, 200, { items, model: 'mock-vision' });
+      return send(res, req, 200, { items, ...reader() });
     }
     if (p === '/api/receipt' && req.method === 'POST') {
       // SPEC §9.3: { images: [dataURL ≤1.5 MB, …≤4], store?, known } → a read receipt.
@@ -170,8 +248,33 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
       const tax = 1.84;
       return send(res, req, 200, {
         store: b.store === 'jewel' ? 'jewel' : 'sams', date: '2026-11-15', subtotal, tax, total: Math.round((subtotal + tax) * 100) / 100, savings: 2,
-        lines, model: 'mock-vision',
+        lines, ...reader(),
       });
+    }
+    // Claude (SPEC §17): status and this month's spend, dinner ideas, and the private connector link.
+    if (p === '/api/ai' && req.method === 'GET') {
+      const c = db.claude;
+      return send(res, req, 200, {
+        keySet: !!c.keySet, engine: claudeOn() ? 'claude' : 'workers-ai', model: claudeModel(), models: MOCK_MODELS,
+        month: new Date().toISOString().slice(0, 7), spentUsd: c.spentUsd, capUsd: c.capUsd, capped: !!c.capped,
+      });
+    }
+    if (p === '/api/ideas' && req.method === 'POST') {
+      const b = await readBody(req);
+      const imgs = Array.isArray(b?.images) ? b.images : null;
+      if (!imgs || imgs.length > 4 || !imgs.every((x) => typeof x === 'string' && x.startsWith('data:image/'))) return send(res, req, 400, { error: 'images must be 0–4 data URLs' });
+      if (typeof b.note === 'string' && b.note.length > 300) return send(res, req, 400, { error: 'note is at most 300 characters' });
+      if (!Array.isArray(b.pantry) || !Array.isArray(b.sides) || !Array.isArray(b.catalog)) return send(res, req, 400, { error: 'pantry, sides and catalog must be arrays' });
+      if (!db.claude.keySet) return send(res, req, 503, { error: 'Claude isn’t set up on the family server yet.' });
+      if (db.claude.capped) return send(res, req, 402, { error: 'This month’s Claude budget is used up.', capped: true });
+      db.ideasCalls++;
+      db.lastIdeas = { images: imgs.length, note: b.note || '', pantry: b.pantry.length, sides: b.sides.length, catalog: b.catalog.length, count: b.count, pantryIds: b.pantry.map((x) => x.id), useBy: b.pantry.filter((x) => x.useBy).length };
+      return send(res, req, 200, { ideas: mockIdeas(b), engine: 'claude', model: claudeModel() });
+    }
+    if (p === '/api/mcp/link' && req.method === 'GET') return send(res, req, 200, { url: `http://${req.headers.host}/mcp/${db.mcpToken}` });
+    if (p === '/api/mcp/rotate' && req.method === 'POST') {
+      db.mcpToken = randomBytes(12).toString('hex');
+      return send(res, req, 200, { url: `http://${req.headers.host}/mcp/${db.mcpToken}` });
     }
     send(res, req, 404, { error: 'Not found' });
   });

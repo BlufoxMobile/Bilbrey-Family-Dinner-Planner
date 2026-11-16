@@ -11,6 +11,7 @@ import {
 import { applyOps } from '../state.js';
 import { undoFor } from '../actions.js';
 import { itemMeta } from '../shopping.js';
+import { readByText } from '../claude.js';
 
 export const title = () => 'Receipts';
 export const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco', other: 'Other store' };
@@ -120,6 +121,7 @@ function review(app, raw, storeHint) {
   if (r.store === 'other' && (storeHint === 'sams' || storeHint === 'jewel')) r.store = storeHint;
   const st = {
     store: r.store, date: r.date || today, total: r.total || '', tax: r.tax, savings: r.savings, toPantry: true,
+    readBy: readByText(raw?.engine, raw?.model),
     lines: r.lines.map((l) => {
       const sugg = suggestMatches(app.db, app.state, l, 4);
       const known = l.matchId && (app.db.ingredients[l.matchId] || app.state.custom?.[l.matchId]) ? l.matchId : null;
@@ -166,6 +168,7 @@ function reviewBody(app, st) {
   const off = Number(st.total) > 0 ? round2(Number(st.total) - sum - tax) : 0;
   const matched = included.filter((l) => l.matchId).length;
   return html`
+    ${when(st.readBy, () => html`<p class="read-by">${ic('sparkle', { size: 16 })}${st.readBy}</p>`)}
     <div class="rcpt-head">
       <label class="field"><span class="field-label">Store</span><select class="input" data-change="rcpt:head" data-f="store">
         ${['sams', 'jewel', 'other'].map((x) => html`<option value="${x}" ${st.store === x ? 'selected' : ''}>${STORE_NAMES[x]}</option>`)}</select></label>
