@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Validates the recipe box against the family's rules (docs/MISSION.md, SPEC.md §1, §3, §8,
-// docs/spec/18-recipe-box.md): data/catalog.json, data/recipes.json, data/lunches.json,
+// docs/spec/18-recipe-box.md, docs/spec/24-chicken-bulk-and-meal-cost.md): data/catalog.json, data/recipes.json, data/lunches.json,
 // data/nutrition.json, img/photos.json and dev/photo-jobs.json.
 // Plain Node (>=18), no packages.  Usage:  node scripts/validate-data.mjs [--quiet]
 // Exit code 1 if any ERROR is found; WARNings are printed but do not fail.
@@ -19,9 +19,10 @@ const STORAGE = ['freezer', 'fridge', 'pantry', 'counter'];
 const KINDS = ['measured', 'staple'];
 const STORES = ['sams', 'jewel'];
 const CATEGORIES = ['Burgers', 'Asian-inspired', 'Pasta', 'Tex-Mex', 'Grill', 'Comfort', 'Salads'];
-const PROTEINS = ['chicken', 'beef', 'pork', 'turkey', 'sausage', 'mixed'];
+// No 'turkey': the family prefers chicken (Jeff, 2026-11-15), so no dinner is a turkey dinner.
+const PROTEINS = ['chicken', 'beef', 'pork', 'sausage', 'mixed'];
 export const EQUIPMENT = ['stovetop', 'blackstone', 'electric grill', 'outdoor grill', 'air fryer', 'microwave', 'possible cooker'];
-const TAGS = ['burger', 'pizza', 'rice', 'family favorite', 'family usual', 'from your pantry', 'noodle night', 'taco night', 'grill night', 'salad', 'healthier', 'sandwiches', 'wraps', 'soup', 'freezer friendly'];
+const TAGS = ['burger', 'pizza', 'rice', 'family favorite', 'family usual', 'from your pantry', 'noodle night', 'taco night', 'grill night', 'salad', 'healthier', 'sandwiches', 'wraps', 'soup', 'freezer friendly', 'bulk'];
 const SIDE_KINDS = ['vegetable', 'starch', 'salad', 'fruit', 'bread', 'soup'];
 const VEG_KINDS = ['vegetable', 'salad'];
 const LUNCH_SLOTS = ['main', 'side', 'snack', 'drink'];
@@ -39,27 +40,49 @@ const MIN_VEG = 1, MIN_VEG_BURGER = 0.4;
 export const RETIRED_DINNERS = {
   'sesame-tofu-noodles': 'the family never eats tofu, and the id (which shows in links and file names) said tofu',
   'orange-tofu-bowls': 'the family never eats tofu, and the id (which shows in links and file names) said tofu',
+  // Jeff, 2026-11-15: "we prefer chicken over turkey". The dishes live on under ids that say chicken (recipes.renamed).
+  'turkey-taco-salad': 'the family prefers chicken to turkey, and the id said turkey; it is chicken-taco-salad now',
+  'turkey-chili': 'the family prefers chicken to turkey, and the id said turkey; it is chicken-bean-chili now',
+  'cooker-turkey-meatballs': 'the family prefers chicken to turkey, and the id said turkey; it is cooker-chicken-meatballs now',
 };
 // Removed on purpose (Jeff, 2026-11-15: no raw cucumbers).
 const REMOVED_SIDES = new Set(['tomato-cucumber', 'cucumber-spears', 'sesame-cucumber']);
 
 // Which catalog meat ids satisfy each "protein" value.
 const PROTEIN_IDS = {
-  chicken: ['chicken', 'chickenThighs', 'fajitaChicken', 'pulledChicken', 'chickenAlfredoDeli'],
-  beef: ['beef', 'beefPatties', 'roastBeef', 'eyeRoundSteak'],
+  chicken: ['chicken', 'chickenThighs', 'groundChicken', 'fajitaChicken', 'pulledChicken', 'chickenAlfredoDeli'],
+  beef: ['beef', 'beefPatties', 'roastBeef', 'eyeRoundSteak', 'stewMeat', 'sirloinTip', 'chuckRoast'],
   pork: ['pork', 'porkLoin', 'groundPork', 'pulledPork'],
-  turkey: ['groundTurkey'],
-  sausage: ['italianSausage', 'smokedSausage', 'chorizo', 'turkeySausage'],
+  sausage: ['italianSausage', 'smokedSausage', 'chorizo', 'chickenSausage'],
 };
 // Safe-temperature rules: if a dinner uses one of these ids, its steps must state the temp.
 const TEMP_RULES = [
-  { ids: ['chicken', 'chickenThighs', 'fajitaChicken'], temp: '165°F', what: 'chicken' },
+  { ids: ['chicken', 'chickenThighs', 'groundChicken', 'fajitaChicken'], temp: '165°F', what: 'chicken' },
   { ids: ['groundTurkey', 'turkeySausage'], temp: '165°F', what: 'ground turkey / turkey sausage' },
   { ids: ['beef', 'beefPatties', 'groundPork', 'italianSausage', 'chorizo'], temp: '160°F', what: 'ground meat / sausage / patties' },
-  { ids: ['eyeRoundSteak'], temp: '145°F', what: 'whole-cut beef' },
-  { ids: ['pulledPork', 'pulledChicken', 'smokedSausage', 'chickenAlfredoDeli', 'roastBeef'], temp: '165°F', what: 'fully cooked meat (reheat)' },
+  { ids: ['eyeRoundSteak', 'sirloinTip', 'stewMeat', 'chuckRoast'], temp: '145°F', what: 'whole-cut beef' },
+  { ids: ['pulledPork', 'pulledChicken', 'smokedSausage', 'chickenSausage', 'chickenAlfredoDeli', 'roastBeef'], temp: '165°F', what: 'fully cooked meat (reheat)' },
   { ids: ['pork', 'porkLoin'], temp: '145°F', what: 'pork chops / loin', rest: true },
 ];
+
+// ---------------------------------------------------------------- what Jeff said on 2026-11-15, 10 pm (docs/spec/24)
+// "We don't use much pork, but we prefer chicken over turkey generally. I eat turkey for lunch meat but they
+// don't like it much." So: no turkey in any dinner or side; turkey lunch items only in Jeff's rotation.
+const TURKEY = /turkey/i;
+const TURKEY_LUNCH_FOR = ['Jeff'];
+// At most a handful of pork dinners in the core rotation, and the pulled pork in the freezer is one of them.
+const PORK_MAIN_IDS = ['pork', 'porkLoin', 'groundPork', 'pulledPork', 'italianSausage', 'chorizo', 'smokedSausage'];
+export const MAX_CORE_PORK = 4;
+const CORE_PORK_KEEP = 'jd-pulled-pork-sandwiches';
+// "I prefer Wishbone ranch btw, I just bought the wrong bottle." Hidden Valley stays an alias so that bottle matches.
+const RANCH_BRAND = /wish-?\s?bone/i;
+const RANCH_LABEL = /^\s*wish-?\s?bone\b/i; // a pack label names its product first
+const WRONG_RANCH = /hidden valley/i;
+// "For the BLT, we can do it minus the T for me." Packaged bowls that come with raw tomato stay out of the
+// box, except the one lunch named here, for the people named, and only while it says to leave the tomatoes out.
+const COMES_WITH_RAW_TOMATO = ['bonduelleBltBowl', 'tfBltChickenBowl'];
+export const TOMATO_LEFT_OUT = { 'bonduelle-chicken-blt': ['Jeff'] };
+const LEAVES_TOMATO_OUT = /\b(leave|hold|pick|take)\b[^.]*\btomato(es)?\b[^.]*\b(out|off)\b|\bwithout the tomato(es)?\b/i;
 
 // ---------------------------------------------------------------- house rules in words
 // Banned words (whole-text, case-insensitive). "seafood-free" is the one allowed seafood phrase.
@@ -124,7 +147,8 @@ const STEP_WORDS = {
   sesame: ['sesame'], lettuce: ['romaine', 'lettuce'], beans: ['beans'], chickpeas: ['chickpea'], tomatoes: ['tomatoes'], tomato: ['tomato'],
   vegetables: ['vegetables'], jasmine: ['rice'], basmati: ['basmati', 'rice'], chickenThighs: ['chicken', 'thighs'], chicken: ['chicken'],
   beef: ['beef'], pork: ['chop', 'pork'], porkLoin: ['pork'], groundPork: ['pork'], groundTurkey: ['turkey'], italianSausage: ['sausage'],
-  turkeySausage: ['sausage'], whiteBeans: ['white beans', 'beans'], greenChiles: ['green chiles'], celery: ['celery'], beefBroth: ['beef stock', 'beef broth'],
+  turkeySausage: ['sausage'], groundChicken: ['ground chicken', 'chicken'], chickenSausage: ['sausage'], stewMeat: ['beef tips', 'stew meat', 'beef'],
+  sirloinTip: ['sirloin', 'steak'], chuckRoast: ['chuck', 'roast'], stirFryVeg: ['stir-fry vegetables', 'vegetables'], normandyVeg: ['normandy', 'vegetables'], whiteBeans: ['white beans', 'beans'], greenChiles: ['green chiles'], celery: ['celery'], beefBroth: ['beef stock', 'beef broth'],
   greenBeans: ['green beans'], cannedCorn: ['corn'], cannedCarrots: ['carrot'], corn: ['corn'], freshGreenBeans: ['green beans', 'beans'],
   cornCobs: ['ears', 'corn'], buns: ['bun'], hoagies: ['roll'], bread: ['bread', 'slice'], naan: ['naan'], tortillas: ['tortilla'],
   yogurt: ['yogurt', 'tzatziki'], potatoes: ['potato'], sweet: ['sweet potato'], ginger: ['ginger'], garlic: ['garlic'], limes: ['lime'],
@@ -180,6 +204,12 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
   function scanText(where, text) {
     for (const word of bannedWords(text)) err(`${where}: banned word "${word}" in: ${String(text).slice(0, 120)}`);
   }
+  /** fn(text, key) for every string inside a dish, the id included ("items" are ids and amounts, checked on their own). */
+  function eachString(value, fn, key = '') {
+    if (typeof value === 'string') fn(value, key || 'id');
+    else if (Array.isArray(value)) value.forEach((v, i) => eachString(v, fn, `${key}[${i + 1}]`));
+    else if (value && typeof value === 'object') for (const [k, v] of Object.entries(value)) if (k !== 'items') eachString(v, fn, key ? `${key}.${k}` : k);
+  }
   /** Every string inside a dish, whatever field it sits in: a new field can't dodge the rules. */
   function scanAll(where, value, key = '') {
     if (typeof value === 'string') scanText(key ? `${where}.${key}` : where, value);
@@ -227,6 +257,40 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
     if (ing.defaultStore && !packs[ing.defaultStore]) err(`${w}: defaultStore "${ing.defaultStore}" has no packs`);
     const g = packs.sams?.generic || packs.jewel?.generic;
     if (g && g.size > 0) unitCost[id] = { cost: g.price / g.size, store: packs.sams?.generic ? 'sams' : 'jewel' };
+    // A price read off the store's own page says where: "confidence": "listed" needs the page.
+    for (const st of Object.keys(packs)) for (const tier of ['generic', 'name']) {
+      const p = packs[st]?.[tier];
+      if (st === 'sams' && p?.confidence === 'listed' && !/^https:\/\//.test(String(p.url || ''))) err(`${w}: packs.${st}.${tier} says its price was read from the store ("listed") but has no url`);
+    }
+    // "bulk": a Sam's Club bulk pack, and how to portion it into meal-size freezer bags or keep it (docs/spec/24).
+    if (ing.bulk !== undefined) {
+      const b = ing.bulk;
+      if (!b || typeof b !== 'object' || Array.isArray(b)) err(`${w}: bulk must be { freezes, portionLb?, note }`);
+      else {
+        for (const k of Object.keys(b)) if (!['freezes', 'portionLb', 'note'].includes(k)) err(`${w}: bulk has an unknown field "${k}"`);
+        if (typeof b.freezes !== 'boolean') err(`${w}: bulk.freezes must be true or false`);
+        if (typeof b.note !== 'string' || b.note.trim().length < 20) err(`${w}: bulk.note must say how to portion or keep the pack`);
+        scanText(`${w}.bulk.note`, b.note);
+        if (!packs.sams?.generic) err(`${w}: bulk needs a Sam's Club pack`);
+        if (b.portionLb !== undefined) {
+          if (ing.unit !== 'lb') err(`${w}: bulk.portionLb is for items sold by the pound (unit is "${ing.unit}")`);
+          else if (!(typeof b.portionLb === 'number' && b.portionLb > 0 && b.portionLb <= (packs.sams?.generic?.size || 0))) err(`${w}: bulk.portionLb must be more than 0 and no more than the Sam's pack`);
+          if (b.freezes !== true) err(`${w}: bulk.portionLb is a freezer-bag size, so bulk.freezes must be true`);
+        } else if (ing.meat && ing.unit === 'lb') err(`${w}: bulk meat sold by the pound needs bulk.portionLb (the meal-size freezer bag)`);
+      }
+    }
+  }
+  // The family's ranch is Wish-Bone; the Hidden Valley bottle in the pantry still matches by alias.
+  if (ING.ranch) {
+    const r = ING.ranch;
+    const usual = r.usual && r.packs?.[r.usual.store]?.[r.usual.tier];
+    if (!RANCH_BRAND.test(String(r.brand || ''))) err('catalog.ranch: brand must be Wish-Bone (the family’s ranch)');
+    if (!usual || !RANCH_LABEL.test(usual.label)) err('catalog.ranch: its usual pack must be the Wish-Bone bottle');
+    if (!(r.aliases || []).some((a) => RANCH_BRAND.test(a))) err('catalog.ranch: needs a Wish-Bone alias');
+    if (!(r.aliases || []).some((a) => WRONG_RANCH.test(a))) err('catalog.ranch: "hidden valley ranch" must stay an alias so the bottle in the pantry still matches');
+    // data/prices.json lays its own pack over the catalog's (app/data.js), label included: it has to agree.
+    const over = r.usual && prices?.prices?.ranch?.[r.usual.store]?.[r.usual.tier];
+    if (over?.label && !RANCH_LABEL.test(over.label)) warn(`data/prices.json: ranch.${r.usual.store}.${r.usual.tier} is "${over.label}", which the app shows instead of the catalog's Wish-Bone bottle; price the Wish-Bone bottle there`);
   }
 
   // Reference ingredients: every id kept, unit unchanged.
@@ -359,6 +423,17 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
     for (const t of [o.title, o.subtitle, ...texts, ...(Array.isArray(o.tips) ? o.tips : []), o.leftovers]) scanRaw(where, t);
     scanRaw(`${where}.photo`, o.photo, { picture: true });
     for (const id of ['cucumber', 'tomato']) if (o.items && o.items[id]) err(`${where}: uses ${id} (the family doesn't eat raw cucumbers or tomatoes)`);
+    for (const id of COMES_WITH_RAW_TOMATO) if (o.items && o.items[id]) err(`${where}: uses ${id}, which comes with raw tomato`);
+    // chicken, not turkey (the id counts as text, like every other house rule)
+    for (const id of Object.keys(o.items || {})) if (TURKEY.test(id)) err(`${where}: uses ${id}; the family prefers chicken to turkey, so no dinner or side has turkey`);
+    eachString(o, (text, key) => {
+      if (TURKEY.test(text)) err(`${where}.${key}: says turkey; the family prefers chicken (turkey is only Jeff's lunch meat): ${text.slice(0, 100)}`);
+      if (WRONG_RANCH.test(text)) err(`${where}.${key}: names Hidden Valley; the family's ranch is Wish-Bone`);
+    });
+    // Jeff confirmed the cooker's STEAM button: a steamed PossibleCooker dish uses it.
+    if ((o.equipment || []).includes('possible cooker') && /\bsteamed\b/i.test(String(o.title || '')) && !steps.some((s) => s.setting === 'STEAM'))
+      err(`${where}: a steamed dish in the PossibleCooker uses its STEAM setting`);
+    for (const s of steps) if (/^SEAR\/SAUTÉ/.test(String(s.setting || '')) && /steam is coming|\bto steam\b|\bsteams? (it|them|the)\b/i.test(s.text)) err(`${where}: a step steams on ${s.setting}; use the STEAM setting`);
     if (!o.photo || o.photo.length < 30) err(`${where}: photo hint missing or too short`);
     if (!(typeof o.minutes === 'number' && o.minutes > 0)) err(`${where}: minutes must be > 0`);
     if (o.tips !== undefined && !(Array.isArray(o.tips) && o.tips.length <= 4 && o.tips.every((t) => typeof t === 'string' && t.trim().length >= 10))) err(`${where}: tips must be up to 4 full sentences`);
@@ -386,6 +461,7 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
   const ids = new Set();
   let nCore = 0, nBench = 0;
   const plates = {};
+  const corePork = [];
   for (const d of dinners) {
     const w = `dinner ${d.id}`;
     if (ids.has(d.id)) err(`${w}: duplicate id`);
@@ -409,6 +485,16 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
     if (!steps.some((s) => s.minutes > 0)) err(`${w}: no step has a time worth a timer`);
     if (!(Array.isArray(d.tips) && d.tips.length >= 1)) err(`${w}: needs at least one tip`);
     if (!(typeof d.leftovers === 'string' && d.leftovers.trim().length >= 15)) err(`${w}: leftovers must say how to store or reuse what's left`);
+
+    // "bulk": the raw meat comes from a Sam's Club bulk pack that is portioned and frozen (catalog "bulk").
+    {
+      const bulkMeat = Object.keys(d.items || {}).filter((id) => ING[id]?.meat && !ING[id]?.cooked && ING[id]?.bulk);
+      const tagged = (d.tags || []).includes('bulk');
+      if (tagged && !bulkMeat.length) err(`${w}: tagged "bulk" but none of its meat comes from a Sam's bulk pack (catalog "bulk")`);
+      if (!tagged && bulkMeat.length) err(`${w}: its ${bulkMeat.join(', ')} comes from a Sam's bulk pack, so it must be tagged "bulk"`);
+    }
+    if ((d.tags || []).includes('freezer friendly') && !/freez/i.test(String(d.leftovers || ''))) err(`${w}: tagged "freezer friendly" but leftovers doesn't say how to freeze it`);
+    if (d.rotation === 'core' && Object.keys(d.items || {}).some((id) => PORK_MAIN_IDS.includes(id))) corePork.push(d.id);
 
     // sides + sideSlots
     const isBurger = (d.tags || []).includes('burger');
@@ -476,6 +562,18 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
   }
   if (nCore < MIN_CORE) err(`expected at least ${MIN_CORE} core dinners, found ${nCore}`);
   if (nBench < MIN_BENCH) err(`expected at least ${MIN_BENCH} bench dinners, found ${nBench}`);
+  // "We don't use much pork": a handful in the core rotation, the rest on the bench.
+  if (corePork.length > MAX_CORE_PORK) err(`${corePork.length} pork dinners in the core rotation (${corePork.join(', ')}); the family eats little pork, so at most ${MAX_CORE_PORK}: move the rest to the bench`);
+  if (ids.has(CORE_PORK_KEEP) && !corePork.includes(CORE_PORK_KEEP)) err(`dinner ${CORE_PORK_KEEP}: stays in the core rotation (the pulled pork is in the family's freezer)`);
+  // recipes.renamed: old id → new id, so a saved plan or rating can follow a dish whose id changed.
+  if (recipes.renamed !== undefined) {
+    if (!recipes.renamed || typeof recipes.renamed !== 'object' || Array.isArray(recipes.renamed)) err('recipes.renamed must be { "old-id": "new-id" }');
+    else for (const [from, to] of Object.entries(recipes.renamed)) {
+      if (ids.has(from)) err(`recipes.renamed: "${from}" is still a dinner`);
+      if (!RETIRED_DINNERS[from]) err(`recipes.renamed: "${from}" must be in RETIRED_DINNERS so the old id can't come back`);
+      if (!ids.has(to)) err(`recipes.renamed: "${from}" points at "${to}", which is not a dinner`);
+    }
+  }
 
   // Reference ids. A retired dinner is the one way out, and it has to be named in RETIRED_DINNERS:
   // before v3 this rule forced "sesame-tofu-noodles" and "orange-tofu-bowls" to exist, and nothing read the id.
@@ -507,6 +605,16 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
         if (!ING[id]) err(`${w}: item "${id}" is not in the catalog`);
         if (!(typeof q === 'number' && q > 0)) err(`${w}: item "${id}" quantity must be a positive number`);
         if (id === 'cucumber' || id === 'tomato') err(`${w}: uses ${id} (the family doesn't eat raw cucumbers or tomatoes)`);
+        // A packaged bowl that comes with raw tomato: only the lunch named in TOMATO_LEFT_OUT, for the people
+        // named there, and only while its own words say to leave the tomatoes out.
+        if (COMES_WITH_RAW_TOMATO.includes(id)) {
+          const forWhom = TOMATO_LEFT_OUT[it.id];
+          if (!forWhom) err(`${w}: uses ${id}, which comes with raw tomato (no raw tomatoes for this family)`);
+          else {
+            if (!LEAVES_TOMATO_OUT.test(String(it.prep || ''))) err(`${w}: comes with raw tomato, so its prep must say to leave the tomatoes out`);
+            if (!(Array.isArray(it.people) && it.people.length === forWhom.length && forWhom.every((n) => it.people.includes(n)))) err(`${w}: comes with raw tomato, so it is for ${forWhom.join(' and ')} only ("people": ${JSON.stringify(forWhom)})`);
+          }
+        }
         if (PER && ING[id] && !macroOk(id)) err(`${w}: item "${id}" has no calories, protein, carbs, fat and fiber in data/nutrition.json`);
       }
       // A number printed in the words has to be the number the app works out and shows beside it.
@@ -519,9 +627,25 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
         if (!t.missing.length && pro && Math.abs(Number(pro[1]) - t.protein) > Math.max(3, t.protein * 0.12)) err(`${w}: says "${pro[0]}" but its items add up to ${Math.round(t.protein)} g`);
       }
     }
+    // "people": the only people an item is for (left off = anyone).
+    const lunchNames = Object.keys(lunches.defaults || {});
+    for (const it of Object.values(LUNCH)) {
+      if (it.people === undefined) continue;
+      const w = `lunch ${it.id}`;
+      if (!Array.isArray(it.people) || !it.people.length || it.people.some((n) => typeof n !== 'string')) { err(`${w}: people must be a list of names`); continue; }
+      for (const n of it.people) if (lunchNames.length && !lunchNames.includes(n)) err(`${w}: people names "${n}", who is not in lunches.defaults`);
+    }
     for (const [name, d] of Object.entries(lunches.defaults || {}))
       for (const [slot, list] of Object.entries(d?.slots || {}))
-        for (const id of list || []) if (!LUNCH[id]) err(`lunches.defaults.${name}.${slot}: "${id}" is not a lunch item`);
+        for (const id of list || []) {
+          const it = LUNCH[id];
+          if (!it) { err(`lunches.defaults.${name}.${slot}: "${id}" is not a lunch item`); continue; }
+          if (Array.isArray(it.people) && !it.people.includes(name)) err(`lunches.defaults.${name}.${slot}: "${id}" is for ${it.people.join(' and ')} only`);
+          // Turkey is Jeff's lunch meat; the others don't like it much.
+          const turkey = TURKEY.test(id) || Object.keys(it.items || {}).some((x) => TURKEY.test(x));
+          if (turkey && !TURKEY_LUNCH_FOR.includes(name)) err(`lunches.defaults.${name}.${slot}: "${id}" is turkey, which only ${TURKEY_LUNCH_FOR.join(' and ')} eats for lunch`);
+        }
+    for (const it of Object.values(LUNCH)) eachString(it, (text, key) => { if (WRONG_RANCH.test(text)) err(`lunch ${it.id}.${key}: names Hidden Valley; the family's ranch is Wish-Bone`); });
     for (const sw of lunches.swaps || []) {
       for (const k of ['from', 'to']) if (!LUNCH[sw[k]]) err(`lunches.swaps: "${sw[k]}" is not a lunch item`);
       scanText('lunches.swaps.why', sw.why);

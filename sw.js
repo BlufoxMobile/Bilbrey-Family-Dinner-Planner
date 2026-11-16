@@ -49,6 +49,7 @@ const SHELL_FILES = [
   'app/products.js',
   'app/scanqty.js',
   'app/deals.js',
+  'app/cost.js',
   'app/coverage.js',
   'app/planahead.js',
   'app/prep.js',

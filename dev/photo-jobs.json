@@ -41,14 +41,6 @@
   },
   {
     "kind": "dinner",
-    "id": "egg-fried-rice",
-    "file": "img/dinners/egg-fried-rice.webp",
-    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A heaping plate of fried jasmine rice with browned diced pork, ribbons of scrambled egg and peas, carrots and corn. Smaller portions of the sides share the plate: sesame edamame and steamed broccoli with butter. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
-    "why": "House rule: the current picture shows cucumber slices.",
-    "done": "2026-11-15"
-  },
-  {
-    "kind": "dinner",
     "id": "veggie-chow-mein",
     "file": "img/dinners/veggie-chow-mein.webp",
     "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Stir-fried noodles with seared strips of pork, sliced mushrooms, shredded cabbage and strips of egg, piled on a platter. Smaller portions of the sides share the plate: sesame edamame and honey-glazed carrots. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
@@ -107,7 +99,7 @@
     "kind": "dinner",
     "id": "egg-roll-in-a-bowl",
     "file": "img/dinners/egg-roll-in-a-bowl.webp",
-    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of savory stir-fried ground turkey with wilted shredded cabbage and carrots, glistening with soy and sesame oil. Smaller portions of the sides share the plate: crispy potstickers and sesame edamame. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of savory stir-fried ground chicken with wilted shredded cabbage and carrots, glistening with soy and sesame oil. Smaller portions of the sides share the plate: crispy potstickers and sesame edamame. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
     "why": "House rule: the current picture shows cucumber spears.",
     "done": "2026-11-15"
   },
@@ -249,9 +241,9 @@
   },
   {
     "kind": "dinner",
-    "id": "cooker-turkey-meatballs",
-    "file": "img/dinners/cooker-turkey-meatballs.webp",
-    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A plate of spaghetti topped with round turkey meatballs in a chunky red marinara with wilted spinach and grated Parmesan. Smaller portions of the sides share the plate: buttered green beans and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "id": "cooker-chicken-meatballs",
+    "file": "img/dinners/cooker-chicken-meatballs.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A plate of spaghetti topped with round chicken meatballs in a chunky red marinara with wilted spinach and grated Parmesan. Smaller portions of the sides share the plate: buttered green beans and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
     "why": "No picture yet: the app shows its placeholder until this one lands.",
     "done": "2026-11-15"
   },
@@ -283,7 +275,7 @@
     "kind": "dinner",
     "id": "cooker-lasagna-soup",
     "file": "img/dinners/cooker-lasagna-soup.webp",
-    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of thick tomato lasagna soup with penne, crumbled ground turkey and wilted spinach, topped with melting mozzarella and grated Parmesan. Smaller portions of the sides share the plate: chopped romaine salad and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A bowl of thick tomato lasagna soup with penne, crumbled ground chicken and wilted spinach, topped with melting mozzarella and grated Parmesan. Smaller portions of the sides share the plate: chopped romaine salad and garlic toast. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
     "why": "No picture yet: the app shows its placeholder until this one lands.",
     "done": "2026-11-15"
   },
@@ -435,7 +427,7 @@
     "kind": "dinner",
     "id": "chili-jacket-potatoes",
     "file": "img/dinners/chili-jacket-potatoes.webp",
-    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Fluffy split golden potatoes heaped with chunky turkey and bean chili, melted cheddar and a dollop of white yogurt. Smaller portions of the sides share the plate: buttered green beans and carrot sticks & ranch. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Fluffy split golden potatoes heaped with chunky chicken and bean chili, melted cheddar and a dollop of white yogurt. Smaller portions of the sides share the plate: buttered green beans and carrot sticks & ranch. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
     "why": "House rule (lower priority): the current picture has a raw scallion garnish.",
     "done": "2026-11-15"
   },
@@ -483,7 +475,7 @@
     "kind": "dinner",
     "id": "sweet-potato-tacos",
     "file": "img/dinners/sweet-potato-tacos.webp",
-    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Corn tortilla tacos filled with seasoned ground turkey and golden crispy sweet potato cubes, topped with salsa and a drizzle of yogurt, lime wedges alongside. Smaller portions of the sides share the plate: seasoned black beans and creamy lime slaw. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Corn tortilla tacos filled with seasoned ground chicken and golden crispy sweet potato cubes, topped with salsa and a drizzle of yogurt, lime wedges alongside. Smaller portions of the sides share the plate: seasoned black beans and creamy lime slaw. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
     "why": "House rule: the current picture shows a fresh salsa with raw diced tomato. Found on the second look at every picture, after the first 58 were made.",
     "done": "2026-11-15"
   },
@@ -525,6 +517,110 @@
     "file": "img/sides/smashed-potatoes.webp",
     "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A bowl of rustic, buttery smashed gold potatoes with skins, topped with a melting pat of butter and black pepper. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
     "why": "House rule (lower priority): the current picture has a raw chive garnish that reads as scallions. Found on the second look at every picture, after the first 58 were made.",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-beef-tips-gravy",
+    "file": "img/dinners/cooker-beef-tips-gravy.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Tender chunks of beef tips with sliced mushrooms and soft cooked onions in a glossy brown gravy spooned over creamy mashed potatoes, with buttered green beans beside them. Smaller portions of the sides share the plate: buttery smashed potatoes and buttered green beans. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "air-fryer-steak-bites",
+    "file": "img/dinners/air-fryer-steak-bites.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Browned, glossy garlic-butter steak bites and halved golden mushrooms piled on a plate beside creamy smashed potatoes and bright green broccoli. Smaller portions of the sides share the plate: buttery smashed potatoes and steamed broccoli with butter. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "pepper-steak",
+    "file": "img/dinners/pepper-steak.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Glossy strips of seared beef with red and green bell pepper strips and soft cooked onions in a dark soy gravy beside white jasmine rice and bright green broccoli. Smaller portions of the sides share the plate: jasmine rice and steamed broccoli with butter. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-pot-roast",
+    "file": "img/dinners/cooker-pot-roast.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A platter of fork-tender pot roast pulled into big chunks with large pieces of potato and carrot and soft cooked onion wedges, glossy brown gravy spooned over the top. Smaller portions of the sides share the plate: buttered green beans and chopped romaine salad. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "griddle-steaks-mushrooms",
+    "file": "img/dinners/griddle-steaks-mushrooms.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Sliced griddle-seared steak, pink in the center, under a pile of browned mushrooms and golden caramelized onions, with crispy potato wedges and steamed broccoli, cauliflower and carrots. Smaller portions of the sides share the plate: air-fryer potato wedges and steamed broccoli, cauliflower & carrots. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "honey-mustard-chicken-thighs",
+    "file": "img/dinners/honey-mustard-chicken-thighs.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Grilled boneless chicken thighs with dark grill marks and a shiny golden honey-mustard glaze, served with a split sweet potato and garlicky green beans. Smaller portions of the sides share the plate: cinnamon-butter sweet potatoes and garlic green beans. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "chicken-vegetable-stir-fry",
+    "file": "img/dinners/chicken-vegetable-stir-fry.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Golden strips of chicken tossed with bright stir-fried broccoli, snap peas, carrots and red pepper strips in a glossy soy glaze beside white jasmine rice. Smaller portions of the sides share the plate: jasmine rice and sesame edamame. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-chunky-beef-chili",
+    "file": "img/dinners/cooker-chunky-beef-chili.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A deep bowl of chunky beef chili with tender cubes of beef, beans, diced peppers and a thick tomato sauce, topped with shredded cheddar and a dollop of yogurt. Smaller portions of the sides share the plate: buttered sweet corn and carrot sticks & ranch. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "apple-glazed-chicken-thighs",
+    "file": "img/dinners/apple-glazed-chicken-thighs.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Grilled boneless chicken thighs with grill marks and a shiny amber apple glaze, served with a buttered sweet potato and green beans topped with crispy fried onions. Smaller portions of the sides share the plate: cinnamon-butter sweet potatoes and green beans with crispy fried onions. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "cooker-chicken-potatoes-carrots",
+    "file": "img/dinners/cooker-chicken-potatoes-carrots.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. Tender herb-rubbed chicken thighs resting on chunks of golden potato, carrot and soft cooked onion in a shallow bowl of light broth, with a lemon half beside it. Smaller portions of the sides share the plate: chopped romaine salad and crisp apple slices. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a Sam’s Club bulk dinner added on 2026-11-15 (docs/spec/24).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "dinner",
+    "id": "egg-fried-rice",
+    "file": "img/dinners/egg-fried-rice.webp",
+    "prompt": "Appetizing, realistic food photograph for a family dinner app, 3:2 landscape. A heaping plate of fried jasmine rice with browned diced steak, ribbons of scrambled egg and peas, carrots and corn. Smaller portions of the sides share the plate: sesame edamame and steamed broccoli with butter. Served on a speckled cream ceramic plate on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field, a potted herb softly blurred in the background. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "The dish changed: the pork became diced steak (the family eats little pork).",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "side",
+    "id": "steamed-normandy-vegetables",
+    "file": "img/sides/steamed-normandy-vegetables.webp",
+    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A bowl of steamed broccoli florets, cauliflower florets and crinkle-cut carrot slices glistening with a little melted butter. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: a new side from the Sam’s frozen Normandy blend.",
+    "done": "2026-11-15"
+  },
+  {
+    "kind": "lunch",
+    "id": "bonduelle-chicken-blt",
+    "file": "img/lunch/bonduelle-chicken-blt.webp",
+    "prompt": "Appetizing, realistic photograph of a packed-lunch item for a family meal app, square 1:1. A clear single-serve salad bowl with chopped iceberg and romaine lettuce, grilled chicken strips, bacon pieces and shredded cheese, a ranch cup beside it. On a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
+    "why": "No picture yet: back for Jeff with the tomatoes left out, so the picture shows none.",
     "done": "2026-11-15"
   }
 ]

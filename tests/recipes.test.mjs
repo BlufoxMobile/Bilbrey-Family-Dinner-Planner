@@ -116,7 +116,8 @@ test('validator: no raw cucumber, onion or tomato in a recipe, a lunch or a pict
 });
 
 test('lunches: the raw-tomato salad bowls are out, and every lunch still resolves', () => {
-  for (const id of ['tf-blt-chicken-bowl', 'bonduelle-chicken-blt']) assert.equal(lunchItem(db, {}, id), null, id);
+  // The Bonduelle BLT bowl came back for Jeff with the tomatoes left out (docs/spec/24, tests/recipes2.test.mjs).
+  assert.equal(lunchItem(db, {}, 'tf-blt-chicken-bowl'), null);
   assert.ok(db.lunch.swaps.every((s) => db.lunch.items[s.from] && db.lunch.items[s.to]));
   for (const cfg of Object.values(db.lunch.defaults)) for (const ids of Object.values(cfg.slots)) for (const id of ids) assert.ok(db.lunch.items[id], id);
   const unknown = check((d) => { d.lunches.items[0].items.madeUpThing = 1; });
@@ -214,7 +215,8 @@ test('validator: cooker settings are real ones, with times the machine allows', 
 
 test('new ingredients are in the catalog with packs, prices marked as estimates, and nutrition', () => {
   const catalog = read('data/catalog.json').ingredients;
-  for (const id of ['whiteBeans', 'celery', 'turkeySausage', 'greenChiles', 'beefBroth']) {
+  // turkeySausage was one of these until the family said chicken, not turkey (docs/spec/24).
+  for (const id of ['whiteBeans', 'celery', 'greenChiles', 'beefBroth']) {
     const ing = catalog[id];
     assert.ok(ing, id);
     for (const st of Object.keys(ing.packs)) for (const tier of ['generic', 'name']) {
@@ -224,7 +226,8 @@ test('new ingredients are in the catalog with packs, prices marked as estimates,
     assert.ok(db.nutrition.per[id].kcal >= 0 && db.nutrition.per[id].carbs >= 0, `${id} has nutrition`);
     assert.ok(db.dinnerList.some((d) => d.items[id]), `${id} is used`);
   }
-  assert.equal(catalog.turkeySausage.meat, true);
+  assert.equal(catalog.turkeySausage.meat, true, 'the id stays so receipts and the pantry still match');
+  assert.ok(!db.dinnerList.some((d) => d.items.turkeySausage || d.items.groundTurkey), 'no dinner uses turkey');
 });
 
 // ---------------------------------------------------------------- detailed recipes

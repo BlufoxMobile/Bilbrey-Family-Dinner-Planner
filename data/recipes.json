@@ -1,7 +1,7 @@
 {
   "version": 2,
   "updated": "2026-11-15",
-  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer, microwave and the Ninja PossibleCooker Pro (equipment id \"possible cooker\") only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases. 2026-11-15: dinners tagged \"from your pantry\" were built around the seasonings and sauces in the family’s pantry photos (Slap Ya Mama, Badia mango pepper, Buffalo Wild Wings mango habanero, Crystal, Buona giardiniera, apple jelly, turmeric, Old Bay, French’s crispy onions). 2026-11-15 pm: Cajun butter steak bites (eye of round), chorizo & nopalitos street tacos and smoky beef & bean chili were built from the family’s freezer and pantry photos. 2026-11-15 (v2.5.3): the creamy Parmesan-and-crouton romaine side was removed for good (the family never eats that kind of salad). 2026-11-15 (v3, docs/spec/18-recipe-box.md): two prototype dinners were retired for good (RETIRED_DINNERS in the validator); every dinner was lightened (leaner cuts, more vegetables, less butter, oil and sugar, a vegetable or salad among every pair of default sides) and its steps rewritten in full; steps may be { text, minutes, setting }; prepMinutes + cookMinutes = minutes; tips and leftovers were added; 14 PossibleCooker dinners and 6 sides joined the box.",
+  "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer, microwave and the Ninja PossibleCooker Pro (equipment id \"possible cooker\") only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases. 2026-11-15: dinners tagged \"from your pantry\" were built around the seasonings and sauces in the family’s pantry photos (Slap Ya Mama, Badia mango pepper, Buffalo Wild Wings mango habanero, Crystal, Buona giardiniera, apple jelly, turmeric, Old Bay, French’s crispy onions). 2026-11-15 pm: Cajun butter steak bites (eye of round), chorizo & nopalitos street tacos and smoky beef & bean chili were built from the family’s freezer and pantry photos. 2026-11-15 (v2.5.3): the creamy Parmesan-and-crouton romaine side was removed for good (the family never eats that kind of salad). 2026-11-15 (v3, docs/spec/18-recipe-box.md): two prototype dinners were retired for good (RETIRED_DINNERS in the validator); every dinner was lightened (leaner cuts, more vegetables, less butter, oil and sugar, a vegetable or salad among every pair of default sides) and its steps rewritten in full; steps may be { text, minutes, setting }; prepMinutes + cookMinutes = minutes; tips and leftovers were added; 14 PossibleCooker dinners and 6 sides joined the box. 2026-11-15 night (docs/spec/24-chicken-bulk-and-meal-cost.md): the family prefers chicken to turkey and eats little pork, so no dinner uses turkey (ground chicken, seasoned like Italian sausage where a dish wants sausage; three ids that named turkey were replaced, see RETIRED_DINNERS and \"renamed\"); pork fried rice and pork chow mein became steak and chicken, and two pork dinners moved to the bench. Ten dinners were built on Sam’s Club bulk buys (beef tips, sirloin tip, chuck roast, chicken thighs and breasts, frozen stir-fry and Normandy vegetables). The tag \"bulk\" marks a dinner whose meat comes from a Sam’s bulk pack that is portioned and frozen (catalog \"bulk\"). Steamed PossibleCooker sides use its STEAM setting (Jeff confirmed the button).",
   "dinners": [
     {
       "id": "smashburgers",
@@ -17,7 +17,8 @@
       ],
       "tags": [
         "burger",
-        "family favorite"
+        "family favorite",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -78,7 +79,8 @@
         "blackstone"
       ],
       "tags": [
-        "burger"
+        "burger",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -138,7 +140,8 @@
         "blackstone"
       ],
       "tags": [
-        "burger"
+        "burger",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -194,7 +197,8 @@
         "blackstone"
       ],
       "tags": [
-        "burger"
+        "burger",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -255,7 +259,8 @@
         "blackstone"
       ],
       "tags": [
-        "burger"
+        "burger",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -311,7 +316,8 @@
         "blackstone"
       ],
       "tags": [
-        "burger"
+        "burger",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -367,7 +373,8 @@
         "stovetop"
       ],
       "tags": [
-        "family favorite"
+        "family favorite",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -428,7 +435,8 @@
       ],
       "tags": [
         "family favorite",
-        "rice"
+        "rice",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -483,7 +491,8 @@
         "blackstone"
       ],
       "tags": [
-        "noodle night"
+        "noodle night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -553,7 +562,8 @@
       ],
       "tags": [
         "rice",
-        "family favorite"
+        "family favorite",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -621,7 +631,8 @@
         "stovetop"
       ],
       "tags": [
-        "noodle night"
+        "noodle night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -685,7 +696,8 @@
         "stovetop"
       ],
       "tags": [
-        "wraps"
+        "wraps",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -727,10 +739,10 @@
     },
     {
       "id": "ginger-beef-cabbage",
-      "title": "Ginger turkey lettuce cups",
-      "subtitle": "Crisp romaine cups filled with ginger-soy ground turkey, cabbage and shredded carrots.",
+      "title": "Ginger chicken lettuce cups",
+      "subtitle": "Crisp romaine cups filled with ginger-soy ground chicken, cabbage and shredded carrots.",
       "category": "Asian-inspired",
-      "protein": "turkey",
+      "protein": "chicken",
       "minutes": 25,
       "prepMinutes": 10,
       "cookMinutes": 15,
@@ -739,11 +751,12 @@
       ],
       "tags": [
         "wraps",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
-        "groundTurkey": 2.25,
+        "groundChicken": 2.25,
         "slaw": 14,
         "lettuce": 3,
         "carrots": 0.5,
@@ -758,7 +771,7 @@
       "steps": [
         "Pull the 3 romaine hearts apart into whole leaves, rinse and pat dry. Shred the carrots, grate the ginger and mince the 4 garlic cloves.",
         {
-          "text": "Heat the oil in your largest skillet over medium-high heat. Add the 2.25 lb of ground turkey and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
+          "text": "Heat the oil in your largest skillet over medium-high heat. Add the 2.25 lb of ground chicken and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
           "minutes": 8,
           "setting": "Stovetop, medium-high"
         },
@@ -793,7 +806,8 @@
         "stovetop"
       ],
       "tags": [
-        "noodle night"
+        "noodle night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -844,10 +858,10 @@
     },
     {
       "id": "egg-fried-rice",
-      "title": "Pork & egg fried rice",
-      "subtitle": "Takeout-style jasmine fried rice with diced lean pork, egg and lots of mixed vegetables.",
+      "title": "Steak & egg fried rice",
+      "subtitle": "Takeout-style jasmine fried rice with seared bites of lean sirloin tip, egg and lots of mixed vegetables.",
       "category": "Asian-inspired",
-      "protein": "pork",
+      "protein": "beef",
       "minutes": 50,
       "prepMinutes": 15,
       "cookMinutes": 35,
@@ -856,11 +870,12 @@
         "blackstone"
       ],
       "tags": [
-        "rice"
+        "rice",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
-        "porkLoin": 2,
+        "sirloinTip": 1.75,
         "jasmine": 1.5,
         "eggs": 4,
         "vegetables": 1.5,
@@ -877,15 +892,15 @@
           "minutes": 15,
           "setting": "Stovetop, low, lid on"
         },
-        "Trim the fat cap off the pork loin, cut the meat into ½-inch dice and toss with 1 tablespoon of the soy sauce. Grate the ginger, mince the 3 garlic cloves and beat the 4 eggs.",
+        "Trim any silvery skin off the 1¾ lb of sirloin tip, cut the meat into ½-inch dice and toss with 1 tablespoon of the soy sauce. Grate the ginger, mince the 3 garlic cloves and beat the 4 eggs.",
         {
           "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
           "minutes": 10,
           "setting": "Blackstone, medium-high"
         },
         {
-          "text": "Cook the pork in a single layer, turning, until browned and the thickest pieces read 145°F, 5–7 minutes. Move it to a cooler part of the griddle and let it rest at least 3 minutes.",
-          "minutes": 5,
+          "text": "Cook the steak in a single layer, turning once or twice, until browned and a thermometer in a thick piece reads 145°F, 3–4 minutes. Move it to a cooler part of the griddle.",
+          "minutes": 3,
           "setting": "Blackstone, medium-high"
         },
         {
@@ -901,7 +916,7 @@
       ],
       "tips": [
         "Day-old rice from the fridge makes the best fried rice.",
-        "Trimming the white fat cap off the loin takes a minute and keeps the dish lean."
+        "Sirloin tip is lean: small dice and a hot, fast sear keep it tender, and it cuts most easily while it is still a little frozen."
       ],
       "leftovers": "Keeps 3 days in the fridge in a covered container; cool it within an hour of cooking and reheat in a hot skillet until steaming.",
       "sides": [
@@ -909,7 +924,7 @@
         "steamed-broccoli"
       ],
       "sideSlots": 2,
-      "photo": "A heaping plate of fried jasmine rice with browned diced pork, ribbons of scrambled egg and peas, carrots and corn."
+      "photo": "A heaping plate of fried jasmine rice with browned diced steak, ribbons of scrambled egg and peas, carrots and corn."
     },
     {
       "id": "pepper-chicken-potatoes",
@@ -925,7 +940,8 @@
         "stovetop"
       ],
       "tags": [
-        "grill night"
+        "grill night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -963,10 +979,10 @@
     },
     {
       "id": "veggie-chow-mein",
-      "title": "Pork & mushroom chow mein",
-      "subtitle": "Noodles stir-fried with thin strips of lean pork, mushrooms, a whole bag of cabbage and ribbons of egg.",
+      "title": "Chicken & mushroom chow mein",
+      "subtitle": "Noodles stir-fried with thin strips of chicken thigh, mushrooms, a whole bag of cabbage and ribbons of egg.",
       "category": "Asian-inspired",
-      "protein": "pork",
+      "protein": "chicken",
       "minutes": 45,
       "prepMinutes": 20,
       "cookMinutes": 25,
@@ -975,11 +991,12 @@
         "blackstone"
       ],
       "tags": [
-        "noodle night"
+        "noodle night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
-        "porkLoin": 2,
+        "chickenThighs": 2,
         "spaghetti": 12,
         "slaw": 14,
         "mushrooms": 8,
@@ -993,7 +1010,7 @@
       },
       "steps": [
         {
-          "text": "Fill your largest pot with about 5 quarts of water, add 1 tablespoon of the salt, cover and bring to a full rolling boil over high heat. It takes 10–15 minutes, so start it first. While it heats, trim the fat cap off the pork loin and slice the meat into thin strips. Whisk the soy sauce, brown sugar and sesame oil, mince the 3 garlic cloves and beat the 3 eggs.",
+          "text": "Fill your largest pot with about 5 quarts of water, add 1 tablespoon of the salt, cover and bring to a full rolling boil over high heat. It takes 10–15 minutes, so start it first. While it heats, trim any big pieces of fat off the chicken thighs and slice them into thin strips. Whisk the soy sauce, brown sugar and sesame oil, mince the 3 garlic cloves and beat the 3 eggs.",
           "minutes": 10,
           "setting": "Stovetop, high"
         },
@@ -1008,8 +1025,8 @@
           "setting": "Blackstone, medium-high"
         },
         {
-          "text": "Spread half the oil on the griddle and sear the pork in a single layer, turning, until browned and the thickest strips read 145°F, 4–6 minutes. Move it to a cooler part of the griddle to rest at least 3 minutes.",
-          "minutes": 4,
+          "text": "Spread half the oil on the griddle and sear the chicken in a single layer, turning, until browned and the thickest strips read 165°F, 5–7 minutes. Move it to a cooler part of the griddle.",
+          "minutes": 5,
           "setting": "Blackstone, medium-high"
         },
         {
@@ -1018,13 +1035,13 @@
           "setting": "Blackstone, medium-high"
         },
         {
-          "text": "Add the noodles and the sauce and toss everything together with the pork until glossy and hot, about 2 minutes.",
+          "text": "Add the noodles and the sauce and toss everything together with the chicken until glossy and hot, about 2 minutes.",
           "minutes": 2,
           "setting": "Blackstone, medium-high"
         }
       ],
       "tips": [
-        "Slice the pork while it is still a little frozen; thin strips are much easier."
+        "Slice the chicken while it is still a little frozen; thin strips are much easier."
       ],
       "leftovers": "Keeps 3 days in the fridge in a covered container; reheat in a skillet with a splash of water.",
       "sides": [
@@ -1032,7 +1049,7 @@
         "canned-carrots"
       ],
       "sideSlots": 2,
-      "photo": "Stir-fried noodles with seared strips of pork, sliced mushrooms, shredded cabbage and strips of egg, piled on a platter."
+      "photo": "Stir-fried noodles with seared strips of chicken, sliced mushrooms, shredded cabbage and strips of egg, piled on a platter."
     },
     {
       "id": "peanut-sweet-potatoes",
@@ -1048,7 +1065,8 @@
         "electric grill"
       ],
       "tags": [
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -1100,7 +1118,8 @@
         "electric grill"
       ],
       "tags": [
-        "family favorite"
+        "family favorite",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -1160,7 +1179,8 @@
         "stovetop"
       ],
       "tags": [
-        "family favorite"
+        "family favorite",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -1219,7 +1239,9 @@
         "stovetop",
         "electric grill"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "chicken": 2.25,
@@ -1280,7 +1302,9 @@
         "stovetop",
         "electric grill"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "chicken": 2.25,
@@ -1328,27 +1352,32 @@
     },
     {
       "id": "chickpea-pepper-pasta",
-      "title": "Charred pepper & sausage penne",
-      "subtitle": "Lean turkey Italian sausage and lots of blistered bell peppers in marinara with Parmesan.",
+      "title": "Charred pepper & chicken sausage penne",
+      "subtitle": "Ground chicken seasoned like Italian sausage and lots of blistered bell peppers in marinara with Parmesan.",
       "category": "Pasta",
-      "protein": "sausage",
+      "protein": "chicken",
       "minutes": 40,
       "prepMinutes": 10,
       "cookMinutes": 30,
       "equipment": [
         "stovetop"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
-        "turkeySausage": 2,
+        "groundChicken": 2,
         "penne": 12,
         "peppers": 3,
         "onions": 0.5,
         "marinara": 24,
         "oil": 1,
         "parm": 2,
-        "salt": 3
+        "salt": 4,
+        "italianSeasoning": 2,
+        "garlicPowder": 1,
+        "redPepperFlakes": 0.25
       },
       "steps": [
         {
@@ -1362,7 +1391,7 @@
           "setting": "Stovetop, medium-high"
         },
         {
-          "text": "Squeeze the 2 lb of turkey Italian sausage out of its casings into a large, deep skillet with the oil. Cook over medium-high heat, breaking it into small crumbles with a wooden spoon, until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
+          "text": "Put the 2 lb of ground chicken in a large, deep skillet with the oil and sprinkle on the Italian seasoning, garlic powder, red pepper flakes and 1 teaspoon of the salt; that seasoning is what makes it taste like Italian sausage. Cook over medium-high heat, breaking it into small crumbles with a wooden spoon, until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
           "minutes": 8,
           "setting": "Stovetop, medium-high"
         },
@@ -1379,7 +1408,7 @@
       ],
       "tips": [
         "A dry, hot pan is what chars the peppers; oil just makes them steam.",
-        "Turkey sausage is soft: chill it 10 minutes in the freezer and the casings slip off easily."
+        "Italian seasoning, garlic powder and a pinch of red pepper turn plain ground chicken into sausage; add a pinch of fennel seed if there is some in the cupboard."
       ],
       "leftovers": "Keeps 3 days in the fridge in a covered container; reheat with a splash of water or milk so the sauce loosens.",
       "sides": [
@@ -1387,7 +1416,7 @@
         "canned-green-beans"
       ],
       "sideSlots": 2,
-      "photo": "Penne in a chunky tomato sauce with browned crumbled sausage and charred red and green bell pepper strips, topped with Parmesan."
+      "photo": "Penne in a chunky tomato sauce with browned crumbled chicken sausage and charred red and green bell pepper strips, topped with Parmesan."
     },
     {
       "id": "cheeseburger-penne",
@@ -1401,7 +1430,9 @@
       "equipment": [
         "stovetop"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "beef": 2,
@@ -1461,7 +1492,9 @@
         "stovetop",
         "electric grill"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "chicken": 2.25,
@@ -1523,7 +1556,9 @@
         "stovetop",
         "electric grill"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "chicken": 2.25,
@@ -1587,7 +1622,8 @@
         "electric grill"
       ],
       "tags": [
-        "grill night"
+        "grill night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -1640,7 +1676,8 @@
       ],
       "tags": [
         "grill night",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -1686,7 +1723,8 @@
         "electric grill"
       ],
       "tags": [
-        "sandwiches"
+        "sandwiches",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -1739,7 +1777,8 @@
       ],
       "tags": [
         "grill night",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -1784,7 +1823,8 @@
         "electric grill"
       ],
       "tags": [
-        "grill night"
+        "grill night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -1834,7 +1874,9 @@
         "stovetop",
         "electric grill"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "beef": 2,
@@ -1894,7 +1936,8 @@
       ],
       "tags": [
         "salad",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -1941,7 +1984,8 @@
         "stovetop"
       ],
       "tags": [
-        "taco night"
+        "taco night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -2049,7 +2093,9 @@
       "equipment": [
         "blackstone"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "chickenThighs": 2,
@@ -2108,7 +2154,8 @@
         "stovetop"
       ],
       "tags": [
-        "rice"
+        "rice",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -2159,10 +2206,10 @@
     },
     {
       "id": "sweet-potato-tacos",
-      "title": "Turkey & sweet potato tacos",
-      "subtitle": "Taco-seasoned ground turkey and crispy air-fried sweet potato cubes in warm street-taco corn tortillas.",
+      "title": "Chicken & sweet potato tacos",
+      "subtitle": "Taco-seasoned ground chicken and crispy air-fried sweet potato cubes in warm street-taco corn tortillas.",
       "category": "Tex-Mex",
-      "protein": "turkey",
+      "protein": "chicken",
       "minutes": 45,
       "prepMinutes": 15,
       "cookMinutes": 30,
@@ -2172,11 +2219,12 @@
       ],
       "tags": [
         "taco night",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
-        "groundTurkey": 2,
+        "groundChicken": 2,
         "sweet": 1.5,
         "streetTacoCorn": 15,
         "taco": 6,
@@ -2191,7 +2239,7 @@
           "setting": "Air fryer, 400°F"
         },
         {
-          "text": "Set a large skillet over medium-high heat; lean turkey browns fine without oil in a nonstick pan. Add the 2 lb of ground turkey and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
+          "text": "Set a large skillet over medium-high heat; lean ground chicken browns fine without oil in a nonstick pan. Add the 2 lb of ground chicken and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
           "minutes": 8,
           "setting": "Stovetop, medium-high"
         },
@@ -2204,7 +2252,7 @@
           "text": "Warm the street-taco tortillas two or three at a time in a dry skillet over medium-high heat, 20–30 seconds per side, until soft with a few toasted spots. Stack them inside a clean kitchen towel so they stay warm and bendy.",
           "setting": "Stovetop, medium-high"
         },
-        "Fill three tortillas per person with turkey and sweet potatoes and top with salsa and yogurt."
+        "Fill three tortillas per person with chicken and sweet potatoes and top with salsa and yogurt."
       ],
       "tips": [
         "Cut the sweet potato cubes the same size so they finish together."
@@ -2215,7 +2263,7 @@
         "lime-slaw"
       ],
       "sideSlots": 2,
-      "photo": "Corn tortilla tacos filled with seasoned ground turkey and golden crispy sweet potato cubes, topped with salsa and a drizzle of yogurt, lime wedges alongside."
+      "photo": "Corn tortilla tacos filled with seasoned ground chicken and golden crispy sweet potato cubes, topped with salsa and a drizzle of yogurt, lime wedges alongside."
     },
     {
       "id": "chicken-tostadas",
@@ -2232,7 +2280,8 @@
         "stovetop"
       ],
       "tags": [
-        "taco night"
+        "taco night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -2289,7 +2338,8 @@
         "microwave"
       ],
       "tags": [
-        "wraps"
+        "wraps",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -2356,7 +2406,9 @@
         "electric grill",
         "stovetop"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "chickenThighs": 2.25,
@@ -2419,7 +2471,8 @@
       ],
       "tags": [
         "pizza",
-        "family favorite"
+        "family favorite",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -2461,9 +2514,9 @@
     {
       "id": "chili-jacket-potatoes",
       "title": "Chili-stuffed potatoes",
-      "subtitle": "Fluffy split potatoes piled with turkey chili, melted cheddar and a cool dollop of yogurt.",
+      "subtitle": "Fluffy split potatoes piled with chicken chili, melted cheddar and a cool dollop of yogurt.",
       "category": "Comfort",
-      "protein": "turkey",
+      "protein": "chicken",
       "minutes": 40,
       "prepMinutes": 5,
       "cookMinutes": 35,
@@ -2472,11 +2525,12 @@
         "stovetop"
       ],
       "tags": [
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
-        "groundTurkey": 2,
+        "groundChicken": 2,
         "potatoes": 3,
         "chiliBeans": 2,
         "cheese": 3,
@@ -2490,7 +2544,7 @@
           "setting": "Microwave, high"
         },
         {
-          "text": "Set a large, deep skillet over medium-high heat; lean turkey browns fine without oil in a nonstick pan. Add the 2 lb of ground turkey and the salt and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
+          "text": "Set a large, deep skillet over medium-high heat; lean ground chicken browns fine without oil in a nonstick pan. Add the 2 lb of ground chicken and the salt and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
           "minutes": 8,
           "setting": "Stovetop, medium-high"
         },
@@ -2510,14 +2564,14 @@
         "carrot-sticks"
       ],
       "sideSlots": 2,
-      "photo": "Fluffy split golden potatoes heaped with chunky turkey and bean chili, melted cheddar and a dollop of white yogurt."
+      "photo": "Fluffy split golden potatoes heaped with chunky chicken and bean chili, melted cheddar and a dollop of white yogurt."
     },
     {
       "id": "breakfast-tacos",
-      "title": "Turkey sausage, egg & potato breakfast tacos",
-      "subtitle": "Breakfast-for-dinner tacos with lean turkey sausage, soft scrambled eggs, golden potatoes, peppers and cheddar.",
+      "title": "Chicken sausage, egg & potato breakfast tacos",
+      "subtitle": "Breakfast-for-dinner tacos with homemade lean chicken sausage, soft scrambled eggs, golden potatoes, peppers and cheddar.",
       "category": "Comfort",
-      "protein": "sausage",
+      "protein": "chicken",
       "minutes": 45,
       "prepMinutes": 15,
       "cookMinutes": 30,
@@ -2526,19 +2580,24 @@
         "microwave"
       ],
       "tags": [
-        "taco night"
+        "taco night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
-        "turkeySausage": 1.5,
+        "groundChicken": 1.5,
         "eggs": 10,
         "potatoes": 1.5,
         "peppers": 2,
         "cheese": 3,
         "salsa": 8,
         "oil": 1,
-        "salt": 1,
-        "streetTacoFlour": 15
+        "salt": 1.5,
+        "streetTacoFlour": 15,
+        "italianSeasoning": 1.5,
+        "garlicPowder": 0.5,
+        "paprika": 0.5,
+        "pepper": 0.5
       },
       "steps": [
         {
@@ -2552,12 +2611,12 @@
           "setting": "Blackstone, medium-high"
         },
         {
-          "text": "Squeeze the 1½ lb of turkey Italian sausage out of its casings onto the griddle and cook, breaking it up, until no pink is left and it reads 165°F, 8–10 minutes. Move it to a cooler part.",
+          "text": "Put the 1½ lb of ground chicken on the griddle and sprinkle it with the Italian seasoning, garlic powder, paprika, black pepper and ½ teaspoon of the salt; that seasoning turns it into breakfast sausage. Cook, breaking it up, until no pink is left and it reads 165°F, 8–10 minutes. Move it to a cooler part.",
           "minutes": 8,
           "setting": "Blackstone, medium-high"
         },
         {
-          "text": "Spread the oil on the hot part and cook the potatoes and peppers with the salt until golden, 6–8 minutes.",
+          "text": "Spread the oil on the hot part and cook the potatoes and peppers with the rest of the salt until golden, 6–8 minutes.",
           "minutes": 6,
           "setting": "Blackstone, medium-high"
         },
@@ -2577,7 +2636,7 @@
         "applesauce-cups"
       ],
       "sideSlots": 2,
-      "photo": "Soft flour tortilla tacos filled with fluffy scrambled eggs, crumbled turkey sausage, golden potato cubes, peppers and melted cheddar, topped with salsa."
+      "photo": "Soft flour tortilla tacos filled with fluffy scrambled eggs, crumbled chicken sausage, golden potato cubes, peppers and melted cheddar, topped with salsa."
     },
     {
       "id": "tomato-soup-melts",
@@ -2593,7 +2652,8 @@
         "stovetop"
       ],
       "tags": [
-        "sandwiches"
+        "sandwiches",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -2642,7 +2702,8 @@
         "stovetop"
       ],
       "tags": [
-        "sandwiches"
+        "sandwiches",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -2698,7 +2759,9 @@
       "equipment": [
         "air fryer"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "chicken": 2.25,
@@ -2749,7 +2812,9 @@
         "electric grill",
         "stovetop"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "core",
       "items": {
         "chicken": 2.25,
@@ -2853,7 +2918,8 @@
         "stovetop"
       ],
       "tags": [
-        "family usual"
+        "family usual",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -3005,7 +3071,8 @@
       ],
       "tags": [
         "family usual",
-        "noodle night"
+        "noodle night",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -3058,7 +3125,8 @@
         "electric grill"
       ],
       "tags": [
-        "rice"
+        "rice",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3117,7 +3185,8 @@
         "blackstone"
       ],
       "tags": [
-        "noodle night"
+        "noodle night",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3192,7 +3261,8 @@
         "stovetop"
       ],
       "tags": [
-        "rice"
+        "rice",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3245,9 +3315,9 @@
     {
       "id": "egg-roll-in-a-bowl",
       "title": "Egg roll in a bowl",
-      "subtitle": "All the flavor of an egg roll (lean ground turkey, a bag and a half of cabbage, carrots, ginger and garlic) in one big skillet.",
+      "subtitle": "All the flavor of an egg roll (lean ground chicken, a bag and a half of cabbage, carrots, ginger and garlic) in one big skillet.",
       "category": "Asian-inspired",
-      "protein": "turkey",
+      "protein": "chicken",
       "minutes": 25,
       "prepMinutes": 10,
       "cookMinutes": 15,
@@ -3255,11 +3325,12 @@
         "stovetop"
       ],
       "tags": [
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
-        "groundTurkey": 2.25,
+        "groundChicken": 2.25,
         "slaw": 21,
         "carrots": 0.5,
         "garlic": 4,
@@ -3272,7 +3343,7 @@
       "steps": [
         "Shred the carrots, mince the 4 garlic cloves and grate the ginger.",
         {
-          "text": "Heat the oil in your largest skillet over medium-high heat. Add the 2.25 lb of ground turkey and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
+          "text": "Heat the oil in your largest skillet over medium-high heat. Add the 2.25 lb of ground chicken and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
           "minutes": 8,
           "setting": "Stovetop, medium-high"
         },
@@ -3292,7 +3363,7 @@
         "edamame"
       ],
       "sideSlots": 2,
-      "photo": "A bowl of savory stir-fried ground turkey with wilted shredded cabbage and carrots, glistening with soy and sesame oil."
+      "photo": "A bowl of savory stir-fried ground chicken with wilted shredded cabbage and carrots, glistening with soy and sesame oil."
     },
     {
       "id": "chicken-katsu",
@@ -3306,7 +3377,9 @@
       "equipment": [
         "air fryer"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "bench",
       "items": {
         "chicken": 2.25,
@@ -3357,7 +3430,8 @@
         "stovetop"
       ],
       "tags": [
-        "rice"
+        "rice",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3417,7 +3491,8 @@
         "stovetop"
       ],
       "tags": [
-        "rice"
+        "rice",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3480,7 +3555,8 @@
         "blackstone"
       ],
       "tags": [
-        "taco night"
+        "taco night",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3547,7 +3623,8 @@
       ],
       "tags": [
         "grill night",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3603,7 +3680,8 @@
         "air fryer"
       ],
       "tags": [
-        "sandwiches"
+        "sandwiches",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3653,7 +3731,9 @@
       "equipment": [
         "stovetop"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "bench",
       "items": {
         "pork": 2.25,
@@ -3694,20 +3774,22 @@
     },
     {
       "id": "sausage-broccoli-penne",
-      "title": "Turkey sausage & broccoli penne",
-      "subtitle": "Lean turkey Italian sausage, lots of garlicky broccoli and penne tossed with Parmesan, lemon and a splash of broth.",
+      "title": "Chicken sausage & broccoli penne",
+      "subtitle": "Ground chicken seasoned like Italian sausage, lots of garlicky broccoli and penne tossed with Parmesan, lemon and a splash of broth.",
       "category": "Pasta",
-      "protein": "sausage",
+      "protein": "chicken",
       "minutes": 35,
       "prepMinutes": 10,
       "cookMinutes": 25,
       "equipment": [
         "stovetop"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "bench",
       "items": {
-        "turkeySausage": 2,
+        "groundChicken": 2,
         "penne": 12,
         "broccoli": 1.75,
         "garlic": 4,
@@ -3716,7 +3798,9 @@
         "oil": 1,
         "redPepperFlakes": 0.25,
         "lemons": 1,
-        "salt": 3
+        "salt": 4,
+        "italianSeasoning": 2,
+        "garlicPowder": 1
       },
       "steps": [
         {
@@ -3730,7 +3814,7 @@
           "setting": "Stovetop, high"
         },
         {
-          "text": "Squeeze the 2 lb of turkey Italian sausage out of its casings into a large, deep skillet with the oil. Cook over medium-high heat, breaking it into small crumbles with a wooden spoon, until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
+          "text": "Put the 2 lb of ground chicken in a large, deep skillet with the oil and sprinkle on the Italian seasoning, garlic powder and 1 teaspoon of the salt; that seasoning is what makes it taste like Italian sausage. Cook over medium-high heat, breaking it into small crumbles with a wooden spoon, until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
           "minutes": 8,
           "setting": "Stovetop, medium-high"
         },
@@ -3749,12 +3833,12 @@
         "garlic-toast"
       ],
       "sideSlots": 2,
-      "photo": "Penne tossed with browned crumbled Italian sausage, bright green broccoli florets, garlic and grated Parmesan in a wide pasta bowl."
+      "photo": "Penne tossed with browned crumbled chicken sausage, bright green broccoli florets, garlic and grated Parmesan in a wide pasta bowl."
     },
     {
       "id": "sausage-pepper-hoagies",
-      "title": "Turkey sausage, pepper & onion hoagies",
-      "subtitle": "Griddled turkey Italian sausage with a big pile of sweet peppers and onions under melted mozzarella on toasted rolls.",
+      "title": "Chicken sausage, pepper & onion hoagies",
+      "subtitle": "Griddled Italian chicken sausage with a big pile of sweet peppers and onions under melted mozzarella on toasted rolls.",
       "category": "Grill",
       "protein": "sausage",
       "minutes": 35,
@@ -3769,7 +3853,7 @@
       ],
       "rotation": "bench",
       "items": {
-        "turkeySausage": 2,
+        "chickenSausage": 1.4,
         "hoagies": 5,
         "peppers": 3,
         "onions": 1,
@@ -3791,8 +3875,8 @@
           "setting": "Blackstone, medium-high"
         },
         {
-          "text": "Meanwhile cook the sausage links on the other side, turning every couple of minutes, for 8 minutes. Split each one lengthwise and griddle cut side down until browned and a thermometer in the center reads 165°F, 4–6 minutes more.",
-          "minutes": 12,
+          "text": "Meanwhile brown the 8 Italian chicken sausage links (two 11 oz packs; they come fully cooked) on the other side, turning every couple of minutes, about 5 minutes. Split each one lengthwise and griddle cut side down until hot all the way through and a thermometer in the center reads 165°F, 2–3 minutes more.",
+          "minutes": 7,
           "setting": "Blackstone, medium-high"
         },
         {
@@ -3803,7 +3887,7 @@
         "Scoop a pile into each roll and add a spoonful of Buona hot giardiniera for anyone who likes heat."
       ],
       "tips": [
-        "Turkey sausage is leaner than pork and dries out if it overcooks, so pull it as soon as it reads 165°F."
+        "The chicken sausage links are already cooked, so they only need browning and heating through; take them off as soon as they read 165°F and they stay juicy."
       ],
       "leftovers": "Keeps 3 days in the fridge in a covered container; reheat the filling in a skillet and toast a fresh roll.",
       "sides": [
@@ -3811,7 +3895,7 @@
         "canned-green-beans"
       ],
       "sideSlots": 2,
-      "photo": "A toasted hoagie roll stuffed with griddled Italian sausage, charred peppers and onions under melted mozzarella."
+      "photo": "A toasted hoagie roll stuffed with griddled Italian chicken sausage, charred peppers and onions under melted mozzarella."
     },
     {
       "id": "chicken-cobb-salad",
@@ -3827,7 +3911,8 @@
         "electric grill"
       ],
       "tags": [
-        "salad"
+        "salad",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3872,11 +3957,11 @@
       "photo": "A large bowl of chopped romaine with neat rows of sliced grilled chicken, crumbled bacon, quartered hard-cooked eggs and shredded cheddar, ranch on the side."
     },
     {
-      "id": "turkey-taco-salad",
-      "title": "Turkey taco salad",
-      "subtitle": "Crisp romaine loaded with taco-spiced turkey, black beans, cheddar, salsa, a cool yogurt topping and a few crunchy chips.",
+      "id": "chicken-taco-salad",
+      "title": "Chicken taco salad",
+      "subtitle": "Crisp romaine loaded with taco-spiced ground chicken, black beans, cheddar, salsa, a cool yogurt topping and a few crunchy chips.",
       "category": "Salads",
-      "protein": "turkey",
+      "protein": "chicken",
       "minutes": 25,
       "prepMinutes": 10,
       "cookMinutes": 15,
@@ -3886,11 +3971,12 @@
       "tags": [
         "salad",
         "taco night",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
-        "groundTurkey": 2,
+        "groundChicken": 2,
         "taco": 3,
         "beans": 1,
         "lettuce": 3,
@@ -3902,7 +3988,7 @@
       },
       "steps": [
         {
-          "text": "Set a large skillet over medium-high heat; lean turkey browns fine without oil in a nonstick pan. Add the 2 lb of ground turkey and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
+          "text": "Set a large skillet over medium-high heat; lean ground chicken browns fine without oil in a nonstick pan. Add the 2 lb of ground chicken and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
           "minutes": 8,
           "setting": "Stovetop, medium-high"
         },
@@ -3911,7 +3997,7 @@
           "minutes": 3,
           "setting": "Stovetop, medium"
         },
-        "Chop the 3 romaine hearts and divide among five big bowls. Top with the warm turkey, shredded cheddar, salsa and a spoonful of yogurt.",
+        "Chop the 3 romaine hearts and divide among five big bowls. Top with the warm chicken, shredded cheddar, salsa and a spoonful of yogurt.",
         "Crush a small handful of chips over each salad and finish with a squeeze of lime."
       ],
       "tips": [
@@ -3923,7 +4009,7 @@
         "applesauce-cups"
       ],
       "sideSlots": 2,
-      "photo": "A big taco salad of chopped romaine topped with seasoned ground turkey, black beans, shredded cheddar, salsa, a dollop of yogurt and crushed tortilla chips, with a lime wedge."
+      "photo": "A big taco salad of chopped romaine topped with seasoned ground chicken, black beans, shredded cheddar, salsa, a dollop of yogurt and crushed tortilla chips, with a lime wedge."
     },
     {
       "id": "asian-chicken-salad",
@@ -3939,7 +4025,8 @@
       ],
       "tags": [
         "salad",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -3978,11 +4065,11 @@
       "photo": "A colorful salad of romaine and shredded cabbage with carrots and orange segments topped with sliced grilled chicken and a glossy sesame-ginger dressing."
     },
     {
-      "id": "turkey-chili",
-      "title": "Turkey & black bean chili",
-      "subtitle": "A big pot of hearty turkey chili with beans, tomatoes and peppers, topped with cheddar and a spoonful of yogurt.",
+      "id": "chicken-bean-chili",
+      "title": "Chicken & bean chili",
+      "subtitle": "A big pot of hearty chicken chili with beans, tomatoes and peppers, topped with cheddar and a spoonful of yogurt.",
       "category": "Comfort",
-      "protein": "turkey",
+      "protein": "chicken",
       "minutes": 45,
       "prepMinutes": 10,
       "cookMinutes": 35,
@@ -3990,11 +4077,12 @@
         "stovetop"
       ],
       "tags": [
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
-        "groundTurkey": 2,
+        "groundChicken": 2,
         "chiliBeans": 2,
         "tomatoes": 2,
         "onions": 1,
@@ -4011,7 +4099,7 @@
           "setting": "Stovetop, medium-high"
         },
         {
-          "text": "Add the 2 lb of ground turkey and break it into small crumbles as it cooks, until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
+          "text": "Add the 2 lb of ground chicken and break it into small crumbles as it cooks, until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
           "minutes": 8,
           "setting": "Stovetop, medium-high"
         },
@@ -4023,7 +4111,7 @@
         }
       ],
       "tips": [
-        "This is a good one for the PossibleCooker: brown the turkey on SEAR/SAUTÉ, add everything else and SLOW COOK on LO for 6 hours.",
+        "This is a good one for the PossibleCooker: brown the chicken on SEAR/SAUTÉ, add everything else and SLOW COOK on LO for 6 hours.",
         "Chili is better the next day."
       ],
       "leftovers": "Keeps 4 days in the fridge and freezes for 3 months; freeze it flat in zip bags so it thaws quickly.",
@@ -4032,7 +4120,7 @@
         "carrot-sticks"
       ],
       "sideSlots": 2,
-      "photo": "A deep bowl of thick turkey and bean chili with tomatoes and peppers, topped with shredded cheddar and a dollop of yogurt."
+      "photo": "A deep bowl of thick chicken and bean chili with tomatoes and peppers, topped with shredded cheddar and a dollop of yogurt."
     },
     {
       "id": "beef-stroganoff",
@@ -4046,7 +4134,9 @@
       "equipment": [
         "stovetop"
       ],
-      "tags": [],
+      "tags": [
+        "bulk"
+      ],
       "rotation": "bench",
       "items": {
         "beef": 2,
@@ -4106,7 +4196,8 @@
         "blackstone"
       ],
       "tags": [
-        "burger"
+        "burger",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -4169,7 +4260,8 @@
         "blackstone"
       ],
       "tags": [
-        "sandwiches"
+        "sandwiches",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -4232,7 +4324,8 @@
       ],
       "tags": [
         "grill night",
-        "from your pantry"
+        "from your pantry",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4289,7 +4382,8 @@
       "tags": [
         "grill night",
         "rice",
-        "from your pantry"
+        "from your pantry",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4380,7 +4474,7 @@
     {
       "id": "buffalo-chicken-wraps",
       "title": "Buffalo chicken ranch wraps",
-      "subtitle": "Griddled chicken tossed in Crystal hot sauce with a little butter, wrapped with lots of romaine, cheddar and Hidden Valley ranch.",
+      "subtitle": "Griddled chicken tossed in Crystal hot sauce with a little butter, wrapped with lots of romaine, cheddar and Wish-Bone ranch.",
       "category": "Grill",
       "protein": "chicken",
       "minutes": 30,
@@ -4392,7 +4486,8 @@
       ],
       "tags": [
         "wraps",
-        "from your pantry"
+        "from your pantry",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4451,9 +4546,10 @@
       ],
       "tags": [
         "grill night",
-        "from your pantry"
+        "from your pantry",
+        "bulk"
       ],
-      "rotation": "core",
+      "rotation": "bench",
       "items": {
         "pork": 2.25,
         "appleJelly": 4,
@@ -4504,7 +4600,8 @@
       ],
       "tags": [
         "grill night",
-        "from your pantry"
+        "from your pantry",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4560,7 +4657,8 @@
       ],
       "tags": [
         "taco night",
-        "from your pantry"
+        "from your pantry",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4613,7 +4711,8 @@
         "stovetop"
       ],
       "tags": [
-        "from your pantry"
+        "from your pantry",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4666,7 +4765,8 @@
       "tags": [
         "soup",
         "freezer friendly",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4721,7 +4821,8 @@
       "tags": [
         "soup",
         "freezer friendly",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4781,7 +4882,8 @@
       ],
       "tags": [
         "soup",
-        "freezer friendly"
+        "freezer friendly",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4853,7 +4955,8 @@
       "tags": [
         "sandwiches",
         "freezer friendly",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4916,7 +5019,8 @@
       "tags": [
         "taco night",
         "freezer friendly",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -4973,9 +5077,10 @@
         "possible cooker"
       ],
       "tags": [
-        "healthier"
+        "healthier",
+        "bulk"
       ],
-      "rotation": "core",
+      "rotation": "bench",
       "items": {
         "porkLoin": 2.25,
         "apples": 1.5,
@@ -5044,7 +5149,8 @@
       "tags": [
         "soup",
         "freezer friendly",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -5096,11 +5202,11 @@
       "photo": "A bowl of chicken noodle soup with shredded chicken, wide egg noodles, carrot coins, celery and peas in a clear golden broth, a lemon wedge beside it."
     },
     {
-      "id": "cooker-turkey-meatballs",
-      "title": "Turkey meatballs in marinara",
-      "subtitle": "Tender lean turkey meatballs simmered right in the marinara with spinach, served over spaghetti with Parmesan.",
+      "id": "cooker-chicken-meatballs",
+      "title": "Chicken meatballs in marinara",
+      "subtitle": "Tender lean chicken meatballs simmered right in the marinara with spinach, served over spaghetti with Parmesan.",
       "category": "Pasta",
-      "protein": "turkey",
+      "protein": "chicken",
       "minutes": 70,
       "prepMinutes": 25,
       "cookMinutes": 45,
@@ -5110,11 +5216,12 @@
       ],
       "tags": [
         "freezer friendly",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
-        "groundTurkey": 2,
+        "groundChicken": 2,
         "panko": 3,
         "eggs": 1,
         "parm": 2,
@@ -5127,7 +5234,7 @@
         "spaghetti": 10
       },
       "steps": [
-        "In a large bowl mix the 2 lb of ground turkey with the panko, the egg, half the Parmesan, the garlic powder, the Italian seasoning and 1 teaspoon of the salt. Mix with your hands only until it comes together. With wet hands, roll it into 25 meatballs about 1½ inches across.",
+        "In a large bowl mix the 2 lb of ground chicken with the panko, the egg, half the Parmesan, the garlic powder, the Italian seasoning and 1 teaspoon of the salt. Mix with your hands only until it comes together. With wet hands, roll it into 25 meatballs about 1½ inches across.",
         "Pour the jar of Rao’s marinara, the can of diced tomatoes with its juice and ½ cup of water into the PossibleCooker pot and stir. Set the meatballs into the sauce in a single layer and spoon a little sauce over each.",
         {
           "text": "Put the lid on, select BRAISE, set the time to 40 minutes and press START/STOP. Leave them alone for the first 20 minutes so they firm up, then turn each one gently with a wooden spoon. They are done when a thermometer in the center of a meatball reads 165°F.",
@@ -5151,7 +5258,7 @@
         }
       ],
       "tips": [
-        "No browning needed: simmering the meatballs in the sauce keeps lean turkey tender and saves a pan.",
+        "No browning needed: simmering the meatballs in the sauce keeps lean chicken tender and saves a pan.",
         "Don’t pack the meatballs tight; a light hand keeps them soft.",
         "The pot is nonstick: stir with a wooden or silicone spoon, never metal."
       ],
@@ -5161,14 +5268,14 @@
         "garlic-toast"
       ],
       "sideSlots": 2,
-      "photo": "A plate of spaghetti topped with round turkey meatballs in a chunky red marinara with wilted spinach and grated Parmesan."
+      "photo": "A plate of spaghetti topped with round chicken meatballs in a chunky red marinara with wilted spinach and grated Parmesan."
     },
     {
       "id": "cooker-sausage-minestrone",
-      "title": "Turkey sausage minestrone",
-      "subtitle": "A big pot of vegetable soup with lean turkey Italian sausage, white beans, carrots, zucchini, spinach and little pasta.",
+      "title": "Chicken sausage minestrone",
+      "subtitle": "A big pot of vegetable soup with Italian-seasoned ground chicken, white beans, carrots, zucchini, spinach and little pasta.",
       "category": "Comfort",
-      "protein": "sausage",
+      "protein": "chicken",
       "minutes": 410,
       "prepMinutes": 20,
       "cookMinutes": 390,
@@ -5178,11 +5285,12 @@
       "tags": [
         "soup",
         "freezer friendly",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
-        "turkeySausage": 1.5,
+        "groundChicken": 1.5,
         "whiteBeans": 2,
         "tomatoes": 2,
         "carrots": 0.75,
@@ -5193,15 +5301,16 @@
         "garlic": 3,
         "chickenBroth": 6,
         "elbows": 6,
-        "italianSeasoning": 2,
+        "italianSeasoning": 3,
         "oil": 1,
         "parm": 2,
-        "salt": 1
+        "salt": 1.5,
+        "garlicPowder": 1
       },
       "steps": [
         "Peel the carrots and cut into small dice, slice 4 ribs of celery (half a bunch), peel the onion and cut it into small dice, and mince the 3 garlic cloves. Drain and rinse the 2 cans of white beans.",
         {
-          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil and squeeze the 1½ lb of turkey Italian sausage out of its casings into the pot. Cook, breaking it into small crumbles with a wooden spoon, until no pink is left and it reads 165°F, 8–10 minutes.",
+          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil and the 1½ lb of ground chicken and sprinkle it with 1 teaspoon of the Italian seasoning, the garlic powder and ½ teaspoon of the salt, so it tastes like Italian sausage. Cook, breaking it into small crumbles with a wooden spoon, until no pink is left and it reads 165°F, 8–10 minutes.",
           "minutes": 8,
           "setting": "SEAR/SAUTÉ on HI"
         },
@@ -5210,7 +5319,7 @@
           "minutes": 4,
           "setting": "SEAR/SAUTÉ on HI"
         },
-        "Pour in the 6 cups of chicken stock and add the 2 cans of diced tomatoes with their juice, the beans, the Italian seasoning and the salt. Stir.",
+        "Pour in the 6 cups of chicken stock and add the 2 cans of diced tomatoes with their juice, the beans, the rest of the Italian seasoning and the rest of the salt. Stir.",
         {
           "text": "Put the lid on. Select SLOW COOK, set it to LO and the time to 6 hours, and press START/STOP (or use HI for 3 hours if you are starting later in the day). Leave the lid on while it cooks; every peek lets heat out.",
           "minutes": 360,
@@ -5233,7 +5342,7 @@
         "garlic-toast"
       ],
       "sideSlots": 2,
-      "photo": "A hearty bowl of minestrone with crumbled sausage, white beans, diced carrots, zucchini half-moons, elbow pasta and wilted spinach in a tomato broth, topped with grated Parmesan."
+      "photo": "A hearty bowl of minestrone with crumbled chicken sausage, white beans, diced carrots, zucchini half-moons, elbow pasta and wilted spinach in a tomato broth, topped with grated Parmesan."
     },
     {
       "id": "cooker-sesame-ginger-chicken",
@@ -5249,7 +5358,8 @@
       ],
       "tags": [
         "rice",
-        "freezer friendly"
+        "freezer friendly",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -5305,7 +5415,8 @@
         "possible cooker"
       ],
       "tags": [
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -5350,9 +5461,9 @@
     {
       "id": "cooker-lasagna-soup",
       "title": "One-pot lasagna soup",
-      "subtitle": "Everything good about lasagna in a bowl: lean turkey, marinara, penne and spinach under melting mozzarella and Parmesan.",
+      "subtitle": "Everything good about lasagna in a bowl: lean ground chicken, marinara, penne and spinach under melting mozzarella and Parmesan.",
       "category": "Pasta",
-      "protein": "turkey",
+      "protein": "chicken",
       "minutes": 50,
       "prepMinutes": 10,
       "cookMinutes": 40,
@@ -5361,11 +5472,12 @@
       ],
       "tags": [
         "soup",
-        "healthier"
+        "healthier",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
-        "groundTurkey": 2,
+        "groundChicken": 2,
         "marinara": 24,
         "tomatoes": 1,
         "chickenBroth": 5,
@@ -5382,7 +5494,7 @@
       "steps": [
         "Peel the onion and cut it into small dice. Mince the 3 garlic cloves.",
         {
-          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil, the 2 lb of ground turkey and the onion. Cook, breaking the turkey into small crumbles with a wooden spoon, until no pink is left, the onion is soft and the meat reads 165°F, 8–10 minutes. Stir in the garlic and Italian seasoning for 30 seconds.",
+          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil, the 2 lb of ground chicken and the onion. Cook, breaking the chicken into small crumbles with a wooden spoon, until no pink is left, the onion is soft and the meat reads 165°F, 8–10 minutes. Stir in the garlic and Italian seasoning for 30 seconds.",
           "minutes": 8,
           "setting": "SEAR/SAUTÉ on HI"
         },
@@ -5408,7 +5520,7 @@
         "garlic-toast"
       ],
       "sideSlots": 2,
-      "photo": "A bowl of thick tomato lasagna soup with penne, crumbled ground turkey and wilted spinach, topped with melting mozzarella and grated Parmesan."
+      "photo": "A bowl of thick tomato lasagna soup with penne, crumbled ground chicken and wilted spinach, topped with melting mozzarella and grated Parmesan."
     },
     {
       "id": "cooker-chicken-cacciatore",
@@ -5424,7 +5536,8 @@
         "stovetop"
       ],
       "tags": [
-        "freezer friendly"
+        "freezer friendly",
+        "bulk"
       ],
       "rotation": "bench",
       "items": {
@@ -5491,7 +5604,8 @@
       ],
       "tags": [
         "sandwiches",
-        "freezer friendly"
+        "freezer friendly",
+        "bulk"
       ],
       "rotation": "core",
       "items": {
@@ -5534,6 +5648,625 @@
       ],
       "sideSlots": 2,
       "photo": "A Chicago-style Italian beef sandwich on a long roll, juicy shredded beef and soft cooked sweet pepper strips topped with colorful hot giardiniera, a cup of jus beside it."
+    },
+    {
+      "id": "cooker-beef-tips-gravy",
+      "title": "Beef tips & gravy",
+      "subtitle": "Sam’s Club beef tips slow-cooked until fork-tender with mushrooms and onions in a rich brown gravy, made for spooning over mashed potatoes.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 460,
+      "prepMinutes": 20,
+      "cookMinutes": 440,
+      "equipment": [
+        "possible cooker"
+      ],
+      "tags": [
+        "freezer friendly",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "stewMeat": 2.25,
+        "onions": 0.75,
+        "mushrooms": 8,
+        "garlic": 3,
+        "beefBroth": 2.5,
+        "soy": 1,
+        "italianSeasoning": 1,
+        "starch": 3,
+        "oil": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Pat the 2¼ lb of beef tips dry with paper towels and cut any big pieces down to about 1½ inches. Peel the onion and cut it into thin half-moons, slice the 8 oz of mushrooms and mince the 3 garlic cloves.",
+        {
+          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil, then half the beef in a single layer. Brown it 3–4 minutes, turning once, and move it to a plate. Brown the second half the same way.",
+          "minutes": 8,
+          "setting": "SEAR/SAUTÉ on HI"
+        },
+        {
+          "text": "Add the onion and mushrooms to the pot and cook, stirring, until the onion is soft and the mushrooms have given up their liquid, 4–5 minutes. Stir in the garlic for 30 seconds. Pour in the 2½ cups of beef stock and the soy sauce and scrape the browned bits off the bottom with a wooden spoon. Press START/STOP to turn the heat off.",
+          "minutes": 4,
+          "setting": "SEAR/SAUTÉ on HI"
+        },
+        "Return the beef and its juices to the pot with the Italian seasoning, salt and pepper, and stir.",
+        {
+          "text": "Put the lid on. Select SLOW COOK, set it to LO and the time to 7 hours, and press START/STOP (or use HI for 4 hours if you are starting later in the day). Leave the lid on while it cooks; every peek lets heat out. The beef is ready when a piece pulls apart with a fork, far past the safe 145°F.",
+          "minutes": 420,
+          "setting": "SLOW COOK on LO"
+        },
+        {
+          "text": "Stir the 3 tablespoons of cornstarch with 3 tablespoons of cold water in a cup until smooth. Take the lid off, select SEAR/SAUTÉ on MED and stir the cornstarch mixture into the pot. Keep stirring gently until the gravy bubbles, turns glossy and coats the back of a spoon, 3–4 minutes. Press START/STOP.",
+          "minutes": 3,
+          "setting": "SEAR/SAUTÉ on MED"
+        },
+        "Spoon the beef tips and plenty of gravy over the mashed potatoes."
+      ],
+      "tips": [
+        "Portion the Sam’s pack the day you buy it: 2¼ lb to a freezer bag, pressed flat, is one dinner. Thaw a bag in the fridge overnight; frozen meat never goes straight into the slow cooker.",
+        "Dry meat browns and wet meat steams, so pat it well and brown it in two batches.",
+        "The pot is nonstick: stir with a wooden or silicone spoon, never metal.",
+        "When the time is up the cooker switches itself to KEEP WARM, so dinner holds if someone is running late."
+      ],
+      "leftovers": "Beef tips in gravy keep 4 days in the fridge and freeze for 3 months; cool them first and freeze flat in zip bags. Rewarm gently and serve over rice or egg noodles.",
+      "sides": [
+        "smashed-potatoes",
+        "canned-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "Tender chunks of beef tips with sliced mushrooms and soft cooked onions in a glossy brown gravy spooned over creamy mashed potatoes, with buttered green beans beside them."
+    },
+    {
+      "id": "air-fryer-steak-bites",
+      "title": "Air-fryer garlic steak bites & mushrooms",
+      "subtitle": "Lean sirloin tip cut into bites and air-fried hot and fast with mushrooms, then tossed in a little garlic butter.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 35,
+      "prepMinutes": 15,
+      "cookMinutes": 20,
+      "equipment": [
+        "air fryer"
+      ],
+      "tags": [
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "sirloinTip": 2.25,
+        "mushrooms": 16,
+        "soy": 1.5,
+        "oil": 1,
+        "garlicPowder": 1.5,
+        "salt": 0.75,
+        "pepper": 0.75,
+        "butter": 1.5
+      },
+      "steps": [
+        "Trim any silvery skin off the 2¼ lb of sirloin tip and cut the meat across the grain into 1-inch cubes. Wipe the 16 oz of mushrooms clean and cut them in half.",
+        "In a large bowl toss the steak and mushrooms with the oil, soy sauce, garlic powder, salt and black pepper. Leave them on the counter to soak up the seasoning while the air fryer heats.",
+        {
+          "text": "Heat the air fryer to 400°F for 3 minutes. Spread half the steak and mushrooms in the basket in a single layer and air-fry 4 minutes. Shake the basket and cook 2–4 minutes more, until the bites are browned and a thermometer in a thick piece reads 145°F. Tip them into a clean bowl and cook the second half the same way.",
+          "minutes": 12,
+          "setting": "Air fryer, 400°F"
+        },
+        {
+          "text": "Add the butter to the hot steak and mushrooms and toss until it melts and coats everything. Rest 3 minutes before serving so the juices stay in the meat.",
+          "minutes": 3
+        }
+      ],
+      "tips": [
+        "Sirloin tip is lean, so stop at 145°F (medium); past that it turns chewy.",
+        "A single layer with space between the pieces browns; a crowded basket steams. Two batches are worth it.",
+        "Cut across the grain: find the lines running through the meat and cut the other way, and every bite is tender.",
+        "Portion the Sam’s roast the day you buy it: 2¼ lb to a freezer bag is one dinner, and half-thawed meat is the easiest to cube."
+      ],
+      "leftovers": "Keeps 3 days in the fridge in a covered container; good cold over a salad or warmed in a tortilla with cheese.",
+      "sides": [
+        "smashed-potatoes",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "Browned, glossy garlic-butter steak bites and halved golden mushrooms piled on a plate beside creamy smashed potatoes and bright green broccoli."
+    },
+    {
+      "id": "pepper-steak",
+      "title": "Pepper steak",
+      "subtitle": "Thin strips of lean sirloin tip seared with lots of bell peppers and soft onions in a gingery soy gravy, for spooning over rice.",
+      "category": "Asian-inspired",
+      "protein": "beef",
+      "minutes": 35,
+      "prepMinutes": 20,
+      "cookMinutes": 15,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "sirloinTip": 2,
+        "peppers": 3,
+        "onions": 0.75,
+        "garlic": 4,
+        "ginger": 0.5,
+        "soy": 5,
+        "beefBroth": 1,
+        "starch": 2,
+        "brownSugar": 1,
+        "riceVinegar": 1,
+        "oil": 2,
+        "pepper": 1
+      },
+      "steps": [
+        "Slice the 2 lb of sirloin tip across the grain into strips about ¼ inch thick and 2 inches long, and toss them with 1 tablespoon of the soy sauce and 1 tablespoon of the cornstarch. Cut the 3 peppers into strips and the onion into thin half-moons. Mince the 4 garlic cloves and grate the ginger.",
+        "In a cup, stir the rest of the soy sauce and cornstarch with the cup of beef stock, the brown sugar, rice vinegar and black pepper until smooth.",
+        {
+          "text": "Heat half the oil in your largest skillet over high heat until it shimmers. Add half the steak in a single layer and sear without stirring for 1 minute, then stir-fry 1–2 minutes more, until browned and cooked through, past the safe 145°F. Move it to a plate and cook the second half the same way.",
+          "minutes": 5,
+          "setting": "Stovetop, high"
+        },
+        {
+          "text": "Add the remaining oil, the peppers and the onion to the skillet and stir-fry until the peppers are tender-crisp and the onion is soft, 4–5 minutes. Stir in the garlic and ginger for 30 seconds.",
+          "minutes": 4,
+          "setting": "Stovetop, high"
+        },
+        {
+          "text": "Stir the sauce again, pour it in and return the steak and its juices. Simmer, stirring, until the gravy is glossy and coats the peppers, 1–2 minutes. Serve over the rice.",
+          "minutes": 1,
+          "setting": "Stovetop, medium-high"
+        }
+      ],
+      "tips": [
+        "Partly frozen steak slices paper-thin: 30 minutes in the freezer, or half-thawed from a freezer bag, is perfect.",
+        "Sear in two batches; a crowded pan steams the meat gray instead of browning it.",
+        "Start the rice first: the PossibleCooker’s WHITE RICE program takes about 25 minutes and holds on KEEP WARM.",
+        "Portion the Sam’s sirloin tip the day you buy it: 2 lb to a freezer bag is one dinner."
+      ],
+      "leftovers": "Keeps 3 days in the fridge in a covered container; reheat in a skillet with a splash of water so the gravy loosens.",
+      "sides": [
+        "cooker-jasmine-rice",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "Glossy strips of seared beef with red and green bell pepper strips and soft cooked onions in a dark soy gravy beside white jasmine rice and bright green broccoli."
+    },
+    {
+      "id": "cooker-pot-roast",
+      "title": "Slow-cooker pot roast with carrots & potatoes",
+      "subtitle": "A Sam’s Club chuck roast browned and slow-cooked all day with potatoes, carrots and onions until it pulls apart, with gravy made from its own juices.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 520,
+      "prepMinutes": 20,
+      "cookMinutes": 500,
+      "equipment": [
+        "possible cooker"
+      ],
+      "tags": [
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chuckRoast": 2.25,
+        "potatoes": 2,
+        "carrots": 1.5,
+        "onions": 1,
+        "garlic": 4,
+        "beefBroth": 2,
+        "soy": 1,
+        "italianSeasoning": 2,
+        "starch": 2,
+        "oil": 1,
+        "salt": 2,
+        "pepper": 0.75
+      },
+      "steps": [
+        "Pat the 2¼ lb chuck roast dry, trim off any thick outside fat and season it all over with 1½ teaspoons of the salt and the pepper. Scrub the 2 lb of potatoes and cut them into 2-inch chunks. Peel the 1½ lb of carrots and cut into 2-inch pieces. Peel the onions and cut them into wedges, and smash the 4 garlic cloves.",
+        {
+          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil, then the roast. Brown it well, about 4 minutes a side, and move it to a plate.",
+          "minutes": 8,
+          "setting": "SEAR/SAUTÉ on HI"
+        },
+        {
+          "text": "Add the onion wedges and garlic and cook, stirring, until the onion starts to soften and brown, 2–3 minutes. Pour in the 2 cups of beef stock and the soy sauce and scrape the browned bits off the bottom with a wooden spoon. Press START/STOP to turn the heat off.",
+          "minutes": 2,
+          "setting": "SEAR/SAUTÉ on HI"
+        },
+        "Stir in the Italian seasoning. Set the roast back in the pot and tuck the potatoes and carrots around it; they should sit mostly in the liquid.",
+        {
+          "text": "Put the lid on. Select SLOW COOK, set it to LO and the time to 8 hours, and press START/STOP (or use HI for 5 hours if you are starting later in the day). Leave the lid on while it cooks; every peek lets heat out. The roast is ready when it pulls apart easily with a fork, far past the safe 145°F.",
+          "minutes": 480,
+          "setting": "SLOW COOK on LO"
+        },
+        {
+          "text": "Lift the roast and vegetables onto a platter with a slotted spoon and cover loosely with foil. Skim the fat off the top of the juices with a large spoon. Stir the 2 tablespoons of cornstarch with 2 tablespoons of cold water until smooth, select SEAR/SAUTÉ on MED, stir it in and keep stirring until the gravy bubbles and thickens, 3–4 minutes. Taste and add the last ½ teaspoon of salt if it needs it. Press START/STOP.",
+          "minutes": 3,
+          "setting": "SEAR/SAUTÉ on MED"
+        },
+        "Pull the roast into big chunks with two forks and serve with the potatoes and carrots, with the gravy spooned over everything."
+      ],
+      "tips": [
+        "Chuck is the cut for pot roast: the long, slow cook melts it tender. Skimming the fat off the juices at the end keeps the gravy lighter.",
+        "Cut the potatoes and carrots big; small pieces turn to mush over 8 hours.",
+        "A Sam’s chuck roast runs about 3½ to 4 lb. Cut off 2¼ lb for tonight and freeze the rest, cubed, in a bag for a pot of chili.",
+        "The pot is nonstick: stir with a wooden or silicone spoon, never metal."
+      ],
+      "leftovers": "Keeps 4 days in the fridge. The meat and gravy freeze for 3 months (the potatoes turn grainy, so eat those first); shredded leftovers make good sandwiches on toasted rolls.",
+      "sides": [
+        "canned-green-beans",
+        "romaine-salad"
+      ],
+      "sideSlots": 2,
+      "photo": "A platter of fork-tender pot roast pulled into big chunks with large pieces of potato and carrot and soft cooked onion wedges, glossy brown gravy spooned over the top."
+    },
+    {
+      "id": "griddle-steaks-mushrooms",
+      "title": "Blackstone steaks with mushrooms & onions",
+      "subtitle": "A lean Sam’s sirloin tip cut into steaks, seared on a very hot griddle and sliced under a pile of browned mushrooms and golden onions.",
+      "category": "Grill",
+      "protein": "beef",
+      "minutes": 40,
+      "prepMinutes": 10,
+      "cookMinutes": 30,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "grill night",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "sirloinTip": 2.25,
+        "mushrooms": 16,
+        "onions": 1,
+        "soy": 1,
+        "butter": 1.5,
+        "oil": 1.5,
+        "garlicPowder": 1,
+        "salt": 1.5,
+        "pepper": 1
+      },
+      "steps": [
+        "Slice the 2¼ lb of sirloin tip across the grain into 5 or 6 steaks about ¾ inch thick. Pat them dry and season both sides with the garlic powder, 1 teaspoon of the salt and the pepper. Slice the 16 oz of mushrooms and cut the onions into thin half-moons.",
+        {
+          "text": "Light the Blackstone and heat it on high for 10 minutes; lean steak wants a very hot griddle.",
+          "minutes": 10,
+          "setting": "Blackstone, high"
+        },
+        {
+          "text": "Spread 1 tablespoon of the oil on one side of the griddle and add the mushrooms and onions with the rest of the salt. Cook, turning them now and then, until the onions are soft and golden and the mushrooms are browned, 8–10 minutes. Splash on the soy sauce, toss, and slide them to the coolest part.",
+          "minutes": 8,
+          "setting": "Blackstone, high"
+        },
+        {
+          "text": "Spread the remaining oil on the hottest part and lay the steaks down. Sear without moving them for 3 minutes, turn, and cook 2–3 minutes more, until a thermometer in the center of the thickest steak reads 145°F for medium.",
+          "minutes": 5,
+          "setting": "Blackstone, high"
+        },
+        {
+          "text": "Move the steaks to a cutting board, top each with a little of the butter and rest 5 minutes. Slice across the grain and serve under a pile of the mushrooms and onions.",
+          "minutes": 5
+        }
+      ],
+      "tips": [
+        "Sirloin tip is lean and best at medium (145°F); slicing it thin across the grain is what makes it tender.",
+        "Start the mushrooms and onions first: they take longer than the steaks and hold happily on the cool side.",
+        "Pat the steaks dry; a dry surface is what gets a brown crust.",
+        "A Sam’s sirloin tip roast is about 4 lb: cut what you need into steaks and freeze the rest in a 2-lb bag for pepper steak or steak bites."
+      ],
+      "leftovers": "Keeps 3 days in the fridge in a covered container; slice thin and pile on toasted rolls with the mushrooms and onions for steak sandwiches.",
+      "sides": [
+        "potato-wedges",
+        "steamed-normandy-vegetables"
+      ],
+      "sideSlots": 2,
+      "photo": "Sliced griddle-seared steak, pink in the center, under a pile of browned mushrooms and golden caramelized onions, with crispy potato wedges and steamed broccoli, cauliflower and carrots."
+    },
+    {
+      "id": "honey-mustard-chicken-thighs",
+      "title": "Honey mustard chicken thighs",
+      "subtitle": "Juicy boneless chicken thighs from the Sam’s tray, grilled and brushed with a sweet-tangy honey mustard.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 30,
+      "prepMinutes": 10,
+      "cookMinutes": 20,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "grill night",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "mustard": 3,
+        "honey": 2,
+        "ciderVinegar": 1,
+        "garlicPowder": 1,
+        "paprika": 1,
+        "oil": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "In a small bowl whisk the mustard, honey, cider vinegar and garlic powder. Spoon 3 tablespoons into a clean cup for the table.",
+        "Trim any big pieces of fat off the 2¼ lb of chicken thighs, pat them dry and toss with the oil, paprika, salt and pepper.",
+        {
+          "text": "Preheat the electric grill on medium-high for 5 minutes. Grill the thighs, turning once halfway and brushing with the honey mustard from the bowl during the last 2 minutes, until browned and a thermometer pushed into the thickest one reads 165°F: 10–14 minutes on an open grill, 6–8 minutes if yours closes like a press. Cook in two batches if the grill is small.",
+          "minutes": 10,
+          "setting": "Electric grill, medium-high"
+        },
+        {
+          "text": "Rest the chicken 3 minutes on a clean plate, then drizzle with the honey mustard you set aside.",
+          "minutes": 3
+        }
+      ],
+      "tips": [
+        "Thighs stay juicy even a few degrees past 165°F, which makes them the forgiving choice for the grill.",
+        "Brush the sauce on at the end; honey burns if it goes on at the start.",
+        "Portion the Sam’s tray the day you buy it: 2¼ lb of thighs to a freezer bag, pressed flat, thaws overnight in the fridge."
+      ],
+      "leftovers": "Keeps 3 days in the fridge in a covered container; slice for wraps or chop over a salad.",
+      "sides": [
+        "sweet-potatoes",
+        "garlic-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "Grilled boneless chicken thighs with dark grill marks and a shiny golden honey-mustard glaze, served with a split sweet potato and garlicky green beans."
+    },
+    {
+      "id": "chicken-vegetable-stir-fry",
+      "title": "Chicken & vegetable stir-fry",
+      "subtitle": "Strips of chicken breast and two bags of Sam’s frozen stir-fry vegetables tossed on the griddle in a light ginger-soy glaze.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 35,
+      "prepMinutes": 15,
+      "cookMinutes": 20,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "rice",
+        "healthier",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "stirFryVeg": 2,
+        "garlic": 4,
+        "ginger": 0.5,
+        "soy": 5,
+        "honey": 1,
+        "riceVinegar": 1,
+        "starch": 2,
+        "sesame": 1,
+        "oil": 2
+      },
+      "steps": [
+        "Cut the 2¼ lb of chicken breast into thin bite-size strips and toss with 1 tablespoon of the soy sauce and 1 tablespoon of the cornstarch. Mince the 4 garlic cloves and grate the ginger.",
+        "In a cup, stir the rest of the soy sauce and cornstarch with the honey, rice vinegar and ¼ cup of water until smooth.",
+        {
+          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
+          "minutes": 10,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Spread half the oil on the griddle and cook the chicken in a single layer, turning, until golden and a thermometer in a thick piece reads 165°F, 5–7 minutes. Move it to a cooler part.",
+          "minutes": 5,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Spread the remaining oil on the hot part and pour on the 2 lb of frozen stir-fry vegetables straight from the bags. Cook, turning them every minute, until the ice has cooked off and they are hot and tender-crisp, 5–6 minutes. Stir in the garlic and ginger for 30 seconds.",
+          "minutes": 5,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Toss the chicken and vegetables together, stir the sauce and pour it over. Keep tossing until it turns glossy and coats everything, about 1 minute. Drizzle with the sesame oil and serve over the rice.",
+          "minutes": 1,
+          "setting": "Blackstone, medium-high"
+        }
+      ],
+      "tips": [
+        "The stir-fry vegetables go on frozen; thawed ones turn limp.",
+        "Sam’s sells them as five 1-lb bags, so two bags are one dinner and the other three stay in the freezer.",
+        "Start the rice before you light the griddle; it holds on KEEP WARM."
+      ],
+      "leftovers": "Keeps 3 days in the fridge in a covered container; reheat in a hot skillet. Over leftover rice it makes a good packed lunch.",
+      "sides": [
+        "cooker-jasmine-rice",
+        "edamame"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden strips of chicken tossed with bright stir-fried broccoli, snap peas, carrots and red pepper strips in a glossy soy glaze beside white jasmine rice."
+    },
+    {
+      "id": "cooker-chunky-beef-chili",
+      "title": "Chunky slow-cooker beef chili",
+      "subtitle": "Sam’s Club stew meat cut small and slow-cooked all day with chili beans, tomatoes and peppers until every bite is tender. Made to double and freeze.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 520,
+      "prepMinutes": 20,
+      "cookMinutes": 500,
+      "equipment": [
+        "possible cooker"
+      ],
+      "tags": [
+        "freezer friendly",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "stewMeat": 1.75,
+        "chiliBeans": 2,
+        "tomatoes": 2,
+        "onions": 1,
+        "peppers": 2,
+        "garlic": 4,
+        "taco": 3,
+        "cumin": 1,
+        "beefBroth": 1,
+        "oil": 1,
+        "salt": 0.5,
+        "cheese": 3,
+        "yogurt": 5
+      },
+      "steps": [
+        "Cut the 1¾ lb of stew meat into ¾-inch pieces and pat them dry. Peel the onion and cut it into small dice, dice the 2 peppers and mince the 4 garlic cloves.",
+        {
+          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil, then half the beef in a single layer. Brown it 3–4 minutes, turning once, and move it to a plate. Brown the second half the same way.",
+          "minutes": 8,
+          "setting": "SEAR/SAUTÉ on HI"
+        },
+        {
+          "text": "Add the onion and peppers to the pot and cook, stirring, until the onion is soft, 4–5 minutes. Stir in the garlic, the packet of taco seasoning and the cumin for 30 seconds, then pour in the cup of beef stock and scrape up the browned bits. Press START/STOP to turn the heat off.",
+          "minutes": 4,
+          "setting": "SEAR/SAUTÉ on HI"
+        },
+        "Add the beef and its juices, the 2 cans of Bush’s chili beans with their sauce, the 2 cans of diced tomatoes with their juice and the salt, and stir.",
+        {
+          "text": "Put the lid on. Select SLOW COOK, set it to LO and the time to 8 hours, and press START/STOP (or use HI for 5 hours if you are starting later in the day). Leave the lid on while it cooks; every peek lets heat out. The chili is ready when the beef falls apart under a spoon, far past the safe 145°F.",
+          "minutes": 480,
+          "setting": "SLOW COOK on LO"
+        },
+        "Stir, taste and add a pinch more salt if it needs it. Ladle into bowls and top with the shredded cheddar and a spoonful of yogurt."
+      ],
+      "tips": [
+        "This is the one to double: the 6.5-quart pot holds twice the recipe, and the second half freezes flat in zip bags for a night nobody wants to cook.",
+        "Stew meat instead of ground beef gives big, tender bites; cut the pieces small so every spoonful gets one.",
+        "The pot is nonstick: stir with a wooden or silicone spoon, never metal.",
+        "When the time is up the cooker switches itself to KEEP WARM, so dinner holds if someone is running late."
+      ],
+      "leftovers": "Keeps 4 days in the fridge and freezes for 3 months; cool it first and freeze flat in zip bags. It is even better the next day over a split potato.",
+      "sides": [
+        "canned-corn",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "A deep bowl of chunky beef chili with tender cubes of beef, beans, diced peppers and a thick tomato sauce, topped with shredded cheddar and a dollop of yogurt."
+    },
+    {
+      "id": "apple-glazed-chicken-thighs",
+      "title": "Apple-jelly glazed chicken thighs",
+      "subtitle": "Grilled boneless chicken thighs brushed with the sweet-tangy apple jelly and mustard glaze from the pantry.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 30,
+      "prepMinutes": 10,
+      "cookMinutes": 20,
+      "equipment": [
+        "electric grill",
+        "stovetop"
+      ],
+      "tags": [
+        "grill night",
+        "from your pantry",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "appleJelly": 4,
+        "mustard": 2,
+        "ciderVinegar": 1,
+        "butter": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        {
+          "text": "In a small saucepan over low heat, melt the apple jelly with the mustard, cider vinegar and butter, stirring until smooth. Set half aside in a clean bowl for serving.",
+          "setting": "Stovetop, low"
+        },
+        "Trim any big pieces of fat off the 2¼ lb of chicken thighs, pat them dry and season both sides with the salt and pepper.",
+        {
+          "text": "Preheat the electric grill on medium-high for 5 minutes. Grill the thighs, turning once halfway and brushing with the glaze during the last 2 minutes, until browned and a thermometer pushed into the thickest one reads 165°F: 10–14 minutes on an open grill, 6–8 minutes if yours closes like a press.",
+          "minutes": 10,
+          "setting": "Electric grill, medium-high"
+        },
+        {
+          "text": "Let the chicken rest 3 minutes on a clean plate, then spoon the reserved glaze over the top.",
+          "minutes": 3
+        }
+      ],
+      "tips": [
+        "Brush the glaze on at the end; the sugar in the jelly burns if it goes on early.",
+        "Thighs are forgiving: they stay juicy a few degrees past 165°F.",
+        "The same glaze is good on chicken breasts; pound them to an even thickness first."
+      ],
+      "leftovers": "Keeps 3 days in the fridge in a covered container; slice thin for sandwiches or wraps.",
+      "sides": [
+        "sweet-potatoes",
+        "crispy-onion-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "Grilled boneless chicken thighs with grill marks and a shiny amber apple glaze, served with a buttered sweet potato and green beans topped with crispy fried onions."
+    },
+    {
+      "id": "cooker-chicken-potatoes-carrots",
+      "title": "Slow-cooker garlic-herb chicken with potatoes & carrots",
+      "subtitle": "Chicken thighs rubbed with garlic, paprika and herbs, slow-cooked on a bed of potatoes, carrots and onions from the big Sam’s bags. No browning, one pot.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 375,
+      "prepMinutes": 15,
+      "cookMinutes": 360,
+      "equipment": [
+        "possible cooker"
+      ],
+      "tags": [
+        "healthier",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "potatoes": 2,
+        "carrots": 1.5,
+        "onions": 0.75,
+        "garlic": 5,
+        "chickenBroth": 1,
+        "lemons": 1,
+        "italianSeasoning": 2,
+        "paprika": 1,
+        "oil": 1,
+        "salt": 1.5,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Scrub the 2 lb of potatoes and cut them into 1½-inch chunks. Peel the 1½ lb of carrots and cut into 1-inch pieces. Peel the onion and cut it into wedges, and mince the 5 garlic cloves.",
+        "Put the potatoes, carrots and onion wedges in the PossibleCooker pot, toss them with half the salt and pour in the cup of chicken stock.",
+        "Trim any big pieces of fat off the 2¼ lb of chicken thighs. In a bowl, toss the chicken with the oil, garlic, Italian seasoning, paprika, pepper and the rest of the salt, and lay the pieces on top of the vegetables in an even layer.",
+        {
+          "text": "Put the lid on. Select SLOW COOK, set it to LO and the time to 6 hours, and press START/STOP (or use HI for 3½ hours if you are starting later in the day). Leave the lid on while it cooks; every peek lets heat out. It is done when the potatoes are tender and a thermometer in the thickest piece of chicken reads at least 165°F.",
+          "minutes": 360,
+          "setting": "SLOW COOK on LO"
+        },
+        "Squeeze the juice of the lemon over everything. Lift the chicken and vegetables into shallow bowls with a slotted spoon and ladle some of the juices from the pot over the top."
+      ],
+      "tips": [
+        "No browning and one pot: this is the dinner for a morning with ten minutes to spare.",
+        "Use thawed chicken in the slow cooker, never frozen, so it heats through safely.",
+        "Everything in it comes from the big Sam’s packs: the tray of thighs, the 10-lb bag of potatoes and the bags of carrots and onions.",
+        "When the time is up the cooker switches itself to KEEP WARM, so dinner holds if someone is running late."
+      ],
+      "leftovers": "Keeps 4 days in the fridge in a covered container; shred the leftover chicken into the juices and it reheats without drying out.",
+      "sides": [
+        "romaine-salad",
+        "apple-slices"
+      ],
+      "sideSlots": 2,
+      "photo": "Tender herb-rubbed chicken thighs resting on chunks of golden potato, carrot and soft cooked onion in a shallow bowl of light broth, with a lemon half beside it."
     }
   ],
   "sides": [
@@ -5585,7 +6318,10 @@
         },
         "Drain well, toss with the butter and salt, and serve."
       ],
-      "photo": "A bowl of bright green steamed broccoli florets glistening with melted butter."
+      "photo": "A bowl of bright green steamed broccoli florets glistening with melted butter.",
+      "tips": [
+        "When the PossibleCooker is free it steams this hands-off: 1 cup of water, the frozen broccoli, lid on, STEAM for 6 minutes."
+      ]
     },
     {
       "id": "lime-slaw",
@@ -6409,14 +7145,14 @@
       "steps": [
         "Peel the 1½ lb of carrots and cut into ½-inch coins.",
         {
-          "text": "Pour 1 cup of water into the PossibleCooker pot, add the carrots and put the lid on. Select SEAR/SAUTÉ, set it to HI and press START/STOP. Once steam is coming from under the lid (about 5 minutes), cook 8–10 minutes more, until a fork slides into a coin easily. Press START/STOP.",
-          "minutes": 13,
-          "setting": "SEAR/SAUTÉ on HI"
+          "text": "Pour 1 cup of water into the PossibleCooker pot, add the carrots and put the lid on. Select STEAM, set the time to 9 minutes and press START/STOP. The cooker brings the water to a boil first, then counts the time down and beeps. The carrots are done when a fork slides into a coin easily.",
+          "minutes": 14,
+          "setting": "STEAM"
         },
         "Drain well, toss with the butter and salt, and serve."
       ],
       "tips": [
-        "If your panel has a STEAM button, use it with the same water and time; SEAR/SAUTÉ with the lid on steams just as well on every model."
+        "STEAM heats the water to a boil before its timer starts, so the time you set is all cooking time. Thick coins may want 2 minutes more."
       ],
       "photo": "A bowl of bright orange steamed carrot coins glistening with a little melted butter."
     },
@@ -6437,14 +7173,14 @@
       "steps": [
         "Trim the stem ends off the 1½ lb of green beans.",
         {
-          "text": "Pour 1 cup of water into the PossibleCooker pot, add the beans and put the lid on. Select SEAR/SAUTÉ, set it to HI and press START/STOP. Once steam is coming from under the lid (about 5 minutes), cook 6–8 minutes more, until they are bright green and bend without snapping. Press START/STOP.",
-          "minutes": 11,
-          "setting": "SEAR/SAUTÉ on HI"
+          "text": "Pour 1 cup of water into the PossibleCooker pot, add the beans and put the lid on. Select STEAM, set the time to 7 minutes and press START/STOP. The cooker brings the water to a boil first, then counts the time down and beeps. The beans are done when they are bright green and bend without snapping.",
+          "minutes": 12,
+          "setting": "STEAM"
         },
         "Drain well and toss with the butter, the salt and the juice of half the lemon. Cut the other half into wedges for the table."
       ],
       "tips": [
-        "If your panel has a STEAM button, use it with the same water and time; SEAR/SAUTÉ with the lid on steams just as well on every model."
+        "STEAM heats the water to a boil before its timer starts, so the time you set is all cooking time."
       ],
       "photo": "A platter of bright green steamed whole green beans glistening with butter, with lemon wedges."
     },
@@ -6500,7 +7236,10 @@
         },
         "Drain well and toss with the butter, salt and pepper."
       ],
-      "photo": "A bowl of steamed mixed vegetables (peas, corn, diced carrots and cut green beans) glistening with a little butter."
+      "photo": "A bowl of steamed mixed vegetables (peas, corn, diced carrots and cut green beans) glistening with a little butter.",
+      "tips": [
+        "When the PossibleCooker is free it steams these hands-off: 1 cup of water, the frozen vegetables, lid on, STEAM for 6 minutes."
+      ]
     },
     {
       "id": "spinach-apple-salad",
@@ -6559,6 +7298,39 @@
         "Warm the stock for 30 seconds in the microwave so the potatoes stay hot."
       ],
       "photo": "A bowl of creamy mashed potatoes with a small pat of melting butter and cracked black pepper."
+    },
+    {
+      "id": "steamed-normandy-vegetables",
+      "title": "Steamed broccoli, cauliflower & carrots",
+      "kind": "vegetable",
+      "minutes": 15,
+      "equipment": [
+        "possible cooker"
+      ],
+      "items": {
+        "normandyVeg": 1.5,
+        "butter": 1,
+        "salt": 0.25,
+        "pepper": 0.25
+      },
+      "steps": [
+        {
+          "text": "Pour 1 cup of water into the PossibleCooker pot, add the 1½ lb of frozen Normandy blend (broccoli, cauliflower and carrots) straight from the bag and put the lid on. Select STEAM, set the time to 7 minutes and press START/STOP. The cooker brings the water to a boil first, then counts the time down and beeps.",
+          "minutes": 12,
+          "setting": "STEAM"
+        },
+        "Drain well and toss with the butter, salt and pepper."
+      ],
+      "tips": [
+        "The 4-lb Sam’s bag is nearly three dinners’ worth: pour out what you need and put the bag straight back in the freezer.",
+        "If the cooker is busy with the main dish, ½ inch of boiling water in a covered pan on the stove does the same job in 5–7 minutes."
+      ],
+      "photo": "A bowl of steamed broccoli florets, cauliflower florets and crinkle-cut carrot slices glistening with a little melted butter."
     }
-  ]
+  ],
+  "renamed": {
+    "turkey-taco-salad": "chicken-taco-salad",
+    "turkey-chili": "chicken-bean-chili",
+    "cooker-turkey-meatballs": "cooker-chicken-meatballs"
+  }
 }
