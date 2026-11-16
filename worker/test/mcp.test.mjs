@@ -146,7 +146,7 @@ test("notifications get 202 with no body; ping; unknown methods; parse errors; b
   assert.equal(batch.status, 200);
   assert.ok(Array.isArray(batch.json));
   assert.deepEqual(batch.json.map((m) => m.id), ["a", "b"]);
-  assert.equal(batch.json[1].result.tools.length, 8);
+  assert.equal(batch.json[1].result.tools.length, 10);
 
   const onlyNotes = await post(mcpPath, [{ jsonrpc: "2.0", method: "notifications/initialized" }]);
   assert.equal(onlyNotes.status, 202);
@@ -162,10 +162,10 @@ test("an unsupported MCP-Protocol-Version header is a 400", async () => {
   assert.equal(ok.status, 200);
 });
 
-test("tools/list: eight tools with JSON Schemas; unknown tools and bad arguments", async () => {
+test("tools/list: ten tools with JSON Schemas; unknown tools and bad arguments", async () => {
   const r = await rpc("tools/list");
   const names = r.json.result.tools.map((t) => t.name);
-  assert.deepEqual(names.sort(), ["add_receipt", "get_family_profile", "get_pantry", "get_plan", "get_shopping_list", "list_recipes", "plan_dinner", "update_pantry"]);
+  assert.deepEqual(names.sort(), ["add_receipt", "get_family_profile", "get_health_summary", "get_pantry", "get_plan", "get_shopping_list", "get_use_first", "list_recipes", "plan_dinner", "update_pantry"]);
   for (const t of r.json.result.tools) {
     assert.equal(t.inputSchema.type, "object", t.name);
     assert.ok(t.description.length > 80, t.name);
@@ -227,11 +227,11 @@ test("update_pantry counts packages with the package size; get_pantry reads them
   assert.equal(r.data.revision, rev0 + 1, "one atomic write for the whole batch");
 
   const s = (await getState()).json;
-  assert.equal(s.updatedBy, "Jeff (Claude chat)");
+  assert.equal(s.updatedBy, "Family (Claude chat)");
   assert.equal(s.state.pantry.marinara.qty, 2 * per);
   assert.equal(s.state.pantry.marinara.place, "pantry");
   assert.equal(s.state.pantry.marinara.label, "Rao's Homemade Marinara Sauce");
-  assert.equal(s.state.pantry.marinara.by, "Jeff (Claude chat)");
+  assert.equal(s.state.pantry.marinara.by, "Family (Claude chat)");
   assert.equal(s.state.pantry.chicken.place, "freezer");
   assert.equal(s.state.pantry.salt.low, true);
 
@@ -311,7 +311,7 @@ test("add_receipt imports like the app, fills the pantry, and never saves the sa
   const id = r.data.receiptId;
   assert.equal(s.state.receiptLog[id].store, "jewel");
   assert.equal(s.state.receiptLog[id].lines.length, 3);
-  assert.equal(s.state.receiptLog[id].by, "Jeff (Claude chat)");
+  assert.equal(s.state.receiptLog[id].by, "Family (Claude chat)");
   assert.ok(s.state.receiptLog[id].pantry, "the receipt is marked as synced to the pantry");
   const budget = s.state.receipts.filter((x) => x.receiptId === id);
   assert.equal(budget.length, 1);
@@ -383,7 +383,7 @@ test("plan_dinner puts a recipe-box dinner on a night; get_plan shows it", async
   assert.equal(s.plan[date].dinner, "brown-butter-spaghetti");
   assert.equal(s.plan[date].status, "planned");
   assert.equal(s.plan[date].manual, true);
-  assert.equal(s.plan[date].by, "Jeff (Claude chat)");
+  assert.equal(s.plan[date].by, "Family (Claude chat)");
 
   const plan = await tool("get_plan", { from: today, to: addDays(today, 6) });
   assert.equal(plan.data.nights.length, 7);
@@ -438,7 +438,7 @@ test("plan_dinner saves a new recipe as a one-off custom dinner and plans it", a
   assert.equal(state.custom[seasoning].name, "Hidden Valley ranch seasoning packet");
   assert.deepEqual(
     { dinner: state.plan[date].dinner, status: state.plan[date].status, manual: state.plan[date].manual, by: state.plan[date].by },
-    { dinner: id, status: "planned", manual: true, by: "Jeff (Claude chat)" },
+    { dinner: id, status: "planned", manual: true, by: "Family (Claude chat)" },
   );
   // The app reads it like any dinner, but a one-off stays out of the automatic rotation.
   assert.ok(allDinners(db, state).some((d) => d.id === id && d.custom));
@@ -540,7 +540,7 @@ test("a recipe box that can't be loaded is a tool error, not a crash", async () 
     assert.match(r.json.result.content[0].text, /couldn't load/);
     // initialize and tools/list don't need the data at all
     const i = await w2.call(path, { method: "POST", origin: null, body: { jsonrpc: "2.0", id: 2, method: "tools/list" } });
-    assert.equal(i.json.result.tools.length, 8);
+    assert.equal(i.json.result.tools.length, 10);
   } finally {
     await w2.dispose();
   }

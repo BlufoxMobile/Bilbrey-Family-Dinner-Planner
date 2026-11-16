@@ -14,7 +14,7 @@ import { unsyncedReceipts, receiptPantryOps } from '../receipts.js';
 import { currentRange } from './plan.js';
 import { scanQtyIn } from '../scanqty.js';
 import { PLACES, KINDS, placeOf, kindOfItem, useSoon } from '../freshness.js';
-import { itemPhoto, hydratePhotos, rememberPhoto, cropItem, photoUrl } from '../photos.js';
+import { itemPhoto, ownPhoto, hydratePhotos, rememberPhoto, cropItem, photoUrl } from '../photos.js';
 import { del } from '../state.js';
 import { packageOf, packagesFor, plural } from '../packages.js';
 import { readByText } from '../claude.js';
@@ -582,7 +582,8 @@ export const actions = {
     app.commit({ ops, undo: undoFor(app.state, ops), message: `Added ${n} ${n === 1 ? 'item' : 'items'} to the pantry. The list is updated.` });
     closeSheet();
     // Then each new item's picture, in the background (items that already have one keep it).
-    const pics = picked.filter(({ id, r }) => r.blob && !itemPhoto(app.state, id));
+    // ownPhoto: a store's product picture doesn't stop the family's own crop from being saved (it wins).
+    const pics = picked.filter(({ id, r }) => r.blob && !ownPhoto(app.state, id));
     (async () => {
       const photoOps = [];
       for (const { id, r } of pics) {

@@ -23,6 +23,13 @@ binding = "AI"
 [observability]
 enabled = true
 
+# Keep the Worker's own log lines (console.log / console.error: failed scans, tidy-ups), but not the
+# automatic one-per-request "invocation" log: that line records the request URL, and the Claude chat
+# link (/mcp/<token>) IS its own password. With this off the link is never written to Workers Logs.
+[observability.logs]
+enabled = true
+invocation_logs = false
+
 # Claude for scans, receipts and recipe ideas (SPEC §14). ANTHROPIC_API_KEY is a SECRET, added in the
 # dashboard (Worker → Settings → Variables and Secrets → type "Secret"); deploys keep secrets. Plain-text
 # variables typed into the dashboard are replaced by this block on every deploy, so the monthly Claude

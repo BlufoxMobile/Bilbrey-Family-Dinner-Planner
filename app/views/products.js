@@ -9,6 +9,8 @@ import { itemMeta, singular } from '../shopping.js';
 import { setProductOps, clearProductOps } from '../actions.js';
 import { productLabel, cleanPackLabel, shownProduct, findItUrl, learnedProducts, researchedProducts, searchUrl } from '../products.js';
 import { parseSize, convertSize } from '../receipts.js';
+import { set } from '../state.js';
+import { itemPhoto, storePhoto, hydratePhotos, ensureStorePhotos, cachedPhotoUrl, storeImageRequest } from '../photos.js';
 
 export const title = () => 'My products';
 const NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
@@ -22,6 +24,35 @@ export function productSource(p) {
 }
 
 const sizeText = (o, unit) => [o.size, o.packSize ? `${fmtQty(o.packSize)} ${o.packSize === 1 ? singular(unit) : unit}` : ''].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join(' · ');
+
+// ---------------------------------------------------------------- product pictures (docs/spec/23)
+
+/** An <img> for one of the family's stored pictures: shown at once when this phone has it, filled in after the render otherwise. */
+export function photoImg(ph, cls = '', alt = '') {
+  const u = cachedPhotoUrl(ph);
+  return html`<img class="${cls}" data-photo="${ph}" ${u ? html`src="${u}"` : ''} alt="${alt}" loading="lazy" decoding="async">`;
+}
+
+/** Fills in the pictures of the open sheet once it has drawn (sheets redraw themselves, so every render asks). */
+export function hydrateSheetSoon(app) {
+  if (typeof document === 'undefined') return;
+  setTimeout(() => hydratePhotos(document.getElementById('sheet'), app.store), 0);
+}
+
+/** The picture for an item at a store: that store's product picture, else the family's own photo of it. */
+export function productPhoto(state, store, id) {
+  const sp = state?.storePhotos?.[id];
+  return (sp?.store === store && storePhoto(state, id)) || itemPhoto(state, id);
+}
+
+/**
+ * When a picked product comes with a picture link (data/products.json `image`), remember the link
+ * on the family's product so the picture is fetched; then fetch whatever is still missing.
+ */
+function withImage(res, store, id, option) {
+  const ok = res && !res.error && res.ops?.length && storeImageRequest(option?.image).ok;
+  return ok ? { ...res, ops: [...res.ops, set(['myProducts', `${store}/${id}`, 'image'], String(option.image).trim())] } : res;
+}
 
 // ---------------------------------------------------------------- the picker
 
@@ -43,8 +74,11 @@ export function openProductPicker(app, { store, id }) {
       const options = researchedProducts(app.db, store, id);
       const unit = meta.unit;
       const isMine = (o) => mine && mine.name === o.name;
+      const ph = productPhoto(app.state, store, id);
+      if (ph) hydrateSheetSoon(app);
       return html`
-        <div class="current-product">
+        <div class="current-product ${ph ? 'has-photo' : ''}">
+          ${ph ? photoImg(ph, 'product-photo', '') : ''}
           <span><small>${mine ? 'Buying' : shown?.usual ? 'You usually buy' : 'Pricing it with'}</small><b>${mine ? productLabel(mine) : shown?.label || meta.name}</b><small>${mine ? productSource(mine) : pack ? `${money(pack.price)} for ${fmtQty(pack.size)} ${unit}, ${pack.confidence === 'paid' ? 'paid' : pack.confidence === 'listed' ? 'listed' : 'estimated'}` : 'No price yet'}</small></span>
           <a class="btn btn-small btn-secondary" href="${findItUrl(app.db, store, mine, cleanPackLabel(pack?.label) || meta.name)}" target="_blank" rel="noopener" data-findit="${store}">${ic('search', { size: 18 })}Find it</a>
         </div>
@@ -74,6 +108,12 @@ export function openProductPicker(app, { store, id }) {
 
 // ---------------------------------------------------------------- the page
 
+/** After each render: fill in the pictures, and quietly fetch any the chosen products still lack. */
+export function mount(app, root) {
+  hydratePhotos(root, app.store);
+  ensureStorePhotos(app);
+}
+
 export function render(app) {
   const store = app.ui.productsStore === 'jewel' ? 'jewel' : 'sams';
   const q = (app.ui.productsQuery || '').trim().toLowerCase();
@@ -102,13 +142,14 @@ export function render(app) {
     ${segmented('productsStore', [{ id: 'sams', label: "Sam's Club" }, { id: 'jewel', label: 'Jewel-Osco' }], store, { label: 'Store', action: 'prod:store' })}
     <label class="search">${ic('search', { size: 20 })}<input type="search" id="products-search" placeholder="Search chicken, cheese, tortillas…" value="${app.ui.productsQuery || ''}" data-input="prod:search" aria-label="Search products" autocomplete="off"></label>
     <p class="muted small">${chosen ? `${chosen} chosen at ${NAMES[store]}.` : `None chosen at ${NAMES[store]} yet: these are the products the list prices.`}</p>
-    <ul class="product-list" id="product-list">${rows.map((r) => html`<li class="product-row ${r.mine ? 'is-mine' : ''}">
+    <ul class="product-list" id="product-list">${rows.map((r) => { const ph = productPhoto(app.state, store, r.ing.id); return html`<li class="product-row ${r.mine ? 'is-mine' : ''} ${ph ? 'has-photo' : ''}">
+      ${ph ? photoImg(ph, 'product-thumb', '') : ''}
       <span class="product-main"><small>${r.ing.name}</small><b>${r.label || r.ing.name}</b><small>${r.mine ? productSource(r.mine) : r.pack ? `${r.pack.confidence === 'paid' ? 'Your usual, paid' : r.pack.confidence === 'listed' ? 'Listed at' : 'Estimate,'} ${money(r.pack.price)}` : ''}</small></span>
       <span class="product-acts">
         <a class="btn btn-small btn-quiet" href="${findItUrl(app.db, store, r.mine, r.label || r.ing.name)}" target="_blank" rel="noopener" aria-label="Find ${r.label || r.ing.name} on ${NAMES[store]}">Find it</a>
         <button type="button" class="btn btn-small btn-secondary" data-action="prod:pick" data-store="${store}" data-id="${r.ing.id}">Change</button>
       </span>
-    </li>`)}</ul>
+    </li>`; })}</ul>
     ${when(!rows.length, () => html`<p class="empty-body pad">Nothing matches “${app.ui.productsQuery}”.</p>`)}
   </div>`;
 }
@@ -123,7 +164,8 @@ export const actions = {
     const list = el.dataset.kind === 'learned' ? learnedProducts(app.state, s.store, s.id) : researchedProducts(app.db, s.store, s.id);
     const o = list[Number(el.dataset.k)];
     if (!o) return;
-    app.commit(setProductOps(app.db, app.state, { store: s.store, id: s.id, product: { ...o, source: el.dataset.kind === 'learned' ? 'receipt' : 'pick' }, who: app.who() }));
+    app.commit(withImage(setProductOps(app.db, app.state, { store: s.store, id: s.id, product: { ...o, source: el.dataset.kind === 'learned' ? 'receipt' : 'pick' }, who: app.who() }), s.store, s.id, o));
+    ensureStorePhotos(app); // its picture, when the product record carries a link to one
     closeSheet();
   },
   'prod:clear': (app, el) => { app.commit(clearProductOps(app.db, app.state, { store: el.dataset.store, id: el.dataset.id })); renderSheet(); },

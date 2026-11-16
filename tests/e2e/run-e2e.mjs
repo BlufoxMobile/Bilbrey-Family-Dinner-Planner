@@ -546,6 +546,9 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   assert.ok(s.receipts.some((r) => r.receiptId === rid), 'counted once in the Budget');
   // The list: the product, "paid $… · Nov 15", and Find it for that exact product.
   await go(page, '#/list', '.page-list');
+  // The receipt is still syncing; its answer redraws the list once. Let that pass before holding on to a row.
+  await waitFor(async () => (await familyState(page)).pending === 0);
+  await page.waitForTimeout(150);
   const row = page.locator(`.item:has(.item-main[data-key="${id0}"])`);
   await row.locator('.paid').waitFor();
   assert.match(await row.locator('.paid').textContent(), /^paid \$[\d.]+ · Nov 15$/);
@@ -701,8 +704,8 @@ test('Claude in settings: the model and this month’s spend, a model switch, an
   await page.waitForSelector('.claude-card .ai-spend');
   assert.match(await page.textContent('.claude-card .ai-status'), /^Claude Opus 5\.5 reads your photos$/);
   assert.match(await page.textContent('.claude-card .ai-spend'), /\$1\.20 of \$5\.00/);
-  assert.match(await page.textContent('.claude-card .seg-ai [data-value="claude-opus-5-5"]'), /About 5¢ a photo/);
-  assert.match(await page.textContent('.claude-card .seg-ai [data-value="claude-haiku-5-5"]'), /About 1¢ a photo/);
+  assert.match(await page.textContent('.claude-card .seg-ai [data-value="claude-opus-5-5"]'), /About 3–8¢ a photo/); // the first photo of a scan stores the list (8¢ at the mock's prices), the rest read it back (3¢)
+  assert.match(await page.textContent('.claude-card .seg-ai [data-value="claude-haiku-5-5"]'), /About 1–2¢ a photo/);
   await page.click('[data-action="ai:model"][data-value="claude-sonnet-5-5"]');
   await toastMatch(page, /^Claude Sonnet 5\.5 reads your photos and suggests dinners from now on/);
   assert.equal((await familyState(page)).state.settings.aiModel, 'claude-sonnet-5-5');
@@ -859,6 +862,9 @@ test('a whole trip comes home in one tap', async () => {
 
 test('cook mode: big steps, check off, mark cooked', async () => {
   await go(page, `#/cook/${TODAY}`, '.cook');
+  // The change just before this is still syncing; its answer redraws the page once. Let that pass before holding on to elements.
+  await waitFor(async () => (await familyState(page)).pending === 0);
+  await page.waitForTimeout(150);
   const steps = await page.$$('.cook-step');
   assert.ok(steps.length >= 3, 'entrée and side steps');
   await steps[0].click();

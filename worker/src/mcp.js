@@ -34,11 +34,13 @@ import { kindOfItem, placeOf, keepsDays, sinceOf, useSoon, KINDS, PLACES } from 
 import { packageOf, packagesFor, plural as packWord } from "../../app/packages.js";
 import { normUnit, scanQtyIn } from "../../app/scanqty.js";
 import { plateNutrition } from "../../app/nutrition.js";
+import { veggieCheck } from "../../app/health.js";
+import { cleanStep, POSSIBLE_COOKER_SETTINGS, NOT_THE_OVEN } from "./claude.js";
 
 export const MCP_PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26"];
 export const MCP_SERVER_NAME = "bilbrey-dinner-planner";
 /** Who the family app shows as having made a change from a Claude chat. */
-export const MCP_BY = "Jeff (Claude chat)";
+export const MCP_BY = "Family (Claude chat)";
 const FAMILY_NAMES = ["Jeff", "Candi", "Knox", "Jordan", "Jackson"];
 
 const DEFAULT_DATA_BASE = "https://blufoxmobile.github.io/Bilbrey-Family-Dinner-Planner/";
@@ -50,7 +52,8 @@ const DATA_TTL_MS = 5 * 60 * 1000;
 const MAX_BATCH = 20;
 const MAX_PLAN_DAYS = 62;
 const TOKEN_RE = /^[0-9a-f]{32}$/;
-const EQUIPMENT = Object.keys(EQUIPMENT_LABELS);
+// The family's Ninja PossibleCooker is `possible cooker` (listed here too, so this file doesn't wait on app/config.js).
+const EQUIPMENT = [...new Set([...Object.keys(EQUIPMENT_LABELS), "possible cooker"])];
 const PLACE_IDS = PLACES.map((p) => p.id);
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
@@ -85,24 +88,41 @@ function dataBase(env) {
   return b.endsWith("/") ? b : `${b}/`;
 }
 
-/** The normalized db (app/data.js buildDb), fetched at most every five minutes. */
+/**
+ * The normalized db (app/data.js buildDb), checked against the website at most every five minutes.
+ * Parsing the seven files (about 600 KB) and building the db is the connector's biggest CPU cost
+ * (about 11 ms on a cold start, measured), so a re-check sends each file's ETag: while the website
+ * answers "not modified" nothing is downloaded, parsed or rebuilt. A file that fails to load keeps
+ * its last copy.
+ */
 export async function loadFamilyDb(env, now = Date.now()) {
   const base = dataBase(env);
-  if (dbCache && dbCache.base === base && now - dbCache.at < DATA_TTL_MS) return dbCache.db;
+  const prev = dbCache && dbCache.base === base ? dbCache : null;
+  if (prev && now - prev.at < DATA_TTL_MS) return prev.db;
   try {
-    const raw = {};
+    const files = {};
+    let changed = !prev;
     await Promise.all(DATA_FILES.map(async ([name, required]) => {
+      const had = prev ? prev.files[name] : null;
       try {
-        const res = await fetch(`${base}data/${name}.json`, { headers: { Accept: "application/json" } });
+        const headers = { Accept: "application/json" };
+        if (had && had.etag) headers["If-None-Match"] = had.etag;
+        const res = await fetch(`${base}data/${name}.json`, { headers });
+        if (res.status === 304 && had) {
+          files[name] = had;
+          return;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        raw[name] = await res.json();
+        files[name] = { etag: res.headers.get("ETag"), value: await res.json() };
+        changed = true;
       } catch (err) {
-        if (required) throw new Error(`data/${name}.json: ${err && err.message ? err.message : err}`);
-        raw[name] = null;
+        if (had && had.value !== null) files[name] = had; // stale beats nothing
+        else if (required) throw new Error(`data/${name}.json: ${err && err.message ? err.message : err}`);
+        else files[name] = { etag: null, value: null };
       }
     }));
-    const db = buildDb(raw);
-    dbCache = { base, at: now, db };
+    const db = changed ? buildDb(Object.fromEntries(DATA_FILES.map(([name]) => [name, files[name].value]))) : prev.db;
+    dbCache = { base, at: now, db, files };
     return db;
   } catch (err) {
     console.error("MCP data load failed:", err && err.message ? err.message : err);
@@ -122,11 +142,17 @@ export function resetMcpCache() {
 const INSTRUCTIONS = [
   "This is the Bilbrey family's own dinner planner (Jeff, Candi, Knox, Jordan, Jackson; Glen Ellyn, IL, Central time).",
   "Changes you make here show up right away in the family's planner app on everyone's phone.",
-  "Start with get_family_profile. House rules for anything you suggest: dinner is one meat main plus two sides for five adult plates;",
-  "never the oven or broiler (Blackstone griddle, air fryer, gas stovetop, electric or outdoor grill, microwave); no tofu; no seafood",
-  "except an occasional snow crab boil with Old Bay; soups now and then; nothing Caesar; no raw cucumbers (pickles are fine), raw onions",
-  "or raw tomatoes; organic fruits and vegetables when possible; Knox only eats Cool Ranch Doritos. Budget about $650 a month in 2–3",
-  "store trips (Sam's Club in Addison, Jewel-Osco on Roosevelt Rd in Glen Ellyn). Use older food first and lean healthier.",
+  "The whole family shares one profile, so whoever is chatting speaks for the household; what you save is marked \"Family (Claude chat)\".",
+  "Start with get_family_profile. Their three goals: spend less on groceries, waste less food, and eat lighter.",
+  "House rules for anything you suggest: dinner is one meat main plus two sides for five full adult plates;",
+  "never the oven or broiler. They cook on a Blackstone griddle, air fryer, gas stovetop, electric or outdoor grill, microwave, and a",
+  "Ninja 10-in-1 PossibleCooker Pro 6.5 qt (equipment id \"possible cooker\": slow cook, sear/sauté, braise, steam, rice, keep warm).",
+  "No tofu; no seafood except an occasional snow crab boil with Old Bay; soups now and then; nothing Caesar; no raw cucumbers (pickles",
+  "are fine), raw onions or raw tomatoes; organic fruits and vegetables when possible; Knox only eats Cool Ranch Doritos.",
+  "Dinners should be lean and high in protein with a vegetable or a salad: leaner cuts, more vegetables, less frying. Lighter never means",
+  "small portions (three growing kids eat these dinners). Show calories and protein per plate when you have them, but never set a calorie",
+  "target for anyone and never call a food good or bad. Budget about $650 a month in 2–3 store trips (Sam's Club in Addison, Jewel-Osco",
+  "on Roosevelt Rd in Glen Ellyn). Use older food first: get_use_first lists what to eat soon.",
   "From photos: record only what you can actually see, and ask the user when a count or a label is unclear before saving.",
 ].join(" ");
 
@@ -248,8 +274,10 @@ const TOOL_DEFS = [
     name: "get_family_profile",
     title: "Family profile and house rules",
     description:
-      "Who the Bilbrey family is and the house rules for their food: the five people (all eat adult portions) and who packs lunch, " +
-      "their two stores (Sam's Club in Addison, Jewel-Osco at 599 E Roosevelt Rd, Glen Ellyn), the kitchen equipment (never an oven), " +
+      "Who the Bilbrey family is and the house rules for their food: the five people (all eat adult portions; one shared family profile) " +
+      "and who packs lunch, their goals (spend less, waste less, eat lighter: lean, high-protein dinners with a vegetable), " +
+      "their two stores (Sam's Club in Addison, Jewel-Osco at 599 E Roosevelt Rd, Glen Ellyn), the kitchen equipment (never an oven; " +
+      "a Ninja PossibleCooker for slow cooking, searing, braising, steaming and rice), " +
       "what they never eat, the monthly grocery budget with this month's spending so far, and the planner's settings. " +
       "Call this first in a new chat, before suggesting meals or shopping.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
@@ -405,8 +433,11 @@ const TOOL_DEFS = [
     description:
       "Put a dinner on a night in the family plan (it appears in their app right away). Either pick a dinner from the recipe box with " +
       "dinnerId (from list_recipes), or write a new one with recipe: a meat main for five adult plates with side ids from list_recipes " +
-      "(two sides; burgers get one, usually 'jewel-fries'). New recipes must follow the house rules or they're refused: no oven or broiler " +
-      "ever (Blackstone griddle, air fryer, stovetop, electric or outdoor grill, microwave), no tofu, no seafood (the one exception is an " +
+      "(two sides, at least one a vegetable or a salad; burgers get one, usually 'jewel-fries'). Keep it lean and high in protein: leaner " +
+      "cuts, more vegetables, air-fry, grill, griddle, braise or slow cook instead of frying; full portions all the same. New recipes must " +
+      "follow the house rules or they're refused: no oven or broiler " +
+      "ever (Blackstone griddle, air fryer, stovetop, electric or outdoor grill, microwave, and the Ninja PossibleCooker: equipment " +
+      "'possible cooker', for slow cook, sear/sauté, braise, steam, rice and keep warm), no tofu, no seafood (the one exception is an " +
       "occasional snow crab boil with Old Bay), nothing Caesar, no raw cucumbers, raw onions or raw tomatoes (cooked onions and tomato " +
       "sauces are fine), meat in every dinner, and steps that state safe temperatures (chicken and turkey 165°F, ground beef and sausage " +
       "160°F, pork chops 145°F then rest 3 minutes). Recipe items should use recipe-box ingredient ids (from list_recipes with id) where " +
@@ -427,7 +458,9 @@ const TOOL_DEFS = [
             subtitle: { type: "string", description: "One short appetizing sentence." },
             category: { type: "string", enum: CATEGORIES },
             protein: { type: "string", enum: PROTEINS },
-            minutes: { type: "number", exclusiveMinimum: 0 },
+            minutes: { type: "number", exclusiveMinimum: 0, description: "Total time, start to table (a slow cook can be hours)." },
+            prepMinutes: { type: "number", minimum: 0, description: "Hands-on time." },
+            cookMinutes: { type: "number", minimum: 0, description: "Time it cooks on its own." },
             equipment: { type: "array", items: { type: "string", enum: EQUIPMENT }, minItems: 1 },
             items: {
               type: "array",
@@ -448,7 +481,28 @@ const TOOL_DEFS = [
               },
             },
             sides: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 2 },
-            steps: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 20 },
+            steps: {
+              type: "array",
+              minItems: 1,
+              maxItems: 20,
+              description: "Plain sentences, or { text, minutes, setting } for a step with a time or a setting worth showing.",
+              items: {
+                anyOf: [
+                  { type: "string" },
+                  {
+                    type: "object",
+                    properties: {
+                      text: { type: "string" },
+                      minutes: { type: "number", exclusiveMinimum: 0 },
+                      setting: { type: "string", description: `What the equipment is set to: for the possible cooker ${POSSIBLE_COOKER_SETTINGS.join(", ")} (plus low or high); a heat level or temperature for the others.` },
+                    },
+                    required: ["text"],
+                    additionalProperties: false,
+                  },
+                ],
+              },
+            },
+            tips: { type: "array", items: { type: "string" }, maxItems: 5, description: "Short practical tips: when to start a slow cook, what to prep ahead, how to keep it lean." },
             tags: { type: "array", items: { type: "string" } },
           },
           required: ["title", "category", "protein", "minutes", "equipment", "items", "sides", "steps"],
@@ -473,6 +527,35 @@ const TOOL_DEFS = [
     inputSchema: { type: "object", properties: { from: DATE, to: DATE, store: STORE3 }, additionalProperties: false },
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
+  {
+    name: "get_use_first",
+    title: "What to eat soon",
+    description:
+      "The food at home that should be used first so nothing is thrown away: perishables whose estimated use-by is near or past, soonest " +
+      "first, with how much there is, where it's kept, and the recipe-box dinners that would use it (those the family could cook tonight " +
+      "without shopping are marked). Use-by dates are estimates from the day each item came home; the date on the package wins. " +
+      "Call this before suggesting or planning dinners, and plan the soonest food first.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        days: { type: "integer", minimum: 0, maximum: 30, description: "How far ahead to look for fridge and counter food (default 4 days). Freezer food is always looked at 30 days ahead." },
+      },
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  },
+  {
+    name: "get_health_summary",
+    title: "How the dinners add up",
+    description:
+      "Calories and protein per plate for the dinners in a range of dates (planned and cooked), their averages, the leanest and the " +
+      "heaviest nights, and which planned dinners have no vegetable or salad among their sides, with the side that could be swapped for " +
+      "one. Defaults to the last 7 days and the next 7. The numbers come from the recipe box's nutrition data (per adult plate, main plus " +
+      "sides as served); a night with ingredients the data doesn't cover says so. The family wants lean, high-protein dinners with a " +
+      "vegetable, in full portions: there are no calorie targets, so don't set one, and don't call a dinner good or bad.",
+    inputSchema: { type: "object", properties: { from: DATE, to: DATE }, additionalProperties: false },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  },
 ];
 
 export const TOOL_LIST = TOOL_DEFS.map((t) => ({ ...t, annotations: { title: t.title, ...t.annotations } }));
@@ -486,6 +569,8 @@ const TOOLS = {
   get_plan: { run: getPlan },
   plan_dinner: { run: planDinner },
   get_shopping_list: { run: getShoppingList },
+  get_use_first: { run: getUseFirst },
+  get_health_summary: { run: getHealthSummary },
 };
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
@@ -494,7 +579,9 @@ const TOOLS = {
 const HOUSE_RULES = [
   "Every dinner is one meat main plus two sides, for five full adult plates (Jeff, Candi, Knox, Jordan, Jackson). Burger nights default to one side, a bag of Jewel-Osco frozen fries, with an optional second side.",
   "Meat in every dinner (chicken, beef, pork, turkey, sausage, bacon…). Salads are welcome as long as they have meat on them.",
-  "Never the oven or broiler (it leaks propane). Cook on the Blackstone griddle, air fryer, gas stovetop, indoor electric grill, outdoor grill or microwave.",
+  "Never the oven or broiler (it leaks propane). Cook on the Blackstone griddle, air fryer, gas stovetop, indoor electric grill, outdoor grill, microwave or the Ninja PossibleCooker (slow cook, sear/sauté, braise, steam, rice, keep warm).",
+  "Lean, high-protein dinners with a vegetable or a salad, for the whole family: leaner cuts, more vegetables, less frying. Lighter never means small portions: three growing kids eat these dinners.",
+  "Show calories and protein per plate, but never set a calorie target for anyone and never call a food good or bad.",
   "No tofu. No seafood, apart from an occasional (every few months) snow crab boil with Old Bay. Soups now and then are welcome.",
   "Never anything Caesar.",
   "No raw cucumbers (pickles are fine), no raw onions and no raw tomatoes. Cooked onions and tomato sauces are fine; only Candi eats raw tomato.",
@@ -530,9 +617,25 @@ function getFamilyProfile(args, { db, state, today }) {
   });
   return {
     today, weekday: weekdayName(today), home: "Glen Ellyn, IL (Central time)",
+    profile: "One shared family profile: all five use the same planner, and anything saved from a Claude chat is marked \"Family (Claude chat)\".",
     people,
+    goals: [
+      "Save money on groceries: about the monthly target, in 2–3 store trips a month rather than a trip every few days.",
+      "Waste less food: cook what's oldest first (get_use_first).",
+      "Eat lighter: lean, high-protein dinners with a vegetable, less frying, full portions. No calorie targets; calories and protein are shown for information.",
+    ],
     stores,
-    equipment: ["Blackstone griddle (outdoor)", "air fryer", "gas stovetop", "indoor electric grill", "outdoor grill", "microwave", "NO oven"],
+    equipment: [
+      "Blackstone griddle (outdoor)", "air fryer", "gas stovetop", "indoor electric grill", "outdoor grill", "microwave",
+      "Ninja 10-in-1 Everyday PossibleCooker Pro, 6.5 qt (MC1101)", "NO oven",
+    ],
+    equipmentIds: EQUIPMENT,
+    possibleCooker: {
+      id: "possible cooker",
+      name: "Ninja 10-in-1 Everyday PossibleCooker Pro, 6.5 qt (MC1101)",
+      usedFor: POSSIBLE_COOKER_SETTINGS,
+      goodFor: "Sear then slow cook or braise in the same pot: chili, stews, soups, pulled chicken or pork, braised lean cuts, and rice for five. It replaces a slow cooker and a Dutch oven; it is never put in an oven.",
+    },
     storage: "One large fridge, a small freezer, an outdoor freezer and a full pantry, so bulk buying is easy to store.",
     houseRules: HOUSE_RULES,
     budget,
@@ -1244,7 +1347,8 @@ const RICE_IDS = ["jasmine", "basmati"];
 export function recipeProblems({ title = "", subtitle = "", steps = [], itemIds = [], itemNames = [], meat = false } = {}) {
   const problems = [];
   const text = [title, subtitle, ...steps];
-  const all = [...text, ...itemNames].join(" \n ");
+  // "No oven needed" and "instead of the oven" say the oven isn't used.
+  const all = [...text, ...itemNames].join(" \n ").replace(NOT_THE_OVEN, " ");
   const crabBoil = SNOW_CRAB.test(all);
   for (const [re, word, exceptFor] of BANNED) {
     if (exceptFor === "crab" && crabBoil) continue;
@@ -1283,6 +1387,7 @@ function planDinner(args, ctx) {
     ops.push(...built.ops);
     state = overlay(state, built.ops);
     dinnerId = built.id;
+    notes.push(...built.notes);
     createdRecipe = { id: built.id, updated: built.updated, newShelfItems: built.newShelfItems, rotation: built.rotation };
   } else {
     dinnerId = args.dinnerId.trim();
@@ -1357,12 +1462,25 @@ function buildCustomDinner(db, state, recipe, { saveToRecipeBox, at, by }) {
   if (!CATEGORIES.includes(recipe.category)) throw new ToolError(`recipe.category must be one of: ${CATEGORIES.join(", ")}.`);
   if (!PROTEINS.includes(recipe.protein)) throw new ToolError(`recipe.protein must be one of: ${PROTEINS.join(", ")}.`);
   const minutes = Number(recipe.minutes);
-  if (!(minutes > 0 && minutes <= 300)) throw new ToolError("recipe.minutes must be the total cooking time in minutes.");
+  // Up to 12 hours: a dinner can slow cook all afternoon in the PossibleCooker.
+  if (!(minutes > 0 && minutes <= 720)) throw new ToolError("recipe.minutes must be the total time in minutes, start to table (at most 720).");
+  const optMinutes = (v, what, max) => {
+    if (v === undefined || v === null) return null;
+    const n = Number(v);
+    if (!(n >= 0 && n <= max)) throw new ToolError(`recipe.${what} must be minutes from 0 to ${max}.`);
+    return Math.round(n);
+  };
+  const prepMinutes = optMinutes(recipe.prepMinutes, "prepMinutes", 240);
+  const cookMinutes = optMinutes(recipe.cookMinutes, "cookMinutes", 720);
   if (!Array.isArray(recipe.equipment) || !recipe.equipment.length) throw new ToolError(`recipe.equipment must list what it's cooked on: ${EQUIPMENT.join(", ")}.`);
   const badEq = recipe.equipment.filter((e) => !EQUIPMENT.includes(e));
   if (badEq.length) throw new ToolError(`The family can't cook with ${badEq.join(", ")}. Equipment must be from: ${EQUIPMENT.join(", ")} (never an oven).`);
-  const steps = Array.isArray(recipe.steps) ? recipe.steps.map((s) => str(s, 600)).filter(Boolean) : [];
-  if (!steps.length || steps.length > 20 || steps.some((s) => s.length < 10)) throw new ToolError("recipe.steps must be 1–20 plain sentences.");
+  // A step is a sentence or { text, minutes?, setting? }. The app's recipe pages read `steps` as
+  // sentences, so that stays a list of strings; the timed version is kept beside it as stepDetails.
+  const stepDetails = Array.isArray(recipe.steps) ? recipe.steps.map(cleanStep).filter(Boolean) : [];
+  const steps = stepDetails.map((s) => s.text);
+  if (!steps.length || steps.length > 20 || steps.some((s) => s.length < 10)) throw new ToolError("recipe.steps must be 1–20 plain sentences (or { text, minutes, setting } objects).");
+  const tips = Array.isArray(recipe.tips) ? recipe.tips.map((t) => str(t, 240)).filter(Boolean).slice(0, 5) : [];
   const burger = recipe.category === "Burgers";
   if (!Array.isArray(recipe.sides) || !recipe.sides.length) throw new ToolError("recipe.sides must list the side ids it's served with (two; burgers one).");
   const sides = [...new Set(recipe.sides.map((s) => checkSide(db, state, s)))];
@@ -1407,8 +1525,14 @@ function buildCustomDinner(db, state, recipe, { saveToRecipeBox, at, by }) {
 
   const itemIds = Object.keys(items);
   const meat = itemIds.some((id) => db.ingredients[id]?.meat || (local.custom?.[id] && MEAT_WORDS.test(local.custom[id].name))) || MEAT_WORDS.test(title);
-  const broken = recipeProblems({ title, subtitle, steps, itemIds, itemNames: names, meat });
+  const broken = recipeProblems({ title, subtitle, steps: [...steps, ...stepDetails.map((s) => s.setting || "").filter(Boolean), ...tips], itemIds, itemNames: names, meat });
   if (broken.length) throw new ToolError(`That recipe breaks the house rules, so it wasn't saved: ${broken.join("; ")}. Change it and try again.`);
+
+  // How the family wants to eat: said, never enforced (the dinner is theirs to choose).
+  const notes = [];
+  const vegSide = sides.some((s) => ["vegetable", "salad"].includes(db.sides[s]?.kind));
+  if (!vegSide && !burger) notes.push("Neither side is a vegetable or a salad; the family wants one with every dinner. list_recipes with include: \"sides\" shows them.");
+  if (/\bdeep[- ]?fr(y|ied|ying)\b|\bfry(ing)? in (\d+ )?(inch(es)? of |cups? of )?oil\b/i.test(steps.join(" "))) notes.push("The family is cutting back on frying: the air fryer, the griddle or the PossibleCooker would keep this one lighter.");
 
   const tags = Array.isArray(recipe.tags) ? recipe.tags.map((t) => String(t).toLowerCase().trim().slice(0, 30)).filter(Boolean).slice(0, 8) : [];
   if (burger && !tags.includes("burger")) tags.push("burger");
@@ -1428,9 +1552,11 @@ function buildCustomDinner(db, state, recipe, { saveToRecipeBox, at, by }) {
   const value = {
     title, ...(subtitle ? { subtitle } : {}), category: recipe.category, protein: recipe.protein, minutes, equipment: [...new Set(recipe.equipment)],
     tags, rotation, items, steps, sides, sideSlots: burger ? 1 : 2, source: "claude", by, at,
+    ...(prepMinutes !== null ? { prepMinutes } : {}), ...(cookMinutes !== null ? { cookMinutes } : {}),
+    ...(stepDetails.some((s) => s.minutes || s.setting) ? { stepDetails } : {}), ...(tips.length ? { tips } : {}),
   };
   ops.push(set(["customDinners", id], value));
-  return { ops, id, updated: !!existing, newShelfItems, rotation: rotation === "core" ? "rotation" : "one-off" };
+  return { ops, id, updated: !!existing, newShelfItems, rotation: rotation === "core" ? "rotation" : "one-off", notes };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
@@ -1502,6 +1628,102 @@ function getShoppingList(args, { db, state, today }) {
     pricesUpdated: list.pricesUpdated,
     note: "Prices are the family's last paid prices or researched estimates; the stores don't publish live prices. Packs are rounded up, so some food is left over for later.",
   };
+}
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// get_use_first (app/freshness.js): what to eat soon, and the dinners that would use it
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+function getUseFirst(args, { db, state, today }) {
+  const days = args.days === undefined ? 4 : args.days;
+  if (!Number.isInteger(days) || days < 0 || days > 30) throw new ToolError("days must be a whole number from 0 to 30.");
+  const soon = useSoon(db, state, today, { soon: days, freezerSoon: 30 });
+  const ids = new Set(soon.map((u) => u.id));
+  const uses = new Map();
+  if (ids.size) {
+    const rem = onHand(db, state);
+    for (const d of allDinners(db, state)) {
+      if (isRetired(state, d.id)) continue;
+      const items = itemsForNight(db, state, d.id, null);
+      const hit = Object.keys(items).filter((id) => ids.has(id));
+      if (!hit.length) continue;
+      const row = { id: d.id, title: d.title, minutes: d.minutes, canCookNow: !shortfall(db, state, rem, items).length };
+      for (const id of hit) uses.set(id, [...(uses.get(id) || []), row]);
+    }
+  }
+  // Nights already planned (the next two weeks) that will use each item.
+  const plannedFor = new Map();
+  for (const date of datesBetween(today, addDays(today, 13))) {
+    const e = state.plan?.[date];
+    if (!e?.dinner || e.status !== "planned" || !dinnerById(db, state, e.dinner)) continue;
+    for (const id of Object.keys(itemsForNight(db, state, e.dinner, e))) if (ids.has(id)) plannedFor.set(id, [...(plannedFor.get(id) || []), date]);
+  }
+  const useFirst = soon.map((u) => {
+    const row = pantryRow(db, state, u.id, today);
+    const dinners = (uses.get(u.id) || []).sort((a, b) => b.canCookNow - a.canCookNow || a.minutes - b.minutes || a.title.localeCompare(b.title));
+    return compact({
+      id: u.id, name: u.name, place: u.place, kind: row.kind,
+      amount: row.qty != null ? unitText(row.qty, row.unit) : undefined, packages: row.packages,
+      since: row.since, useBy: u.useBy, daysLeft: u.daysLeft,
+      when: u.daysLeft < 0 ? "past its estimated use-by: check it before cooking (the package date wins)" : u.daysLeft === 0 ? "use today" : u.daysLeft === 1 ? "use by tomorrow" : `use within ${u.daysLeft} days`,
+      plannedFor: plannedFor.get(u.id),
+      dinners: dinners.length ? dinners.slice(0, 6) : undefined,
+    });
+  });
+  const unplanned = useFirst.filter((u) => !u.plannedFor);
+  return {
+    today,
+    lookingAhead: { fridgeAndCounterDays: days, freezerDays: 30 },
+    count: useFirst.length,
+    useFirst,
+    notInAnyPlannedDinner: unplanned.map((u) => u.name),
+    note: useFirst.length
+      ? "Use-by dates are estimates from the day each item came home; the date on the package wins. Plan the soonest food first; freezer food keeps, so fridge and counter food comes first."
+      : "Nothing at home needs using up in that time.",
+  };
+}
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// get_health_summary (app/nutrition.js + app/health.js): calories, protein and vegetables
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+function getHealthSummary(args, { db, state, today }) {
+  const range = args.from === undefined && args.to === undefined
+    ? { from: addDays(today, -7), to: addDays(today, 7), dates: datesBetween(addDays(today, -7), addDays(today, 7)) }
+    : rangeArgs(args, today);
+  const nights = [];
+  for (const date of range.dates) {
+    const e = state.plan?.[date];
+    if (!e?.dinner || e.status === "away") continue;
+    const d = dinnerById(db, state, e.dinner);
+    if (!d) continue;
+    const n = plateNutrition(db, state, d.id, e);
+    const night = { date, day: weekdayName(date), status: e.status === "cooked" ? "cooked" : "planned", dinner: d.title, sides: sidesServed(db, state, d.id, e).map((s) => s.title) };
+    if (n) {
+      night.kcal = Math.round(n.kcal);
+      night.proteinG = Math.round(n.protein);
+      if (!n.complete) night.notCounted = n.missing.map((id) => itemMeta(db, state, id).name);
+    } else night.noData = true;
+    nights.push(night);
+  }
+  const counted = nights.filter((n) => typeof n.kcal === "number");
+  const avg = (k) => (counted.length ? Math.round(counted.reduce((t, n) => t + n[k], 0) / counted.length) : null);
+  const byKcal = [...counted].sort((a, b) => a.kcal - b.kcal);
+  const pick = (n) => (n ? { date: n.date, dinner: n.dinner, kcal: n.kcal, proteinG: n.proteinG } : undefined);
+  const veg = veggieCheck(db, state, range.dates);
+  return compact({
+    from: range.from, to: range.to, today,
+    dinners: nights.length,
+    perPlate: counted.length ? { averageKcal: avg("kcal"), averageProteinG: avg("proteinG"), countedDinners: counted.length } : undefined,
+    lightest: byKcal.length > 1 ? pick(byKcal[0]) : undefined,
+    heaviest: byKcal.length > 1 ? pick(byKcal[byKcal.length - 1]) : undefined,
+    mostProtein: counted.length > 1 ? pick([...counted].sort((a, b) => b.proteinG - a.proteinG)[0]) : undefined,
+    vegetables: {
+      plannedDinners: veg.total,
+      withAVegetableOrSalad: veg.withVeg,
+      without: veg.gaps.map((g) => ({ date: g.date, dinner: g.dinner.title, sides: g.sides, suggestion: g.add ? "add a vegetable as the second side" : `swap ${g.sides[g.slot] || "a side"} for a vegetable or a salad` })),
+    },
+    nights,
+    note: "Per adult plate: the main plus its sides as served, from the recipe box's nutrition data (estimates). The family wants lean, high-protein dinners with a vegetable in full portions; there are no calorie targets.",
+  });
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
