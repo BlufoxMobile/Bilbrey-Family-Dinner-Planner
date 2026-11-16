@@ -57,6 +57,8 @@ const SHELL_FILES = [
   'app/claude.js',
   'app/ideas.js',
   'app/views/ideas.js',
+  'app/cooking.js',
+  'styles/parts/cook.css',
   'fonts/young-serif-400.woff2',
   'fonts/atkinson-next-400.woff2',
   'fonts/atkinson-next-400-italic.woff2',

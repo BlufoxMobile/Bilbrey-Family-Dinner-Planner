@@ -12,10 +12,15 @@ import {
 import {
   placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps,
   resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName, awayBlock, bringBackTripOps,
-  voteOps, sideVoteOps, lunchVoteOps,
+  voteOps, sideVoteOps, lunchVoteOps, saveLeftoversOps, useLeftoverOps, clearLeftoversOps, leftoverNightOps,
 } from '../actions.js';
-import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote } from './common.js';
-import { plateNutrition, sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
+import {
+  sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote,
+  plate, leanMark, isLeftoverNight, leftoversQuestion,
+} from './common.js';
+import { sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
+import { leftoversOnHand, leftoverNightChoices, servingsText, useByText } from '../cooking.js';
+import { finishCooking } from './cook.js';
 import { waitText } from '../state.js';
 
 const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
@@ -40,6 +45,17 @@ function nightBody(app, date) {
   if (e?.status === 'away') {
     const r = awayReason(e);
     const trip = awayBlock(app.state, date).filter((x) => x >= today);
+    if (isLeftoverNight(e)) {
+      return html`
+        <div class="away-card away-card-sheet">
+          <span class="away-ic">${ic('bowl', { size: 26 })}</span>
+          <div><p class="away-title">${r.label}</p><p class="away-note">${e.away?.note || r.note}</p></div>
+        </div>
+        <p class="sheet-text">Reheat it until it’s steaming hot all the way through (165°F).${d ? ` ${d.title} was planned; its groceries are off the list.` : ''}</p>
+        <div class="action-list">
+          <button type="button" class="action-row" data-action="night:back" data-date="${date}">${ic('flame')}<span><b>${d ? `Cook ${d.title} after all` : 'Cook something after all'}</b><small>${d ? 'Its groceries go back on the list.' : 'Then pick a dinner for the night.'}</small></span></button>
+        </div>`;
+    }
     return html`
       <div class="away-card away-card-sheet">
         <span class="away-ic">${ic('moon', { size: 26 })}</span>
@@ -71,12 +87,14 @@ function nightBody(app, date) {
         <p class="night-title">${d.title}</p>
         ${equipment(d, { compact: true })}
         ${favoriteBadge(app, d)}
-        ${when(showNutrition(app), () => html`<p class="night-nutri">${nutri(app, plateNutrition(app.db, app.state, d.id, e), { suffix: 'a plate', compact: true })}</p>`)}
+        ${when(showNutrition(app), () => html`<p class="night-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate', compact: true })}</p>`)}
       </div>
       ${thumbs(app, { kind: 'dinner', id: d.id, label: d.title })}
     </div>
     ${when(isRetired(app.state, d.id) && !cooked, () => html`<p class="hint">${ic('down_vote', { size: 18 })}<span>${droppedBy(app, d.id)} gave ${d.title} a thumbs down, so it won’t be planned again. <button type="button" class="link-btn" data-action="night:pick" data-date="${date}">Swap this night</button></span></p>`)}
     ${when(cooked, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked${e.cookedBy ? ` by ${e.cookedBy}` : ''}.</p>`)}
+    ${when(cooked && !app.state.leftovers?.[date] && diffDays(today, date) <= 3, () => leftoversQuestion(app, date))}
+    ${when(cooked && app.state.leftovers?.[date], () => { const l = app.state.leftovers[date]; return html`<p class="muted small lo-line">${l.servings > 0 ? `${servingsText(l.servings)} of leftovers in the fridge.` : l.saved ? 'The leftovers are gone.' : 'No leftovers that night.'} <button type="button" class="link-btn" data-action="leftovers:edit" data-date="${date}">Change</button></p>`; })}
     <h3 class="sheet-h">Sides</h3>
     <ul class="side-rows">
       ${sides.map((s) => html`<li class="side-row">
@@ -99,7 +117,7 @@ function nightBody(app, date) {
     })}
     ${when(!cooked && slots === 1 && sides.length < 2, () => html`<button type="button" class="btn btn-quiet btn-small add-side" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="1">${ic('plus', { size: 18 })}Add a side</button>`)}
     <div class="action-list">
-      <a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>Big steps for the dinner and both sides.</small></span></a>
+      ${when(!cooked, () => html`<a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>One step at a time, with timers, for the dinner and its sides.</small></span></a>`)}
       ${when(!cooked && date !== today && !past, () => html`<button type="button" class="action-row" data-action="night:tonight" data-date="${date}">${ic('tonight')}<span><b>Make this tonight</b><small>Tonight’s dinner moves to ${diffDays(date, today) === 1 ? 'tomorrow' : dayAndDate(date, today)}.</small></span></button>`)}
       ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:move" data-date="${date}">${ic('move')}<span><b>Move to another night</b><small>If that night has a dinner, they trade places.</small></span></button>`)}
       ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('swap')}<span><b>Swap for a different dinner</b></span></button>`)}
@@ -107,7 +125,7 @@ function nightBody(app, date) {
       ${cooked
         ? html`<button type="button" class="action-row" data-action="night:uncook" data-date="${date}">${ic('undo')}<span><b>Mark as not cooked</b><small>Puts what it used back in the pantry.</small></span></button>`
         : html`<button type="button" class="action-row" data-action="night:cooked" data-date="${date}">${ic('checkCircle')}<span><b>Mark cooked</b><small>Takes what it used out of the pantry.</small></span></button>`}
-      <a class="action-row" href="#/recipe/${d.id}">${ic('recipes')}<span><b>Open the recipe</b></span></a>
+      <a class="action-row" href="#/recipe/${d.id}">${ic('recipes')}<span><b>Open the recipe</b><small>Ingredients for five, timing, tips and nutrition.</small></span></a>
       ${when(!cooked, () => html`<button type="button" class="action-row action-quiet" data-action="night:clear" data-date="${date}">${ic('trash')}<span><b>Clear this night</b></span></button>`)}
     </div>`;
 }
@@ -135,12 +153,14 @@ function pickBody(app, { date, query }) {
       ${list.length ? list.map((d) => {
         const where = findInPlan(app.state, d.id, { exclude: date, from: today, near: date })[0];
         const off = planStore !== 'both' && !dinnerFeasibleAt(app.db, app.state, d.id, planStore);
+        const facts = showNutrition(app) ? plate(app, d.id, null) : null;
         return html`<li><button type="button" class="pick-row ${d.id === current ? 'is-current' : ''}" data-action="pick:choose" data-date="${date}" data-dinner="${d.id}" ${d.id === current ? html`aria-current="true"` : ''}>
           ${dinnerPhoto(app, d, { size: 'thumb' })}
           <span class="pick-main"><b>${d.title}</b>
-            <small>${d.minutes} min${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small></span>
+            <small>${d.minutes} min${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small>
+            ${when(facts, () => html`<small class="pick-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein a plate${leanMark(facts, { compact: true })}</small>`)}</span>
         </button></li>`;
-      }) : html`<li class="muted pad">No dinners match “${query}”.</li>`}
+      }) : html`<li class="muted pad">${q ? `No dinners match “${query}”. Try another word, or browse the recipe box.` : 'There are no dinners in the rotation. Bring some back from Recipes, Dropped.'}</li>`}
     </ul>`;
 }
 
@@ -354,7 +374,7 @@ function subBody(app, d, slot, st, date) {
     ${st.tab === 'box'
       ? html`<ul class="pick-list">${sides.map((s) => html`<li><button type="button" class="pick-row" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-ref="${s.id}">
           ${sidePhoto(app, { parsed: { type: 'side', id: s.id }, info: { kind: s.kind } }, { size: 'thumb' })}
-          <span class="pick-main"><b>${s.title}</b><small>${s.minutes ? `${s.minutes} min` : ''}${s.kind ? `${s.minutes ? ', ' : ''}${s.kind}` : ''}</small></span></button></li>`)}</ul>`
+          <span class="pick-main"><b>${s.title}</b><small>${s.minutes ? `${s.minutes} min` : ''}${s.kind ? `${s.minutes ? ', ' : ''}${s.kind}` : ''}${(() => { const sn = showNutrition(app) ? sideNutrition(app.db, app.state, { type: 'side', id: s.id }) : null; return sn ? `, ${fmtKcal(sn.kcal)} cal a plate` : ''; })()}</small></span></button></li>`)}</ul>`
       : html`
         ${shelf.length ? html`<ul class="shelf-list">${shelf.map((it) => {
           const q = st.qty[it.id] ?? Math.min(defaultQty(it.unit), typeof it.have === 'number' ? it.have : defaultQty(it.unit));
@@ -373,6 +393,34 @@ function subBody(app, d, slot, st, date) {
           </div>
           <button type="submit" class="btn btn-secondary btn-block">Use it as the side</button>
         </form>`}`;
+}
+
+// ---------------------------------------------------------------- leftovers (SPEC §22.5)
+
+/** Which night should the leftovers be dinner? Only nights before they're past their best. */
+export function openLeftoverNight(app, from) {
+  openSheet({
+    id: `leftover-night:${from}`,
+    live: true,
+    title: 'Make it a leftover night',
+    get subtitle() { const l = leftoversOnHand(app.state, app.today()).find((x) => x.date === from); return l ? `${servingsText(l.servings)} of ${l.title}, ${useByText(l, app.today())}.` : ''; },
+    render: () => {
+      const today = app.today();
+      const l = leftoversOnHand(app.state, today).find((x) => x.date === from);
+      if (!l) return html`<p class="sheet-text">Those leftovers are gone.</p><div class="sheet-actions"><button type="button" class="btn btn-primary btn-block" data-action="sheet:close">OK</button></div>`;
+      const nights = leftoverNightChoices(app.state, l, today);
+      if (!nights.length) return html`<p class="sheet-text">There’s no free night before they’re past their best (${useByText(l, today)}). Have them for lunch instead.</p><div class="sheet-actions"><button type="button" class="btn btn-primary btn-block" data-action="sheet:close">OK</button></div>`;
+      return html`
+        <p class="sheet-text">Nothing is cooked that night, and its groceries come off the list.${l.servings < 5 ? ` With ${servingsText(l.servings)} for five, plan to add a side or a salad.` : ''}</p>
+        <ul class="move-list">${nights.map((x) => {
+          const t = app.state.plan?.[x];
+          const td = t?.dinner ? dinnerById(app.db, app.state, t.dinner) : null;
+          return html`<li><button type="button" class="move-row ${td ? '' : 'is-open'}" data-action="leftovers:night-set" data-from="${from}" data-night="${x}">
+            <span class="move-day"><b>${dayWord(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${td ? `Instead of ${td.title}` : 'Open'}</span>${ic('right', { size: 18 })}
+          </button></li>`;
+        })}</ul>`;
+    },
+  });
 }
 
 // ---------------------------------------------------------------- who's on this phone
@@ -440,7 +488,32 @@ export const actions = {
     if (res.open) openPick(app, el.dataset.date);
     else closeSheet();
   },
-  'night:cooked': (app, el) => { app.commit(markCookedOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() })); closeSheet(); },
+  // The sheet stays open on a cooked night: it asks about leftovers next.
+  'night:cooked': (app, el) => { if (app.commit(markCookedOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() })) && sheetId() === `night:${el.dataset.date}`) renderSheet(); else closeSheet(); },
+  'leftovers:save': (app, el) => {
+    const ok = app.commit(saveLeftoversOps(app.db, app.state, { date: el.dataset.date, servings: Number(el.dataset.n), who: app.who() }));
+    if (sheetId() === `leftovers:${el.dataset.date}`) closeSheet();
+    else renderSheet();
+    // From cook mode's last screen: the cooking session is over.
+    if (ok && el.dataset.then) { finishCooking(app); app.navigate(el.dataset.then); }
+  },
+  'leftovers:edit': (app, el) => {
+    const date = el.dataset.date;
+    const e = app.state.plan?.[date];
+    openSheet({
+      id: `leftovers:${date}`,
+      title: 'Leftovers',
+      subtitle: `${dinnerById(app.db, app.state, e?.dinner)?.title || 'Dinner'}, ${relativeDay(date, app.today()).toLowerCase() === 'tonight' ? 'tonight' : weekdayName(date)}`,
+      render: () => leftoversQuestion(app, date, { heading: 'How many servings are in the fridge?' }),
+    });
+  },
+  'leftovers:ate': (app, el) => { app.commit(useLeftoverOps(app.db, app.state, { date: el.dataset.date, servings: 1 })); renderSheet(); },
+  'leftovers:gone': (app, el) => { app.commit(clearLeftoversOps(app.db, app.state, { date: el.dataset.date })); renderSheet(); },
+  'leftovers:night': (app, el) => openLeftoverNight(app, el.dataset.date),
+  'leftovers:night-set': (app, el) => {
+    app.commit(leftoverNightOps(app.db, app.state, { from: el.dataset.from, night: el.dataset.night, who: app.who(), today: app.today() }));
+    closeSheet();
+  },
   'night:uncook': (app, el) => { app.commit(unmarkCookedOps(app.db, app.state, { date: el.dataset.date })); closeSheet(); },
   'night:clear': (app, el) => { app.commit(clearNightOps(app.db, app.state, { date: el.dataset.date, today: app.today() })); closeSheet(); },
   'night:auto': (app, el) => {

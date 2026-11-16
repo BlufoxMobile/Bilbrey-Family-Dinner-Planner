@@ -1,29 +1,42 @@
-// RECIPE: one dinner — photo, ingredients for five, sides, steps, family votes,
-// make tonight / add to plan / start cooking, and retire/restore for Jeff and Candi.
+// RECIPE (SPEC §22.2): a page worth cooking from. The photo, why it's on the plan, how long it
+// takes, the equipment and its settings, ingredients for five against the pantry, the whole plate
+// timed together, detailed steps, each side's own method, tips, safe temperatures, leftovers and
+// nutrition per plate. Then the family's votes, and retire/restore for Jeff and Candi.
 import { html, ic, when, openSheet, avatar, personStyle, tf } from '../ui.js';
 import { FAMILY, PARENTS } from '../config.js';
-import { fmtQty, addDays, datesBetween, relativeDay, shortDate, dayWord, dayAndDate, listJoin } from '../util.js';
-import { dinnerById, isRetired, isPromoted, isFavorite, voteInfo, findInPlan, inRotation, scaleItems, downVoters, implicitPromotions } from '../planner.js';
+import { addDays, datesBetween, relativeDay, shortDate, dayWord, dayAndDate, listJoin } from '../util.js';
+import { dinnerById, isRetired, isPromoted, isFavorite, voteInfo, findInPlan, inRotation, downVoters, implicitPromotions } from '../planner.js';
 import { settingsOf } from '../state.js';
 import { voteOps, retireOps, restoreOps, promoteOps } from '../actions.js';
-import { itemMeta, unitText } from '../shopping.js';
-import { sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote } from './common.js';
-import { plateNutrition, entreeNutrition, sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
+import { unitText } from '../shopping.js';
+import {
+  sidesFor, dinnerPhoto, sidePhoto, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote,
+  plate, leanMark, cic, equipIcon, equipLabel, whyList, timelineChart, plateGuide, isDismissed,
+} from './common.js';
+import { entreeNutrition, sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
+import {
+  recipeTimes, recipeTips, leftoversNote, fmtMinutes, stepDetails, equipmentSettings, safeTemps, plateRecipes, cookTracks, cookTimeline,
+  stepIngredients, pantryCheck, whyThisDinner, plainName,
+} from '../cooking.js';
 import { place, openWho } from './sheets.js';
+import { cookProgress } from './cook.js';
 
 export const title = (app) => dinnerById(app.db, app.state, app.route.params[0])?.title || 'Recipe';
 
-function amount(qty, unit) {
-  return unitText(qty, unit);
-}
+const PLATE_GUIDE_KEY = 'plate-guide';
 
-export function ingredients(app, items) {
+/** Ingredients for five, each with whether it's already in the house. */
+export function ingredients(app, items, { check = true } = {}) {
   const lighter = settingsOf(app.state).meatScale !== 1;
-  const scaled = scaleItems(app.db, app.state, items);
-  return html`<ul class="ingredients">${Object.entries(scaled).map(([id, q]) => {
-    const m = itemMeta(app.db, app.state, id);
-    const light = lighter && app.db.ingredients[id]?.meat;
-    return html`<li><span class="ing-amt">${amount(q, m.unit)}</span><span class="ing-name">${m.name}${light ? html` <span class="tag">lighter</span>` : ''}</span></li>`;
+  const rows = pantryCheck(app.db, app.state, items).rows;
+  return html`<ul class="ingredients ${check ? 'ingredients-check' : ''}">${rows.map((r) => {
+    const light = lighter && app.db.ingredients[r.id]?.meat;
+    const state = r.status === 'have' ? 'In the pantry' : r.status === 'short' ? `Need ${unitText(r.short, r.unit)} more` : 'Not in the pantry';
+    return html`<li class="ing ing-${r.status}">
+      <span class="ing-amt">${r.amount}</span>
+      <span class="ing-name">${r.name}${light ? html` <span class="tag">lighter</span>` : ''}</span>
+      ${check ? html`<span class="ing-state">${r.status === 'have' ? ic('check', { size: 16 }) : ''}<span>${state}</span></span>` : ''}
+    </li>`;
   })}</ul>`;
 }
 
@@ -49,31 +62,95 @@ function votes(app, d) {
   </section>`;
 }
 
+/** Prep, cook and total; or just the total when that's all the recipe knows. */
+function timeStrip(d, tl) {
+  const t = recipeTimes(d);
+  const cells = [];
+  if (t.prep) cells.push(['Prep', fmtMinutes(t.prep)]);
+  if (t.cook) cells.push(['Cook', fmtMinutes(t.cook)]);
+  if (t.total) cells.push([t.prep || t.cook ? 'Total' : 'Start to finish', fmtMinutes(t.total)]);
+  if (tl.tracks.length > 1 && tl.total && tl.total !== t.total) cells.push(['With the sides', fmtMinutes(tl.total)]);
+  if (!cells.length) return '';
+  return html`<dl class="time-strip">${cells.map(([k, v]) => html`<div><dt>${k}</dt><dd>${v}</dd></div>`)}</dl>`;
+}
+
+/** One numbered step: what to do, the heat, how long, and the amounts it uses. */
+function stepItem(st, ings) {
+  return html`<li class="step">
+    <p class="step-text">${st.text}</p>
+    ${when(st.setting || st.timers.length, () => html`<p class="step-chips">
+      ${when(st.setting, () => html`<span class="step-chip step-chip-heat">${ic('flame', { size: 15 })}${st.setting}</span>`)}
+      ${st.timers.map((t) => html`<span class="step-chip">${cic('timer', { size: 15 })}${t.label}</span>`)}
+    </p>`)}
+    ${when(ings?.length, () => html`<p class="step-ings"><span class="sr-only">Uses: </span>${ings.filter((x) => !x.again).map((x) => x.label).join(' · ')}</p>`)}
+  </li>`;
+}
+
+function nutritionSection(app, d, entry, sides, facts) {
+  if (!showNutrition(app)) return '';
+  const main = entreeNutrition(app.db, app.state, d.id);
+  const rows = [['The dinner', main], ...sides.map((s) => [s.info?.title || 'Side', sideNutrition(app.db, app.state, s.parsed)])];
+  const more = facts ? [['Carbs', facts.carbsG], ['Fat', facts.fatG], ['Fiber', facts.fiberG]].filter(([, v]) => Number.isFinite(v)) : [];
+  return html`<section class="recipe-nutrition" aria-labelledby="nutri-h">
+    <h2 id="nutri-h" class="section-title">Nutrition, one plate</h2>
+    ${facts ? html`<p class="nutri-big"><span><b>≈ ${fmtKcal(facts.kcal)}</b> calories</span><span><b>${Math.round(facts.protein)} g</b> protein</span>${more.map(([k, v]) => html`<span><b>${Math.round(v)} g</b> ${k.toLowerCase()}</span>`)}${leanMark(facts)}</p>`
+      : html`<p class="muted">No calorie data for this one yet.</p>`}
+    ${when(facts?.lean && facts.why, () => html`<p class="muted small">Why it’s marked lean: ${facts.why}.</p>`)}
+    <table class="nutri-table">
+      <thead><tr><th scope="col">On the plate</th><th scope="col">Calories</th><th scope="col">Protein</th></tr></thead>
+      <tbody>${rows.map(([name, n]) => html`<tr><th scope="row">${name}</th><td>${n ? fmtKcal(n.kcal) : '—'}</td><td>${n ? `${Math.round(n.protein)} g` : '—'}</td></tr>`)}</tbody>
+    </table>
+    <p class="muted small">One of five equal, adult-size plates, worked out from the ingredients (USDA figures). Real plates vary, and that’s fine.${facts && facts.complete === false ? ' A few ingredients have no data yet and aren’t counted.' : ''}</p>
+  </section>`;
+}
+
 export function render(app) {
   const id = app.route.params[0];
   const d = dinnerById(app.db, app.state, id);
   if (!d) {
     return html`<div class="page"><a class="back" href="#/recipes">${ic('left', { size: 20 })}Recipes</a>
-      <div class="empty"><h3 class="empty-title">That recipe isn’t in the box</h3><p class="empty-body">It may have been renamed. Browse the recipe box instead.</p><div class="empty-actions"><a class="btn btn-primary" href="#/recipes">Open recipes</a></div></div></div>`;
+      <div class="empty"><h1 class="empty-title">That recipe isn’t in the box</h1><p class="empty-body">It may have been renamed or removed. Browse the recipe box instead.</p><div class="empty-actions"><a class="btn btn-primary" href="#/recipes">Open recipes</a></div></div></div>`;
   }
   const today = app.today();
-  const sides = sidesFor(app, d.id, null);
   const retired = isRetired(app.state, d.id);
   const bench = d.rotation === 'bench' && !isPromoted(app.state, d.id) && !retired && !implicitPromotions(app.db, app.state).has(d.id);
   const parent = PARENTS.includes(app.who());
   const where = findInPlan(app.state, d.id, { from: today });
   const replaced = app.state.promoted?.[d.id]?.replaced || implicitPromotions(app.db, app.state).get(d.id);
+  // The night it's next planned decides the sides (a one-night swap shows here too).
+  const nightOf = where[0] || null;
+  const entry = nightOf ? app.state.plan[nightOf] : null;
+  const isTonight = nightOf === today;
+  const cookedTonight = isTonight && entry?.status === 'cooked';
+  const sides = sidesFor(app, d.id, entry);
+  const facts = showNutrition(app) ? plate(app, d.id, entry) : null;
+  const recs = plateRecipes(app.db, app.state, d.id, entry);
+  const tl = cookTimeline(cookTracks(recs));
+  const steps = stepDetails(d);
+  const stepIngs = stepIngredients(app.db, app.state, d.items, steps);
+  const gear = equipmentSettings(d);
+  const temps = safeTemps(d);
+  const tips = recipeTips(d);
+  const why = whyThisDinner(app.db, app.state, d.id, entry, { today });
+  const need = recs.map((r) => pantryCheck(app.db, app.state, r.recipe.items));
+  const total = need.reduce((n, c) => n + c.total, 0);
+  const missing = need.flatMap((c) => c.missing);
+  const going = cookProgress(d.id);
+  const cookHref = isTonight ? `#/cook/${today}` : `#/cook/d/${d.id}`;
+  const cookLabel = going ? `Keep cooking: step ${going.step} of ${going.of}` : 'Start cooking';
   return html`<div class="page page-recipe">
     <a class="back" href="#/recipes">${ic('left', { size: 20 })}Recipes</a>
     <div class="recipe-top">
       <div class="recipe-photo">${dinnerPhoto(app, d, { size: 'hero', eager: true, alt: d.title })}</div>
       <div class="recipe-head">
+        <p class="recipe-kicker">${d.category}${d.protein && d.protein !== 'mixed' ? `, ${d.protein}` : ''}${d.custom ? ', a family recipe' : ''}</p>
         <h1 class="recipe-title">${d.title}</h1>
         ${when(d.subtitle, () => html`<p class="recipe-sub">${d.subtitle}</p>`)}
-        ${equipment(d)}
-        ${when(showNutrition(app), () => html`<p class="recipe-nutri">${nutri(app, plateNutrition(app.db, app.state, d.id, null), { suffix: 'a plate with both sides' })}</p>`)}
+        ${when(why.length, () => html`<div class="recipe-why"><p class="why-h">${isTonight ? 'Why it’s on the plan tonight' : nightOf ? `Why it’s on the plan ${relativeDay(nightOf, today).toLowerCase()}` : 'Why make it'}</p>${whyList(why)}</div>`)}
+        ${timeStrip(d, tl)}
+        ${when(showNutrition(app), () => html`<p class="recipe-nutri">${nutri(app, facts, { suffix: sides.length ? `a plate with ${sides.length === 1 ? 'its side' : 'both sides'}` : 'a plate' })}</p>`)}
         ${(() => {
-          const idea = lighterSide(app.db, app.state, d.id, null);
+          const idea = lighterSide(app.db, app.state, d.id, entry);
           return idea ? lighterChip(app, {
             key: `side:${d.id}:${idea.slot}:${idea.to.id}`,
             text: `${idea.to.title} instead of ${idea.from.title}.`,
@@ -89,29 +166,86 @@ export function render(app) {
           ${when(where.length, () => html`<span class="badge badge-plan">${ic('plan', { size: 14 })}Planned ${where.slice(0, 2).map((w) => (w === today ? 'tonight' : relativeDay(w, today))).join(' and ')}</span>`)}
         </div>
         <div class="recipe-actions">
-          <button type="button" class="btn btn-primary" data-action="rec:tonight" data-dinner="${d.id}">${ic('tonight', { size: 20 })}Make this tonight</button>
-          <button type="button" class="btn btn-secondary" data-action="rec:addplan" data-dinner="${d.id}">${ic('plan', { size: 20 })}Add to plan on…</button>
-          <a class="btn btn-secondary" href="#/cook/d/${d.id}">${ic('flame', { size: 20 })}Start cooking</a>
+          ${isTonight
+            ? html`${when(!cookedTonight, () => html`<a class="btn btn-primary" id="rec-cook" href="${cookHref}">${ic('flame', { size: 20 })}${cookLabel}</a>`)}
+              ${when(cookedTonight, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked tonight.</p>`)}
+              <button type="button" class="btn btn-secondary" data-action="rec:addplan" data-dinner="${d.id}">${ic('plan', { size: 20 })}Move or plan again…</button>`
+            : html`<button type="button" class="btn btn-primary" data-action="rec:tonight" data-dinner="${d.id}">${ic('tonight', { size: 20 })}Make this tonight</button>
+              <button type="button" class="btn btn-secondary" data-action="rec:addplan" data-dinner="${d.id}">${ic('plan', { size: 20 })}Add to plan on…</button>
+              <a class="btn btn-secondary" id="rec-cook" href="${cookHref}">${ic('flame', { size: 20 })}${cookLabel}</a>`}
         </div>
-        ${when(where.includes(today) === false && findInPlan(app.state, d.id, { from: today }).length, () => html`<p class="muted small">Making it tonight swaps it with tonight’s dinner.</p>`)}
+        ${when(!isTonight && where.length, () => html`<p class="muted small">Making it tonight trades it with tonight’s dinner.</p>`)}
       </div>
     </div>
+
+    ${when(showNutrition(app) && !isDismissed(app, PLATE_GUIDE_KEY), () => plateGuide({ dismissKey: PLATE_GUIDE_KEY }))}
+
     <div class="recipe-cols">
-      <section class="recipe-ings" aria-labelledby="ing-h">
-        <h2 id="ing-h" class="section-title">For five, all adult plates</h2>
-        ${ingredients(app, d.items)}
-        <h3 class="sub-title">Sides</h3>
-        ${sides.length ? sides.map((s) => html`<div class="side-block"><details class="side-detail">
-          <summary>${sidePhoto(app, s, { size: 'thumb' })}<span><b>${s.info?.title}</b>${replacedNote(app, s)}${when(s.remembered && !s.replaced, () => html`<small>Remembered substitute</small>`)}${when(showNutrition(app), () => { const sn = sideNutrition(app.db, app.state, s.parsed); return html`<small class="side-kcal">${sn ? `${fmtKcal(sn.kcal)} cal a plate` : '—'}</small>`; })}</span></summary>
-          ${ingredients(app, s.info?.items || {})}
-          <ol class="steps steps-small">${(s.info?.steps || []).map((t) => html`<li>${t}</li>`)}</ol>
-        </details>${when(s.parsed.type === 'side' && app.db.sides[s.parsed.id], () => thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', compact: true }))}</div>`) : html`<p class="muted">No sides.</p>`}
-      </section>
-      <section class="recipe-steps" aria-labelledby="steps-h">
-        <h2 id="steps-h" class="section-title">Steps</h2>
-        <ol class="steps">${d.steps.map((t) => html`<li>${t}</li>`)}</ol>
-      </section>
+      <div class="recipe-need">
+        ${when(gear.length, () => html`<section aria-labelledby="gear-h" class="recipe-gear">
+          <h2 id="gear-h" class="section-title">Equipment</h2>
+          <ul class="gear">${gear.map((g) => html`<li>${equipIcon(g.id, { size: 22 })}<span><b>${equipLabel(g.id)}</b>${g.settings.length ? html`<small>${g.settings.join(', ')}</small>` : ''}</span></li>`)}</ul>
+          <p class="muted small">No oven needed, ever.</p>
+        </section>`)}
+        <section class="recipe-ings" aria-labelledby="ing-h">
+          <h2 id="ing-h" class="section-title">For five, all adult plates</h2>
+          ${when(total, () => html`<p class="pantry-sum ${missing.length ? '' : 'is-ready'}">${missing.length
+            ? html`${cic('pantry', { size: 18 })}<span><b>${total - missing.length} of ${total}</b> ingredients are in the pantry. Missing: ${listJoin(missing.slice(0, 5).map((m) => plainName(m.name)))}${missing.length > 5 ? `, and ${missing.length - 5} more` : ''}. ${where.length ? html`<a href="#/list">They’re on the list.</a>` : 'Plan it and they go on the list.'}</span>`
+            : html`${ic('checkCircle', { size: 18 })}<span><b>Everything is in the pantry.</b> Nothing to buy.</span>`}</p>`)}
+          <h3 class="sub-title">${d.title}</h3>
+          ${ingredients(app, d.items)}
+          ${sides.map((s) => html`<h3 class="sub-title">${s.info?.title}</h3>${ingredients(app, s.info?.items || {})}`)}
+        </section>
+      </div>
+
+      <div class="recipe-method">
+        ${when(tl.tracks.length > 1, () => html`<section class="recipe-timing" aria-labelledby="timing-h">
+          <h2 id="timing-h" class="section-title">Timing the whole plate</h2>
+          ${timelineChart(tl)}
+          <ul class="cook-cues">${tl.cues.map((c) => html`<li><b>${c.title}.</b> ${c.text}</li>`)}</ul>
+        </section>`)}
+
+        <section class="recipe-steps" aria-labelledby="steps-h">
+          <h2 id="steps-h" class="section-title">Steps</h2>
+          ${steps.length
+            ? html`<ol class="steps steps-detail">${steps.map((st, i) => stepItem(st, stepIngs[i]))}</ol>`
+            : html`<p class="muted">This recipe has no steps written down yet. Its ingredients are on the left; cook it the way the family likes it.</p>`}
+        </section>
+
+        <section class="recipe-sides" aria-labelledby="sides-h">
+          <h2 id="sides-h" class="section-title">${sides.length === 1 ? 'The side' : 'The sides'}</h2>
+          ${sides.length ? sides.map((s, i) => {
+            const rec = recs.find((r) => r.id === `side${i}`);
+            const sSteps = rec ? stepDetails(rec.recipe) : [];
+            const cue = tl.cues.find((c) => c.id === `side${i}`);
+            const sn = showNutrition(app) ? sideNutrition(app.db, app.state, s.parsed) : null;
+            const sGear = rec ? equipmentSettings(rec.recipe) : [];
+            return html`<div class="side-block"><details class="side-detail" open>
+              <summary>${sidePhoto(app, s, { size: 'thumb' })}<span><b>${s.info?.title}</b>${replacedNote(app, s)}${when(s.remembered && !s.replaced, () => html`<small>Remembered substitute</small>`)}
+                <small class="side-kcal">${[s.info?.minutes ? fmtMinutes(s.info.minutes) : '', ...sGear.map((g) => `${equipLabel(g.id)}${g.settings.length ? ` (${g.settings.join(', ')})` : ''}`), showNutrition(app) ? (sn ? `${fmtKcal(sn.kcal)} cal a plate` : 'no calorie data') : ''].filter(Boolean).join(' · ')}</small></span></summary>
+              ${when(cue, () => html`<p class="side-cue">${ic('clock', { size: 16 })}<span>${cue.text}</span></p>`)}
+              <ol class="steps steps-small steps-side">${sSteps.map((st) => html`<li>${st.text}${st.timers.length ? html` <span class="step-chip">${cic('timer', { size: 14 })}${st.timers.map((t) => t.label).join(', ')}</span>` : ''}</li>`)}</ol>
+            </details>${when(s.parsed.type === 'side' && app.db.sides[s.parsed.id], () => thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', compact: true }))}</div>`;
+          }) : html`<p class="muted">No sides with this one.</p>`}
+        </section>
+
+        ${when(tips.length, () => html`<section class="recipe-tips" aria-labelledby="tips-h">
+          <h2 id="tips-h" class="section-title">Tips</h2>
+          <ul class="tips">${tips.map((t) => html`<li>${t}</li>`)}</ul>
+        </section>`)}
+
+        <section class="recipe-safe" aria-labelledby="safe-h">
+          <h2 id="safe-h" class="section-title">Done and safe</h2>
+          <ul class="temps">${temps.map((x) => html`<li>${cic('thermo', { size: 20 })}<span><b>${x.temp}°F</b> ${x.food}, ${x.note}</span></li>`)}
+            ${when(!temps.length, () => html`<li>${cic('thermo', { size: 20 })}<span>Cook meat until a thermometer in the thickest part reads <b>165°F</b> for chicken and turkey, <b>160°F</b> for ground meat, <b>145°F</b> for chops and steaks.</span></li>`)}</ul>
+          <h3 class="sub-title">Leftovers</h3>
+          <p class="recipe-leftovers">${leftoversNote(d)}</p>
+        </section>
+      </div>
     </div>
+
+    ${nutritionSection(app, d, entry, sides, facts)}
+    ${when(showNutrition(app) && isDismissed(app, PLATE_GUIDE_KEY), () => html`<p class="pg-again"><button type="button" class="link-btn" data-action="rec:plate-guide">A lighter plate: the half-plate guide</button></p>`)}
     ${votes(app, d)}
     ${when(parent, () => html`<section class="parent-tools">
       <h2 class="section-title">For Jeff and Candi</h2>
@@ -119,7 +253,19 @@ export function render(app) {
         : bench ? html`<button type="button" class="btn btn-secondary" data-action="rec:promote" data-dinner="${d.id}">${ic('plus', { size: 20 })}Add to the rotation</button>`
           : inRotation(app.state, d, app.db) ? html`<button type="button" class="btn btn-quiet" data-action="rec:retire" data-dinner="${d.id}">${ic('trash', { size: 20 })}Retire from the rotation</button>` : ''}
     </section>`)}
+    ${when(!cookedTonight, () => html`<div class="recipe-bar is-hidden"><a class="btn btn-primary btn-lg btn-block" href="${cookHref}">${ic('flame', { size: 22 })}${cookLabel}</a></div>`)}
   </div>`;
+}
+
+/** The bar at the bottom appears once the page's own "Start cooking" has scrolled out of sight. */
+export function mount(app, main) {
+  const bar = main.querySelector('.recipe-bar');
+  const top = main.querySelector('.recipe-actions');
+  if (!bar) return;
+  if (!top || typeof IntersectionObserver === 'undefined') { bar.classList.remove('is-hidden'); return; }
+  new IntersectionObserver((entries) => {
+    if (bar.isConnected) bar.classList.toggle('is-hidden', entries[entries.length - 1].isIntersecting);
+  }).observe(top);
 }
 
 function openAddToPlan(app, dinnerId) {
@@ -156,6 +302,7 @@ export const actions = {
   'rec:retire': (app, el) => app.commit(retireOps(app.db, app.state, { dinnerId: el.dataset.dinner, who: app.who(), today: app.today() })),
   'rec:restore': (app, el) => app.commit(restoreOps(app.db, app.state, { dinnerId: el.dataset.dinner })),
   'rec:promote': (app, el) => app.commit(promoteOps(app.db, app.state, { dinnerId: el.dataset.dinner })),
+  'rec:plate-guide': () => openSheet({ id: 'plate-guide', title: 'A lighter plate', render: () => plateGuide() }),
 };
 
 export { isFavorite };

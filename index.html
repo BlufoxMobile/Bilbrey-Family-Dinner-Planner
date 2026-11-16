@@ -27,6 +27,7 @@
     try { var d = JSON.parse(localStorage.getItem('bfdp.v2.device') || '{}'); if (d.theme === 'light' || d.theme === 'dark') document.documentElement.dataset.theme = d.theme; } catch (e) {}
   </script>
   <script type="module" src="app/main.js"></script>
+  <link rel="stylesheet" href="styles/parts/cook.css">
 </head>
 <body>
   <div id="app" class="app is-boot" aria-busy="true">

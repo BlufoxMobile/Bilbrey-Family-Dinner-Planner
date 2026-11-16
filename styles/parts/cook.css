@@ -1,0 +1,363 @@
+/* Tonight, the recipe page, the recipe box and cook mode (SPEC §22).
+   Everything here uses the tokens in styles/tokens.css, so a new design system restyles it.
+   Each dish on the plate has a tone: the dinner is the red rule, the sides pine and butter. */
+
+.cook-tone-main, .tl-main { --tone: var(--red); --tone-ink: var(--card); }
+.cook-tone-a, .tl-side0 { --tone: var(--pine); --tone-ink: var(--pine-ink); }
+.cook-tone-b, .tl-side1 { --tone: var(--butter); --tone-ink: #2A2620; }
+.cook-tone-c, .tl-side2, .tl-side3 { --tone: var(--dusk-2); --tone-ink: var(--dusk-ink); }
+
+/* ---------------------------------------------------------------- small shared pieces */
+
+/* lean: a leaf and a word, never a score */
+.lean-mark { display: inline-flex; align-items: center; gap: 4px; padding: 1px 9px 1px 6px; border-radius: 999px; background: var(--sage-tint); color: var(--pine); font-size: var(--t-xs); font-weight: 700; line-height: 1.5; white-space: nowrap; vertical-align: baseline; }
+.lean-mark .ic { flex: none; }
+.lean-mark-sm { padding: 0 7px 0 4px; margin-left: 6px; }
+
+/* why this dinner, tonight */
+.why { display: grid; gap: 6px; margin-top: 12px; }
+.why li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: start; font-size: var(--t-sm); line-height: 1.4; color: var(--ink-2); }
+.why .ic { margin-top: 2px; color: var(--sage); }
+.why-sale .ic, .why-fav .ic { color: color-mix(in srgb, var(--butter) 70%, var(--ink)); }
+
+/* the whole plate on one clock */
+.tl { display: grid; gap: 8px; margin: var(--s3) 0; }
+.tl-row { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr); gap: 10px; align-items: center; font-size: var(--t-sm); }
+.tl-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.tl-lane { display: block; height: 28px; border-radius: 8px; background: var(--paper-2); overflow: hidden; }
+.tl-bar { display: flex; align-items: center; justify-content: flex-end; height: 100%; min-width: 3.6em; padding: 0 8px; border-radius: 8px; background: var(--tone, var(--red)); color: var(--tone-ink, var(--card)); font-size: var(--t-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tl-axis { display: flex; justify-content: space-between; gap: 8px; padding-left: calc(9em + 10px); color: var(--ink-3); font-size: var(--t-xs); }
+.cook-cues { display: grid; gap: 8px; margin: var(--s3) 0; color: var(--ink-2); font-size: var(--t-sm); line-height: 1.45; }
+.cook-cues b { color: var(--ink); }
+
+/* leftovers: how many servings went in the fridge */
+.lo-ask { display: grid; gap: 8px; }
+.lo-ask .section-title { margin: 0; }
+.lo-nums { display: flex; flex-wrap: wrap; gap: 8px; }
+.lo-num { min-width: 52px; min-height: 48px; align-items: center; justify-content: center; border-radius: 14px; font-size: var(--t-md); font-weight: 700; }
+.lo-line { margin: var(--s2) 0; }
+.sheet-body > .lo-ask { margin: var(--s3) 0; padding: 14px 16px; border-radius: var(--r-card); background: color-mix(in srgb, var(--butter-tint) 60%, var(--card)); }
+
+/* a lighter plate: half, a palm, a cupped hand */
+.plate-guide { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 22px; align-items: center; margin: var(--s8) 0 0; padding: 18px 20px; border-radius: var(--r-card); border: 1px solid color-mix(in srgb, var(--sage) 35%, transparent); background: color-mix(in srgb, var(--sage-tint) 55%, var(--card)); }
+.sheet-body .plate-guide { margin: 0; border: 0; background: transparent; padding: 0 0 var(--s3); }
+.pg-plate { flex: none; }
+.pg-rim { fill: var(--card); stroke: var(--line-2); stroke-width: 2; }
+.pg-veg { fill: var(--sage); }
+.pg-pro { fill: var(--red); }
+.pg-starch { fill: var(--butter); }
+.pg-lines { fill: none; stroke: var(--card); stroke-width: 3; }
+.pg-text { display: grid; gap: 8px; justify-items: start; }
+.pg-text .section-title { margin: 0; }
+.pg-list { display: grid; gap: 4px; }
+.pg-list li { display: grid; grid-template-columns: 14px 1fr; gap: 10px; align-items: center; }
+.pg-key { width: 14px; height: 14px; border-radius: 4px; }
+.pg-key-veg { background: var(--sage); }
+.pg-key-pro { background: var(--red); }
+.pg-key-starch { background: var(--butter); }
+.pg-again { margin-top: var(--s4); }
+@media (max-width: 479px) {
+  .plate-guide { grid-template-columns: 1fr; }
+  .pg-plate { width: 92px; height: 92px; }
+}
+
+/* ---------------------------------------------------------------- tonight */
+
+.tcard { padding: 16px 18px; margin: var(--s5) 0; border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1); }
+.tonight-side > .tcard:first-child, .tonight-side > .prep-card:first-child { margin-top: 0; }
+.tcard .section-head { align-items: center; margin-bottom: 2px; }
+.tcard .section-title { margin: 0; }
+.tcard .section-title .ic { color: var(--sage); }
+.hero .why { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.hero-done { margin: 0; align-items: flex-start; font-weight: 600; }
+.hero-done .ic { flex: none; margin-top: 3px; }
+.menu-nutri { font-variant-numeric: tabular-nums; }
+.menu-main .lean-mark { display: inline-flex; }
+
+.lo-card { box-shadow: var(--sh-1), inset 0 3px 0 var(--butter); display: grid; gap: 10px; justify-items: start; }
+.tonight-main > .lo-card { margin-top: var(--s5); }
+.forgot-card { display: grid; gap: 10px; margin-top: 0; box-shadow: var(--sh-1), inset 0 3px 0 var(--butter); }
+.forgot-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.lo-list, .soon-list, .lt-list { display: grid; }
+.lo-row { display: grid; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.lo-main { display: grid; gap: 1px; }
+.lo-main small, .soon-main small { color: var(--ink-2); line-height: 1.4; }
+.lo-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.lo-row.is-late .lo-main small, .soon-row.is-late .soon-main small { color: var(--red); }
+.soon-row { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.soon-list li:last-child, .lt-list li:last-child, .lo-list:last-child li:last-child { border-bottom: 0; }
+.soon-ic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--sage-tint); color: var(--pine); }
+.soon-row.is-due .soon-ic { background: var(--butter-tint); color: var(--ink); }
+.soon-row.is-late .soon-ic { background: var(--red-tint); color: var(--red); }
+.soon-main { display: grid; gap: 1px; min-width: 0; }
+.lt-row { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 1px 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.lt-what { color: var(--ink-2); line-height: 1.4; }
+.lt-nutri { grid-column: 2; color: var(--ink-3); font-size: var(--t-xs); font-variant-numeric: tabular-nums; }
+
+/* the week, calmly: four plain facts */
+.week-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }
+.week-stats div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 2px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--paper-2) 60%, var(--card)); }
+.week-stats dt { color: var(--ink-2); font-size: var(--t-xs); line-height: 1.3; }
+.week-stats dd { margin: 0; font-family: var(--font-display); font-size: var(--t-xl); line-height: 1.1; font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- the recipe page */
+
+.recipe-kicker { margin-bottom: 6px; color: var(--ink-3); font-size: var(--t-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.recipe-why { margin: 14px 0; padding: 12px 14px; border-left: 3px solid var(--red); border-radius: 0 var(--r-card) var(--r-card) 0; background: var(--card); box-shadow: var(--sh-1); }
+.recipe-why .why { margin-top: 6px; }
+.why-h { font-size: var(--t-sm); font-weight: 700; }
+.time-strip { display: flex; flex-wrap: wrap; margin: 14px 0 6px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); overflow: hidden; }
+.time-strip div { flex: 1 1 0; min-width: 92px; padding: 10px 14px; box-shadow: 1px 0 0 var(--line), 0 1px 0 var(--line); }
+.time-strip dt { color: var(--ink-3); font-size: var(--t-xs); font-weight: 700; }
+.time-strip dd { margin: 0; font-family: var(--font-display); font-size: var(--t-lg); line-height: 1.2; white-space: nowrap; }
+.recipe-actions .status-note { margin: 0; }
+.recipe-need, .recipe-method { display: grid; gap: var(--s8); align-content: start; min-width: 0; }
+.gear { display: grid; gap: 10px; margin-bottom: var(--s2); }
+.gear li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: center; }
+.gear .ic { color: var(--sage); }
+.gear b { display: block; font-weight: 600; }
+.gear small { display: block; color: var(--ink-2); }
+.pantry-sum { display: grid; grid-template-columns: 18px 1fr; gap: 10px; padding: 10px 12px; margin-bottom: var(--s2); border-radius: 12px; background: color-mix(in srgb, var(--butter-tint) 70%, var(--card)); font-size: var(--t-sm); line-height: 1.45; }
+.pantry-sum.is-ready { background: var(--sage-tint); }
+.pantry-sum .ic { margin-top: 2px; color: var(--pine); }
+.recipe-ings .sub-title:first-of-type { margin-top: var(--s3); }
+.ingredients-check li { grid-template-columns: 84px minmax(0, 1fr); row-gap: 0; }
+.ing-state { grid-column: 2; display: inline-flex; align-items: center; gap: 4px; color: var(--ink-3); font-size: var(--t-xs); }
+.ing-have .ing-state { color: var(--sage); }
+.ing-short .ing-state, .ing-none .ing-state { color: color-mix(in srgb, var(--butter) 40%, var(--ink)); font-weight: 600; }
+
+.steps-detail { gap: var(--s5); }
+.step-text { line-height: 1.6; }
+.step-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.step-chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px 2px 8px; border-radius: 999px; background: var(--paper-2); color: var(--ink-2); font-size: var(--t-xs); font-weight: 700; white-space: nowrap; vertical-align: middle; }
+.step-chip-heat { background: var(--red-tint); color: var(--red); }
+.step-ings { margin-top: 6px; color: var(--ink-3); font-size: var(--t-sm); line-height: 1.45; }
+.recipe-sides .side-block:first-of-type .side-detail { border-top: 1px solid var(--line); }
+.side-cue { display: grid; grid-template-columns: 16px 1fr; gap: 8px; align-items: start; margin-bottom: 10px; padding: 8px 10px; border-radius: 10px; background: var(--sage-tint); color: var(--ink); font-size: var(--t-sm); line-height: 1.4; }
+.side-cue .ic { margin-top: 2px; color: var(--pine); }
+.steps.steps-side { gap: 10px; color: var(--ink); }
+.steps.steps-side li::marker { color: var(--sage); font-weight: 700; }
+/* the side's method gets the full width; its thumbs sit in the corner of its heading */
+.recipe-sides .side-block { position: relative; display: block; }
+.recipe-sides .side-block > .thumbs { position: absolute; top: 12px; right: 0; padding: 0; }
+.recipe-sides .side-detail summary { min-height: 72px; padding-right: 108px; }
+.tips { display: grid; gap: 10px; }
+.tips li { position: relative; padding-left: 22px; line-height: 1.55; }
+.tips li::before { content: ''; position: absolute; left: 4px; top: .62em; width: 8px; height: 8px; border-radius: 50%; background: var(--butter); }
+.temps { display: grid; gap: 8px; }
+.temps li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; line-height: 1.5; }
+.temps .ic { color: var(--red); margin-top: 1px; }
+.recipe-leftovers { color: var(--ink-2); line-height: 1.55; }
+
+.recipe-nutrition { margin-top: var(--s10); padding: 20px; border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1); }
+.nutri-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; margin-bottom: 6px; color: var(--ink-2); }
+.nutri-big b { margin-right: 4px; font-family: var(--font-display); font-weight: 400; font-size: var(--t-2xl); color: var(--ink); font-variant-numeric: tabular-nums; }
+.nutri-table { width: 100%; margin: 12px 0; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.nutri-table th, .nutri-table td { padding: 9px 0; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; }
+.nutri-table td, .nutri-table thead th:not(:first-child) { text-align: right; padding-left: 12px; white-space: nowrap; }
+.nutri-table thead th { color: var(--ink-3); font-size: var(--t-xs); font-weight: 700; }
+.nutri-table tbody th { font-weight: 600; }
+
+/* phones: "Start cooking" stays within reach while you read (once the button up top has scrolled away) */
+.recipe-bar.is-hidden { visibility: hidden; }
+.recipe-bar { position: sticky; bottom: calc(var(--tabbar-h) + var(--safe-b) + 8px); z-index: 10; margin-top: var(--s8); padding: 8px; border-radius: 20px; background: color-mix(in srgb, var(--card) 90%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: var(--sh-2); }
+
+/* ---------------------------------------------------------------- the recipe box */
+
+.r-nutri { color: var(--ink-2); font-size: var(--t-xs); font-variant-numeric: tabular-nums; line-height: 1.6; }
+.r-pantry { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-3); font-size: var(--t-xs); }
+.r-pantry.is-ready { color: var(--sage); font-weight: 700; }
+.r-count { margin-bottom: var(--s3); }
+.r-empty { padding-top: var(--s8); }
+.pick-nutri { font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- cook mode: the whole screen, one step at a time */
+
+.app.is-cook .view { padding: 0; max-width: none; width: 100%; margin: 0; }
+.cook-v3 { height: 100dvh; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto auto; overflow: hidden; }
+.cook-v3 .cook-bar { position: static; }
+.cook-tools { display: flex; align-items: center; gap: 2px; }
+.cook-title { min-width: 0; }
+.cook-title small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cook-stage { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.cook-v3 .cook-body { max-width: 880px; padding: var(--s5) var(--gutter) var(--s8); gap: var(--s5); }
+.cook-empty { min-height: 100dvh; }
+.cook-dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--tone, var(--red)); }
+
+/* a step: big enough to read from across the kitchen */
+.cook-step-card { position: relative; display: grid; gap: 16px; align-content: start; padding: 22px 22px 22px 24px; border-left: 6px solid var(--tone, var(--red)); border-radius: var(--r-index); background: var(--card); box-shadow: var(--sh-2); }
+.cook-dish-tag { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--ink-2); font-size: calc(var(--t-sm) * var(--cook-scale)); line-height: 1.3; }
+.cook-dish-tag b { color: var(--ink); font-weight: 700; }
+.cook-dish-tag small { color: var(--ink-3); font-size: inherit; font-weight: 600; }
+.cook-step-text { font-size: calc(clamp(1.45rem, 1.1rem + 1.9vw, 3.4rem) * var(--cook-scale)); line-height: 1.32; letter-spacing: -0.005em; text-wrap: pretty; }
+.cook-setting { display: inline-flex; align-items: center; gap: 8px; justify-self: start; padding: 6px 14px 6px 10px; border-radius: 999px; background: var(--red-tint); color: var(--red); font-size: calc(var(--t-md) * var(--cook-scale)); font-weight: 700; }
+.cook-ings { display: flex; flex-wrap: wrap; gap: 8px; }
+.cook-ings li { padding: 6px 12px; border-radius: 10px; background: var(--paper-2); font-size: calc(var(--t-md) * var(--cook-scale)); font-weight: 600; line-height: 1.35; }
+.cook-ings li.is-again { background: transparent; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink-3); font-weight: 400; }
+.cook-resumed { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; justify-self: start; padding: 6px 12px; border-radius: 10px; background: var(--butter-tint); color: var(--ink); font-size: var(--t-sm); }
+.cook-resumed .link-btn { min-height: 32px; }
+
+/* timers */
+.cook-timers { display: grid; gap: 10px; }
+.cook-timer.is-idle { display: flex; }
+.cook-timer-start { min-height: 56px; gap: 10px; padding: 0 20px 0 16px; font-size: calc(var(--t-md) * var(--cook-scale)); }
+.cook-timer-start b { font-variant-numeric: tabular-nums; }
+.cook-timer-start span { font-weight: 400; }
+.cook-timer.is-running, .cook-timer.is-paused, .cook-timer.is-done { display: grid; gap: 10px; padding: 12px 14px; border: 2px solid var(--pine); border-radius: 14px; background: var(--sage-tint); }
+.cook-timer.is-paused { border-style: dashed; }
+.cook-timer.is-done { border-color: var(--red); background: var(--red-tint); animation: cook-pulse .9s ease-in-out infinite alternate; }
+.cook-timer-face { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.cook-timer-face .ic { color: var(--pine); }
+.cook-timer.is-done .cook-timer-face .ic { color: var(--red); }
+.cook-timer-clock { font-family: var(--font-display); font-weight: 400; font-size: calc(2.5rem * var(--cook-scale)); line-height: 1; font-variant-numeric: tabular-nums; }
+.cook-timer-face small { color: var(--ink-2); font-weight: 600; }
+.cook-timer-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.cook-upnext { display: grid; gap: 2px; padding: 12px 16px 12px 14px; border-left: 4px solid var(--tone, var(--line-2)); border-radius: 0 12px 12px 0; background: color-mix(in srgb, var(--card) 60%, transparent); color: var(--ink-2); font-size: calc(var(--t-md) * var(--cook-scale)); line-height: 1.45; }
+.cook-upnext small { color: var(--ink-3); font-size: var(--t-xs); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.cook-upnext span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* timers from other steps, always in sight */
+.cook-dock { display: flex; gap: 8px; padding: 8px var(--gutter); overflow-x: auto; scrollbar-width: none; border-top: 1px solid var(--line); background: var(--card); }
+.cook-dock::-webkit-scrollbar { display: none; }
+.cook-pill { display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 10px; border: 2px solid var(--pine); border-radius: 999px; background: var(--sage-tint); color: var(--ink); white-space: nowrap; }
+.cook-pill b { font-variant-numeric: tabular-nums; }
+.cook-pill span { max-width: 11em; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); font-size: var(--t-sm); }
+.cook-pill.is-paused { border-style: dashed; }
+.cook-pill.is-done { border-color: var(--red); background: var(--red-tint); animation: cook-pulse .9s ease-in-out infinite alternate; }
+
+/* back and next: the two biggest things on the screen after the step */
+.cook-nav { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 10px; padding: 10px var(--gutter) calc(10px + var(--safe-b)); border-top: 1px solid var(--line); background: color-mix(in srgb, var(--card) 96%, transparent); }
+.cook-nav .btn { min-height: 60px; padding: 0 12px; font-size: var(--t-lg); }
+.cook-nav > :only-child { grid-column: 1 / -1; justify-self: start; min-width: min(100%, 220px); }
+.cook-nav :focus-visible { outline-offset: 3px; }
+
+/* get ready */
+.cook-ready { display: grid; gap: var(--s5); }
+.cook-facts { gap: 8px 18px; font-size: calc(var(--t-md) * var(--cook-scale)); color: var(--ink); }
+.cook-facts b { font-weight: 700; }
+.cook-temp { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; font-size: calc(var(--t-md) * var(--cook-scale)); }
+.cook-temp .ic { color: var(--red); margin-top: 2px; }
+.cook-plan, .cook-v3 .cook-need { padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.cook-plan .cook-sec-h, .cook-need .cook-sec-h { margin-bottom: 4px; }
+.cook-order { display: flex; width: 100%; }
+.cook-need-h { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; font-family: var(--font-text); font-size: var(--t-md); font-weight: 700; }
+.cook-gather-row { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; width: 100%; min-height: 50px; padding: 8px 2px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; font-size: calc(var(--t-md) * var(--cook-scale)); }
+.cook-gather li:last-child .cook-gather-row { border-bottom: 0; }
+.cook-check { display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid var(--line-2); border-radius: 8px; }
+.cook-gather-row.is-on .cook-check { border-color: var(--sage); background: var(--sage); color: var(--card); }
+.cook-gather-row.is-on .cook-gather-name { color: var(--ink-3); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--ink-3) 60%, transparent); }
+.cook-gather-name small { display: block; color: color-mix(in srgb, var(--butter) 40%, var(--ink)); font-size: var(--t-xs); font-weight: 600; text-decoration: none; }
+
+/* finish */
+.cook-finish { display: grid; gap: 14px; justify-items: start; padding: 26px 24px; border-radius: var(--r-index); background: var(--card); box-shadow: var(--sh-2); }
+.cook-finish .cook-dish { width: 100%; margin: 0; padding: 0 0 12px; }
+.cook-finish-ic { color: var(--sage); }
+.cook-finish-acts { display: grid; gap: 10px; width: 100%; }
+.cook-finish .hint { margin: 0; }
+.cook-finish .lo-ask { width: 100%; padding: 14px 16px; border-radius: var(--r-card); background: color-mix(in srgb, var(--butter-tint) 60%, var(--card)); }
+.cook-uses { line-height: 1.5; }
+
+/* the list of every step (a sheet): done, here, to come */
+.cook-step.is-current { border: 2px solid var(--pine); }
+.cook-step .cook-text small { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; color: var(--ink-3); font-size: var(--t-xs); font-weight: 700; text-decoration: none; }
+.sheet-body .cook-step .cook-text { font-size: var(--t-md); }
+.cook-presets .chip { min-width: 84px; min-height: 52px; align-items: center; justify-content: center; font-size: var(--t-md); font-weight: 700; }
+
+/* a timer is done: over every screen, impossible to miss */
+.cook-alert { position: fixed; z-index: 70; top: calc(var(--safe-t) + 10px); left: 10px; right: 10px; display: grid; gap: 8px; max-width: 720px; margin: 0 auto; }
+.cook-alert-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 12px; align-items: center; padding: 14px 16px; border-radius: 16px; background: #A8322A; color: #fff; box-shadow: var(--sh-3); animation: cook-ring .8s ease-in-out infinite alternate; }
+.cook-alert-ic { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: rgba(255, 255, 255, .18); }
+.cook-alert-text { display: grid; line-height: 1.3; }
+.cook-alert-text b { font-size: var(--t-lg); }
+.cook-alert-acts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-on-alert { background: #fff; color: #7D241D; }
+.btn-quiet-alert { background: transparent; border-color: rgba(255, 255, 255, .6); color: #fff; }
+.cook-alert :focus-visible { outline-color: #fff; }
+@keyframes cook-ring { from { box-shadow: var(--sh-3), 0 0 0 0 rgba(168, 50, 42, .55); } to { box-shadow: var(--sh-3), 0 0 0 10px rgba(168, 50, 42, 0); } }
+@keyframes cook-pulse { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 45%, transparent); } to { box-shadow: 0 0 0 7px transparent; } }
+
+/* ---------------------------------------------------------------- wider screens */
+
+@media (min-width: 600px) {
+  .week-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .lo-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .cook-finish-acts { grid-auto-flow: column; justify-content: start; }
+  .cook-nav { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
+  .cook-step-card { padding: 28px 30px 28px 30px; }
+  .cook-finish { padding: 34px 36px; }
+}
+
+@media (min-width: 960px) {
+  .recipe-bar { display: none; }
+  .page-tonight .week-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page-tonight .lo-row { grid-template-columns: 1fr; }
+  .recipe-photo .photo-hero { aspect-ratio: 5 / 4; }
+  .recipe-head .recipe-actions { grid-template-columns: repeat(auto-fit, minmax(200px, max-content)); }
+  .plate-guide { max-width: 760px; }
+  .recipe-nutrition { max-width: 760px; }
+  .tl-row { grid-template-columns: minmax(0, 12em) minmax(0, 1fr); }
+  .tl-axis { padding-left: calc(12em + 10px); }
+}
+
+/* a laptop on the counter, or the TV: the step on the left, what it needs on the right */
+@media (min-width: 1100px) {
+  .cook-v3 .cook-body { max-width: 1240px; }
+  .cook-v3.is-step .cook-step-card { grid-template-columns: minmax(0, 1.75fr) minmax(280px, 1fr); column-gap: 44px; padding: 36px 40px; }
+  .cook-step-card > .cook-dish-tag, .cook-step-card > .cook-resumed { grid-column: 1 / -1; }
+  .cook-step-card > .cook-step-text { grid-column: 1; grid-row: span 6; }
+  .cook-step-card > .cook-setting, .cook-step-card > .cook-ings, .cook-step-card > .cook-timers { grid-column: 2; }
+  .cook-ready { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .cook-ready > .cook-card, .cook-ready > .hint { grid-column: 1 / -1; }
+  .cook-ready > .cook-need:only-of-type, .cook-ready > .cook-card + .cook-need { grid-column: 1 / -1; }
+  .cook-nav { grid-template-columns: 240px minmax(0, 1fr); padding-left: max(var(--gutter), calc((100% - 1240px) / 2 + var(--gutter))); padding-right: max(var(--gutter), calc((100% - 1240px) / 2 + var(--gutter))); }
+  .cook-dock { padding-left: max(var(--gutter), calc((100% - 1240px) / 2 + var(--gutter))); }
+  .cook-nav .btn { min-height: 68px; }
+}
+
+/* ---------------------------------------------------------------- the kitchen display (a TV-size screen, read from across the room)
+   Layout, and one step up in type for Tonight and cook mode. If the design system already scales
+   type on a TV, drop the two token blocks below and keep the layout. */
+@media (min-width: 1700px) {
+  .view-tonight, .view-recipes { max-width: 1760px; }
+  .view-recipe { max-width: 1600px; }
+  .page-tonight {
+    --t-xs: 1rem; --t-sm: 1.125rem; --t-md: 1.25rem; --t-lg: 1.5rem; --t-xl: 1.875rem; --t-2xl: 2.25rem;
+    font-size: var(--t-md);
+  }
+  .page-tonight .tonight-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 56px; }
+  /* the photo gives up some height so "Start cooking" is on the screen without scrolling */
+  .page-tonight .hero-photo .photo-hero { aspect-ratio: 16 / 9; }
+  .page-tonight .hero-title { font-size: 3.25rem; }
+  .page-tonight .hero-sub { margin-top: 6px; }
+  .page-tonight .hero-actions { grid-auto-flow: column; justify-content: start; gap: 14px; }
+  .page-tonight .hero-actions .btn-lg { min-height: 68px; padding: 0 36px; font-size: var(--t-xl); }
+  .page-tonight .btn { min-height: 56px; }
+  .page-tonight .btn-small { min-height: 48px; }
+  .page-tonight .tonight-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; align-items: start; padding-top: 0; }
+  .page-tonight .tonight-side > .tcard, .page-tonight .tonight-side > .prep-card { margin: 0 0 24px; }
+  .page-tonight .tonight-side > .ahead { grid-column: 2; grid-row: 1 / span 4; }
+  .page-tonight .tonight-side > .tcard, .page-tonight .tonight-side > .prep-card, .page-tonight .tonight-side > .glance { grid-column: 1; }
+  .page-tonight .menu-row { min-height: 88px; }
+  .r-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+  .cook-v3 { --t-xs: 1rem; --t-sm: 1.125rem; --t-md: 1.375rem; --t-lg: 1.625rem; --t-xl: 2rem; --t-2xl: 2.75rem; }
+  .cook-v3 .cook-body { max-width: 1680px; padding-top: var(--s8); }
+  .cook-v3 .cook-bar { padding: 12px 28px; }
+  .cook-v3 .cook-title { font-size: var(--t-lg); }
+  .cook-v3 .cook-title small { font-size: var(--t-sm); }
+  .cook-v3 .cook-progress { height: 8px; }
+  .cook-v3.is-step .cook-step-card { padding: 48px 56px; column-gap: 64px; border-left-width: 10px; }
+  .cook-nav { grid-template-columns: 320px minmax(0, 1fr); padding: 16px max(40px, calc((100% - 1680px) / 2 + 40px)); }
+  .cook-dock { padding: 12px max(40px, calc((100% - 1680px) / 2 + 40px)); }
+  .cook-nav .btn { min-height: 84px; font-size: var(--t-xl); }
+  .cook-v3 .btn { min-height: 56px; }
+  .cook-v3 .icon-btn { width: 56px; height: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cook-alert-row, .cook-timer.is-done, .cook-pill.is-done { animation: none; }
+}
+
+@media print {
+  .recipe-bar, .recipe-actions, .plate-guide .btn, .votes, .parent-tools, .cook-nav, .cook-dock, .cook-alert { display: none !important; }
+}

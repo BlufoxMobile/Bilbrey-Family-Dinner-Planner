@@ -857,16 +857,26 @@ test('a whole trip comes home in one tap', async () => {
   for (const d of ['2026-11-19', '2026-11-20', '2026-11-21']) assert.notEqual(s.plan[d]?.status, 'away', `${d} is home`);
 });
 
-test('cook mode: big steps, check off, mark cooked', async () => {
-  await go(page, `#/cook/${TODAY}`, '.cook');
-  const steps = await page.$$('.cook-step');
-  assert.ok(steps.length >= 3, 'entrée and side steps');
-  await steps[0].click();
-  await page.waitForSelector('.cook-step.is-done');
+test('cook mode: one big step at a time, mark cooked, then the leftovers question', async () => {
+  // The full flow (timers, swipe, keys, resume, leftover nights) is in tests/e2e/cook-e2e.mjs.
+  await go(page, `#/cook/${TODAY}`, '.cook.is-ready');
+  await page.click('#cook-next');
+  await page.waitForSelector('.cook.is-step .cook-step-text');
+  await page.click('[data-action="cook:steps"]');
+  await page.waitForSelector('dialog[open] .cook-step');
+  const n = (await page.$$('dialog[open] .cook-step')).length;
+  assert.ok(n >= 3, 'entrée and side steps');
+  await page.click(`dialog[open] .cook-step >> nth=${n - 1}`);
+  await waitFor(async () => (await page.textContent('.cook-title')).includes(`Step ${n} of ${n}`));
   await shot(page, 'e2e-13-cook');
+  await page.click('#cook-next');
+  await page.waitForSelector('.cook.is-finish');
   await page.click('[data-action="cook:done"]');
-  await page.waitForSelector('.page-tonight');
+  await page.waitForSelector('.cook-finish .lo-ask');
   assert.equal((await familyState(page)).state.plan[TODAY].status, 'cooked');
+  await page.click('.cook-finish [data-action="leftovers:save"][data-n="0"]');
+  await page.waitForSelector('.page-tonight');
+  assert.equal((await familyState(page)).state.leftovers[TODAY].saved, 0);
   await page.waitForSelector('.kicker-done');
 });
 

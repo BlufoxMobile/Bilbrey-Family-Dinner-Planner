@@ -4,6 +4,7 @@
 
 import { set, del, push, applyOps as applyOpsPure } from './state.js';
 import { clone, listJoin, round2, slugify, uid, weekdayName, shortDate, diffDays } from './util.js';
+import { leftoverRecord, servingsText, LEFTOVER_REASON } from './cooking.js';
 import { FAMILY } from './config.js';
 import {
   bestBenchFor, dinnerById, effectiveSides, findInPlan, generatePlan, itemsForNight, sideInfo, parseSideRef, kindOf,
@@ -235,7 +236,65 @@ export function unmarkCookedOps(db, state, { date }) {
   const next = { ...clone(e), status: 'planned' };
   delete next.cookedAt; delete next.cookedBy; delete next.deducted;
   ops.unshift(set(['plan', date], next));
+  // Not cooked after all: there are no leftovers from it either (and the question can be asked again).
+  const left = state?.leftovers?.[date];
+  if (left) {
+    ops.push(del(['leftovers', date]));
+    const night = left.night && state?.plan?.[left.night];
+    if (night?.status === 'away' && night.away?.reason === LEFTOVER_REASON && night.away?.from === date) ops.push(...bringBackOps(db, state, { date: left.night }).ops);
+  }
   return result(state, ops, `${titleOf(db, state, e.dinner)} is back to planned.`);
+}
+
+// ---------------------------------------------------------------- leftovers (SPEC §22.5)
+// state.leftovers["YYYY-MM-DD" (the night it was cooked)] =
+//   { dinner, title, servings (left now), saved (put away that night), useBy, by, at, night? }
+
+/** After dinner: how many servings went in the fridge (0 = none, and the question is answered). */
+export function saveLeftoversOps(db, state, { date, servings, who, at }) {
+  const e = state?.plan?.[date];
+  if (!e?.dinner) return result(state, [], 'Nothing was planned that night.', { error: true });
+  const rec = leftoverRecord(db, state, { date, servings, who, at: at || new Date().toISOString() });
+  const message = rec.servings
+    ? `${rec.title}: ${servingsText(rec.servings)} of leftovers saved, good through ${weekdayName(rec.useBy)}.`
+    : 'No leftovers. Nothing to keep track of.';
+  return result(state, [set(['leftovers', date], rec)], message, { servings: rec.servings });
+}
+
+/** Someone ate some (a lunch, a late plate). At zero the batch is done. */
+export function useLeftoverOps(db, state, { date, servings = 1 }) {
+  const l = state?.leftovers?.[date];
+  if (!l || !(l.servings > 0)) return result(state, [], 'Those leftovers are already gone.');
+  const left = Math.max(0, l.servings - Math.max(1, Math.round(Number(servings) || 1)));
+  const message = left ? `${l.title || 'Leftovers'}: ${servingsText(left)} left.` : `${l.title || 'Leftovers'}: that was the last of it.`;
+  return result(state, [set(['leftovers', date, 'servings'], left)], message, { left });
+}
+
+/** All gone (eaten or tossed). */
+export function clearLeftoversOps(db, state, { date }) {
+  const l = state?.leftovers?.[date];
+  if (!l || !(l.servings > 0)) return result(state, [], 'Those leftovers are already gone.');
+  return result(state, [set(['leftovers', date, 'servings'], 0)], `${l.title || 'Leftovers'}: all gone.`);
+}
+
+/**
+ * A leftover night: `night` is marked not-cooking with the reason "Leftovers", so its groceries
+ * come off the list; the dinner that was planned stays on the entry and comes back with
+ * "bring back". plan[night] = { …, status: 'away', away: { reason: 'Leftovers', note, from } }.
+ */
+export function leftoverNightOps(db, state, { from, night, who, at, today }) {
+  const l = state?.leftovers?.[from];
+  if (!l || !(l.servings > 0)) return result(state, [], 'Those leftovers are already gone.', { error: true });
+  const prev = state?.plan?.[night];
+  if (prev?.status === 'cooked') return result(state, [], 'That night is already cooked.', { error: true });
+  const title = l.title || 'Leftovers';
+  const entry = {
+    dinner: prev?.dinner ?? null, sides: prev?.sides ? [...prev.sides] : [], status: 'away',
+    away: { reason: LEFTOVER_REASON, note: `${title}, from ${weekdayName(from)}`, from }, manual: true, ...stamp(who, at),
+  };
+  const ops = [set(['plan', night], entry), set(['leftovers', from, 'night'], night)];
+  const bumped = prev?.dinner && prev.status !== 'away' ? ` ${titleOf(db, state, prev.dinner)} comes off that night, and its groceries off the list.` : '';
+  return result(state, ops, `${cap(nightName(night, today))} is a leftover night: ${title}.${bumped}`);
 }
 
 // ---------------------------------------------------------------- sides
