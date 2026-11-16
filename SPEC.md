@@ -613,3 +613,78 @@ sweet potatoes get cinnamon.
    it comes home: keep what the next two days need, freeze the rest in meal-size bags.
 5. After the trip: once a receipt from the trip is saved, the trip list shows what it bought that the
    list didn't ask for.
+
+## 15. Claude chat connector (private remote MCP server)
+
+> Jeff wants to send fridge, freezer or pantry photos, or a receipt, in any Claude chat and have Claude
+> update the planner, read the pantry, suggest dinners from what's on hand, plan them and show the list.
+
+### 15.1 What it is
+The family Worker also speaks MCP (Model Context Protocol), so Jeff adds it in Claude as a **custom
+connector** (Settings → Connectors → Add custom connector, on claude.ai or the Claude apps). Claude then
+reads and writes the same family state the phones use; a change shows up in the app on the next sync.
+Writes carry `by: "Jeff (Claude chat)"` (and the doc's `updated_by`), so the family can see where a
+change came from.
+
+### 15.2 Endpoints (Worker)
+| Method | Path | |
+|---|---|---|
+| GET | `/api/mcp/link` | Family key → `{ ok, url }` = `https://<worker>/mcp/<token>`. The token (32 random hex) is made on first call and kept in the Durable Object (`mcp_link` table). |
+| POST | `/api/mcp/rotate` | Family key → `{ ok, rotated: true, url }` with a new token; the old link stops working at once. |
+| POST | `/mcp/<token>` | MCP Streamable HTTP: JSON-RPC 2.0, `Content-Type: application/json` replies, no SSE, no sessions. Batches accepted (≤ 20). Notifications/responses only → 202, no body. |
+| GET (or other) | `/mcp/<token>` | 405, `Allow: POST`. |
+
+Protocol versions `2025-06-18` and `2025-03-26` (initialize echoes the client's when it's one of these,
+else answers `2025-06-18`; an unsupported `MCP-Protocol-Version` header → 400). Methods: `initialize`
+(serverInfo `bilbrey-dinner-planner`, capabilities `{ tools }`, short `instructions` with the house
+rules), `notifications/*`, `ping`, `tools/list`, `tools/call`; anything else → -32601; an unknown tool →
+-32602. Tool failures come back as results with `isError: true` and a plain sentence Claude can act on.
+
+### 15.3 Tools
+All results are one text block of compact JSON. Every write is one atomic batch through the Durable
+Object's normal op path (the same validation, 1 MB limit and revision bump as `POST /api/ops`).
+
+| Tool | Input | Does |
+|---|---|---|
+| `get_family_profile` | — | People (and who packs lunch), stores, equipment (no oven), the house rules, this month's budget (receipts so far, still to buy, projected vs the target), settings. |
+| `get_pantry` | `place?`, `includeEmpty?` | Every pantry item: id, name, place, kind, qty + unit, packages (`app/packages.js`), since / estimated use-by / days left (`app/freshness.js`), low, label; plus `useFirst` and `runningLow`. |
+| `update_pantry` | `items: [{ id? \| name?, packages? \| qty?+unit?, mode: set\|add, place?, low?, label?, remove?, newItem? }]` (≤ 60) | Names match catalog ids/aliases (exact, or one clear best guess); an unclear name comes back unsaved with candidate ids; anything else becomes a shelf item (`customItemOps`). Packages convert with the package size (the family's product, else the catalog's pack); other units convert where they can. `setPantryOps` semantics (since, low cleared on restock). The description tells Claude to ask when a count from a photo is unclear. |
+| `add_receipt` | `store: jewel\|sams, date, total, tax?, savings?, lines: [{ product, brand?, size?, qty?, unitPrice?, lineTotal?, discount?, matchId? }], addToPantry?, dryRun?` | Food and drink lines only. `importReceipts` (source `scan`, so dedupe by store + date + total and never counted twice in the Budget; the Budget line says "Added from a Claude chat"), then `receiptPantryOps` for receipts from the last 14 days. Unmatched lines are counted in the total only. `dryRun` previews the matches. |
+| `list_recipes` | `query?`, `makeableNow?`, `id?`, `include?`, `includeDropped?` | Dinners (status rotation / bench / custom; sides as served; kcal and protein per plate) and sides. `makeableNow` checks each dinner + sides against the pantry (`onHand`, 95% rule), use-soon food first, plus near misses (≤ 2 items short). `id` → the full recipe. |
+| `get_plan` | `from?`, `to?` (≤ 62 days; default today + 6) | Each night: dinner + effective sides, status (planned, cooked, away with reason, open), kcal per plate, who planned it, and packed lunches by person. |
+| `plan_dinner` | `date` + `dinnerId`, or `recipe: { title, subtitle?, category, protein, minutes, equipment, items: [{ id?, name, qty, unit?, newItem? }], sides, steps, tags? }`; `sides?`, `saveToRecipeBox?` | Uses `placeDinnerOps` (moves/trades like the app; cooked nights refused; dropped dinners refused). A recipe is saved as `customDinners[custom-dinner-<slug>]` (normalizeDinner shape, `source: "claude"`), `rotation: "bench"` (a one-off: `inRotation` keeps it out of the generator) unless `saveToRecipeBox`; the same title updates it. Recipes breaking the house rules are refused (below). |
+| `get_shopping_list` | `from?`, `to?`, `store?` | `buildList`: by store, each item's product, packs to buy, cost, need/have, why (dinners, lunches, extra, low), coupons; totals, sales savings, skipped, buy-on-the-day. No dates = what the app shows now (the active trip, else the current period). |
+
+**House rules for new recipes** (the validator's bans, `scripts/validate-data.mjs`): no oven/broiler
+words and equipment only from the six the family has; no fish/seafood words, tofu, Worcestershire or
+Caesar (a **snow crab** boil is the one seafood exception); no cucumber/tzatziki; no raw onion or raw
+tomato (a sentence that cooks them is fine); meat in every dinner; steps must state the safe temperature
+for the meats they use (165°F chicken/turkey and reheated meats, 160°F ground meat/sausage, 145°F
+pork + rest 3 minutes, 145°F whole-cut beef); two existing, not-dropped side ids (burgers one or two).
+Rice in the dinner or its sides adds the `rice` tag; `Burgers` adds `burger`; a week with more rice
+nights than `riceMaxPerWeek` gets a note.
+
+### 15.4 Security model
+- **The link is the credential.** The token is 128 random bits in the path, compared in constant time;
+  a wrong or missing token is a plain 404 (same as an unknown path). Claude calls it server to server,
+  so `/mcp/*` skips the browser Origin rules and sends no CORS headers. There are no cookies or other
+  ambient credentials for a web page to borrow.
+- **Only the family can see the link:** `/api/mcp/link` and `/api/mcp/rotate` need the family key (the
+  usual 401/429 backoff applies). Jeff keeps the link private, like a password.
+- **Rotate any time** (`POST /api/mcp/rotate`): the old link dies immediately; re-add the connector with
+  the new one.
+- The connector can change only the family state document through validated ops. It can't change the
+  passcode, read or delete pantry photos, or call Workers AI.
+
+### 15.5 How it's built
+- `worker/src/mcp.js` holds the protocol and the tools; `worker/src/index.js` only adds the routes and
+  the Durable Object's token methods. The tool code imports the app's pure modules (`../../app/data.js`,
+  `shopping.js`, `planner.js`, `receipts.js`, `actions.js`, `coverage.js`, `freshness.js`,
+  `packages.js`, `scanqty.js`, `lunch.js`, `nutrition.js`, `state.js`, `util.js`, `config.js`), so a
+  receipt, a pantry count or a list from Claude is computed exactly as on the phones. Wrangler bundles
+  them (`npm run check` shows the bundle); the tests load them as modules.
+- The recipe box comes from the public Pages copy of `data/*.json` (catalog, recipes, prices, stores,
+  lunches, nutrition, products; `DATA_BASE` var to override), cached in memory for 5 minutes; a failed
+  refresh keeps the last copy.
+- Each MCP request runs inside the Kitchen Durable Object: the data load is the only await, then the
+  state is read, the ops built and committed synchronously, so a tool call is atomic.

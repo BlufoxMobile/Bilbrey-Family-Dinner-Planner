@@ -9,6 +9,15 @@
 > `version=` in `/api/health`. The manual upload below is the fallback (the dashboard's firewall
 > has blocked it for some code changes).
 
+> **Since the Claude chat connector (SPEC §15) the Worker is more than one file.** `src/index.js`
+> imports `src/mcp.js`, which imports the app's own pure modules from `../app/*.js`. Workers Builds
+> runs `npx wrangler deploy`, which bundles all of it (the build checks out the whole repo, so
+> `../app` is there). For the manual-upload fallback below, upload the **bundle**, not
+> `src/index.js`: run `npm run check` in `worker/` and upload `.wrangler/dry-run/index.js` as the
+> `index.js` part (about 260 KB, 78 KB gzipped). Nothing else changes: no new bindings, no
+> migration (the connector's token lives in a new `mcp_link` table the Durable Object creates
+> itself). After a deploy, `GET /api/mcp/link` without a key answers 401 (404 means old code).
+
 
 The Worker is ONE ES-module file, `worker/src/index.js` (v2.3.0, ~80 KB, no npm runtime
 dependencies; its only import is the built-in `cloudflare:workers`). Deploy it with the Workers
