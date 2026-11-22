@@ -50,7 +50,7 @@ html[data-theme="dark"] .fx-aurora { opacity: .34; }
 .fx-enter .ck-bar:nth-of-type(5) .ck-fill { animation-delay: 400ms; }
 .fx-enter .ck-bar:nth-of-type(6) .ck-fill { animation-delay: 460ms; }
 @keyframes fx-grow-y { from { transform: scaleY(0); } }
-.fx-enter .ck-target, .fx-enter .ck-target-label, .fx-enter .ck-val { animation: fx-fade var(--dur-slow) 900ms both; }
+/* labels and the target line are there from the first frame (gauntlet r1: they faded in late) */
 @keyframes fx-fade { from { opacity: 0; } }
 .fx-enter .ck-line { stroke-dasharray: 1; animation: fx-draw calc(var(--dur-scene) * 1.7) 250ms var(--ease-out) both; }
 @keyframes fx-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }

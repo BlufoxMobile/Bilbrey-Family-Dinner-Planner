@@ -135,7 +135,7 @@ function dinnersCard(app, week) {
   return html`<section class="ck-card" aria-labelledby="ckd-h">
     <h2 id="ckd-h" class="section-title">${ic('leaf', { size: 22 })}Dinners</h2>
     <dl class="week-stats">${tiles.map(([v, k]) => html`<div><dt>${k}</dt><dd>${v}</dd></div>`)}</dl>
-    <p class="muted small">Every dinner eaten at home is one that wasn’t bought twice. <a href="#/plan">Open the planner</a></p>
+    <p class="muted small">Every dinner eaten at home is one that wasn’t bought twice. <a href="#/plan">Open the Plan</a></p>
   </section>`;
 }
 
@@ -222,7 +222,7 @@ function sharedCard(app, s, today, canClaim) {
 function weighSection(app, today) {
   if (hiddenHere(app)) {
     return html`<section class="ck-card ck-weigh ck-tv" aria-labelledby="ckw-h"><h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}Weigh-in</h2>
-      <p class="small">Weigh-ins are turned off for the TV. Open the planner on a phone to add or see them.</p></section>`;
+      <p class="small">Weigh-ins are turned off for the TV. Open the app on a phone to add or see them.</p></section>`;
   }
   const me = app.store.device.weigh;
   const everyone = sharedWeighIns(app.state);

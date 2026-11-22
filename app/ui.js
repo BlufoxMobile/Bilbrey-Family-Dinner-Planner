@@ -1,7 +1,7 @@
 // DOM helpers: an escaping html`` template, bottom sheets on <dialog>, toasts with
 // undo, in-app confirmations, photos with graceful placeholders, avatars.
 
-import { escapeHtml } from './util.js';
+import { escapeHtml, fmtQty } from './util.js';
 import { icon, glyph } from './icons.js';
 import { FAMILY } from './config.js';
 import * as motion from './motion.js';
@@ -279,7 +279,10 @@ export function confirmSheet({ title, body = '', confirm = 'Confirm', cancel = '
 // ---------------------------------------------------------------- toasts
 
 let toastTimer = null;
-export function toast(message, { undo = null, action = null, duration = 6500 } = {}) {
+let toastAbort = null;
+// A toast with a button stays at least 15 seconds and waits while a finger, the mouse or keyboard focus
+// is on it (gauntlet r1: 6.5 s was too short to read and reach Undo). A plain note stays 6.5 s.
+export function toast(message, { undo = null, action = null, duration = null } = {}) {
   if (!message) return;
   let root = document.getElementById('toast');
   if (!root) {
@@ -294,7 +297,9 @@ export function toast(message, { undo = null, action = null, duration = 6500 } =
   const host = sheet?.open && current ? sheet : document.body; // a sheet that is sliding away is already gone
   if (root.parentNode !== host) host.appendChild(root);
   clearTimeout(toastTimer);
+  toastAbort?.abort();
   const btn = undo ? { label: 'Undo', fn: undo } : action;
+  const wait = duration ?? (btn ? 15000 : 6500);
   setHTML(root, html`<div class="toast">
       <p class="toast-msg">${message}</p>
       ${when(btn, () => html`<button type="button" class="toast-btn">${btn.label}</button>`)}
@@ -304,7 +309,18 @@ export function toast(message, { undo = null, action = null, duration = 6500 } =
   root.querySelector('.toast-btn')?.addEventListener('click', () => { hide(); btn.fn(); });
   root.querySelector('.toast-x').addEventListener('click', hide);
   requestAnimationFrame(() => root.classList.add('is-on'));
-  toastTimer = setTimeout(hide, duration);
+  const ctl = new AbortController(); toastAbort = ctl;
+  const box = root.querySelector('.toast');
+  let held = 0;
+  const arm = (ms) => { clearTimeout(toastTimer); toastTimer = setTimeout(hide, ms); };
+  const hold = () => { held++; clearTimeout(toastTimer); };
+  const release = () => { held = Math.max(0, held - 1); if (!held) arm(5000); };
+  for (const [on, off] of [['pointerenter', 'pointerleave'], ['focusin', 'focusout']]) {
+    box.addEventListener(on, hold, { signal: ctl.signal });
+    box.addEventListener(off, release, { signal: ctl.signal });
+  }
+  box.addEventListener('touchstart', () => arm(wait), { signal: ctl.signal, passive: true });
+  arm(wait);
 }
 
 // ---------------------------------------------------------------- small controls
@@ -319,7 +335,7 @@ export function stepper({ value, step = 1, min = 0, action, data = {}, unit = ''
   const attrs = Object.entries(data).map(([k, v]) => `data-${k}="${escapeHtml(String(v))}"`).join(' ');
   return html`<span class="stepper" role="group" aria-label="${label}">
     <button type="button" class="stepper-btn" data-action="${action}" data-delta="-${step}" ${raw(attrs)} aria-label="Less" ${value <= min ? 'disabled' : ''}>${ic('minus', { size: 18 })}</button>
-    <span class="stepper-val">${value}${unit ? html` <small>${unit}</small>` : ''}</span>
+    <span class="stepper-val">${typeof value === 'number' ? fmtQty(value) : value}${unit ? html` <small>${unit}</small>` : ''}</span>
     <button type="button" class="stepper-btn" data-action="${action}" data-delta="${step}" ${raw(attrs)} aria-label="More">${ic('plus', { size: 18 })}</button>
   </span>`;
 }

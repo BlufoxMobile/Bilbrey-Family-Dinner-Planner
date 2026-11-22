@@ -27,6 +27,25 @@ import { fmtMinutes } from '../data.js';
 
 const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
 
+// ---------------------------------------------------------------- "not for us" asks first
+
+/** "Take X off the menu for everyone?" Reopens the night sheet it came from, either way. */
+async function confirmOff(app, { title, promoted = null, nights = 0, side = false }) {
+  const from = sheetId();
+  const night = /^night:(\d{4}-\d{2}-\d{2})$/.exec(from || '')?.[1];
+  const name = title || (side ? 'This side' : 'This dinner');
+  const what = side ? 'Dinners that have it get a similar side.'
+    : promoted ? `${promoted} joins the menu${nights ? ` and takes its ${nights === 1 ? 'planned night' : `${nights} planned nights`} after tonight` : ''}. Tonight stays as it is.` : 'Tonight stays as it is.';
+  const ok = await confirmSheet({
+    title: `Take ${name} off the menu for everyone?`,
+    body: `It won’t be planned again. ${what} You can bring it back from Recipes, Not for us.`,
+    confirm: 'Take it off the menu',
+    cancel: 'Keep it',
+  });
+  if (night) openNight(app, night);
+  return ok;
+}
+
 // ---------------------------------------------------------------- night sheet
 
 export function openNight(app, date) {
@@ -65,17 +84,17 @@ function nightBody(app, date) {
       </div>
       ${when(d, () => html`<p class="sheet-text">${d.title} was planned. Its groceries are off the list while you’re away.</p>`)}
       <div class="action-list">
-        ${when(trip.length > 1, () => html`<button type="button" class="action-row" data-action="night:back-trip" data-date="${date}">${ic('home')}<span><b>Bring the whole trip home</b><small>All ${trip.length} nights, ${shortDate(trip[0])} – ${shortDate(trip[trip.length - 1])}, go back on the plan.</small></span></button>`)}
+        ${when(trip.length > 1, () => html`<button type="button" class="action-row" data-action="night:back-trip" data-date="${date}">${ic('home')}<span><b>We’re home all ${trip.length} nights</b><small>${shortDate(trip[0])} – ${shortDate(trip[trip.length - 1])} go back on the plan.</small></span></button>`)}
         <button type="button" class="action-row" data-action="night:back" data-date="${date}">${ic('home')}<span><b>${d ? `Bring back ${d.title}` : 'We’re home after all'}</b><small>${d ? 'Its groceries go back on the list.' : 'Then pick a dinner for the night.'}</small></span></button>
-        <button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('edit')}<span><b>Change the reason</b></span></button>
+        <button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('edit')}<span><b>Change the nights or reason</b></span></button>
       </div>`;
   }
   if (!d) {
     return html`
       <p class="sheet-text">Nothing is planned ${past ? 'for that night' : 'yet'}.</p>
       <div class="action-list">
-        ${when(!past, () => html`<button type="button" class="action-row" data-action="night:auto" data-date="${date}">${ic('sparkle')}<span><b>Pick one for me</b><small>Follows the house rules and what’s in the pantry.</small></span></button>`)}
-        <button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('recipes')}<span><b>Choose a dinner</b><small>From the recipe box.</small></span></button>
+        ${when(!past, () => html`<button type="button" class="action-row" data-action="night:auto" data-date="${date}">${ic('sparkle')}<span><b>Pick one for me</b><small>Uses the house rules and the pantry.</small></span></button>`)}
+        <button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('recipes')}<span><b>Choose a dinner</b></span></button>
         ${when(!past, () => html`<button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('away')}<span><b>Not eating at home</b></span></button>`)}
       </div>`;
   }
@@ -92,9 +111,9 @@ function nightBody(app, date) {
         ${when(showNutrition(app), () => html`<p class="night-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate', compact: true })}</p>`)}
         ${costNote(costOf(app, d.id, e), { house: true, cls: 'night-cost' })}
       </div>
-      ${thumbs(app, { kind: 'dinner', id: d.id, label: d.title })}
     </div>
-    ${when(isRetired(app.state, d.id) && !cooked, () => html`<p class="hint">${ic('down_vote', { size: 18 })}<span>${d.title} is marked “not for us”, so it won’t be planned again. <button type="button" class="link-btn" data-action="night:pick" data-date="${date}">Swap this night</button></span></p>`)}
+    <div class="night-rate"><span class="night-rate-q">What does the family think?</span>${thumbs(app, { kind: 'dinner', id: d.id, label: d.title, labels: true })}</div>
+    ${when(isRetired(app.state, d.id) && !cooked, () => html`<p class="hint">${ic('down_vote', { size: 18 })}<span>${d.title} is off the menu, so it won’t be planned again. <button type="button" class="link-btn" data-action="night:pick" data-date="${date}">Change dinner</button></span></p>`)}
     ${when(cooked, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.</p>`)}
     ${when(cooked && !app.state.leftovers?.[date] && diffDays(today, date) <= 3, () => leftoversQuestion(app, date))}
     ${when(cooked && app.state.leftovers?.[date], () => { const l = app.state.leftovers[date]; return html`<p class="muted small lo-line">${l.servings > 0 ? `${servingsText(l.servings)} of leftovers in the fridge.` : l.saved ? 'The leftovers are gone.' : 'No leftovers that night.'} <button type="button" class="link-btn" data-action="leftovers:edit" data-date="${date}">Change</button></p>`; })}
@@ -104,8 +123,7 @@ function nightBody(app, date) {
         ${sidePhoto(app, s, { size: 'thumb' })}
         <span class="side-name">${s.info?.title}${replacedNote(app, s)}${when(s.remembered && !s.replaced, () => html`<small class="remembered">${ic('check', { size: 14 })}Remembered for ${d.title}</small>`)}${when(showNutrition(app), () => { const sn = sideNutrition(app.db, app.state, s.parsed); return html`<small class="side-kcal">${sn ? `${fmtKcal(sn.kcal)} cal a plate` : '—'}</small>`; })}</span>
         <span class="side-acts">
-          ${when(s.parsed.type === 'side' && app.db.sides[s.parsed.id], () => thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', compact: true }))}
-          ${when(!cooked, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="${s.slot}">Substitute</button>`)}
+          ${when(!cooked, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="${s.slot}" aria-label="Change ${s.info?.title || 'this side'}">Change side</button>`)}
         </span>
       </li>`)}
     </ul>
@@ -120,15 +138,15 @@ function nightBody(app, date) {
     })}
     ${when(!cooked && slots === 1 && sides.length < 2, () => html`<button type="button" class="btn btn-quiet btn-small add-side" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="1">${ic('plus', { size: 18 })}Add a side</button>`)}
     <div class="action-list">
-      ${when(!cooked, () => html`<a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>One step at a time, with timers, for the dinner and its sides.</small></span></a>`)}
+      ${when(!cooked, () => html`<a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>Step by step, with timers.</small></span></a>`)}
       ${when(!cooked && date !== today && !past, () => html`<button type="button" class="action-row" data-action="night:tonight" data-date="${date}">${ic('tonight')}<span><b>Make this tonight</b><small>Tonight’s dinner moves to ${diffDays(date, today) === 1 ? 'tomorrow' : dayAndDate(date, today)}.</small></span></button>`)}
-      ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:move" data-date="${date}">${ic('move')}<span><b>Move to another night</b><small>If that night has a dinner, they trade places.</small></span></button>`)}
-      ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('swap')}<span><b>Swap for a different dinner</b></span></button>`)}
-      ${when(!cooked && !past, () => html`<button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('away')}<span><b>Not eating at home</b><small>Removes this dinner’s groceries.</small></span></button>`)}
+      ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('swap')}<span><b>Change dinner</b></span></button>`)}
+      ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:move" data-date="${date}">${ic('move')}<span><b>Move to another night</b><small>Trades places if that night has a dinner.</small></span></button>`)}
+      ${when(!cooked && !past, () => html`<button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('away')}<span><b>Not eating at home</b></span></button>`)}
       ${cooked
-        ? html`<button type="button" class="action-row" data-action="night:uncook" data-date="${date}">${ic('undo')}<span><b>Mark as not cooked</b><small>Puts what it used back in the pantry.</small></span></button>`
-        : html`<button type="button" class="action-row" data-action="night:cooked" data-date="${date}">${ic('checkCircle')}<span><b>Mark cooked</b><small>Takes what it used out of the pantry.</small></span></button>`}
-      <a class="action-row" href="#/recipe/${d.id}">${ic('recipes')}<span><b>Open the recipe</b><small>Ingredients for five, timing, tips and nutrition.</small></span></a>
+        ? html`<button type="button" class="action-row" data-action="night:uncook" data-date="${date}">${ic('undo')}<span><b>Mark as not cooked</b><small>Puts it back in the pantry.</small></span></button>`
+        : html`<button type="button" class="action-row" data-action="night:cooked" data-date="${date}">${ic('checkCircle')}<span><b>Mark cooked</b><small>Takes it out of the pantry.</small></span></button>`}
+      <a class="action-row" href="#/recipe/${d.id}">${ic('recipes')}<span><b>Open the recipe</b></span></a>
       ${when(!cooked, () => html`<button type="button" class="action-row action-quiet" data-action="night:clear" data-date="${date}">${ic('trash')}<span><b>Clear this night</b></span></button>`)}
     </div>`;
 }
@@ -157,7 +175,7 @@ function pickBody(app, { date, query }) {
             ${when(facts, () => html`<small class="pick-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein a plate${leanMark(facts, { compact: true })}</small>`)}
             ${costNote(costOf(app, d.id, null), { short: true, tag: 'small', cls: 'pick-cost' })}</span>
         </button></li>`;
-      }) : html`<li class="muted pad">${q ? `No dinners match “${query}”. Try another word, or browse the recipe box.` : 'There are no dinners in the rotation. Bring some back from Recipes, Dropped.'}</li>`}
+      }) : html`<li class="muted pad">${q ? `No dinners match “${query}”. Try another word, or browse the recipe box.` : 'Nothing is on the menu. Bring some back from Recipes, Not for us.'}</li>`}
     </ul>`;
 }
 
@@ -239,12 +257,12 @@ export function openMove(app, fromDate) {
     id: `move:${fromDate}`,
     size: 'tall',
     title: `Move ${d.title}`,
-    subtitle: 'Pick the night. If it already has a dinner, the two trade places.',
+    subtitle: 'If that night has a dinner, they trade places.',
     render: () => html`<ul class="move-list">${nights.map((x) => {
       const t = app.state.plan?.[x];
       const td = t?.dinner ? dinnerById(app.db, app.state, t.dinner) : null;
       const cooked = t?.status === 'cooked';
-      const what = t?.status === 'away' ? `Away: ${awayReason(t).label}` : td ? (cooked ? `${td.title} (cooked)` : `Trade with ${td.title}`) : 'Open';
+      const what = t?.status === 'away' ? `Away: ${awayReason(t).label}` : td ? (cooked ? `${td.title} (cooked)` : `Trade with ${td.title}`) : 'Nothing planned';
       return html`<li><button type="button" class="move-row ${td && !cooked ? '' : 'is-open'}" data-action="move:to" data-from="${fromDate}" data-to="${x}" data-dinner="${d.id}" ${cooked ? 'disabled' : ''}>
         <span class="move-day"><b>${dayWord(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${what}</span>${ic('right', { size: 18 })}
       </button></li>`;
@@ -258,8 +276,13 @@ export function openAway(app, date) {
   const today = app.today();
   const e = app.state.plan?.[date];
   const d = e?.dinner && e.status !== 'away' ? dinnerById(app.db, app.state, e.dinner) : null;
-  const st = { mode: 'one', from: date, to: addDays(date, 2), reason: e?.away?.reason || 'Date night', note: e?.away?.note || '', push: 'skip', pushTo: openNights(app.state, addDays(date, 1), { limit: 1 })[0] || '' };
+  const wasAway = e?.status === 'away';
+  const block = wasAway ? awayBlock(app.state, date) : [date];
+  // One tap does the usual thing (docs/spec/29): skip it, or move it. A reason, a note and "a few
+  // nights" wait under the fold, and nothing is picked for you.
+  const st = { mode: block.length > 1 ? 'range' : 'one', from: block[0] || date, to: block[block.length - 1] || addDays(date, 2), reason: e?.away?.reason || '', note: e?.away?.note || '' };
   const opens = openNights(app.state, addDays(today, 0), { limit: 10, exclude: [date] });
+  const night = date === today ? 'tonight' : weekdayName(date);
   openSheet({
     id: `away:${date}`,
     size: 'tall',
@@ -267,28 +290,34 @@ export function openAway(app, date) {
     subtitle: date === today ? `Tonight, ${longDay(date)}` : longDay(date),
     render: () => html`
       <form class="form" data-submit="away:save" data-date="${date}">
-        <div class="seg" role="radiogroup" aria-label="How many nights">
-          <button type="button" role="radio" class="seg-opt ${st.mode === 'one' ? 'is-on' : ''}" aria-checked="${tf(st.mode === 'one')}" data-away-mode="one">Just this night</button>
-          <button type="button" role="radio" class="seg-opt ${st.mode === 'range' ? 'is-on' : ''}" aria-checked="${tf(st.mode === 'range')}" data-away-mode="range">A few nights (trip)</button>
-        </div>
-        ${when(st.mode === 'range', () => html`<div class="field-row">
-          <label class="field"><span class="field-label">From</span><input class="input" type="date" name="from" value="${st.from}" min="${today}" required></label>
-          <label class="field"><span class="field-label">Through</span><input class="input" type="date" name="to" value="${st.to}" min="${today}" required></label>
+        ${when(st.mode === 'one' && !wasAway, () => html`<div class="away-quick">
+          <button type="button" class="btn btn-primary btn-block btn-lg" data-action="away:quick" data-date="${date}" data-push="skip">${d ? `Skip ${night}` : `Not home ${night}`}</button>
+          ${when(d, () => html`<p class="muted small away-hint">${d.title} comes off the list this time.</p>`)}
+          ${when(d && opens.length, () => html`<div class="away-move">
+            <label class="field"><span class="field-label">Or move it to</span>
+              <select class="input" name="pushTo" aria-label="Night to move ${d.title} to">${opens.map((x) => html`<option value="${x}">${dayAndDate(x, today)}</option>`)}</select></label>
+            <button type="button" class="btn btn-secondary" data-action="away:quick" data-date="${date}" data-push="move">Move it</button>
+          </div>`)}
         </div>`)}
-        <fieldset class="field">
-          <legend class="field-label">Why?</legend>
-          <div class="chip-grid">
-            ${AWAY_REASONS.map((r) => html`<label class="chip chip-radio ${st.reason === r.id ? 'is-on' : ''}"><input type="radio" name="reason" value="${r.id}" ${st.reason === r.id ? 'checked' : ''}>${r.label}</label>`)}
+        <details class="away-more" ${wasAway || st.mode === 'range' ? 'open' : ''}>
+          <summary>${wasAway ? 'Nights and reason' : 'Away a few nights, or add a reason'}</summary>
+          <div class="seg" role="radiogroup" aria-label="How many nights">
+            <button type="button" role="radio" class="seg-opt ${st.mode === 'one' ? 'is-on' : ''}" aria-checked="${tf(st.mode === 'one')}" data-away-mode="one">Just this night</button>
+            <button type="button" role="radio" class="seg-opt ${st.mode === 'range' ? 'is-on' : ''}" aria-checked="${tf(st.mode === 'range')}" data-away-mode="range">Away a few nights</button>
           </div>
-        </fieldset>
-        <label class="field"><span class="field-label">Note <small>(optional)</small></span><input class="input" name="note" value="${st.note}" maxlength="80" placeholder="Grandma’s birthday, Knox’s game…"></label>
-        ${when(st.mode === 'one' && d, () => html`<fieldset class="field">
-          <legend class="field-label">What about ${d.title}?</legend>
-          <label class="radio-row"><input type="radio" name="push" value="skip" ${st.push === 'skip' ? 'checked' : ''}><span><b>Skip it this time</b><small>Its groceries come off the list.</small></span></label>
-          ${opens.length ? html`<label class="radio-row"><input type="radio" name="push" value="move" ${st.push === 'move' ? 'checked' : ''}><span><b>Push it to another night</b>
-            <select class="input input-inline" name="pushTo" aria-label="Night to push it to">${opens.map((x) => html`<option value="${x}" ${x === st.pushTo ? 'selected' : ''}>${dayAndDate(x, today)}</option>`)}</select></span></label>` : ''}
-        </fieldset>`)}
-        <button type="submit" class="btn btn-primary btn-block">Mark not eating at home</button>
+          ${when(st.mode === 'range', () => html`<div class="field-row">
+            <label class="field"><span class="field-label">From</span><input class="input" type="date" name="from" value="${st.from}" min="${today}" required></label>
+            <label class="field"><span class="field-label">Through</span><input class="input" type="date" name="to" value="${st.to}" min="${today}" required></label>
+          </div>`)}
+          <fieldset class="field">
+            <legend class="field-label">Why? <small>(optional)</small></legend>
+            <div class="chip-grid">
+              ${AWAY_REASONS.map((r) => html`<label class="chip chip-radio ${st.reason === r.id ? 'is-on' : ''}"><input type="radio" name="reason" value="${r.id}" ${st.reason === r.id ? 'checked' : ''}>${r.label}</label>`)}
+            </div>
+          </fieldset>
+          <label class="field"><span class="field-label">Note <small>(optional)</small></span><input class="input" name="note" value="${st.note}" maxlength="80" placeholder="Grandma’s birthday, Knox’s game…"></label>
+          <button type="submit" class="btn btn-primary btn-block">${st.mode === 'range' ? 'Mark these nights away' : wasAway ? 'Save' : `Not home ${night}`}</button>
+        </details>
       </form>`,
     onMount: (el) => {
       const form = el.querySelector('form');
@@ -298,13 +327,10 @@ export function openAway(app, date) {
         st.note = f.get('note') ?? st.note;
         if (f.get('from')) st.from = f.get('from');
         if (f.get('to')) st.to = f.get('to');
-        if (f.get('push')) st.push = f.get('push');
-        if (f.get('pushTo')) st.pushTo = f.get('pushTo');
       };
       el.querySelectorAll('[data-away-mode]').forEach((b) => b.addEventListener('click', () => { keep(); st.mode = b.dataset.awayMode; renderSheet(); }));
       form.addEventListener('change', (ev) => {
         if (ev.target.name === 'reason') { keep(); form.querySelectorAll('.chip-radio').forEach((c) => c.classList.toggle('is-on', c.querySelector('input').checked)); }
-        if (ev.target.name === 'pushTo') { const r = form.querySelector('input[name=push][value=move]'); if (r) r.checked = true; }
       });
     },
   });
@@ -320,7 +346,7 @@ export function openSubstitute(app, { date, dinnerId, slot }) {
   openSheet({
     id: `sub:${dinnerId}:${slot}`,
     size: 'tall',
-    title: adding ? `Add a side to ${d.title}` : 'Substitute a side',
+    title: adding ? `Add a side to ${d.title}` : 'Change side',
     subtitle: adding ? 'Remembered every time it’s on the menu.' : `For ${d.title}. Remembered every time it’s on the menu.`,
     render: () => subBody(app, d, slot, st, date),
     onMount: (el) => {
@@ -566,6 +592,14 @@ export const actions = {
   },
   'pick:choose': (app, el) => place(app, { dinnerId: el.dataset.dinner, date: el.dataset.date }),
   'move:to': (app, el) => place(app, { dinnerId: el.dataset.dinner, date: el.dataset.to, fromDate: el.dataset.from }),
+  // The one-tap answers on the "Not eating at home" sheet: skip this night, or move its dinner.
+  'away:quick': (app, el) => {
+    const form = el.closest('form');
+    const f = form ? new FormData(form) : new FormData();
+    const pushTo = el.dataset.push === 'move' ? f.get('pushTo') || null : null;
+    app.commit(markAwayOps(app.db, app.state, { dates: [el.dataset.date], reason: f.get('reason') || 'Other', note: String(f.get('note') || '').trim(), who: app.who(), today: app.today(), pushTo }));
+    closeSheet();
+  },
   'away:save': (app, form) => {
     const date = form.dataset.date;
     const f = new FormData(form);
@@ -614,12 +648,18 @@ export const actions = {
   'sheet:who': (app) => { closeSheet(); app.navigate('#/family'); },
   // The family's signal, everywhere (SPEC §9.2, docs/spec/20): thumbs up = loved, thumbs down = not
   // for us, neither = fine. One signal for the whole family; every change's message has Undo.
-  'vote:dinner': (app, el) => {
-    app.commit(voteOps(app.db, app.state, { dinnerId: el.dataset.id, value: Number(el.dataset.value), today: app.today() }));
+  // "Not for us" changes the menu for everyone, so it asks first (gauntlet r1); "Loved" and "fine"
+  // just happen, with Undo.
+  'vote:dinner': async (app, el) => {
+    const r = voteOps(app.db, app.state, { dinnerId: el.dataset.id, value: Number(el.dataset.value), today: app.today() });
+    if (r.retired && !(await confirmOff(app, { title: dinnerById(app.db, app.state, el.dataset.id)?.title, promoted: r.promoted ? dinnerById(app.db, app.state, r.promoted)?.title : null, nights: r.replacedNights || 0 }))) return;
+    app.commit(r);
     renderSheet();
   },
-  'vote:side': (app, el) => {
-    app.commit(sideVoteOps(app.db, app.state, { sideId: el.dataset.id, value: Number(el.dataset.value) }));
+  'vote:side': async (app, el) => {
+    const r = sideVoteOps(app.db, app.state, { sideId: el.dataset.id, value: Number(el.dataset.value) });
+    if (r.dropped && !(await confirmOff(app, { title: app.db.sides[el.dataset.id]?.title, side: true }))) return;
+    app.commit(r);
     renderSheet();
   },
   'vote:lunch': (app, el) => {

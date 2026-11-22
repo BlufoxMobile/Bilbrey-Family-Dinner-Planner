@@ -3,7 +3,7 @@
 // GitHub Pages' 10-minute HTTP cache can't mix an old file into a new version.
 // Photos, fonts, icons: cache-first.
 // The family API (/api/*) is never cached. Bump CACHE_VERSION with app/config.js VERSION.
-const CACHE_VERSION = 'v3.4.1';
+const CACHE_VERSION = 'v3.5.0';
 const SHELL = `bfdp-shell-${CACHE_VERSION}`;
 const DATA = `bfdp-data-${CACHE_VERSION}`;
 const IMAGES = 'bfdp-images-v1';
@@ -19,6 +19,7 @@ const SHELL_FILES = [
   'styles/parts/tv.css',
   'styles/parts/server.css',
   'styles/parts/profile.css',
+  'styles/parts/simple.css',
   'styles/parts/planner.css',
   'styles/parts/cost.css',
   'app/main.js',

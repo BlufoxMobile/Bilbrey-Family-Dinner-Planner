@@ -104,21 +104,20 @@ export function moneyCheckin(db, state, today, week = shownWeek(state, today)) {
   };
   const tossed = wasteEntries(state).filter((x) => x.reason === 'tossed' && x.date >= week.start && x.date <= week.end);
   const waste = { total: round2(tossed.reduce((t, x) => t + x.cost, 0)), count: tossed.length, names: [...new Set(tossed.map((x) => String(x.name || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/,.*$/, '').trim()).filter(Boolean))] };
-  const status = b.projected > target ? 'over' : b.ifPlanned > target ? 'tight' : 'on';
+  const status = b.ifPlanned > target ? 'over' : b.ifPlanned > target * 0.97 ? 'tight' : 'on';
   const nights = `${b.unplanned} open ${b.unplanned === 1 ? 'night' : 'nights'}`;
+  // One number, the same one the Budget page leads with (docs/spec/29): where the month is heading.
   const verdict = status === 'over'
-    ? `Over budget: what’s bought and planned comes to ${money(b.projected)}, ${money(b.projected - target)} past the ${money(target, { whole: true })} target.`
-    : status === 'tight'
-      ? `Close to the line: ${money(b.projected)} so far, and the ${nights} left would take it to about ${money(b.ifPlanned)} at the usual ${money(b.average)} a dinner. That’s ${money(b.ifPlanned - target)} over.`
-      : `On budget: the month is heading for about ${money(b.ifPlanned)} of ${money(target, { whole: true })}${left < target * 0.05 ? ', with very little room to spare' : ''}.`;
+    ? `Over budget: heading for about ${money(b.ifPlanned)} of ${money(target, { whole: true })}, about ${money(b.ifPlanned - target, { whole: true })} over.`
+    : `${status === 'tight' ? 'Close to the line' : 'On budget'}: heading for about ${money(b.ifPlanned)} of ${money(target, { whole: true })}, about ${money(target - b.ifPlanned, { whole: true })} under.`;
 
   const tips = [];
   const anyThisMonth = b.receipts.length > 0;
   if (!w.receipts.length && !anyThisMonth) tips.push({ text: 'No receipts are logged yet, so these numbers are only the plan. Scan one after each trip and the check-in shows what you really spent.', href: '#/budget', label: 'Scan a receipt' });
-  if (status === 'over') tips.push({ text: 'To get back under, plan the nights left from what’s already in the house before buying more.', href: '#/plan', label: 'Plan from the pantry' });
-  if (status === 'tight') tips.push({ text: `Plan the ${nights} from the pantry and freezer first. Every dinner the house already covers is about ${money(b.average)} that stays in the budget.`, href: '#/plan', label: 'Plan from the pantry' });
+  if (status === 'over') tips.push({ text: b.unplanned ? `Plan the ${nights} from the pantry and freezer first.` : 'Plan the nights left from what’s already in the house before buying more.', href: '#/plan', label: 'Plan from the pantry' });
+  if (status === 'tight' && b.unplanned) tips.push({ text: `Plan the ${nights} from the pantry and freezer first.`, href: '#/plan', label: 'Plan from the pantry' });
   if (month.tripsOver) tips.push({ text: `${month.trips} store trips so far this month; the goal is ${month.tripGoal}. Extra runs are where unplanned spending goes, so make the next list cover the ${daysLeft + 1} days left.`, href: '#/list', label: 'Open the list' });
-  if (waste.count) tips.push({ text: `${money(waste.total)} went in the trash this week${waste.names.length ? ` (${listJoin(waste.names.slice(0, 3).map((n) => n.toLowerCase()))})` : ''}. Tonight’s “Use first” card shows what to cook next so it doesn’t happen twice.`, href: '#/tonight', label: 'See what to use first' });
+  if (waste.count) tips.push({ text: `${money(waste.total)} went in the trash this week${waste.names.length ? ` (${listJoin(waste.names.slice(0, 3).map((n) => n.toLowerCase()))})` : ''}. The Pantry’s “Use first” list shows what to cook next.`, href: '#/pantry', label: 'See what to use first' });
   if (status !== 'over' && w.total > share * 1.5 && month.tripsLeft >= 0 && !month.tripsOver) tips.push({ text: `A big week (${money(w.total)}) is normal after a stock-up trip. What matters is the month, and it’s still on track.` });
   if (!tips.length) tips.push({ text: status === 'on' ? 'Nothing to change. Keep shopping from the list.' : 'Stick to the list on the next trip and the month lands on target.' });
 

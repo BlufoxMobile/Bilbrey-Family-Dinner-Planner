@@ -113,13 +113,16 @@ export function render(app) {
   const b = monthBudget(app.db, app.state, today, { baseline: BASELINE_MONTHLY });
   const scale = Math.max(b.target, b.projected, b.ifPlanned, 1) * 1.08;
   const pct = (n) => `${Math.max(0, Math.min(100, (n / scale) * 100)).toFixed(2)}%`;
-  const over = b.projected > b.target;
+  // One number everywhere (docs/spec/29): where the month is heading, open nights at the usual cost
+  // included. The Weekly check-in says the same number.
+  const heading = b.unplanned ? b.ifPlanned : b.projected;
+  const over = heading > b.target + 0.004;
   const month = monthOnly(today);
   return html`<div class="page page-budget">
     <header class="page-head"><h1 class="page-title">Budget</h1><a class="text-link" href="#/checkin">Weekly check-in</a></header>
     <section class="budget-card" aria-labelledby="bud-h">
       <h2 id="bud-h" class="budget-month">${month} groceries</h2>
-      <p class="budget-big"><span class="budget-num">${money(b.projected)}</span><span class="budget-of">projected of ${money(b.target)}</span></p>
+      <p class="budget-big"><span class="budget-num">${money(heading)}</span><span class="budget-of">where ${month} is heading · target ${money(b.target, { whole: true })}</span></p>
       <div class="meter" role="img" aria-label="${money(b.spent)} spent, ${money(b.stillToBuy)} still to buy, target ${money(b.target)}">
         <span class="meter-spent" style="width:${pct(b.spent)}"></span>
         <span class="meter-plan" style="left:${pct(b.spent)};width:${pct(b.stillToBuy)}"></span>
@@ -133,14 +136,18 @@ export function render(app) {
         ${when(b.extras, () => html`<li><span class="key key-plan"></span>Extras: everyday items for the rest of the month<b>${money(b.extras)}</b></li>`)}
         ${when(b.unplanned, () => html`<li><span class="key key-maybe"></span>${b.unplanned} ${b.unplanned === 1 ? 'night' : 'nights'} not planned yet, at ${money(b.average)} a dinner (your rotation’s average)<b>+${money(round2(b.ifPlanned - b.projected))}</b></li>`)}
       </ul>
-      <p class="budget-verdict ${over || b.leftIfPlanned < 0 ? 'is-over' : 'is-under'}">${over ? `${money(b.projected - b.target)} over the target so far.` : `${money(b.left)} left under the target.`}${
-        !over && b.unplanned ? ` Planning the other ${b.unplanned} ${b.unplanned === 1 ? 'night' : 'nights'} at about ${money(b.average)} each ${b.leftIfPlanned >= 0 ? `still leaves about ${money(b.leftIfPlanned)}` : `would go about ${money(-b.leftIfPlanned)} over`}.` : ''}</p>
-      ${when(b.savings > 0, () => html`<p class="budget-save">${ic('leaf', { size: 20 })}<span>${b.unplanned ? `On pace for about ${money(b.savings)}` : money(b.savings)} less than the old ${money(b.baseline, { whole: true })} month.</span></p>`)}
-      <p class="muted small">Projected = receipts logged this month + the shopping list for the rest of ${month} (today through ${shortDate(b.end)}), at ${app.db.pricesUpdated ? `prices estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'estimated prices'}. ${b.receipts.length ? '' : 'Log receipts after each trip so “spent so far” is real.'}</p>
+      <p class="budget-verdict ${over ? 'is-over' : 'is-under'}">${over
+        ? `About ${money(heading - b.target, { whole: true })} over.`
+        : `About ${money(b.target - heading, { whole: true })} under.`}${over ? html` <span class="budget-tip">Planning a few dinners from the pantry helps most.</span>` : ''}</p>
     </section>
 
-    ${tripsCard(app, b)}
     ${tripAdviceCard(app)}
+
+    <details class="budget-more">
+      <summary><span>How it’s worked out</span><small>Trips, waste, the year</small></summary>
+      <p class="muted small">${money(b.spent)} on receipts so far + ${money(b.stillToBuy)} still on the list for the rest of ${month}${b.unplanned ? ` + ${b.unplanned} open ${b.unplanned === 1 ? 'night' : 'nights'} at the usual ${money(b.average)}` : ''}. Prices ${app.db.pricesUpdated ? `estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'are estimates'}.</p>
+      ${when(b.savings > 0, () => html`<p class="budget-save">${ic('leaf', { size: 20 })}<span>About ${money(b.savings)} less than the old ${money(b.baseline, { whole: true })} month.</span></p>`)}
+    ${tripsCard(app, b)}
     ${yearCard(app, b)}
     ${wasteCard(app, b)}
 
@@ -156,11 +163,7 @@ export function render(app) {
       <p class="budget-verdict ${b.typical.total > b.target ? 'is-over' : 'is-under'}">${b.typical.total > b.target ? `${money(b.typical.total - b.target)} over the ${money(b.target, { whole: true })} target. Try Lighter meat, cheaper products for a few items, or a Jewel-only week.` : `${money(b.target - b.typical.total)} under the ${money(b.target, { whole: true })} target.`}</p>
     </section>
 
-    <section class="target" aria-labelledby="m-h">
-      <h2 id="m-h" class="section-title">Meat per dinner</h2>
-      <p class="muted small">Recipes are written hearty: about 2¼–2½ lb of meat for five adult plates. Lighter uses 15% less meat in every dinner, and the list and this projection follow.</p>
-      ${segmented('meatScale', MEAT_OPTS, String(b.meatScale), { label: 'Meat per dinner', action: 'fam:meat' })}
-    </section>
+    </details>
     <section class="target" aria-labelledby="t-h">
       <h2 id="t-h" class="section-title">Monthly target</h2>
       <form class="form form-row" data-submit="bud:target">
@@ -173,15 +176,15 @@ export function render(app) {
       <h2 id="r-h" class="section-title">Receipts this month</h2>
       <div class="rcpt-cta">
         <button type="button" class="btn btn-primary" data-action="rcpt:scan">${ic('camera', { size: 20 })}Scan a receipt</button>
-        <p class="muted small">A photo of the paper receipt or screenshots of the store app’s receipt. It counts here, and the list learns what you paid.</p>
+        <p class="muted small">A photo of the receipt, or screenshots from the store’s app.</p>
       </div>
       ${(() => {
         const scanned = receiptList(app.state).filter((r) => r.date.slice(0, 7) === b.month);
         return scanned.length ? html`<div class="rcpt-list">${scanned.map((r) => receiptDetails(app, r))}</div>` : '';
       })()}
       ${when(receiptList(app.state).length, () => html`<a class="text-link" href="#/receipts">All saved receipts (${receiptList(app.state).length})</a>`)}
+      <details class="log-by-hand"><summary>No receipt? Log a total by hand</summary>
       <form class="form form-inline-card" data-submit="bud:receipt">
-        <p class="field-label">Or log a total by hand</p>
         <div class="field-row">
           <label class="field"><span class="field-label">Date</span><input class="input" type="date" name="date" value="${today}" max="${today}" required></label>
           <label class="field field-money"><span class="field-label">Total</span><span class="prefix" aria-hidden="true">$</span><input class="input" type="number" name="amount" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" required></label>
@@ -191,7 +194,7 @@ export function render(app) {
         </div></fieldset>
         <label class="field"><span class="field-label">Note <small>(optional)</small></span><input class="input" name="note" maxlength="60" placeholder="Big Sam’s run"></label>
         <button type="submit" class="btn btn-primary btn-block">${ic('receipt', { size: 20 })}Log receipt</button>
-      </form>
+      </form></details>
       ${b.receipts.filter((r) => !r.receiptId || !app.state.receiptLog?.[r.receiptId]).length ? html`<ul class="receipt-list">${b.receipts.filter((r) => !r.receiptId || !app.state.receiptLog?.[r.receiptId]).map((r) => html`<li class="receipt-row">
           <span><b>${NAMES[r.store] || r.store}</b><small>${shortDate(r.date)}${r.note ? `, ${r.note}` : ''}${byLabel(r.by) ? `, by ${byLabel(r.by)}` : ''}</small></span>
           <span class="receipt-amt">${money(Number(r.amount))}</span>

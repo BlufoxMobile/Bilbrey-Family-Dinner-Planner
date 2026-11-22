@@ -55,25 +55,30 @@ export function storeProductUrl(db, store, id) {
 const sectionIndex = (a) => { const i = AISLES.indexOf(a); return i < 0 ? AISLES.length : i; };
 
 /**
- * The in-store walk for one store's items: aisles in order (each its own stop), then the items
- * with no aisle yet, by section. → [{ key, label, aisle: code|null, items }]
+ * The in-store walk for one store's items: one stop per aisle, in aisle order. An item with no
+ * aisle yet joins the first aisle that holds its section (bell peppers ride along with the produce
+ * aisle), marked as a guess (`guess`: a Set of their keys), so the walk never doubles back; only a
+ * section with no known aisle at all comes at the end. → [{ key, label, aisle: code|null, items, guess }]
  * Items keep their order inside a stop (the list's own order: section, then name).
  */
 export function shopStops(db, state, store, items) {
   const byAisle = new Map();
-  const bySection = new Map();
+  const loose = [];
   for (const it of items) {
     const a = it.freeText ? null : aisleFor(db, state, store, it.id);
-    if (a) {
-      if (!byAisle.has(a.code)) byAisle.set(a.code, { key: `a:${a.code}`, label: a.label, aisle: a.code, items: [] });
-      byAisle.get(a.code).items.push(it);
-    } else {
-      const sec = it.aisle || 'Snacks & Extras';
-      if (!bySection.has(sec)) bySection.set(sec, { key: `s:${sec}`, label: sec, aisle: null, items: [] });
-      bySection.get(sec).items.push(it);
-    }
+    if (!a) { loose.push(it); continue; }
+    if (!byAisle.has(a.code)) byAisle.set(a.code, { key: `a:${a.code}`, label: a.label, aisle: a.code, items: [], guess: new Set() });
+    byAisle.get(a.code).items.push(it);
   }
   const aisles = [...byAisle.values()].sort((a, b) => aisleKey(a.aisle).localeCompare(aisleKey(b.aisle)));
+  const bySection = new Map();
+  for (const it of loose) {
+    const sec = it.aisle || 'Snacks & Extras';
+    const home = aisles.find((g) => g.items.some((x) => x.aisle === sec && !g.guess.has(x.key)));
+    if (home) { home.items.push(it); home.guess.add(it.key); continue; }
+    if (!bySection.has(sec)) bySection.set(sec, { key: `s:${sec}`, label: sec, aisle: null, items: [], guess: new Set() });
+    bySection.get(sec).items.push(it);
+  }
   const sections = [...bySection.values()].sort((a, b) => sectionIndex(a.label) - sectionIndex(b.label));
   return [...aisles, ...sections];
 }

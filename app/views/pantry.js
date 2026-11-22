@@ -75,10 +75,10 @@ function pantryRow(app, id, p) {
       ${when(soon, () => html`<small class="pan-soon ${soon.daysLeft <= 0 ? 'is-now' : ''}">${useByText(app, soon)}</small>`)}
       ${when(!soon && noDate?.has(id), () => html`<small class="pan-soon is-ask">No date yet, so no use-by</small>`)}
       ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
-      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `${fmtQty(count)} ${plural(pk.word, count)} (about ${unitText(p.qty, m.unit)})` : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}${p.by ? `, updated by ${p.by}` : ''}</small></span>
+      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `${fmtQty(count)} ${plural(pk.word, count)} (about ${unitText(p.qty, m.unit)})` : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}</small></span>
     <span class="pan-ctrl">
       ${staple
-        ? switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `${m.name} stocked until low` })
+        ? html`<span class="have-it"><span class="have-label" aria-hidden="true">Have it</span>${switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `Have ${m.name}` })}</span>`
         : byPack ? html`<span class="qty-edit qty-pack">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${pk.per}" aria-label="One less ${pk.word} of ${m.name}">${ic('minus', { size: 18 })}</button>
             <input class="qty-input" type="number" inputmode="decimal" min="0" step="any" value="${typeof p.qty === 'number' ? count : ''}" data-change="pan:qty" data-id="${id}" data-per="${pk.per}" aria-label="How many ${plural(pk.word, 2)} of ${m.name}">
@@ -91,7 +91,7 @@ function pantryRow(app, id, p) {
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${pk?.counted ? 1 : stepFor(m.unit)}" aria-label="More ${m.name}">${ic('plus', { size: 18 })}</button>
             ${when(pk?.counted, () => html`<span class="qty-unit">${m.unit}</span>`)}
           </span>`}
-      <button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Running low'}</button>
+      <button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Low? Add to list'}</button>
       <button type="button" class="icon-btn" data-action="pan:remove" data-id="${id}" aria-label="Remove ${m.name}">${ic('trash', { size: 20 })}</button>
     </span>
   </li>`;
@@ -106,6 +106,14 @@ function coverDates(app) {
 }
 
 const STORE_NAMES = { sams: 'Sam’s Club', jewel: 'Jewel-Osco', other: 'Other store' };
+
+/** One plain line instead of the old coverage card: how many planned dinners the shelves already cover. */
+function coverLine(app) {
+  const dates = coverDates(app);
+  const cov = pantryCoverage(app.db, app.state, { dates });
+  if (!cov.total) return '';
+  return html`<p class="cover-line">${ic('checkCircle', { size: 18 })}<span><b>${cov.ready} of ${cov.total}</b> planned ${cov.total === 1 ? 'dinner is' : 'dinners are'} fully stocked. <a href="#/list">The list buys the rest</a>.</span></p>`;
+}
 
 function coverageCard(app) {
   const dates = coverDates(app);
@@ -132,13 +140,11 @@ function coverageCard(app) {
 
 function syncCard(app) {
   const recs = unsyncedReceipts(app.db, app.state, app.today());
+  if (!recs.length) return '';
   return html`<section class="sync-card" aria-labelledby="sync-h">
-    <h2 id="sync-h" class="section-title">Sync from receipts</h2>
-    ${recs.length ? html`<ul class="sync-list">${recs.map((r) => html`<li><span><b>${STORE_NAMES[r.store] || 'Receipt'}, ${shortDate(r.date)}</b><small>${r.adds.length} ${r.adds.length === 1 ? 'grocery' : 'groceries'}: ${listJoin(r.adds.slice(0, 4).map((a) => a.name.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()))}${r.adds.length > 4 ? '…' : ''}</small></span>
-      <button type="button" class="btn btn-small btn-secondary" data-action="pan:sync" data-id="${r.id}">Add to pantry</button></li>`)}</ul>`
-      : html`<p class="small">Scan a receipt after each trip and its groceries go straight onto these shelves.</p>`}
-    <p class="muted small">Jewel-Osco and Sam’s Club don’t let other apps read your receipts, so the scanner reads them instead: a photo of the paper receipt, or a screenshot of the receipt in the store’s app (Account, then Purchases or Purchase history).</p>
-    <button type="button" class="btn btn-secondary btn-block" data-action="rcpt:scan">${ic('camera', { size: 20 })}Scan a receipt</button>
+    <h2 id="sync-h" class="section-title">From your receipts</h2>
+    <ul class="sync-list">${recs.map((r) => html`<li><span><b>${STORE_NAMES[r.store] || 'Receipt'}, ${shortDate(r.date)}</b><small>${r.adds.length} ${r.adds.length === 1 ? 'grocery' : 'groceries'}: ${listJoin(r.adds.slice(0, 4).map((a) => a.name.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()))}${r.adds.length > 4 ? '…' : ''}</small></span>
+      <button type="button" class="btn btn-small btn-secondary" data-action="pan:sync" data-id="${r.id}">Add to pantry</button></li>`)}</ul>
   </section>`;
 }
 
@@ -152,10 +158,9 @@ function useFirstCard(app, soon) {
   if (!soon.length && !old.length) return '';
   const place = (id) => PLACES.find((p) => p.id === id)?.label.replace(/^(In|On) the /, '') || '';
   return html`<section class="use-first" aria-labelledby="use-h">
-    <h2 id="use-h" class="section-title">${ic('clock', { size: 22 })}Use these first</h2>
-    <ul class="use-list">${soon.slice(0, 8).map((s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${bare(s.name)}</b><small>${useByText(app, s)}, ${place(s.place)}</small></button></li>`)}
-      ${old.slice(0, 6).map((w) => html`<li class="${w.past ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${w.id}"><b>${bare(w.name)}</b><small>${w.unknown ? 'No date on it, so it counts as old' : `In the freezer ${agoText(w.age)}, since ${shortDate(w.since)}`}</small></button></li>`)}</ul>
-    <p class="muted small">Estimated from the day each came home. The date on the package wins. <a href="#/plan">Plan ahead</a> puts these in dinners first; freeze fresh meat before its day.</p>
+    <h2 id="use-h" class="section-title">${ic('clock', { size: 22 })}Use first</h2>
+    <ul class="use-list">${soon.slice(0, 5).map((s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${bare(s.name)}</b><small>${useByText(app, s)}, ${place(s.place)}</small></button></li>`)}
+      ${old.slice(0, Math.max(0, 6 - Math.min(5, soon.length))).map((w) => html`<li class="${w.past ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${w.id}"><b>${bare(w.name)}</b><small>${w.unknown ? 'No date on it, so it counts as old' : `In the freezer ${agoText(w.age)}, since ${shortDate(w.since)}`}</small></button></li>`)}</ul>
   </section>`;
 }
 
@@ -166,7 +171,7 @@ function whenCard(app, rows) {
   const shown = rows.slice(0, 6);
   return html`<section class="when-card" id="when-card" aria-labelledby="when-h">
     <h2 id="when-h" class="section-title">${ic('info', { size: 22 })}About when did these go in?</h2>
-    <p class="small">${rows.length === 1 ? 'One thing has' : `${rows.length} things have`} no date, so the pantry can’t say when to use ${rows.length === 1 ? 'it' : 'them'}. A rough answer is enough.</p>
+    <p class="small">A rough answer is enough.</p>
     <ul class="when-list">${shown.map((r) => html`<li><span class="when-name"><b>${bare(r.name)}</b><small>${place(r.place)}${r.meat && r.place === 'freezer' ? ', counted as old until you say' : ''}</small></span>
       <span class="when-chips" role="group" aria-label="When ${bare(r.name)} went in">${ABOUT_WHEN.map((a) => html`<button type="button" class="chip" data-action="pan:about" data-id="${r.id}" data-about="${a.id}">${a.label}</button>`)}</span></li>`)}</ul>
     ${when(rows.length > shown.length, () => html`<p class="muted small">${rows.length - shown.length} more after these.</p>`)}
@@ -205,39 +210,26 @@ export function render(app) {
   const places = shelves(app, entries.filter((e) => !e[1].low && !isEmpty(e)));
   const photos = entries.filter(([id]) => itemPhoto(app.state, id)).length;
   const canScan = app.store.device.key && !app.store.device.localOnly && app.store.health?.ai !== false;
+  const cov = coverLine(app);
   return html`<div class="page page-pantry">
     <header class="page-head"><h1 class="page-title">Pantry</h1></header>
-    ${catchUpCard(app)}
-    ${leftoversCard(app)}
-    ${useFirstCard(app, soon)}
-    ${whenCard(app, ask)}
-    ${coverageCard(app)}
-    <section class="scan-card">
-      <div class="scan-text">
-        <h2 class="scan-title">Scan the pantry before you shop</h2>
-        <p class="small">Take photos of the shelves, fridge and freezer. The app suggests what it sees, keeps a picture of each item, and you confirm each one, so the list only buys what’s missing.</p>
-      </div>
-      <div class="scan-pick">
-        <label class="btn btn-primary scan-btn file-btn">${ic('image', { size: 22 })}Photo library<input type="file" accept="image/*" multiple class="file-over" data-change="pan:scan" aria-label="Choose pantry photos from the photo library"></label>
-        <label class="btn btn-primary scan-btn file-btn">${ic('camera', { size: 22 })}Take a photo<input type="file" accept="image/*" capture="environment" class="file-over" data-change="pan:scan" aria-label="Take a pantry photo"></label>
-      </div>
-      ${when(!canScan, () => html`<p class="muted small">${app.store.device.localOnly ? 'Scanning needs the family server, and this device is set to “this device only.” Add items by hand below.' : !app.store.device.key ? 'Scanning needs the family server. Connect with the family passcode, or add items by hand below.' : 'Pantry scanning isn’t available on the family server right now. Add items by hand below.'}</p>`)}
-    </section>
-    <section class="ideas-cta" aria-label="Dinner ideas from Claude">
-      <span class="ideas-cta-ic" aria-hidden="true">${ic('sparkle', { size: 22 })}</span>
-      <p class="small"><b>Food to use up?</b> Snap it, and Claude suggests dinners you can make from it and the pantry.</p>
-      <button type="button" class="btn btn-secondary" data-action="ideas:open">${ic('camera', { size: 20 })}What can I make?</button>
-    </section>
     <section class="pan-add" aria-labelledby="add-h">
-      <h2 id="add-h" class="section-title">Add by hand</h2>
-      <label class="search">${ic('search', { size: 20 })}<input type="search" id="pantry-search" placeholder="Chicken, rice, green beans…" value="${app.ui.pantryQuery}" data-input="pan:search" aria-label="Search ingredients to add" autocomplete="off"></label>
+      <h2 id="add-h" class="sr-only">Add to the pantry</h2>
+      <label class="search">${ic('search', { size: 20 })}<input type="search" id="pantry-search" placeholder="Add: chicken, rice, green beans…" value="${app.ui.pantryQuery}" data-input="pan:search" aria-label="Search ingredients to add" autocomplete="off"></label>
       <div id="pan-results">${results(app)}</div>
+      <div class="scan-pick pan-scan" role="group" aria-label="Add from photos of the shelves">
+        <label class="btn btn-secondary file-btn">${ic('image', { size: 20 })}Photo library<input type="file" accept="image/*" multiple class="file-over" data-change="pan:scan" aria-label="Add from shelf photos in the photo library"></label>
+        <label class="btn btn-secondary file-btn">${ic('camera', { size: 20 })}Take a photo<input type="file" accept="image/*" capture="environment" class="file-over" data-change="pan:scan" aria-label="Take a photo of the shelves"></label>
+      </div>
+      <p class="muted small pan-add-how">${canScan ? 'Photos of the shelves: the app suggests what it sees, you confirm.' : app.store.device.localOnly ? 'Photo scanning needs the family server; this device is set to “this device only.”' : !app.store.device.key ? 'Photo scanning needs the family passcode (Family & settings).' : 'Photo scanning isn’t available right now.'} Just shopped? <button type="button" class="link-btn" data-action="rcpt:scan">Scan the receipt</button>.</p>
     </section>
+    ${useFirstCard(app, soon)}
+    ${when(cov, () => cov)}
     ${syncCard(app)}
     ${when(low.length, () => html`<section class="pan-group"><h2 class="section-title">Running low</h2><ul class="pan-list">${low.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)}
     ${entries.length ? html`
       <nav class="pan-jump" aria-label="Pantry sections">${places.map((pl) => html`<button type="button" class="chip" data-action="pan:jump" data-target="place-${pl.id}">${pl.label.replace(/^(In|On) the /, '').replace(/^./, (c) => c.toUpperCase())} <span class="chip-count">${pl.count}</span></button>`)}</nav>
-      ${when(photos < entries.length, () => html`<p class="muted small pan-photo-hint">${ic('camera', { size: 16 })}Tap a square to add a picture, so everyone knows exactly which one is on the shelf. ${photos ? `${photos} of ${entries.length} have one.` : ''}</p>`)}
+      ${when(photos < entries.length, () => html`<p class="muted small pan-photo-hint">${ic('camera', { size: 16 })}Tap a square to add a picture.</p>`)}
       ${places.map((pl) => html`<section class="pan-place" id="place-${pl.id}" aria-labelledby="ph-${pl.id}">
         <h2 id="ph-${pl.id}" class="section-title">${pl.label}<span class="count">${pl.count}</span></h2>
         ${pl.kinds.map((k) => html`<h3 class="pan-kind">${k.label}<span class="count">${k.rows.length}</span></h3><ul class="pan-list">${k.rows.map(([id, p]) => pantryRow(app, id, p))}</ul>`)}
@@ -248,6 +240,7 @@ export function render(app) {
         <button type="button" class="btn btn-small btn-secondary" data-action="pan:clear-empty">Clear all ${empty.length}</button>
         <ul class="pan-list">${empty.map(([id, p]) => pantryRow(app, id, p))}</ul>
       </section>`)}
+      ${whenCard(app, ask)}
       ${wasteLine(app)}`
       : html`<div class="empty"><span class="empty-ic">${ic('pantry', { size: 28 })}</span><h3 class="empty-title">The pantry is empty</h3><p class="empty-body">Scan your shelves or add what you have. Staples like salt and spices stay off the list until you mark them running low.</p></div>`}
   </div>`;

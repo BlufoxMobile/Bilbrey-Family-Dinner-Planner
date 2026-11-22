@@ -430,14 +430,15 @@ function retireBundle(db, state, { dinnerId, by, at, today }) {
   const lead = `${name} is marked “not for us”, so it’s off the menu.`;
   if (bench) {
     ops.push(set(['promoted', bench.id], { replaced: dinnerId, at }));
-    const future = Object.entries(state?.plan || {}).filter(([date, e]) => e?.dinner === dinnerId && e.status === 'planned' && (!today || date >= today));
+    // Nights after tonight only: tonight's groceries are bought and it may be on the stove (docs/spec/29).
+    const future = Object.entries(state?.plan || {}).filter(([date, e]) => e?.dinner === dinnerId && e.status === 'planned' && (!today || date > today));
     for (const [date, e] of future) ops.push(set(['plan', date], { ...clone(e), dinner: bench.id, sides: [...bench.sides] }));
     message = `${lead} ${bench.title} takes its place`;
     message += future.length ? ` in the rotation and on ${future.length === 1 ? 'its planned night' : `its ${future.length} planned nights`}.` : ' in the rotation.';
   } else {
     message = `${lead} Every bench dinner is already in the rotation, so nothing new comes in.`;
   }
-  return { ops, message, promoted: bench?.id || null };
+  return { ops, message, promoted: bench?.id || null, replacedNights: bench ? Object.entries(state?.plan || {}).filter(([date, e]) => e?.dinner === dinnerId && e.status === 'planned' && (!today || date > today)).length : 0 };
 }
 
 /**
@@ -460,7 +461,7 @@ export function rateDinnerOps(db, state, { dinnerId, signal, who, at, today }) {
   for (const old of formerIds(db, dinnerId)) if (state?.votes?.[old] !== undefined) ops.push(del(['votes', old]));
   if (signal === 'no') {
     const b = retireBundle(db, state, { dinnerId, by: who, at: at || new Date().toISOString(), today });
-    return result(state, [...ops, ...b.ops], b.message, { retired: true, promoted: b.promoted, signal });
+    return result(state, [...ops, ...b.ops], b.message, { retired: true, promoted: b.promoted, replacedNights: b.replacedNights, signal });
   }
   if (state?.retired?.[dinnerId]) ops.push(del(['retired', dinnerId]));
   if (was === 'no') {
@@ -694,11 +695,11 @@ export function removeReceiptOps(state, { id }) {
   return result(state, [set(['receipts'], list)], 'Receipt removed.');
 }
 
-export function addExtraOps(db, state, { name, item, qty = 1, unit = '', store, every = 'trip', price }) {
+export function addExtraOps(db, state, { name, item, qty = 1, unit = '', store, every = 'trip', price, once = null }) {
   const id = item ? `x-${item}` : `x-${slugify(name)}-${uid().slice(0, 4)}`;
-  const x = { name: item ? db.ingredients[item]?.name || name : name, qty: Number(qty) || 1, unit, store: store || (item ? db.ingredients[item]?.defaultStore : 'jewel') || 'jewel', every, ...(item ? { item } : {}) };
+  const x = { name: item ? db.ingredients[item]?.name || name : name, qty: Number(qty) || 1, unit, store: store || (item ? db.ingredients[item]?.defaultStore : 'jewel') || 'jewel', every, ...(item ? { item } : {}), ...(once ? { once } : {}) };
   if (!item && Number.isFinite(Number(price)) && price !== '' && price != null) x.price = round2(Number(price));
-  return result(state, [set(['extras', id], x)], `${x.name} added to every ${every === 'week' ? 'week' : 'trip'}.`);
+  return result(state, [set(['extras', id], x)], once ? `${x.name} is on this list.` : `${x.name} added to every ${every === 'week' ? 'week' : 'trip'}.`);
 }
 
 export function removeExtraOps(state, { id }) {

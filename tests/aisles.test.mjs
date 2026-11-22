@@ -51,11 +51,14 @@ test('the family’s aisle always wins, and clearing it falls back to the store�
   assert.equal(aisleFor(db, { aisles: { sams: {} } }, 'sams', 'chicken').code, 'M9');
 });
 
-test('in the store: one stop per aisle in walking order, then what has no aisle yet, by section', () => {
+test('in the store: one stop per aisle in walking order; no aisle yet rides with its section, never doubling back', () => {
   const it = (id, aisle) => ({ id, key: id, aisle, name: id });
   const items = [it('honey', 'Condiments & Sauces'), it('chicken', 'Meat'), it('bananas', 'Produce'), it('beefPatties', 'Meat'), it('garlic', 'Produce'), it('mystery', 'Frozen')];
   const stops = shopStops(db, {}, 'sams', items);
-  assert.deepEqual(stops.map((s) => s.label), ['Aisle F7', 'Aisle G1', 'Aisle M9', 'Produce', 'Frozen']);
+  assert.deepEqual(stops.map((s) => s.label), ['Aisle F7', 'Aisle G1', 'Aisle M9', 'Frozen']);
+  const g1 = stops.find((s) => s.aisle === 'G1');
+  assert.deepEqual(g1.items.map((i) => i.id), ['bananas', 'garlic'], 'garlic has no Sam’s aisle, so it goes with the produce');
+  assert.ok(g1.guess.has('garlic') && !g1.guess.has('bananas'), 'and it is marked as a guess');
   assert.deepEqual(stops.find((s) => s.aisle === 'M9').items.map((i) => i.id), ['chicken', 'beefPatties'], 'two things in one aisle share a stop');
   const jewel = shopStops(db, { aisles: { jewel: { garlic: { aisle: '1' } } } }, 'jewel', items);
   assert.equal(jewel[0].label, 'Aisle 1');

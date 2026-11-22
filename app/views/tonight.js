@@ -1,6 +1,7 @@
-// TONIGHT (SPEC §22.1): the home screen. Tonight's dinner with one big "Start cooking", what to
-// thaw or prep now, what needs using first (leftovers too), today's lunches, the week's dinners at
-// a glance, and the rest of the week. On a TV-size screen it lays out as a kitchen display.
+// TONIGHT (SPEC §22.1, docs/spec/29): the home screen, with one job: tonight's dinner and how to
+// start it. Below it, only what needs you today: a dinner nobody marked cooked, leftovers, what to
+// thaw or pack, and the weekly check-in on its day. Everything else lives on its own tab.
+// On a TV-size screen it lays out as a kitchen display.
 import { html, ic, when } from '../ui.js';
 import { addDays, dateRange, longDay, money, relativeDay, rangeLabel, fmtQty, listJoin, hourIn, weekdayName, shortDate, midSentence, byLabel } from '../util.js';
 import { dinnerById, periodRange, itemsForNight } from '../planner.js';
@@ -17,6 +18,9 @@ import { whyThisDinner, weekSummary, leftoversOnHand, servingsText, useByText, p
 import { openPick, openAway, openNight } from './sheets.js';
 import { defaultAnchor, catchUpCard } from './plan.js';
 import { cookProgress } from './cook.js';
+import { thawLine } from './common.js';
+export { thawLine };
+import { thawNow } from '../prep.js';
 import { checkinCard } from './checkin.js';
 
 export const title = () => 'Tonight';
@@ -76,7 +80,6 @@ function hero(app, today) {
   }
   const sides = sidesFor(app, d.id, e);
   const cooked = e.status === 'cooked';
-  const why = cooked ? [] : whyThisDinner(app.db, app.state, d.id, e, { today });
   const going = cooked ? null : cookProgress(d.id);
   const left = app.state.leftovers?.[today];
   return html`<article class="hero ${cooked ? 'is-cooked' : ''}">
@@ -84,12 +87,11 @@ function hero(app, today) {
     <div class="index-card">
       <p class="hero-kicker"><span class="dot" aria-hidden="true"></span>Tonight${cooked ? html`<span class="kicker-done">${ic('check', { size: 16 })}Cooked</span>` : ''}</p>
       <h1 class="hero-title">${d.title}</h1>
-      ${when(d.subtitle, () => html`<p class="hero-sub">${d.subtitle}</p>`)}
-      ${when(sides.length, () => html`<p class="hero-sides">with ${sides.map((s, i) => html`${i ? (i === sides.length - 1 ? ' and ' : ', ') : ''}<button type="button" class="link-side" data-action="side:sub" data-date="${today}" data-dinner="${d.id}" data-slot="${s.slot}" aria-label="${s.info?.title}. Substitute this side">${s.info?.title}</button>`)}</p>`)}
+      ${when(sides.length, () => html`<p class="hero-sides">with ${sides.map((s, i) => html`${i ? (i === sides.length - 1 ? ' and ' : ', ') : ''}<button type="button" class="link-side" data-action="side:sub" data-date="${today}" data-dinner="${d.id}" data-slot="${s.slot}" aria-label="${s.info?.title}. Change this side">${s.info?.title}</button>`)}</p>`)}
       ${sides.filter((x) => x.replaced).map((x) => html`<p class="hero-replaced">${x.info?.title}: ${replacedText(app, x).replace(/^In/, 'in')}.</p>`)}
       <div class="hero-meta">${equipment(d)}${favoriteBadge(app, d)}</div>
       ${when(showNutrition(app), () => html`<p class="hero-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate' })}</p>`)}
-      ${costNote(costOf(app, d.id, e), { house: true, cls: 'hero-cost' })}
+      ${when(!cooked, () => thawLine(app, today))}
       <div class="hero-actions">
         ${cooked
           ? html`<p class="status-note status-cooked hero-done">${ic('checkCircle', { size: 18 })}<span>Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.${left ? (left.saved ? ` ${servingsText(left.saved)} of leftovers saved.` : ' No leftovers.') : ''}</span></p>
@@ -97,22 +99,8 @@ function hero(app, today) {
           : html`<a class="btn btn-primary btn-lg" id="tonight-cook" href="#/cook/${today}">${ic('flame', { size: 20 })}${going ? `Keep cooking: step ${going.step} of ${going.of}` : 'Start cooking'}</a>
             <a class="btn btn-secondary" href="#/recipe/${d.id}">${ic('recipes', { size: 20 })}See the whole recipe</a>`}
       </div>
-      ${whyList(why)}
-      ${when(!cooked, () => {
-        const idea = lighterSide(app.db, app.state, d.id, e);
-        return idea ? lighterChip(app, {
-          key: `side:${d.id}:${idea.slot}:${idea.to.id}`,
-          text: `${idea.to.title} instead of ${idea.from.title}.`,
-          why: showNutrition(app) ? `About ${fmtKcal(idea.saves)} fewer calories a plate, and it’s remembered for ${d.title}.` : `It’s remembered for ${d.title}.`,
-          action: 'lighter:side', data: { dinner: d.id, slot: idea.slot, ref: idea.to.id }, label: 'Swap it',
-        }) : '';
-      })}
-      ${when(!(cooked && howWasDate(app) === today), () => html`<div class="hero-rate">
-        <p class="rate-h">Thumbs up: loved, a family favorite. Thumbs down: not for us, and it’s off the menu.</p>
-        ${rateList(app, d, sides)}
-      </div>`)}
       <div class="quick" role="group" aria-label="Tonight’s options">
-        <button type="button" class="quick-btn" data-action="night:pick" data-date="${today}" ${cooked ? 'disabled' : ''}>${ic('swap')}<span>Swap</span></button>
+        <button type="button" class="quick-btn" data-action="night:pick" data-date="${today}" ${cooked ? 'disabled' : ''}>${ic('swap')}<span>Change dinner</span></button>
         <button type="button" class="quick-btn" data-action="night:away" data-date="${today}" ${cooked ? 'disabled' : ''}>${ic('away')}<span>Not eating at home</span></button>
         ${cooked
           ? html`<button type="button" class="quick-btn" data-action="night:uncook" data-date="${today}">${ic('undo')}<span>Not cooked</span></button>`
@@ -123,51 +111,7 @@ function hero(app, today) {
   </article>`;
 }
 
-function weekAhead(app, today) {
-  const dates = dateRange(addDays(today, 1), 6);
-  const openCount = dates.filter((d) => !app.state.plan?.[d]?.dinner && app.state.plan?.[d]?.status !== 'away').length;
-  return html`<section class="ahead" aria-labelledby="ahead-h">
-    <div class="section-head">
-      <h2 id="ahead-h" class="section-title">The rest of the week</h2>
-      <a class="text-link" href="#/plan">Planner</a>
-    </div>
-    <ol class="menu-list">
-      ${dates.map((date) => {
-        const e = app.state.plan?.[date];
-        const d = e?.dinner ? dinnerById(app.db, app.state, e.dinner) : null;
-        const away = e?.status === 'away';
-        const facts = d && !away && showNutrition(app) ? plate(app, d.id, e) : null;
-        return html`<li><button type="button" class="menu-row ${away ? 'is-away' : ''} ${!d && !away ? 'is-open' : ''}" data-action="night:open" data-date="${date}">
-          ${dayStamp(date, today)}
-          <span class="menu-main">
-            ${away ? html`<b>${awayReason(e).label}</b><small>${e.away?.note || 'Not eating at home'}</small>`
-              : d ? html`<b>${d.title}</b><small>${listJoin(sidesFor(app, d.id, e).map((s) => s.info?.title))}</small>${facts ? html`<small class="menu-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein${leanMark(facts, { compact: true })}</small>` : ''}${costNote(costOf(app, d.id, e), { short: true, tag: 'small', cls: 'menu-cost' })}`
-                : html`<b>Nothing planned</b><small>Tap to pick a dinner</small>`}
-          </span>
-          ${away ? html`<span class="menu-ic">${ic(isLeftoverNight(e) ? 'bowl' : 'moon', { size: 22 })}</span>` : d ? dinnerPhoto(app, d, { size: 'thumb' }) : html`<span class="menu-ic">${ic('plus', { size: 22 })}</span>`}
-        </button></li>`;
-      })}
-    </ol>
-    ${when(openCount >= 3, () => html`<button type="button" class="btn btn-secondary btn-block" data-action="tonight:plan-ahead">${ic('sparkle', { size: 20 })}Plan the open nights</button>`)}
-  </section>`;
-}
-
-function glance(app) {
-  const anchor = app.ui.anchor || defaultAnchor(app);
-  const range = periodRange(anchor, app.settings.period, app.settings.weekStartsOn);
-  const list = buildList(app.db, app.state, { dates: range.dates });
-  if (!list.nights.length) return '';
-  const big = list.freezer.filter((f) => f.dinners >= 2).slice(0, 2);
-  return html`<section class="glance" aria-label="Groceries">
-    <a class="glance-card" href="#/list">
-      <span class="glance-ic">${ic('cart', { size: 24 })}</span>
-      <span class="glance-main"><b>${money(list.total)}</b><small>estimated groceries for ${list.nights.length} ${list.nights.length === 1 ? 'dinner' : 'dinners'}, ${rangeLabel(range.start, range.end)}</small></span>
-      ${ic('right', { size: 20 })}
-    </a>
-    ${big.map((f) => html`<p class="glance-note">${ic('snow', { size: 18 })}<span>${freezerNote(f)}</span></p>`)}
-  </section>`;
-}
-
+/** "Still frozen? Thaw the 2 lb lean ground beef in cold water now, about 1 hr." Right above Start cooking. */
 const COUNT_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 
 /** "Lean ground beef: one 10¾ lb pack covers all 5 dinners, with 0.24 lb left over." */
@@ -189,89 +133,6 @@ function todayLine(app, today) {
   if (!n) return '';
   const from = n.lunch && n.dinner ? 'lunch and dinner' : n.lunch ? 'lunch' : 'dinner';
   return html`<p class="today-nutri">Today for ${who}: about <b>${fmtKcal(n.kcal)}</b> calories and <b>${Math.round(n.protein)} g</b> protein from ${from}.<small>Breakfast and snacks aren’t counted.${n.complete ? '' : ' A few ingredients have no calorie data yet.'}</small></p>`;
-}
-
-// ---------------------------------------------------------------- use first: leftovers, then what's close to its date
-
-/** The first planned dinner (next seven nights) that uses an ingredient. → "Wednesday’s chicken fajitas" | '' */
-function plannedUse(app, id, today) {
-  for (const n of plannedNights(app.db, app.state, dateRange(today, 7)).sort((a, b) => a.date.localeCompare(b.date))) {
-    if (n.entry.status === 'cooked') continue;
-    if (itemsForNight(app.db, app.state, n.entry.dinner, n.entry)[id]) {
-      const t = dinnerById(app.db, app.state, n.entry.dinner)?.title || 'dinner';
-      return `${n.date === today ? 'tonight’s' : n.date === addDays(today, 1) ? 'tomorrow’s' : `${weekdayName(n.date)}’s`} ${t}`;
-    }
-  }
-  return '';
-}
-
-function useFirst(app, today) {
-  const left = leftoversOnHand(app.state, today);
-  const soon = useSoon(app.db, app.state, today).slice(0, 5);
-  const more = useSoon(app.db, app.state, today).length - soon.length;
-  return html`<section class="tcard use-first" aria-labelledby="use-h">
-    <div class="section-head"><h2 id="use-h" class="section-title">${cic('box', { size: 22 })}Use first</h2><a class="text-link" href="#/pantry">Pantry</a></div>
-    ${leftoverRows(app)}
-    ${soon.length ? html`<ul class="soon-list">${soon.map((u) => {
-      const use = plannedUse(app, u.id, today);
-      const by = u.daysLeft < 0 ? 'past its best' : u.daysLeft === 0 ? 'best today' : u.daysLeft === 1 ? 'best by tomorrow' : `best by ${weekdayName(u.useBy)}${u.daysLeft > 6 ? `, ${shortDate(u.useBy)}` : ''}`;
-      return html`<li class="soon-row ${u.daysLeft < 0 ? 'is-late' : u.daysLeft <= 1 ? 'is-due' : ''}">
-        <span class="soon-ic" aria-hidden="true">${ic(u.place === 'freezer' ? 'snow' : 'clock', { size: 18 })}</span>
-        <span class="soon-main"><b>${plainName(u.name).replace(/^./, (c) => c.toUpperCase())}</b><small>In the ${u.place}, ${by}${use ? `. Going into ${use}` : '. Nothing planned uses it yet'}.</small></span>
-      </li>`;
-    })}</ul>${when(more > 0, () => html`<p class="muted small">And ${more} more in the <a href="#/pantry">pantry</a>.</p>`)}`
-      : when(!left.length, () => html`<p class="muted small">Nothing in the fridge is close to its date, and there are no leftovers waiting. Estimates start the day groceries come home.</p>`)}
-  </section>`;
-}
-
-// ---------------------------------------------------------------- today's lunches
-
-function lunches(app, today) {
-  if (!app.db.lunch?.available) return '';
-  const people = lunchPeople(app.db, app.state).filter((p) => p.cfg.enabled);
-  if (!people.length) return '';
-  let date = today;
-  let rows = people.map((p) => lunchFor(app.db, app.state, p.name, date)).filter(Boolean);
-  // No lunches today (a weekend): show what gets packed tonight for tomorrow.
-  if (!rows.length) { date = addDays(today, 1); rows = people.map((p) => lunchFor(app.db, app.state, p.name, date)).filter(Boolean); }
-  if (!rows.length) return '';
-  return html`<section class="tcard lunch-today" aria-labelledby="lt-h">
-    <div class="section-head"><h2 id="lt-h" class="section-title">${ic('lunch', { size: 22 })}${date === today ? 'Today’s lunches' : 'Tomorrow’s lunches, to pack tonight'}</h2><a class="text-link" href="#/lunch">Lunch</a></div>
-    <ul class="lt-list">${rows.map((l) => {
-      const n = l.skip || l.empty ? null : lunchNutrition(app.db, l);
-      const what = listJoin(l.slots.filter((s) => s.item).map((s, i) => (i ? midSentence(s.item.title) : s.item.title)));
-      return html`<li class="lt-row">
-        <b>${l.name}</b>
-        <span class="lt-what">${l.skip ? `${l.reason || 'No packed lunch'} (nothing to pack)` : l.empty ? 'Nothing picked yet' : what}</span>
-        ${when(n && showNutrition(app), () => html`<small class="lt-nutri">≈ ${fmtKcal(n.kcal)} cal, ${Math.round(n.protein)} g protein</small>`)}
-      </li>`;
-    })}</ul>
-  </section>`;
-}
-
-// ---------------------------------------------------------------- the week's dinners, calmly
-
-function weekCard(app, today) {
-  const range = periodRange(today, 'week', app.settings.weekStartsOn);
-  const w = weekSummary(app.db, app.state, range.dates);
-  if (!w.home && !w.leftoverNights) return '';
-  const show = showNutrition(app) && w.counted > 0;
-  const tiles = [];
-  if (show) tiles.push([`≈ ${fmtKcal(w.avgKcal)}`, 'calories, an average dinner plate']);
-  if (show) tiles.push([`${Math.round(w.avgProtein)} g`, 'protein, an average plate']);
-  tiles.push([`${w.withVeg} of ${w.home}`, `${w.home === 1 ? 'dinner has' : 'dinners have'} a vegetable or salad`]);
-  tiles.push([String(w.home), `${w.home === 1 ? 'night' : 'nights'} cooking at home${w.cooked ? `, ${w.cooked} cooked so far` : ''}`]);
-  const notes = [];
-  if (show && w.lean) notes.push(`${w.lean} lean ${w.lean === 1 ? 'dinner' : 'dinners'}`);
-  if (w.leftoverNights) notes.push(`${w.leftoverNights} leftover ${w.leftoverNights === 1 ? 'night' : 'nights'}`);
-  if (w.away) notes.push(`${w.away} ${w.away === 1 ? 'night' : 'nights'} out`);
-  if (w.open) notes.push(`${w.open} ${w.open === 1 ? 'night' : 'nights'} still open`);
-  return html`<section class="tcard week-card" aria-labelledby="wk-h">
-    <div class="section-head"><h2 id="wk-h" class="section-title">${ic('leaf', { size: 22 })}This week’s dinners</h2><span class="muted small">${rangeLabel(range.start, range.end)}</span></div>
-    <dl class="week-stats">${tiles.map(([v, k]) => html`<div><dt>${k}</dt><dd>${v}</dd></div>`)}</dl>
-    ${when(notes.length, () => html`<p class="muted small">${listJoin(notes).replace(/^./, (c) => c.toUpperCase())}.</p>`)}
-    ${when(w.withVeg < w.home, () => html`<p class="muted small"><a href="#/plan">Add a vegetable to the ${w.home - w.withVeg === 1 ? 'one' : w.home - w.withVeg} without, on the Plan.</a></p>`)}
-  </section>`;
 }
 
 /**
@@ -308,21 +169,21 @@ function howWas(app, today) {
 
 export function render(app) {
   const today = app.today();
+  const left = leftoverRows(app);
   return html`<div class="page page-tonight">
     <p class="dateline">${longDay(today)}</p>
-    ${when(howWasDate(app) !== today, () => howWas(app, today))}
-    ${catchUpCard(app)}
-    ${todayLine(app, today)}
     <div class="tonight-grid">
-      <div class="tonight-main">${hero(app, today)}${leftoversAskCard(app)}${when(howWasDate(app) === today, () => howWas(app, today))}</div>
+      <div class="tonight-main">
+        ${hero(app, today)}
+        ${catchUpCard(app, { compact: true })}
+        ${leftoversAskCard(app)}
+        ${when(howWasDate(app), () => howWas(app, today))}
+        ${when(left, () => html`<section class="tcard left-fridge" aria-labelledby="left-h"><h2 id="left-h" class="section-title">${ic('bowl', { size: 22 })}<span>Leftovers in the fridge</span></h2>${left}</section>`)}
+      </div>
       <div class="tonight-side">
+        ${prepCard(app, { days: 2, title: 'Thaw & prep', empty: false, skip: ['use'], skipTonightThaw: true })}
         ${checkinCard(app)}
-        ${prepCard(app, { days: 2, title: 'Thaw and prep now', empty: true, emptyText: 'Nothing to thaw or pack for tonight or tomorrow.' })}
-        ${useFirst(app, today)}
-        ${lunches(app, today)}
-        ${weekCard(app, today)}
-        ${weekAhead(app, today)}
-        ${glance(app)}
+        ${todayLine(app, today)}
       </div>
     </div>
   </div>`;

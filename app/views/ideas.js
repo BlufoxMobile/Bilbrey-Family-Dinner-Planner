@@ -49,7 +49,7 @@ function show(app) {
     size: 'tall',
     live: done,
     title: done ? (st.ideas.length === 1 ? 'One idea for dinner' : `${st.ideas.length || 'No'} ideas for dinner`) : 'What can I make?',
-    subtitle: done ? '' : 'Snap the food you want to use. Claude suggests dinners from it and what’s in the pantry.',
+    subtitle: done ? '' : 'Snap the food you want to use up. You’ll get dinners that use it.',
     render: () => body(app),
   });
 }
@@ -57,7 +57,7 @@ function show(app) {
 function body(app) {
   if (st.phase === 'busy') {
     return html`<div class="scan-progress" role="status"><span class="spinner" aria-hidden="true"></span>
-      <p>Claude is looking at ${st.photos.length ? (st.photos.length === 1 ? 'your photo' : `your ${st.photos.length} photos`) : 'the pantry'}…</p>
+      <p>Looking at ${st.photos.length ? (st.photos.length === 1 ? 'your photo' : `your ${st.photos.length} photos`) : 'the pantry'}…</p>
       <p class="muted small">This takes about half a minute.</p></div>`;
   }
   if (st.phase === 'error') {
@@ -73,7 +73,7 @@ function body(app) {
 
 function pick(app) {
   const info = aiInfo();
-  const warn = info && !info.keySet ? 'Claude isn’t turned on yet. Once Jeff adds the Claude key to the family server, this works.'
+  const warn = info && !info.keySet ? 'Dinner ideas aren’t turned on yet. Jeff turns them on in Family → Advanced.'
     : info?.capped ? 'This month’s Claude budget is used up. It’s back on the 1st.' : '';
   const room = MAX_IDEA_PHOTOS - st.photos.length;
   return html`
@@ -86,7 +86,7 @@ function pick(app) {
     <label class="field idea-note-field"><span class="field-label">Anything to use up or skip? <small>Optional</small></span>
       <textarea class="input idea-note" id="idea-note" maxlength="${NOTE_MAX}" rows="2" data-input="ideas:note" placeholder="Use the chicken thighs">${st.note}</textarea></label>
     <button type="button" class="btn btn-primary btn-block" data-action="ideas:go" ${st.busy ? 'disabled' : ''}>${ic('sparkle', { size: 20 })}Get ideas</button>
-    <p class="muted small">Up to ${MAX_IDEA_PHOTOS} photos: the fridge, the counter, a pack of chicken. No photos? Claude works from the pantry list.</p>`;
+    <p class="muted small">Up to ${MAX_IDEA_PHOTOS} photos: the fridge, the counter, a pack of chicken. No photos? It works from the pantry.</p>`;
 }
 
 // ---------------------------------------------------------------- the ideas
@@ -152,7 +152,7 @@ function results(app) {
   return html`
     <p class="read-by">${ic('sparkle', { size: 16 })}Ideas from ${by}${st.sent ? `, from ${st.sent}` : ''}</p>
     ${st.ideas.length ? st.ideas.map((idea, k) => ideaCard(app, idea, k))
-      : html`<p class="sheet-text">Claude didn’t come up with a dinner that fits the house rules this time. Try another photo, or a note like “use the ground beef”.</p>`}
+      : html`<p class="sheet-text">No dinner fit the house rules this time. Try another photo, or a note like “use the ground beef”.</p>`}
     <div class="sheet-actions"><button type="button" class="btn btn-quiet btn-block" data-action="ideas:back">${ic('camera', { size: 20 })}Try other photos</button></div>`;
 }
 
@@ -199,7 +199,7 @@ async function getIdeas(app) {
     st.busy = false;
   }
   if (sheetId() === 'ideas') show(app);
-  else if (st.phase === 'done' && st.ideas.length) toast(`Claude has ${st.ideas.length === 1 ? 'a dinner idea' : `${st.ideas.length} dinner ideas`} ready.`, { action: { label: 'See them', fn: () => openIdeas(app, { keepResults: true }) }, duration: 15000 });
+  else if (st.phase === 'done' && st.ideas.length) toast(`${st.ideas.length === 1 ? 'A dinner idea is' : `${st.ideas.length} dinner ideas are`} ready.`, { action: { label: 'See them', fn: () => openIdeas(app, { keepResults: true }) }, duration: 15000 });
 }
 
 // ---------------------------------------------------------------- putting an idea on a night

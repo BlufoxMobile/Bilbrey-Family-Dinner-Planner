@@ -164,7 +164,7 @@ function claudeSection(app) {
   const st = claudeStatusText(app);
   const spend = connected(app) ? aiStatus(ai.info, app.settings.aiModel).spend : null;
   return html`<section class="set-sec claude-card" aria-labelledby="ai-h">
-    <h2 id="ai-h" class="section-title">${ic('sparkle', { size: 22 })}Claude</h2>
+    <h2 id="ai-h" class="section-title">${ic('sparkle', { size: 22 })}Dinner ideas & photo reading (Claude)</h2>
     <p class="ai-status ai-${st.tone}" role="status"><span class="ai-dot" aria-hidden="true"></span><span>${st.text}</span></p>
     ${when(spend, () => html`<div class="ai-spend">
       <p class="ai-spend-row"><span>This month</span><b>${spend.text}</b></p>
@@ -179,13 +179,12 @@ function claudeSection(app) {
 function rules(app) {
   const s = app.settings;
   return html`<section class="set-sec" aria-labelledby="rules-h">
-    <h2 id="rules-h" class="section-title">Planner rules</h2>
-    <div class="set-row set-col"><span class="set-label">Burger nights<small>Fries by default, with an option to add a side.</small></span>
+    <h2 id="rules-h" class="section-title">House rules</h2>
+    <div class="set-row set-col"><span class="set-label">Burger nights<small>With fries.</small></span>
       <div class="chip-grid days-pick">${DAYS.map((d, i) => html`<button type="button" class="chip ${s.burgerNights.includes(i) ? 'is-on' : ''}" aria-pressed="${tf(s.burgerNights.includes(i))}" data-action="fam:burger" data-day="${i}">${d}</button>`)}</div></div>
     <div class="set-row"><span class="set-label">Frozen pizza nights a month<small>On Saturdays.</small></span>${stepper({ value: s.pizzaPerMonth, step: 1, min: 0, action: 'fam:num', data: { key: 'pizzaPerMonth', max: 4 }, label: 'Pizza nights a month' })}</div>
     <div class="set-row"><span class="set-label">Rice dinners a week, at most<small>Candi’s rule.</small></span>${stepper({ value: s.riceMaxPerWeek, step: 1, min: 0, action: 'fam:num', data: { key: 'riceMaxPerWeek', max: 3 }, label: 'Rice dinners a week' })}</div>
     <div class="set-row set-col"><span class="set-label">Weeks start on</span>${segmented('weekStartsOn', [{ id: '1', label: 'Monday' }, { id: '0', label: 'Sunday' }], String(s.weekStartsOn), { label: 'Weeks start on', action: 'fam:weekstart', small: true })}</div>
-    <p class="muted small">Dinners the family marks “loved” come up more often; “not for us” takes one off the menu. Set either with the thumbs on any dinner.</p>
   </section>`;
 }
 
@@ -193,10 +192,10 @@ function shopping(app) {
   const s = app.settings;
   return html`<section class="set-sec" aria-labelledby="shop-h">
     <h2 id="shop-h" class="section-title">Shopping and budget</h2>
-    <div class="set-row"><span class="set-label">Monthly grocery target<small>What the Budget page measures the month against.</small></span><a class="btn btn-small btn-quiet" href="#/budget" aria-label="Monthly grocery target, $${s.monthlyTarget}. Change it on the Budget page">$${s.monthlyTarget}</a></div>
+    <div class="set-row"><span class="set-label">Monthly grocery target</span><a class="btn btn-small btn-quiet" href="#/budget" aria-label="Monthly grocery target, $${s.monthlyTarget}. Change it on the Budget page">$${s.monthlyTarget}</a></div>
     <div class="set-row set-col"><span class="set-label">Plan from</span>${segmented('planStore', [{ id: 'both', label: 'Both stores' }, { id: 'sams', label: "Sam's only" }, { id: 'jewel', label: 'Jewel only' }], s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}</div>
-    <div class="set-row"><span class="set-label">Organic fruits and vegetables<small>The list picks the organic version when the store has one. Prices are Jewel-Osco’s, checked Nov 15.</small></span>${switchToggle({ on: s.organic, action: 'fam:organic', label: 'Buy organic fruits and vegetables' })}</div>
-    <div class="set-row set-col"><span class="set-label">Meat per dinner<small>Lighter trims every meat amount by 15% to save money.</small></span>${segmented('meatScale', MEAT_OPTS, String(s.meatScale), { label: 'Meat per dinner', action: 'fam:meat', small: true })}</div>
+    <div class="set-row"><span class="set-label">Organic fruits and vegetables<small>When the store has one.</small></span>${switchToggle({ on: s.organic, action: 'fam:organic', label: 'Buy organic fruits and vegetables' })}</div>
+    <div class="set-row set-col"><span class="set-label">Meat per dinner<small>Lighter uses 15% less meat.</small></span>${segmented('meatScale', MEAT_OPTS, String(s.meatScale), { label: 'Meat per dinner', action: 'fam:meat', small: true })}</div>
   </section>`;
 }
 
@@ -250,26 +249,31 @@ function display(app) {
   const todayOpts = [{ id: '', label: 'Nobody' }, ...names.map((n) => ({ id: n, label: n }))];
   return html`<section class="set-sec" aria-labelledby="disp-h">
     <h2 id="disp-h" class="section-title">Display on this device</h2>
-    <p class="muted small">These stay on this phone, computer or TV. Everything else on this page is shared by the whole family.</p>
+    <p class="muted small">Just this phone, computer or TV.</p>
     <div class="set-row set-col"><span class="set-label">Appearance</span>${segmented('theme', [{ id: 'auto', label: 'Match device' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }], d.theme || 'auto', { label: 'Appearance', action: 'fam:theme', small: true })}</div>
     ${raw(tvSettingRow())}
-    <div class="set-row set-col"><span class="set-label">Text size<small>Large makes everything a step bigger. A TV gets its own big layout from TV display, above.</small></span>${segmented('textSize', [{ id: 'regular', label: 'Regular' }, { id: 'large', label: 'Large' }], d.textSize || 'regular', { label: 'Text size', action: 'fam:text', small: true })}</div>
+    <div class="set-row set-col"><span class="set-label">Text size</span>${segmented('textSize', [{ id: 'regular', label: 'Regular' }, { id: 'large', label: 'Large' }], d.textSize || 'regular', { label: 'Text size', action: 'fam:text', small: true })}</div>
     <div class="set-row"><span class="set-label">Show calories and protein<small>Lunches and dinners; breakfast and snacks aren’t tracked.</small></span>${switchToggle({ on: !d.hideNutrition, action: 'fam:nutrition', label: 'Show calories and protein on this device' })}</div>
     ${when(!d.hideNutrition, () => html`<div class="set-row set-col"><span class="set-label">Today’s total on Tonight<small>One line adding up a packed lunch and a dinner plate for one person. Pick whose shows on this device.</small></span>${segmented('todayFor', todayOpts, d.todayFor || '', { label: 'Whose daily total shows on Tonight', action: 'fam:today', small: true })}</div>`)}
   </section>`;
 }
 
 export function render(app) {
+  // House rules first; the plumbing (sync, Claude, device data) waits under Advanced unless something
+  // needs attention (docs/spec/29).
+  const synced = app.store.status === 'synced';
   return html`<div class="page page-family">
     <header class="page-head"><h1 class="page-title">Family & settings</h1></header>
-    <p class="set-lead">One plan for the whole family: every phone and the TV share it, with no separate profiles.</p>
-    ${syncSection(app)}
+    ${when(!synced, () => syncSection(app))}
     ${rules(app)}
     ${shopping(app)}
-    ${stores(app)}
     ${lunches(app)}
-    ${claudeSection(app)}
     ${display(app)}
+    ${stores(app)}
+    <details class="set-advanced" data-more="advanced" ${openMore.has('advanced') ? 'open' : ''}>
+      <summary><span class="section-title">Advanced</span><small>Sync, dinner ideas and photo reading, and this device’s data</small></summary>
+    ${when(synced, () => syncSection(app))}
+    ${claudeSection(app)}
     <section class="set-sec" aria-labelledby="hl-h">
       <h2 id="hl-h" class="section-title">Good to know</h2>
       <ul class="plain">
@@ -285,6 +289,7 @@ export function render(app) {
       <p class="muted small">${allDinners(app.db, app.state).length} dinners and ${app.db.sideList.length} sides in the recipe box. Version ${VERSION}.</p>
       <button type="button" class="btn btn-danger-quiet" data-action="fam:reset">${ic('trash', { size: 20 })}Clear this device’s data</button>
     </section>
+    </details>
   </div>`;
 }
 

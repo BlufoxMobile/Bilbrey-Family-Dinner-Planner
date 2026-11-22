@@ -128,7 +128,7 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   await page.click(`dialog[open] [data-action="ahead:quick"][data-end="${end}"]`);
   assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:pantry"]', 'aria-checked'), 'true');
   assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:replan"]', 'aria-checked'), 'true', 're-planning is on by default with “use what we have first”');
-  assert.match(await page.textContent('dialog[open] .ahead-count'), /14 nights: 7 open, 5 the planner picked and 2 staying as they are\. Tonight’s dinner and nights set by hand, cooked or away always stay as they are\./);
+  assert.match(await page.textContent('dialog[open] .ahead-count'), /14 nights: 7 empty, 5 the app picked,? and 2 stay as they are\./);
   // Turning the pantry off turns re-planning off with it; back on, it follows.
   await page.click('dialog[open] [data-action="ahead:pantry"]');
   assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:replan"]', 'aria-checked'), 'false');
@@ -214,33 +214,33 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   assert.equal(errors.length, 0, errors.join('\n'));
 });
 
-test('lean by default and busy nights are family settings on the Plan page; the freezer watch names what’s old', async () => {
+test('lean by default and busy nights are family settings under More on the Plan; Use first names what’s old', async () => {
   await go(page, '#/plan', '.page-plan');
-  assert.match(await page.textContent('.plan-prefs-head'), /Planning for\s*Lean plates/);
-  await page.click('.plan-prefs-head');
-  assert.equal(await page.getAttribute('[data-action="plan:lean"]', 'aria-checked'), 'true', 'lean is on by default');
-  await page.click('[data-action="plan:busy"][data-day="2"]'); // Wednesdays
+  // Planning for lives under More now (docs/spec/29): the week comes first on the page.
+  await page.click('.plan-actions [data-action="plan:more"]');
+  await page.waitForSelector('dialog[open] .plan-prefs');
+  assert.equal(await page.getAttribute('dialog[open] [data-action="plan:lean"]', 'aria-checked'), 'true', 'lean is on by default');
+  await page.click('dialog[open] [data-action="plan:busy"][data-day="2"]'); // Wednesdays
   await waitFor(async () => JSON.stringify((await familyState()).settings?.busyNights) === '[2]');
-  await page.waitForSelector('[data-action="plan:busy"][data-day="2"][aria-pressed="true"]');
-  await textMatch(page, '.plan-prefs-head', /Lean plates, easy on Wed/);
-  await textMatch(page, '.lean-line', /\d+ of \d+ planned dinners are lean plates/);
-  await page.click('[data-action="plan:lean"]');
+  await page.waitForSelector('dialog[open] [data-action="plan:busy"][data-day="2"][aria-pressed="true"]');
+  await textMatch(page, 'dialog[open] .lean-line', /\d+ of \d+ planned dinners are lean plates/);
+  await page.click('dialog[open] [data-action="plan:lean"]');
   await toastMatch(page, /Lean by default is off/);
   assert.equal((await familyState()).settings.lean, false);
   await page.click('.toast-root .toast-btn'); // Undo
   await waitFor(async () => (await familyState()).settings.lean !== false);
   await closeToast(page);
-  await shotOf(page, '.plan-prefs', 'planner-04-lean-busy-390');
-  // The freezer watch: the July steak is past its time, the undated beef counts as old, the thighs are 2 months in.
-  const fz = await page.textContent('#freezer-card');
-  assert.match(fz, /In the freezer the longest/);
-  assert.match(fz, /Past its time\s*Eye of round steak/i);
-  assert.match(fz, /No date\s*.*ground beef/i);
-  assert.match(fz, /Nobody dated it, so it counts as old/);
-  assert.match(fz, /Planned: (tonight|\w{3} Nov \d+)/, 'old food has a night in the plan');
-  clean(fz, 'the freezer watch');
+  await shotOf(page, 'dialog[open] .plan-prefs', 'planner-04-lean-busy-390');
+  await page.keyboard.press('Escape');
+  // Use first, on the Pantry: the July steak is past its time, the undated beef counts as old.
+  await go(page, '#/pantry', '.page-pantry');
+  const fz = await page.textContent('.use-first');
+  assert.match(fz, /Eye of round steak/i);
+  assert.match(fz, /ground beef/i);
+  assert.match(fz, /No date on it, so it counts as old/);
+  clean(fz, 'use first');
   assert.ok(await noOverflow(page));
-  await shotOf(page, '#freezer-card', 'planner-05-freezer-watch-390');
+  await shotOf(page, '.use-first', 'planner-05-use-first-390');
   assert.equal(errors.length, 0, errors.join('\n'));
 });
 
@@ -390,7 +390,7 @@ test('after dinner is cooked the app asks about leftovers once; they can go in a
     setOp(['plan', '2026-11-14'], { ...s0.plan['2026-11-18'], by: 'Family' }),
   ], (s) => !!s.plan['2026-11-15'] && !!s.plan['2026-11-14']);
   await go(page, '#/tonight', '.page-tonight');
-  // One catch-up prompt, and it is on Tonight too.
+  // One catch-up prompt, and it lives on Tonight (docs/spec/29: one home per card).
   await page.waitForSelector('#catch-card');
   assert.equal(await page.locator('#catch-card, .forgot-card').count(), 1, 'one prompt, not two');
   await page.click('[data-action="tonight:cooked"]');
@@ -401,10 +401,11 @@ test('after dinner is cooked the app asks about leftovers once; they can go in a
   assert.equal(await page.locator('.lo-ask').count(), 1, 'one question for the night');
   assert.doesNotMatch(await page.textContent('.prep-card'), /left from tonight/);
   await shotOf(page, '.lo-card', 'planner-13-tonight-leftovers-ask-390');
-  // The same question is on Plan; answered there, it is answered everywhere.
+  // Not on Plan or Pantry any more: one home per card.
   await go(page, '#/plan', '.page-plan');
-  await page.waitForSelector('.left-wrap .lo-ask');
-  await page.click('.left-wrap [data-action="leftovers:save"][data-n="4"]');
+  assert.equal(await page.locator('.lo-ask, #catch-card, .left-fridge').count(), 0, 'Plan is the week, nothing else');
+  await go(page, '#/tonight', '.page-tonight');
+  await page.click('.lo-card [data-action="leftovers:save"][data-n="4"]');
   await toastMatch(page, /4 servings of leftovers saved, good through Thursday/);
   await closeToast(page);
   let s = await familyState();
@@ -449,12 +450,13 @@ test('after dinner is cooked the app asks about leftovers once; they can go in a
   // The pantry lists the frozen plates in the freezer and as a quick backup.
   await go(page, '#/pantry', '.page-pantry');
   assert.match(await page.textContent(`#pan-${left[0]}`), /Leftover [\s\S]+3 plates on hand/);
-  assert.match(await page.textContent('.cover-card'), /Quick backups on the shelf: .*Leftover/);
+  assert.equal(await page.locator('#catch-card').count(), 0, 'the catch-up is Tonight’s, not the Pantry’s');
 
-  // Catch-up: Saturday's and Sunday's dinners were never marked. The same card, here too.
+  // Catch-up: Saturday's and Sunday's dinners were never marked. Tonight asks.
+  await go(page, '#/tonight', '.page-tonight');
   const card = await page.textContent('#catch-card');
   assert.match(card, /Is the pantry still right\?/);
-  assert.match(card, /2 dinners from the last week were never taken off the shelves/);
+  assert.match(card, /2 dinners from the last week never came off the shelves/);
   await shotOf(page, '#catch-card', 'planner-15-catch-up-card-390');
   await page.click('#catch-card [data-action="catch:open"]');
   await page.waitForSelector('dialog[open] [data-action="catch:cooked"][data-date="2026-11-15"]');
@@ -472,10 +474,10 @@ test('after dinner is cooked the app asks about leftovers once; they can go in a
   assert.ok(s.plan['2026-11-15'].deducted, 'what it used came off the shelves, once');
   await page.waitForSelector('#catch-card', { state: 'detached' });
   // Marked cooked a day late, last night's dinner gets the one leftovers question too.
-  await page.waitForSelector('.left-wrap .lo-ask');
-  assert.match(await page.textContent('.left-wrap .lo-ask'), /Any leftovers from last night\?/);
-  await page.click('.left-wrap [data-action="leftovers:save"][data-n="0"]');
-  await page.waitForSelector('.left-wrap', { state: 'detached' });
+  await page.waitForSelector('.lo-card .lo-ask');
+  assert.match(await page.textContent('.lo-card .lo-ask'), /Any leftovers from last night\?/);
+  await page.click('.lo-card [data-action="leftovers:save"][data-n="0"]');
+  await page.waitForSelector('.lo-card', { state: 'detached' });
   assert.ok(await noOverflow(page));
   assert.equal(errors.length, 0, errors.join('\n'));
 });

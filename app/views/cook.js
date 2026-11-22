@@ -6,7 +6,7 @@ import { html, ic, when, tf, openSheet, closeSheet, sheetOpen } from '../ui.js';
 import { isISODate, midSentence, relativeDay, listJoin } from '../util.js';
 import { dinnerById, findInPlan } from '../planner.js';
 import { markCookedOps, cookedPreview } from '../actions.js';
-import { cic, equipIcon, equipLabel, timelineChart, leftoversQuestion, isLeftoverNight } from './common.js';
+import { cic, equipIcon, equipLabel, timelineChart, leftoversQuestion, isLeftoverNight, thawLine } from './common.js';
 import {
   plateRecipes, cookTracks, cookTimeline, stepIngredients, stepDetails, equipmentSettings, safeTemps, pantryCheck, ingredientLabel,
   newTimer, timerLeft, timerPhase, pauseTimer, resumeTimer, addTime, fmtClock, fmtMinutes, ringing, leftoversNote, servingsText,
@@ -320,6 +320,7 @@ function readyScreen(app, t, p, s) {
         ${settings.map((e) => html`<li>${equipIcon(e.id, { size: 20 })}<span>${equipLabel(e.id)}${e.settings.length ? html`: <b>${e.settings.join(', ')}</b>` : ''}</span></li>`)}
       </ul>
       ${temps.map((x) => html`<p class="cook-temp">${cic('thermo', { size: 20 })}<span>${x.food}: <b>${x.temp}°F</b>, ${x.note}.</span></p>`)}
+      ${when(t.date === app.today(), () => thawLine(app, app.today()))}
       <p class="muted small" data-wake>${'wakeLock' in navigator ? 'The screen stays on while you cook.' : 'This screen may dim while you cook: turn auto-lock up, or tap it now and then.'}</p>
     </div>
     ${when(!p.n, () => html`<p class="hint">${ic('info', { size: 18 })}<span>This recipe has no steps written down. Cook it your way, then tap Finish to mark it cooked.</span></p>`)}
@@ -327,14 +328,10 @@ function readyScreen(app, t, p, s) {
       <h2 id="cook-plan-h" class="cook-sec-h">Timing the whole plate</h2>
       ${timelineChart(p.tl)}
       <ul class="cook-cues">${p.tl.cues.map((c) => html`<li><b>${c.title}.</b> ${c.text}</li>`)}</ul>
-      <div class="seg seg-sm cook-order" role="radiogroup" aria-label="Order of the steps">
-        <button type="button" role="radio" class="seg-opt ${prefs.order === 'together' ? 'is-on' : ''}" aria-checked="${tf(prefs.order === 'together')}" data-action="cook:order" data-order="together">Timed together</button>
-        <button type="button" role="radio" class="seg-opt ${prefs.order === 'dish' ? 'is-on' : ''}" aria-checked="${tf(prefs.order === 'dish')}" data-action="cook:order" data-order="dish">One dish at a time</button>
-      </div>
     </section>`)}
     <section class="cook-need" aria-labelledby="cook-need-h">
       <h2 id="cook-need-h" class="cook-sec-h">Get everything out</h2>
-      <p class="muted small">For five. Tap each one as it lands on the counter.</p>
+      <p class="muted small">Tap each one as it comes out.</p>
       ${p.recs.map((r) => {
         const check = pantryCheck(app.db, app.state, r.recipe.items);
         if (!check.rows.length) return '';
@@ -357,13 +354,13 @@ function stepScreen(app, t, p, s) {
   const next = p.tl.steps[s.i + 1];
   const custom = timerById(timerId(s, step, 'x'));
   return html`<article class="cook-step-card ${tone(step.track)}">
-    <p class="cook-dish-tag"><span class="cook-dot" aria-hidden="true"></span><b>${step.title}</b><small>step ${step.index + 1} of ${step.of}</small></p>
+    <p class="cook-dish-tag"><span class="cook-dot" aria-hidden="true"></span><b>${step.title}</b></p>
     ${when(resumedKey === s.key, () => html`<p class="cook-resumed">${ic('undo', { size: 16 })}<span>Picked up where you left off.</span><button type="button" class="link-btn" data-action="cook:restart">Start over</button></p>`)}
     <p class="cook-step-text" id="cook-step-text" aria-live="polite">${step.text}</p>
     ${when(step.setting, () => html`<p class="cook-setting">${ic('flame', { size: 20 })}<span>${step.setting}</span></p>`)}
     ${when(ings.length, () => html`<ul class="cook-ings" aria-label="What this step uses, for five">${ings.map((x) => html`<li class="${x.again ? 'is-again' : ''}">${x.label}${x.again ? html`<span class="sr-only"> (already out)</span>` : ''}</li>`)}</ul>`)}
     <ul class="cook-timers" aria-label="Timers for this step">
-      ${step.timers.map((t0, k) => timerControl(app, s, step, k, t0))}
+      ${step.timers.map((t0, k) => (Number(t0.seconds) > 0 && Number(t0.seconds) < 30 ? '' : timerControl(app, s, step, k, t0)))}
       ${custom ? timerControl(app, s, step, 'x', { label: custom.label, per: null }) : ''}
       ${when(!custom, () => html`<li class="cook-timer is-idle"><button type="button" class="btn btn-quiet btn-small cook-timer-other" data-action="cook:timer-pick" data-key="${step.key}">${ic('plus', { size: 18 })}${step.timers.length ? 'Another timer' : 'Set a timer'}</button></li>`)}
     </ul>
@@ -472,7 +469,7 @@ export function render(app) {
       ${atReady
         ? html`<a class="btn btn-secondary btn-lg cook-nav-back" id="cook-back" href="${exit}">${ic('left', { size: 22 })}<span>${t.date ? 'Tonight' : 'Recipe'}</span></a>`
         : html`<button type="button" class="btn btn-secondary btn-lg cook-nav-back" id="cook-back" data-action="cook:back">${ic('left', { size: 22 })}<span>Back</span></button>`}
-      ${when(!atFinish, () => html`<button type="button" class="btn btn-primary btn-lg cook-nav-next" id="cook-next" data-action="cook:next"><span>${atReady ? (p.n ? 'Start cooking' : 'Finish') : s.i === p.n - 1 ? 'Finish' : 'Next'}</span>${ic('right', { size: 22 })}</button>`)}
+      ${when(!atFinish, () => html`<button type="button" class="btn btn-primary btn-lg cook-nav-next" id="cook-next" data-action="cook:next"><span>${atReady ? (p.n ? 'Step 1' : 'Finish') : s.i === p.n - 1 ? 'Finish' : 'Next'}</span>${ic('right', { size: 22 })}</button>`)}
     </nav>
   </div>`;
 }

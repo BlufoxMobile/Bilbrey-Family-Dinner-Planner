@@ -8,12 +8,16 @@ import { containerSize, normUnit } from './scanqty.js';
 const WORDS = ['jar', 'bottle', 'can', 'box', 'bag', 'loaf', 'pouch', 'tub', 'carton', 'canister', 'jug', 'bowl', 'tray', 'sleeve', 'pack', 'package', 'bunch', 'head'];
 const PLURAL = { box: 'boxes', pouch: 'pouches', loaf: 'loaves', bunch: 'bunches', package: 'packages' };
 /** Units that already count packages: 3 cans are 3 cans. */
-const COUNTED = new Set(['can', 'bottle', 'jar', 'box', 'bag', 'pouch', 'bowl', 'pack', 'package', 'tub', 'carton', 'crust', 'biscuit', 'each', 'item', 'unit']);
+const COUNTED = new Set(['can', 'bottle', 'jar', 'box', 'bag', 'pouch', 'bowl', 'pack', 'package', 'tub', 'carton', 'crust', 'biscuit', 'each', 'item', 'unit',
+  // Things counted one by one: 3 romaine hearts are 3 hearts, never "¾ of a pack".
+  'heart', 'head', 'ear', 'lemon', 'lime', 'orange', 'pepper', 'egg', 'pizza']);
 
 export const plural = (word, n) => (Math.abs(n - 1) < 1e-9 ? word : PLURAL[word] || `${word}s`);
 
 function wordFrom(text) {
-  const s = String(text || '').toLowerCase();
+  // Notes in parentheses ("delivery-app prices can run above in-store") never name the package.
+  let s = String(text || '').toLowerCase();
+  for (let was = null; was !== s;) { was = s; s = s.replace(/\([^()]*\)/g, ' '); }
   if (/\bgallon\b/.test(s)) return 'jug';
   let best = null;
   for (const w of WORDS) {
@@ -63,7 +67,8 @@ export function packageOf(db, state, id) {
   const mine = latestProduct(state, id);
   const per = own > 0 ? own : mine ? Number(mine.packSize) : ing ? containerSize(ing) : null;
   if (!(per > 0)) return null;
-  const pack = ing?.packs?.jewel?.name || ing?.packs?.jewel?.generic || ing?.packs?.sams?.generic;
+  // The family's usual pack first; a name-brand listing is only a fallback.
+  const pack = ing?.packs?.jewel?.generic || ing?.packs?.sams?.generic || ing?.packs?.jewel?.name;
   const word = wordFrom(mine?.name) || wordFrom(ing?.container?.label) || wordFrom(pack?.label) || defaultWord((ing || custom).name, unit);
   return { per, word, counted: false };
 }

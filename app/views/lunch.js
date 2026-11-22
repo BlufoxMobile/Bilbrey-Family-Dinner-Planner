@@ -2,7 +2,7 @@
 // with, plus anyone the family adds. Rotations per slot, weekdays by default, per-day swaps and
 // skips, an editor for each person (pause or remove them there), lighter ideas where wanted.
 import { html, ic, when, openSheet, closeSheet, renderSheet, avatar, personStyle, photo, switchToggle, tf, confirmSheet } from '../ui.js';
-import { addDays, dateRange, money, rangeLabel, shortDate, startOfWeek, weekday, weekdayName, diffDays, dayWord, listJoin } from '../util.js';
+import { addDays, dateRange, money, rangeLabel, shortDate, startOfWeek, weekday, weekdayName, diffDays, dayWord, listJoin, hourIn } from '../util.js';
 import {
   lunchPackers, personConfig, lunchFor, lunchLibrary, lunchSlots, lunchItem, SKIP_REASONS, hasLunchDay, lunchVote, newPackerName,
 } from '../lunch.js';
@@ -47,16 +47,16 @@ function slotRow(app, l, s, name, date) {
   </button></li>`;
 }
 
-function dayCard(app, name, date) {
+function dayCard(app, name, date, { packTonight = false } = {}) {
   const today = app.today();
   const l = lunchFor(app.db, app.state, name, date);
   if (!l) return '';
   const past = date < today;
   const n = lunchNutrition(app.db, l);
-  const cls = ['lunch-day', l.skip && 'is-skipped', date === today && 'is-today', past && 'is-past'].filter(Boolean).join(' ');
+  const cls = ['lunch-day', l.skip && 'is-skipped', (packTonight || (date === today && !packTonightAny(app))) && 'is-today', past && 'is-past'].filter(Boolean).join(' ');
   return html`<article class="${cls}" data-date="${date}">
     <header class="ld-head">
-      <span class="ld-day"><b>${date === today ? 'Today' : weekdayName(date)}</b><small>${shortDate(date)}</small></span>
+      <span class="ld-day"><b>${date === today ? 'Today' : date === addDays(today, 1) ? 'Tomorrow' : weekdayName(date)}</b><small>${packTonight ? 'Pack it tonight' : shortDate(date)}</small></span>
       ${when(!l.skip, () => nutri(app, n, { compact: true }))}
     </header>
     ${l.skip ? html`<div class="ld-skipped"><span>${ic('away', { size: 20 })}</span><p><b>${l.reason || 'No packed lunch'}</b><small>Nothing to pack, and its groceries are off the list.</small></p>
@@ -66,6 +66,9 @@ function dayCard(app, name, date) {
         ${when(!past, () => html`<button type="button" class="btn btn-small btn-quiet ld-skip" data-action="lunch:skip" data-who="${name}" data-date="${date}">${ic('away', { size: 18 })}Skip this day</button>`)}`}
   </article>`;
 }
+
+/** After 2 PM, the lunch to think about is tomorrow's (gauntlet r1). */
+const packTonightAny = (app) => hourIn(new Date()) >= 14;
 
 const SWAP_KIND = { lighter: 'Lighter idea', protein: 'More protein', idea: 'Idea' };
 
@@ -131,11 +134,13 @@ export function render(app) {
   const food = lunches.reduce((t, l) => t + lunchFoodCost(app.db, app.state, l), 0);
   const isThisWeek = week.includes(today) || (start > today && diffDays(start, today) <= 2);
   const packing = packingLine(app);
+  // The next lunch to pack comes first: today's, or tomorrow's after 2 PM; days gone by go last.
+  const focus = days.find((d) => d >= (packTonightAny(app) ? addDays(today, 1) : today)) || null;
+  const ordered = focus ? [...days.filter((d) => d >= focus), ...days.filter((d) => d < focus)] : days;
   return html`<div class="page page-lunch">
     <header class="page-head"><h1 class="page-title">Lunch</h1></header>
     <div class="people" role="tablist" aria-label="Whose lunches">
       ${people.map((p) => html`<button type="button" role="tab" class="person ${p.name === name ? 'is-on' : ''} ${p.paused ? 'is-paused' : ''}" style="${personStyle(p.name)}" aria-selected="${tf(p.name === name)}" data-action="lunch:who" data-who="${p.name}">${avatar(p.name, { size: 'sm' })}<span>${p.name}${p.paused ? html`<small> · paused</small>` : ''}</span></button>`)}
-      <button type="button" class="person person-add" data-action="lunch:add">${ic('plus', { size: 18 })}<span>Add a person</span></button>
     </div>
     ${!person ? html`<div class="empty"><span class="empty-ic">${ic('lunch', { size: 28 })}</span><h3 class="empty-title">No one’s lunches are planned</h3>
         <p class="empty-body">Lunches are optional. Add whoever packs one and pick what they like; it repeats every school or work day, and its groceries join the shopping list.</p>
@@ -153,13 +158,12 @@ export function render(app) {
             <p class="muted small">${lunches.length} packed this week${food > 0 ? `, about ${money(food)} of food` : ''}. ${daysText(cfg)}.</p></div>
           <button type="button" class="btn btn-small btn-secondary" data-action="lunch:edit" data-who="${name}">${ic('edit', { size: 18 })}Edit ${name}’s lunches</button>
         </div>
-        ${swapIdeas(app, name)}
-        ${days.length ? html`<div class="lunch-days">${days.map((d) => dayCard(app, name, d))}</div>`
+        ${days.length ? html`<div class="lunch-days">${ordered.map((d) => dayCard(app, name, d, { packTonight: d === focus && focus !== today }))}</div>`
           : html`<p class="empty-body pad">No lunch days picked for ${name}. Edit ${name}’s lunches to choose days.</p>`}
       </section>`}
     ${when(person, () => html`<p class="muted small lunch-foot">${showNutrition(app) ? 'Calories count packed lunches and dinners at home; breakfast and snacks aren’t tracked. ' : ''}${packing
       ? html`Lunch groceries are on the <a href="#/list" data-action="lunch:tolist">shopping list</a>, marked Lunch, for ${packing} only.`
-      : html`No lunches are being packed, so no lunch groceries are on the <a href="#/list" data-action="lunch:tolist">shopping list</a>.`}</p>`)}
+      : html`No lunches are being packed, so no lunch groceries are on the <a href="#/list" data-action="lunch:tolist">shopping list</a>.`} <button type="button" class="link-btn" data-action="lunch:add">Add a person</button></p>`)}
   </div>`;
 }
 

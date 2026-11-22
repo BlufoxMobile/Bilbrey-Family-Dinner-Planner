@@ -916,3 +916,4 @@ brief they were built to. Where they differ from the sections above, they win.
 - `docs/spec/26-cinematic-motion.md` — v3.2.0: the week-by-week progress record, and the cinematic motion layer (`app/fx.js`)
 - `docs/spec/27-family-picks-2026-11-22.md` — v3.3.0–3.3.1: the 22 dinners and 7 sides the family said No to, 22 thirty-minute replacements without pork, simple canned sides, and fried shrimp night
 - `docs/spec/28-shopping-modes.md` — v3.4.0: the list's two ways to shop, In the store (big product pictures, Sam's aisles) and Order online (each item opens on the store's site)
+- `docs/spec/29-simpler.md` — v3.5.0: the gauntlet simplification: one job per screen, one home per card, labelled thumbs, "Not for us" asks first, one budget number, folds for the details

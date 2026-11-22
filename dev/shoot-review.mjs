@@ -21,13 +21,17 @@ const SCREENS = [['tonight', '#/tonight', '.page-tonight'], ['plan', '#/plan', '
   ['family', '#/family', '.page-family'], ['lunch', '#/lunch', '.page-lunch'], ['list', '#/list', '.page-list'], ['recipes', '#/recipes', '.page-recipes'],
   ['recipe', '#/recipe/cooker-pot-roast', '.page-recipe'], ['cook', `#/cook/${TODAY}`, '.cook'], ['checkin', '#/checkin', '.page-checkin'], ['products', '#/products', '.page-products']];
 
-const SHEETS = [['ahead', '#/plan', '.page-plan', '[data-action="ahead:open"]'], ['ideas', '#/plan', '.page-plan', '[data-action="ideas:open"]'], ['leftovers', '#/plan', '.page-plan', '[data-action="leftovers:more"]'],
-  ['move', '#/plan', '.page-plan', '[data-action="night:move"]'], ['prefs', '#/plan', '.page-plan', '[data-action="plan:prefs"]'], ['night', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]'],
+const SHEETS = [['ahead', '#/plan', '.page-plan', '[data-action="ahead:open"]'], ['more', '#/plan', '.page-plan', '[data-action="plan:more"]'],
+  ['ideas', '#/plan', '.page-plan', '[data-action="plan:more"]', 'dialog[open]', '[data-action="ideas:open"]'], ['leftovers', '#/tonight', '.page-tonight', '[data-action="leftovers:more"]'],
+  ['night', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]'], ['move', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]', 'dialog[open]', '[data-action="night:move"]'],
+  ['away', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]', 'dialog[open]', '[data-action="night:away"]'],
+  ['not-for-us', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]', 'dialog[open]', '.night-rate [data-action="vote:dinner"][data-value="-1"]'],
+  ['easy', '#/tonight', '.page-tonight', '[data-action="easy:open"]'], ['change-side', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]', 'dialog[open]', '[data-action="side:sub"]'],
   ['gone', '#/pantry', '.page-pantry', '[data-action="pan:gone"]'], ['item', '#/list', '.page-list', '[data-action="list:item"]'], ['lunch-edit', '#/lunch', '.page-lunch', '[data-action="lunch:edit"]'],
   ['lunch-add', '#/lunch', '.page-lunch', '[data-action="lunch:add"]'], ['trip', '#/list', '.page-list', '[data-action="trip:new"]'], ['receipt', '#/budget', '.page-budget', '[data-action="rcpt:scan"]'],
   // Not sheets, but opened the same way: the recipe's cost list, the dinner picker, and the card plan-ahead leaves on the Plan.
   ['cost', '#/recipe/cooker-beef-tips-gravy', '.page-recipe', '#recipe-cost > summary', '#recipe-cost[open]'], ['pick', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]', '.pick-list', '[data-action="night:pick"]'],
-  ['ahead-result', '#/plan', '.page-plan', '[data-action="ahead:open"]', '#ahead-cost', '[data-action="ahead:go"]']];
+  ['ahead-result', '#/plan', '.page-plan', '[data-action="ahead:open"]', '.ahead-card', '[data-action="ahead:go"]']];
 
 const staticSrv = await startStatic({ port: 0, quiet: true });
 const api = await startMockApi({ port: 0, quiet: true });
@@ -130,7 +134,7 @@ for (const theme of ['light', 'dark']) {
         await page.waitForSelector(sel);
         await page.waitForTimeout(500);
         await page.locator(opener).first().click({ timeout: 3000 });
-        if (next) { await page.waitForSelector('dialog[open]', { timeout: 3000 }); await page.waitForTimeout(400); await page.locator(next).first().click({ timeout: 3000 }); }
+        if (next) { await page.waitForSelector('dialog[open]', { timeout: 3000 }); await page.waitForTimeout(400); await page.locator(next).first().click({ timeout: 3000 }); await page.waitForTimeout(500); }
         if (name !== 'prefs') await page.waitForSelector(shown, { timeout: 6000 });
         if (shown !== 'dialog[open]') await page.locator(shown).first().scrollIntoViewIfNeeded();
         await page.waitForTimeout(700);

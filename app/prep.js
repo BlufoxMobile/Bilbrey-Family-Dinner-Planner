@@ -88,7 +88,8 @@ function thawTasks(db, state, today, end, pairs) {
       if (on >= today) {
         if (on <= end) out.push({ date: on, when: 'evening', kind: 'thaw', id, text: `Move ${amount} of ${what} from the freezer to the fridge for ${forWhat}.` });
       } else if (date >= today && date <= end) {
-        out.push({ date: today, when: 'morning', kind: 'thaw', id, text: `Still frozen? Thaw the ${what} for ${forWhat} sealed in a zip bag in cold water, about 30 minutes a pound, changing the water every 30 minutes.` });
+        const minutes = meta.unit === 'lb' ? Math.max(30, Math.round((qty * 30) / 15) * 15) : null;
+        out.push({ date: today, when: 'morning', kind: 'thaw', id, forDate: date, qty, unit: meta.unit, what, minutes, text: `Still frozen? Thaw the ${what} for ${forWhat} sealed in a zip bag in cold water, about 30 minutes a pound, changing the water every 30 minutes.` });
       }
     }
   }
@@ -99,9 +100,10 @@ function lunchTasks(db, state, today, end) {
   const out = [];
   const dates = datesBetween(today, end);
   const lunches = lunchesIn(db, state, dates);
-  // Once a week: portioning jobs for the lunches in the window, on the first day.
+  // Once a week: portioning jobs for the coming week's lunches, on the first day. Always the whole
+  // week, so Tonight's two-day list and the Plan's week say the same number of snack bags.
   const batch = new Map();
-  for (const l of lunches) {
+  for (const l of lunchesIn(db, state, datesBetween(today, addDays(today, 6)))) {
     for (const s of l.slots) {
       if (!s.item?.batch) continue;
       const k = s.item.id;
@@ -206,6 +208,14 @@ function pantryTasks(db, state, today) {
   // Leftovers and dinners never marked cooked are asked about once, on their own cards (Tonight,
   // Plan and Pantry: docs/spec/22 §22.1), not as prep jobs as well.
   return out;
+}
+
+/**
+ * Meat for tonight's dinner that's still in the freezer and should be thawing now (cold water),
+ * → [{ id, what, qty, unit, minutes }]. Tonight and cook mode say it above "Start cooking".
+ */
+export function thawNow(db, state, today) {
+  return thawTasks(db, state, today, today, []).filter((t) => t.forDate === today).map(({ id, what, qty, unit, minutes }) => ({ id, what, qty, unit, minutes }));
 }
 
 export function prepSchedule(db, state, { today, days = 7 }) {

@@ -94,7 +94,7 @@ function parseRoute() {
   return { view: VIEWS[view] ? view : 'tonight', params };
 }
 
-function syncPill() {
+function syncPill(where = 'rail') {
   const s = app.store;
   const pending = s.pending.length;
   const map = {
@@ -107,8 +107,11 @@ function syncPill() {
     error: { label: 'Sync paused', tone: 'warn', icon: 'cloudOff', long: s.statusDetail || 'Sync paused.' },
   };
   const m = map[s.status] || map.offline;
+  // Synced is the normal state, so the top bar says nothing then (docs/spec/29); anything else shows
+  // an icon and a word, never color alone. The side rail on wide screens always shows it.
+  if (where === 'top' && s.status === 'synced') return '';
   return html`<button type="button" class="sync sync-${m.tone}" data-action="sheet:sync" aria-label="${m.label}. ${m.long}" title="${m.long}">
-    <span class="sync-dot" aria-hidden="true"></span><span class="sync-label">${m.label}</span>
+    ${ic(m.icon, { size: 18 })}<span class="sync-label">${m.label}</span>
   </button>`;
 }
 
@@ -130,9 +133,9 @@ function shell() {
     <header class="topbar">
       <a class="wordmark wordmark-sm" href="#/tonight" aria-label="The Bilbrey Family Dinner Planner, tonight"><span class="wm-mark" aria-hidden="true"></span><span class="wm-text">Bilbrey Dinners</span></a>
       <div class="topbar-right">
-        ${syncPill()}
-        <a class="icon-btn ${active === 'budget' ? 'is-on' : ''}" href="#/budget" aria-label="Budget">${ic('budget')}</a>
-        <a class="icon-btn settings-btn ${active === 'family' ? 'is-on' : ''}" href="#/family" aria-label="Family and settings">${ic('family')}</a>
+        ${syncPill('top')}
+        <a class="top-link ${active === 'budget' ? 'is-on' : ''}" href="#/budget" ${active === 'budget' ? html`aria-current="page"` : ''}>${ic('budget', { size: 22 })}<span>Budget</span></a>
+        <a class="top-link settings-btn ${active === 'family' ? 'is-on' : ''}" href="#/family" ${active === 'family' ? html`aria-current="page"` : ''}>${ic('family', { size: 22 })}<span>Family</span></a>
       </div>
     </header>
     <main id="view" class="view view-${app.route.view}" tabindex="-1"></main>
@@ -213,7 +216,11 @@ export function render() {
   tv.decorate(main);
   document.title = v.title ? `${v.title(app)} — The Bilbrey Family Dinner Planner` : 'The Bilbrey Family Dinner Planner';
   if (changedView) {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    // Mid-shop, the list comes back where you left it (docs/spec/29), even after a reload.
+    if (lastView?.startsWith('list/')) { try { sessionStorage.setItem('bfdp.scroll.list', String(y)); } catch { /* private mode */ } }
+    let back = 0;
+    if (app.route.view === 'list') { try { back = Number(sessionStorage.getItem('bfdp.scroll.list')) || 0; } catch { back = 0; } }
+    window.scrollTo({ top: back, behavior: 'instant' });
     fx.enter(main); // a new screen arrives; a re-render never replays it
     if (lastView && lastView !== 'gate') {
       // Driving with a remote or the keyboard from the navigation: stay on it. Otherwise the new screen takes focus: its first
@@ -448,6 +455,7 @@ async function boot() {
   app.store.connect(); // every device, from the first open: there is no "who are you" step to wait for
   const resync = () => { if (document.visibilityState === 'visible' && app.store.device.key && !app.store.device.localOnly) app.store.sync(); };
   document.addEventListener('visibilitychange', resync);
+  window.addEventListener('pagehide', () => { if (app.route?.view === 'list') { try { sessionStorage.setItem('bfdp.scroll.list', String(window.scrollY)); } catch { /* private mode */ } } });
   window.addEventListener('online', () => (app.store.device.key ? app.store.sync() : app.store.connect()));
   window.addEventListener('focus', resync);
   setInterval(resync, 30000);

@@ -4,10 +4,10 @@ import { EQUIPMENT_LABELS } from '../config.js';
 import { EQUIPMENT_ICON } from '../icons.js';
 import { dinnerById, effectiveSides, sideInfo, isFavorite, dinnerSignal, sideSignal } from '../planner.js';
 import { lunchVote } from '../lunch.js';
-import { listJoin, midSentence, relativeDay, shortWeekday, weekdayName } from '../util.js';
+import { listJoin, midSentence, relativeDay, shortWeekday, weekdayName, hourIn, fmtQty } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
-import { prepSchedule } from '../prep.js';
+import { prepSchedule, thawNow } from '../prep.js';
 import { dinnerCost, costLine } from '../cost.js';
 import { plateFacts, timeLabel, fmtMinutes, equipmentLabel, LEFTOVER_REASON, leftoversOnHand, leftoversToAsk, leftoverNightChoices, servingsText, useByText } from '../cooking.js';
 
@@ -130,7 +130,7 @@ export function myThumb(app, kind, id, person = null) {
  * fine, and every change's message has Undo. kind: 'dinner' | 'side' | 'lunch' (a lunch item's
  * thumbs are for `person`, who packs it).
  */
-export function thumbs(app, { kind, id, label, person = null, compact = false }) {
+export function thumbs(app, { kind, id, label, person = null, compact = false, labels = false }) {
   const mine = myThumb(app, kind, id, person);
   const lunch = kind === 'lunch';
   const whose = lunch && person ? `${person}’s ` : '';
@@ -138,9 +138,13 @@ export function thumbs(app, { kind, id, label, person = null, compact = false })
   const state = mine === 1 ? (lunch ? 'liked' : 'loved') : mine === -1 ? (lunch ? 'out' : 'not for us') : (lunch ? 'no thumbs' : 'fine');
   const up = lunch ? `Thumbs up: keep ${label} in ${whose}lunches` : `Loved: ${label} is a family favorite`;
   const down = lunch ? `Thumbs down: drop ${label} from ${whose}lunches` : `Not for us: take ${label} off the menu`;
-  return html`<span class="thumbs ${compact ? 'thumbs-sm' : ''}" role="group" data-signal="${state}" aria-label="${lunch ? `${whose}thumbs for ${label}` : `What the family thinks of ${label}: ${state}`}">
-    <button type="button" class="thumb thumb-up ${mine === 1 ? 'is-on' : ''}" aria-pressed="${tf(mine === 1)}" data-action="vote:${kind}" ${raw(data)} data-value="1" aria-label="${up}" title="${lunch ? 'Thumbs up' : 'Loved'}">${ic('up_vote', { size: compact ? 18 : 20 })}</button>
-    <button type="button" class="thumb thumb-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="vote:${kind}" ${raw(data)} data-value="-1" aria-label="${down}" title="${lunch ? 'Thumbs down' : 'Not for us'}">${ic('down_vote', { size: compact ? 18 : 20 })}</button>
+  // Labelled thumbs say what they do (gauntlet r1: bare thumbs were a guess); the words are the
+  // family's two signals, "Loved" and "Not for us".
+  const upWord = lunch ? 'Keep' : 'Loved';
+  const downWord = lunch ? 'Drop' : 'Not for us';
+  return html`<span class="thumbs ${compact ? 'thumbs-sm' : ''} ${labels ? 'thumbs-labelled' : ''}" role="group" data-signal="${state}" aria-label="${lunch ? `${whose}thumbs for ${label}` : `What the family thinks of ${label}: ${state}`}">
+    <button type="button" class="thumb thumb-up ${mine === 1 ? 'is-on' : ''}" aria-pressed="${tf(mine === 1)}" data-action="vote:${kind}" ${raw(data)} data-value="1" aria-label="${up}" title="${lunch ? 'Thumbs up' : 'Loved'}">${ic('up_vote', { size: compact ? 18 : 20 })}${labels ? html`<span>${upWord}</span>` : ''}</button>
+    <button type="button" class="thumb thumb-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="vote:${kind}" ${raw(data)} data-value="-1" aria-label="${down}" title="${lunch ? 'Thumbs down' : 'Not for us'}">${ic('down_vote', { size: compact ? 18 : 20 })}${labels ? html`<span>${downWord}</span>` : ''}</button>
   </span>`;
 }
 
@@ -148,8 +152,8 @@ export function thumbs(app, { kind, id, label, person = null, compact = false })
 export function rateList(app, d, sides) {
   const tag = (what, kind, id) => { const s = signalFor(app, kind, id); return s === 'fine' ? what : `${what} · ${SIGNAL_LABELS[s]}`; };
   return html`<ul class="rate-list">
-    <li class="rate-row"><span class="rate-name"><small>${tag('Dinner', 'dinner', d.id)}</small><b>${d.title}</b></span>${thumbs(app, { kind: 'dinner', id: d.id, label: d.title })}</li>
-    ${sides.filter((s) => s.parsed.type === 'side' && app.db.sides[s.parsed.id]).map((s) => html`<li class="rate-row"><span class="rate-name"><small>${tag('Side', 'side', s.parsed.id)}</small><b>${s.info?.title}</b></span>${thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side' })}</li>`)}
+    <li class="rate-row"><span class="rate-name"><small>${tag('Dinner', 'dinner', d.id)}</small><b>${d.title}</b></span>${thumbs(app, { kind: 'dinner', id: d.id, label: d.title, labels: true })}</li>
+    ${sides.filter((s) => s.parsed.type === 'side' && app.db.sides[s.parsed.id]).map((s) => html`<li class="rate-row"><span class="rate-name"><small>${tag('Side', 'side', s.parsed.id)}</small><b>${s.info?.title}</b></span>${thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', labels: true })}</li>`)}
   </ul>`;
 }
 
@@ -340,15 +344,35 @@ const prepAction = (a) => (a.name === 'nav'
 const prepActionButton = (a) => html`<button type="button" class="btn btn-small btn-secondary prep-act" data-action="${a.name}" ${raw(Object.entries(a.data || {}).map(([k, v]) => `data-${k}="${String(v).replace(/"/g, '&quot;')}"`).join(' '))}>${a.label}</button>`;
 
 /** Thaw, cook-once and lunch-packing jobs for the next few days, from the plan and the pantry. */
-export function prepCard(app, { days = 7, title = 'Prep schedule', empty = true, emptyText = 'Nothing to thaw or pack in the next few days.' } = {}) {
+export function prepCard(app, { days = 7, title = 'Thaw & prep', empty = true, emptyText = 'Nothing to thaw or pack in the next few days.', skip = [], collapsed = false, skipTonightThaw = false } = {}) {
   const today = app.today();
-  const sched = prepSchedule(app.db, app.state, { today, days });
+  // skipTonightThaw: Tonight already says it right above "Start cooking".
+  const sched = prepSchedule(app.db, app.state, { today, days })
+    .map((d) => ({ ...d, tasks: d.tasks.filter((t) => !skip.includes(t.kind) && !(skipTonightThaw && t.kind === 'thaw' && t.forDate === today && t.date === today)) })).filter((d) => d.tasks.length);
   if (!sched.length && !empty) return '';
+  // A morning job still undone in the afternoon is a "now" job, not a "morning" one.
+  const late = hourIn(new Date()) >= 12;
+  const whenLabel = (d, t) => (d.date === today && t.when === 'morning' && late ? 'Now' : PREP_WHEN[t.when] || '');
+  const body = sched.length ? html`<ol class="prep-days">${sched.map((d) => html`<li class="prep-day">
+      <h3 class="prep-date">${d.date === today ? 'Today' : relativeDay(d.date, today)}</h3>
+      <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${whenLabel(d, t)}</small>${t.text}${t.action ? prepAction(t.action) : ''}</span></li>`)}</ul>
+    </li>`)}</ol>` : html`<p class="muted small">${emptyText}</p>`;
+  if (collapsed) {
+    const n = sched.reduce((k, d) => k + d.tasks.length, 0);
+    return html`<details class="prep-card prep-fold"><summary class="section-title">${ic('clock', { size: 22 })}<span>${title}</span><small>${n ? `${n} ${n === 1 ? 'job' : 'jobs'}` : 'nothing yet'}</small></summary>${body}</details>`;
+  }
   return html`<section class="prep-card" aria-labelledby="prep-h-${days}">
     <h2 id="prep-h-${days}" class="section-title">${ic('clock', { size: 22 })}${title}</h2>
-    ${sched.length ? html`<ol class="prep-days">${sched.map((d) => html`<li class="prep-day">
-      <h3 class="prep-date">${d.date === today ? 'Today' : relativeDay(d.date, today)}</h3>
-      <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${PREP_WHEN[t.when] || ''}</small>${t.text}${t.action ? prepAction(t.action) : ''}</span></li>`)}</ul>
-    </li>`)}</ol>` : html`<p class="muted small">${emptyText}</p>`}
+    ${body}
   </section>`;
+}
+
+/** "Still frozen? Thaw the 2 lb lean ground beef in cold water now, about 1 hr." (Tonight and cook mode's Get ready.) */
+export function thawLine(app, today) {
+  const t = thawNow(app.db, app.state, today);
+  if (!t.length) return '';
+  const time = (m) => (m >= 60 ? `${Math.round((m / 60) * 2) / 2} ${m >= 90 ? 'hrs' : 'hr'}` : `${m} min`);
+  const what = listJoin(t.map((x) => `${x.unit === 'lb' ? `${fmtQty(Math.round(x.qty * 4) / 4)} lb ` : ''}${x.what}`));
+  const longest = Math.max(0, ...t.map((x) => x.minutes || 0));
+  return html`<p class="hero-thaw" role="note">${ic('snow', { size: 20 })}<span><b>Still frozen?</b> Thaw the ${what} in cold water now${longest ? `, about ${time(longest)}` : ''}.</span></p>`;
 }

@@ -174,7 +174,8 @@ export function buildList(db, state, { dates, listKey = '', store: tripStore = n
   const freeExtras = [];
   for (const [key, x] of Object.entries(extras)) {
     if (!x) continue;
-    const mult = x.every === 'week' ? weeks : 1;
+    if (x.once && x.once !== listKey) continue; // a one-off ("grab paper towels") belongs to one list
+    const mult = !x.once && x.every === 'week' ? weeks : 1;
     const qty = (Number(x.qty) > 0 ? Number(x.qty) : 1) * mult;
     if (x.item && (db.ingredients[x.item] || state?.custom?.[x.item])) {
       extraPacks[x.item] = (extraPacks[x.item] || 0) + qty;
@@ -523,7 +524,7 @@ export function extrasPerMonth(db, state) {
   let t = 0;
   let unpriced = 0;
   for (const x of Object.values(state?.extras || {})) {
-    if (!x) continue;
+    if (!x || x.once) continue; // one-offs aren't part of a typical month
     const qty = Number(x.qty) > 0 ? Number(x.qty) : 1;
     let each = null;
     if (x.item && db.ingredients[x.item]) {

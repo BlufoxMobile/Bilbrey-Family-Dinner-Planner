@@ -32,9 +32,15 @@ function intro() {
   return html`<ul class="gate-points">${POINTS.map(([icon, text]) => html`<li>${ic(icon, { size: 20 })}<span>${text}</span></li>`)}</ul>`;
 }
 
-const altButtons = () => html`<div class="gate-alt">
+// "This device only" is for the rare phone that should never share; it waits under More options
+// (gauntlet r1), next to Larger text for whoever finds the type small.
+const altButtons = (app) => html`<div class="gate-alt">
   <button type="button" class="btn btn-quiet btn-block" id="gate-later" data-action="gate:later">Look around first</button>
-  <button type="button" class="btn btn-quiet btn-block" id="gate-local" data-action="gate:local">Use on this device only</button>
+  <details class="gate-more">
+    <summary>More options</summary>
+    <button type="button" class="btn btn-quiet btn-block" id="gate-text" data-action="gate:text">${app.store.device.textSize === 'large' ? 'Regular text' : 'Larger text'}</button>
+    <button type="button" class="btn btn-quiet btn-block" id="gate-local" data-action="gate:local">Use on this device only</button>
+  </details>
 </div>`;
 
 export function render(app) {
@@ -61,7 +67,7 @@ export function render(app) {
       <p class="gate-text">This device is offline, or the family server isn’t answering. Check the Wi-Fi and try again.</p>`, html`
       <p class="gate-text">You can also look around now: the recipes are all here, and anything you change is kept on this device until it connects.</p>
       <button type="button" class="btn btn-primary btn-block" id="gate-retry" data-action="gate:retry">${ic('refresh', { size: 20 })}Try again</button>
-      ${altButtons()}`);
+      ${altButtons(app)}`);
   }
   const creating = step === 'create';
   return card(creating ? 'Create the family passcode' : 'Enter the family passcode', intro(), html`
@@ -70,7 +76,7 @@ export function render(app) {
       : 'Type the passcode the family set up, and this device joins the plan. Capital letters don’t matter.'}</p>
     ${passcodeForm(app, creating ? 'create' : 'enter', { compact: true })}
     ${when(isTV() && !app.ui.passErr, () => html`<p class="muted small gate-remote">With a remote: move to the box and press OK or Select for the on-screen keyboard. “Show the passcode” lets you check it before you choose ${creating ? 'Create' : 'Join'}.</p>`)}
-    ${altButtons()}
+    ${altButtons(app)}
     ${when(creating, () => html`<p class="muted small">It never leaves the device in plain text. Capital letters don’t matter.</p>`)}`);
 }
 
@@ -84,6 +90,7 @@ export function mount(app, root) {
 
 export const actions = {
   'gate:later': (app) => { app.store.setDevice({ dismissedGate: true }); },
+  'gate:text': (app) => { app.store.setDevice({ textSize: app.store.device.textSize === 'large' ? 'regular' : 'large' }); },
   'gate:local': (app) => { app.store.useLocalOnly(); app.store.setDevice({ dismissedGate: true }); },
   'gate:retry': (app) => {
     app.ui.gateBusy = true;

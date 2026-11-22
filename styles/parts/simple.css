@@ -1,0 +1,159 @@
+/* The simplicity pass (docs/spec/29): every screen opens on its one job. Overrides the older
+   layouts where a screen was rearranged; tokens only. */
+
+/* ---- Tonight: the dinner and "Start cooking" on the first screen of a phone. */
+.page-tonight .hero-photo .photo-hero { aspect-ratio: 4 / 3; }
+@media (min-width: 700px) { .page-tonight .hero-photo .photo-hero { aspect-ratio: 3 / 2; } }
+.hero-thaw { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 0; padding: 10px 12px; border-radius: var(--r-ctl); background: var(--butter-tint); color: var(--ink); font-size: var(--t-sm); line-height: 1.4; }
+.hero-thaw .ic { flex: none; color: var(--ink-2); margin-top: 1px; }
+
+/* The one-line "did you cook it?" strip under the hero. */
+.forgot-card { display: grid; gap: 10px; margin: var(--s4) 0; padding: 14px 16px; border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1), inset 0 3px 0 var(--butter); }
+.forgot-q { margin: 0; line-height: 1.4; }
+.forgot-q b { font-weight: 700; }
+
+/* ---- A folded card: the summary is the heading, with a count on the right. */
+.prep-fold > summary { display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; min-height: 44px; margin: 0; }
+.prep-fold > summary::-webkit-details-marker { display: none; }
+.prep-fold > summary small { margin-left: auto; font-family: var(--font-text); font-size: var(--t-sm); font-weight: 600; color: var(--ink-3); letter-spacing: 0; }
+.prep-fold > summary::after { content: ''; width: 10px; height: 10px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); margin: -4px 4px 0 0; transition: transform var(--dur-fast) var(--ease); }
+.prep-fold[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
+.prep-fold[open] > summary { margin-bottom: var(--s3); }
+
+/* ---- List: the checklist first. */
+.list-mode { gap: 6px; padding: 12px 14px; margin-bottom: var(--s4); }
+.list-mode-how { line-height: 1.4; }
+/* The store's name stays at the top while you walk it, with how many are left. */
+.store-head { position: sticky; top: calc(var(--header-h) + var(--safe-t)); z-index: 5; background: var(--paper); padding-top: 8px; }
+.store-total b { font-family: var(--font-display); font-weight: var(--display-weight); }
+.clip-link { margin: 0 0 var(--s2); }
+/* A row: tick · picture · product (2 lines at most), then price and count · ›. Tapping the row ticks it. */
+.item.has-thumb, .item.is-store.has-thumb { grid-template-columns: 44px 60px minmax(0, 1fr) 32px; column-gap: 10px; min-height: 84px; }
+.item .item-thumb, .item.is-store .item-thumb { width: 60px; height: 60px; border-radius: 14px; cursor: default; }
+.item-main { cursor: pointer; padding: 12px 0; gap: 4px; }
+.item .item-name { font-size: var(--t-md); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.item .item-qty { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: var(--t-sm); color: var(--ink-2); }
+.item .item-qty .item-price { font-size: var(--t-sm); font-weight: 700; color: var(--ink); padding: 0; }
+.item.is-checked .item-qty .item-price { color: var(--ink-3); }
+.item-more { display: grid; place-items: center; width: 32px; min-height: 48px; padding: 0; border: 0; background: transparent; color: var(--ink-3); border-radius: var(--r-ctl); }
+.item-more:hover { color: var(--ink); background: var(--paper-2); }
+.tag-guess { background: var(--paper-2); color: var(--ink-2); }
+/* Order online: the open button sits under the product. */
+.item.is-online.has-thumb { grid-template-columns: 44px 56px minmax(0, 1fr) 32px; }
+.item.is-online .item-thumb { width: 56px; height: 56px; }
+.item.is-online .order-it { grid-column: 3 / 4; grid-row: 2; justify-self: start; margin: 0 0 12px; }
+.item.is-online .item-more { grid-row: 1; grid-column: 4; }
+@media (min-width: 640px) {
+  .item.is-online.has-thumb { grid-template-columns: 44px 56px minmax(0, 1fr) auto 32px; }
+  .item.is-online .order-it { grid-column: 4; grid-row: 1; margin: 0; align-self: center; }
+  .item.is-online .item-more { grid-column: 5; }
+}
+/* "Add something": one field on this list only. */
+.quick-add { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; margin: var(--s4) 0 var(--s5); }
+.quick-add .quick-store { width: auto; }
+/* Money, coupons and receipts, folded under the list. */
+.list-more { margin: var(--s5) 0; padding: 4px 16px; border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1); }
+.list-more > summary { display: flex; align-items: center; gap: 10px; min-height: 52px; cursor: pointer; list-style: none; }
+.list-more > summary::-webkit-details-marker { display: none; }
+.list-more > summary .section-title { margin: 0; display: flex; align-items: center; gap: 8px; }
+.list-more > summary small { margin-left: auto; font-weight: 700; font-size: var(--t-md); color: var(--ink); }
+.list-more[open] { padding-bottom: 16px; }
+.list-more .totals { box-shadow: none; padding: 0; background: transparent; }
+details.leftovers > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+/* Done shopping rides above the tab bar once anything is in the cart. */
+.done-shopping.is-ready { position: sticky; bottom: calc(var(--tabbar-h) + var(--safe-b) + 10px); z-index: 6; }
+.done-shopping.is-ready .btn { box-shadow: var(--sh-2); }
+@media (min-width: 900px) { .done-shopping.is-ready { bottom: 16px; } }
+
+/* ---- Pantry */
+.pan-add { display: grid; gap: var(--s3); margin-bottom: var(--s5); }
+.pan-scan { margin-top: 2px; }
+.pan-add-how { margin: 0; }
+.cover-line { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 var(--s5); font-size: var(--t-sm); color: var(--ink-2); }
+.cover-line .ic { flex: none; color: var(--sage); margin-top: 1px; }
+.cover-line b { color: var(--ink); }
+.have-it { display: inline-flex; align-items: center; gap: 8px; }
+.have-label { font-size: var(--t-xs); font-weight: 700; color: var(--ink-2); }
+
+@media print {
+  .quick-add, .item-more, .list-more, .done-shopping { display: none !important; }
+  .item.has-thumb, .item.is-store.has-thumb, .item.is-online.has-thumb { grid-template-columns: 18px 1fr; }
+}
+
+/* ---------------------------------------------------------------- header: labelled links, quiet sync (docs/spec/29) */
+.top-link { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 52px; min-height: 48px; padding: 2px 6px; border-radius: var(--r-ctl); color: var(--ink-2); text-decoration: none; font-size: var(--t-xs); font-weight: 600; line-height: 1.1; }
+.top-link.is-on { color: var(--pine); background: var(--sage-tint); }
+.top-link:active { transform: scale(.94); }
+@media (hover: hover) { .top-link:hover { color: var(--pine); background: var(--sage-tint); } }
+.sync .ic { flex: none; }
+.sync-warn { border-color: color-mix(in srgb, var(--butter) 60%, var(--line)); color: var(--ink); }
+.sync-busy .ic { animation: pulse calc(var(--dur-slow) * 2.6) ease-in-out infinite; }
+@media (max-width: 380px) { .topbar .sync-label { display: inline; } .topbar .sync { padding: 0 10px; } .top-link { min-width: 46px; padding: 2px 3px; } }
+
+/* ---------------------------------------------------------------- Family: Advanced folds the plumbing away */
+.set-advanced { margin-top: var(--s5); border-top: 1px solid var(--line); padding-top: var(--s3); }
+.set-advanced > summary { list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 2px; min-height: 48px; padding: 6px 0; }
+.set-advanced > summary::-webkit-details-marker { display: none; }
+.set-advanced > summary .section-title { margin: 0; }
+.set-advanced > summary small { color: var(--ink-3); font-size: var(--t-xs); }
+
+/* ---------------------------------------------------------------- labelled thumbs: they say what they do */
+.thumbs-labelled { gap: 8px; flex-wrap: wrap; }
+.thumbs-labelled .thumb { display: inline-flex; align-items: center; gap: 6px; width: auto; height: 44px; padding: 0 14px 0 11px; border-radius: var(--r-pill); font-size: var(--t-sm); font-weight: 700; white-space: nowrap; }
+.rate-row { flex-wrap: wrap; row-gap: 8px; }
+.night-rate { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: var(--s3) 0 var(--s2); padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.night-rate-q { font-size: var(--t-sm); font-weight: 600; color: var(--ink-2); }
+
+/* ---------------------------------------------------------------- not eating at home: one tap first */
+.away-quick { display: grid; gap: var(--s2); margin-bottom: var(--s3); }
+.away-hint { margin: -4px 0 0; text-align: center; }
+.away-move { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--s2); padding-top: var(--s2); border-top: 1px solid var(--line); }
+.away-move .field { margin: 0; }
+.away-move .btn { min-height: 48px; }
+.away-more { border-top: 1px solid var(--line); padding-top: var(--s2); }
+.away-more > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--pine); }
+.away-more[open] > summary { margin-bottom: var(--s2); }
+.away-more > * + * { margin-top: var(--s3); }
+.gate-more > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--ink-2); }
+.gate-more[open] > summary { margin-bottom: var(--s1); }
+
+/* ---------------------------------------------------------------- Recipes: three chips, then More filters */
+.filters-more { margin: calc(-1 * var(--s1)) 0 var(--s3); }
+.filters-more > summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; color: var(--pine); font-size: var(--t-sm); }
+.filters-more[open] > summary { margin-bottom: var(--s1); }
+
+/* ---------------------------------------------------------------- Budget: one number, details folded */
+.budget-tip { display: block; margin-top: 4px; font-weight: 500; color: var(--ink-2); }
+.budget-more, .log-by-hand { margin: var(--s4) 0; padding: 4px 16px; border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1); }
+.budget-more > summary, .log-by-hand > summary { display: flex; align-items: center; gap: 10px; min-height: 52px; cursor: pointer; list-style: none; font-weight: 700; font-size: var(--t-md); }
+.budget-more > summary::-webkit-details-marker, .log-by-hand > summary::-webkit-details-marker { display: none; }
+.budget-more > summary small { margin-left: auto; font-weight: 600; font-size: var(--t-sm); color: var(--ink-3); }
+.budget-more > summary::after, .log-by-hand > summary::after { content: ''; flex: none; width: 9px; height: 9px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); margin: -4px 2px 0 auto; transition: transform var(--dur-fast) var(--ease); }
+.budget-more > summary small + *, .budget-more > summary small ~ ::after { margin-left: 0; }
+.budget-more[open] > summary::after, .log-by-hand[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
+.budget-more[open], .log-by-hand[open] { padding-bottom: 16px; }
+.budget-more > section, .budget-more > .typical { box-shadow: none; background: transparent; padding-left: 0; padding-right: 0; }
+.log-by-hand { box-shadow: none; background: transparent; padding: 0; }
+.log-by-hand > summary { font-size: var(--t-sm); color: var(--pine); }
+
+/* ---------------------------------------------------------------- the night sheet: one row per side, its button beside it */
+.side-row { grid-template-columns: auto minmax(0, 1fr) auto; }
+.side-acts { grid-column: auto; margin-top: 0; }
+
+/* ---------------------------------------------------------------- every small fold says it opens */
+.item-fix > summary, .ahead-date > summary, .away-more > summary, .filters-more > summary, .gate-more > summary { list-style: none; gap: 8px; }
+.item-fix > summary::-webkit-details-marker, .ahead-date > summary::-webkit-details-marker, .away-more > summary::-webkit-details-marker, .filters-more > summary::-webkit-details-marker, .gate-more > summary::-webkit-details-marker { display: none; }
+.item-fix > summary::after, .ahead-date > summary::after, .away-more > summary::after, .filters-more > summary::after, .gate-more > summary::after { content: ''; flex: none; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin: -3px 2px 0 6px; opacity: .7; transition: transform var(--dur-fast) var(--ease); }
+.item-fix[open] > summary::after, .ahead-date[open] > summary::after, .away-more[open] > summary::after, .filters-more[open] > summary::after, .gate-more[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
+.away-more > summary { justify-content: space-between; }
+.item-fix > summary, .ahead-date > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--pine); }
+.item-fix[open] > summary, .ahead-date[open] > summary { margin-bottom: var(--s2); }
+/* In the More sheet the plan settings sit flat, like the rest of the sheet. */
+dialog .plan-prefs { border: 0; background: transparent; }
+dialog .plan-prefs > .sheet-h { margin-top: var(--s4); }
+/* The pantry's unit word sits inside the stepper's border with room to breathe. */
+.qty-edit .qty-unit { margin: 0 12px 0 2px; white-space: nowrap; }
+/* Recipes' three tabs share the width evenly, so "Not for us" is never cut off. */
+.page-recipes .tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; overflow: visible; }
+.page-recipes .tab-opt { justify-content: center; padding: 0 4px; gap: 5px; }
+@media (max-width: 400px) { .page-recipes .tab-opt { flex-direction: column; gap: 0; min-height: 56px; line-height: 1.15; } }

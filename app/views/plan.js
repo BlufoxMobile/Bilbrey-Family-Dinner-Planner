@@ -1,5 +1,6 @@
-// PLAN: 1–3 weeks or a month, plan-from store, day cards with sides,
-// two-tap swap, drag-and-drop on desktop, plan / re-plan, and plan ahead, pantry first (SPEC §16).
+// PLAN: 1–3 weeks or a month of day cards, opening straight on the week (docs/spec/29). One
+// primary button (Plan ahead) and a More sheet for the rest: ideas, two-tap swap, filling open
+// nights, re-planning, the plan-from store and "Planning for". Drag-and-drop on desktop.
 // Smarter planning (SPEC §21): plan ahead re-plans the planner's own picks with a before/after,
 // lean by default and busy nights, the freezer watch, leftovers and pantry catch-up.
 import { html, ic, when, segmented, toast, openSheet, closeSheet, renderSheet, switchToggle, tf } from '../ui.js';
@@ -68,17 +69,12 @@ function dayCard(app, date, { compact = false } = {}) {
       ${when(d && !away && !compact && showNutrition(app), () => { const n = plateNutrition(app.db, app.state, d.id, e); return n ? html`<span class="day-kcal">≈ ${fmtKcal(n.kcal)} cal, ${Math.round(n.protein)} g protein</span>` : ''; })}
       ${when(d && !away && !compact, () => costNote(costOf(app, d.id, e), { short: true, tag: 'span', cls: 'day-cost' }))}
       ${when(away && e.away?.note, () => html`<span class="day-note">${e.away.note}</span>`)}
-      ${when(!d && !away && !past, () => html`<span class="day-note">${type === 'burger' ? 'Burger night' : type === 'pizza' ? 'Pizza night' : 'Open'}</span>`)}
+      ${when(!d && !away && !past, () => html`<span class="day-note">${type === 'burger' ? 'Burger night' : type === 'pizza' ? 'Pizza night' : 'Tap to plan'}</span>`)}
       ${when(cooked, () => html`<span class="day-status">${ic('checkCircle', { size: 16 })}Cooked</span>`)}
-      ${when(d && !away && !cooked && !past && isRetired(app.state, d.id), () => html`<span class="day-status day-status-warn">${ic('down_vote', { size: 16 })}Thumbs down: tap to swap</span>`)}
+      ${when(d && !away && !cooked && !past && isRetired(app.state, d.id), () => html`<span class="day-status day-status-warn">${ic('down_vote', { size: 16 })}Not for us: tap to change</span>`)}
       ${when(e?.manual && !away && !cooked && d && !isRetired(app.state, d.id), () => html`<span class="day-status day-status-quiet">Set by ${byLabel(e.by) || 'the family'}</span>`)}
     </button>
-    ${when(sides.length && !compact, () => html`<ul class="day-sides">
-      ${sides.map((s) => html`<li><span class="day-side">${s.info?.title}${when(s.remembered, () => html`<span class="sr-only"> (remembered)</span>`)}</span>
-        ${when(!cooked, () => html`<button type="button" class="sub-btn" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="${s.slot}" aria-label="Substitute ${s.info?.title}">Substitute</button>`)}</li>`)}
-      ${when(!cooked && d.sideSlots === 1 && sides.length < 2, () => html`<li><button type="button" class="sub-btn sub-add" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="1">${ic('plus', { size: 16 })}Add a side</button></li>`)}
-    </ul>`)}
-    ${when(d && !away && !compact, () => html`<div class="day-foot">${thumbs(app, { kind: 'dinner', id: d.id, label: d.title, compact: true })}</div>`)}
+    ${when(sides.length && !compact, () => html`<p class="day-sides">with ${listJoin(sides.map((s) => midSentence(s.info?.title || '')))}</p>`)}
   </article>`;
 }
 
@@ -128,37 +124,22 @@ export function render(app) {
       ${segmented('period', PERIODS.map((p) => ({ id: p.id, label: p.label })), s.period, { label: 'How long to plan', action: 'plan:period' })}
     </header>
     ${periodNav(app, range)}
-    <div class="plan-opts">
-      <div class="opt"><span class="opt-label" id="pf-l">Plan from</span>${segmented('planStore', STORE_OPTS, s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}</div>
-      ${planPrefs(app, range)}
-    </div>
-    ${when(s.planStore !== 'both', () => {
-      const cov = storeCoverage(app.db, app.state, s.planStore);
-      const name = s.planStore === 'jewel' ? 'Jewel-Osco' : "Sam's Club";
-      return html`<p class="hint">${ic('store', { size: 18 })}<span>${cov.ok} of ${cov.total} dinners can be made from ${name} alone (or with what’s in the pantry), so only those get planned.${cov.missing.length ? ` The others need something ${name} doesn’t carry, like ${listJoin(cov.missing.map((m) => m.toLowerCase()))}. Mark those stocked in the pantry and more dinners qualify.` : ''}${auto ? ' Re-plan to apply this to nights already planned.' : ''}</span></p>`;
-    })}
     <div class="plan-actions">
-      <button type="button" class="btn btn-primary" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}Plan ahead</button>
-      <button type="button" class="btn btn-secondary" data-action="ideas:open">${ic('camera', { size: 20 })}What can I make?</button>
-      ${open ? html`<button type="button" class="btn btn-secondary" data-action="plan:fill">${ic('plus', { size: 20 })}Plan ${open} open ${open === 1 ? 'night' : 'nights'}</button>` : ''}
-      ${auto ? html`<button type="button" class="btn btn-secondary" data-action="plan:replan">${ic('refresh', { size: 20 })}Re-plan this period</button>` : ''}
-      <button type="button" class="btn ${app.ui.swapMode ? 'btn-primary' : 'btn-secondary'}" data-action="plan:swapmode" aria-pressed="${app.ui.swapMode ? 'true' : 'false'}">${ic('swap', { size: 20 })}${app.ui.swapMode ? 'Done swapping' : 'Swap two nights'}</button>
+      <button type="button" class="btn btn-primary" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}${open ? `Plan ahead (${open} open)` : 'Plan ahead'}</button>
+      ${app.ui.swapMode
+        ? html`<button type="button" class="btn btn-primary" data-action="plan:swapmode" aria-pressed="true">${ic('swap', { size: 20 })}Done swapping</button>`
+        : html`<button type="button" class="btn btn-secondary" data-action="plan:more" aria-haspopup="dialog">${ic('more', { size: 20 })}More</button>`}
     </div>
     ${when(app.ui.swapMode, () => html`<p class="swap-banner" role="status">${app.ui.swapPick ? html`Now tap the night to trade with <b>${shortDate(app.ui.swapPick)}</b>.` : 'Tap the first night, then the night to trade with.'}</p>`)}
     ${aheadCard(app)}
-    ${tripAdviceCard(app)}
-    ${catchUpCard(app)}
-    ${leftoversCard(app)}
-    ${freezerCard(app)}
+    ${grid(app, range)}
     <p class="plan-summary">${planned} ${planned === 1 ? 'dinner' : 'dinners'} planned${away ? `, ${away} ${away === 1 ? 'night' : 'nights'} away` : ''}${(() => {
       // What the food on the plates costs (docs/spec/24 §24.7), which is not what the trip costs: the list buys whole packs, lunches and extras.
       const pc = planCost(app.db, app.state, range.dates, { today });
-      return pc.dinners && pc.total > 0 ? html`: ${pc.estimated ? 'about ' : ''}<b>${money(pc.perDinner)}</b> a dinner, <b>${money(pc.perServing)}</b> a plate` : '';
-    })()}. About <a href="#/list">${money(list.total)} in groceries</a> on the list.</p>
-    ${veggieCard(app, range)}
-    ${grid(app, range)}
-    ${when(auto, () => html`<p class="muted small center">Re-planning keeps cooked and away nights and anything the family set by hand.</p>`)}
-    ${prepCard(app, { days: 7 })}
+      return pc.dinners && pc.total > 0 ? html`: ${pc.estimated ? 'about ' : ''}<b>${money(pc.perServing)}</b> a plate` : '';
+    })()}. <a href="#/list">${money(list.total)} on the list</a>.</p>
+    ${tripAdviceCard(app)}
+    ${prepCard(app, { days: 7, title: 'Thaw & prep for the week', collapsed: true, skip: ['use'] })}
   </div>`;
 }
 
@@ -185,7 +166,38 @@ function seedFor(app, range) {
   return range.start;
 }
 
+/** Everything on the Plan that isn't the week itself (docs/spec/29): one sheet, one tap away. */
+function openMore(app) {
+  openSheet({
+    id: 'plan-more',
+    live: true,
+    title: 'More for the plan',
+    render: () => {
+      const s = app.settings;
+      const range = currentRange(app);
+      const today = app.today();
+      const future = range.dates.filter((d) => d >= today);
+      const plan = app.state.plan || {};
+      const open = future.filter((d) => isFillable(plan[d], 'fill')).length;
+      const auto = future.filter((d) => plan[d]?.status === 'planned' && plan[d]?.dinner && !plan[d]?.manual).length;
+      const cov = s.planStore !== 'both' ? storeCoverage(app.db, app.state, s.planStore) : null;
+      return html`
+        <div class="action-list">
+          <button type="button" class="action-row" data-action="ideas:open">${ic('camera')}<span><b>What can I make?</b><small>Snap the fridge and get dinner ideas.</small></span></button>
+          ${when(open, () => html`<button type="button" class="action-row" data-action="plan:fill">${ic('plus')}<span><b>Fill the ${open} empty ${open === 1 ? 'night' : 'nights'}</b><small>Quick picks, no questions.</small></span></button>`)}
+          <button type="button" class="action-row" data-action="plan:swapmode">${ic('swap')}<span><b>Swap two nights</b><small>Tap one night, then the other.</small></span></button>
+          ${when(auto, () => html`<button type="button" class="action-row" data-action="plan:replan">${ic('refresh')}<span><b>Pick new dinners for this week</b><small>Keeps cooked nights and anything set by hand. Undo brings the old ones back.</small></span></button>`)}
+        </div>
+        <h3 class="sheet-h" id="pf-l">Plan from</h3>
+        ${segmented('planStore', STORE_OPTS, s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}
+        ${when(cov, () => html`<p class="muted small">${cov.ok} of ${cov.total} dinners can be made from ${s.planStore === 'jewel' ? 'Jewel-Osco' : "Sam's Club"} alone.</p>`)}
+        ${planPrefs(app, range, { open: true })}`;
+    },
+  });
+}
+
 export const actions = {
+  'plan:more': (app) => openMore(app),
   // Keep the family's place if they've paged to another period; otherwise the new length
   // starts where it should (next week on a Sunday night), not pinned to today.
   'plan:period': (app, el) => { app.commit(settingOps(app.state, 'period', el.dataset.value), { quiet: true }); app.ui.swapPick = null; },
@@ -202,16 +214,18 @@ export const actions = {
   },
   'plan:today': (app) => { app.ui.anchor = app.today(); app.render(); },
   'plan:fill': (app) => {
+    closeSheet();
     const r = currentRange(app);
     app.commit(generateOps(app.db, app.state, { dates: r.dates, mode: 'fill', who: app.who(), today: app.today(), seedKey: seedFor(app, r) }));
   },
   'plan:replan': (app) => {
+    closeSheet();
     const r = currentRange(app);
     // A different seed each time so "Re-plan" actually offers something new; stored entries keep phones in sync.
     const n = (app.ui.replans = (app.ui.replans || 0) + 1);
     app.commit(generateOps(app.db, app.state, { dates: r.dates, mode: 'replan', who: app.who(), today: app.today(), seedKey: `${seedFor(app, r)}#${n}` }));
   },
-  'plan:swapmode': (app) => { app.ui.swapMode = !app.ui.swapMode; app.ui.swapPick = null; app.render(); },
+  'plan:swapmode': (app) => { closeSheet(); app.ui.swapMode = !app.ui.swapMode; app.ui.swapPick = null; app.render(); },
   'plan:tap': (app, el) => {
     const date = el.dataset.date;
     if (!app.ui.swapMode) { openNight(app, date); return; }
@@ -320,7 +334,7 @@ function openPlanAhead(app) {
   openSheet({
     id: 'plan-ahead',
     title: 'Plan ahead',
-    subtitle: 'Dinners and packed lunches from tonight through the night you pick.',
+    subtitle: 'Dinners and lunches from tonight on.',
     render: () => {
       const dates = datesBetween(today, st.end);
       const open = dates.filter((d) => isFillable(app.state.plan?.[d], 'fill')).length;
@@ -335,11 +349,12 @@ function openPlanAhead(app) {
             return html`<button type="button" class="chip chip-lg ${on ? 'is-on' : ''}" aria-pressed="${tf(on)}" data-action="ahead:quick" data-end="${e}">${q.label}<small>to ${weekdayShort(e)} ${shortDate(e)}</small></button>`;
           })}
         </div>
-        <label class="field ahead-date"><span class="field-label">Or pick the last night</span>
-          <input class="input" type="date" id="ahead-end" min="${today}" max="${aheadLimit(today)}" value="${st.end}" data-change="ahead:end"></label>
-        <p class="muted small ahead-count">${count(dates.length, 'night')}: ${listJoin([open ? `${open} open` : '', own ? `${own} the planner picked` : '', kept ? `${kept} staying as ${kept === 1 ? 'it is' : 'they are'}` : ''])}. Tonight’s dinner and nights set by hand, cooked or away always stay as they are.</p>
-        <div class="set-row ahead-switch"><span class="set-label">Use what we have first<small>Dinners the pantry already covers go first, oldest food first, so nothing sits until it’s freezer-burnt.</small></span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
-        <div class="set-row ahead-switch"><span class="set-label">Re-plan the planner’s picks<small>${own ? `${count(own, 'night')} the planner chose can change when that uses more of the pantry or costs less. Tonight’s dinner stays.` : 'Nothing after tonight was picked by the planner, so only open nights get planned.'} Off: only open nights are filled.</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Re-plan the planner’s picks' })}</div>
+        <details class="ahead-date"><summary>Another last night</summary>
+          <label class="field"><span class="field-label">Last night to plan</span>
+          <input class="input" type="date" id="ahead-end" min="${today}" max="${aheadLimit(today)}" value="${st.end}" data-change="ahead:end"></label></details>
+        <p class="muted small ahead-count">${count(dates.length, 'night')}: ${listJoin([open ? `${open} empty` : '', own ? `${own} the app picked` : '', kept ? `${kept} stay as ${kept === 1 ? 'it is' : 'they are'}` : ''])}.</p>
+        <div class="set-row ahead-switch"><span class="set-label">Use what we have first</span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
+        <div class="set-row ahead-switch"><span class="set-label">Can change the app’s picks<small>${own ? 'Never tonight, or anything set by hand.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Can change the app’s picks' })}</div>
         <button type="button" class="btn btn-primary btn-block" data-action="ahead:go">${ic('sparkle', { size: 20 })}Plan it</button>`;
     },
   });
@@ -420,20 +435,21 @@ function aheadVerdict(was, now) {
 const DAY_LETTERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /** The two planning preferences, and how lean this period's plan is. */
-function planPrefs(app, range) {
+function planPrefs(app, range, { open: always = false } = {}) {
   const lean = leanOn(app.state);
   const busy = busyNightsOf(app.state);
   const today = app.today();
   const sum = lean && showNutrition(app) ? leanSummary(app.db, app.state, range.dates.filter((d) => d >= today)) : null;
   // A button, not <details>: the page re-renders on every sync, and this has to stay open through it.
-  const open = !!app.ui.prefsOpen;
+  const open = always || !!app.ui.prefsOpen;
   return html`<div class="plan-prefs ${open ? 'is-open' : ''}">
-    <button type="button" class="plan-prefs-head" data-action="plan:prefs" aria-expanded="${tf(open)}" aria-controls="plan-prefs-body"><span class="opt-label">Planning for</span><span class="plan-prefs-now">${lean ? 'Lean plates' : 'Any dinner'}${busy.length ? `, easy on ${listJoin(busy.map((d) => DAY_LETTERS[d]))}` : ''}</span></button>
+    ${always ? html`<h3 class="sheet-h">Planning for</h3>`
+      : html`<button type="button" class="plan-prefs-head" data-action="plan:prefs" aria-expanded="${tf(open)}" aria-controls="plan-prefs-body"><span class="opt-label">Planning for</span><span class="plan-prefs-now">${lean ? 'Lean plates' : 'Any dinner'}${busy.length ? `, easy on ${listJoin(busy.map((d) => DAY_LETTERS[d]))}` : ''}</span></button>`}
     ${when(open, () => html`<div class="plan-prefs-body" id="plan-prefs-body">
-    <div class="set-row"><span class="set-label">Lean by default<small>New plans favor lighter, high-protein dinners with a vegetable, and keep fried and heavy ones to two a week. Burger and pizza nights stay.</small></span>${switchToggle({ on: lean, action: 'plan:lean', label: 'Lean by default' })}</div>
-    <div class="opt"><span class="opt-label" id="busy-l">Busy nights</span>
+    <div class="set-row"><span class="set-label">Lean by default<small>Lighter, high-protein dinners with a vegetable.</small></span>${switchToggle({ on: lean, action: 'plan:lean', label: 'Lean by default' })}</div>
+    <div class="opt"><span class="opt-label" id="busy-l">Busy nights (easy dinners)</span>
       <div class="chip-grid busy-days" role="group" aria-labelledby="busy-l">${DAY_LETTERS.map((l, i) => html`<button type="button" class="chip ${busy.includes(i) ? 'is-on' : ''}" aria-pressed="${tf(busy.includes(i))}" data-action="plan:busy" data-day="${i}">${l}</button>`)}</div>
-      <p class="muted small">Busy nights get a slow-cooker dinner (the PossibleCooker does the work) or one that takes 30 minutes or less.</p></div>
+      <p class="muted small">Slow cooker or 30 minutes or less.</p></div>
     ${when(sum && sum.known >= 3, () => html`<p class="small lean-line">${ic('leaf', { size: 18 })}<span><b>${sum.lean} of ${sum.total}</b> planned ${sum.total === 1 ? 'dinner is a lean plate' : 'dinners are lean plates'}${sum.heavy ? `, ${sum.heavy} ${sum.heavy === 1 ? 'is' : 'are'} heavy` : ''}. A plate averages about ${fmtKcal(sum.kcal)} calories and ${Math.round(sum.proteinG)} g protein.</span></p>`)}
     </div>`)}
   </div>`;
@@ -491,12 +507,12 @@ export function catchUpCard(app) {
   if (!c.total) return '';
   if (c.nights.length === 1 && !c.lunches.length) {
     const n = c.nights[0];
-    return html`<section class="tcard forgot-card" id="catch-card" aria-labelledby="catch-h">
-      <h2 id="catch-h" class="section-title">${n.date === addDays(today, -1) ? 'Did you cook last night?' : `Did you cook on ${weekdayName(n.date)}?`}</h2>
-      <p class="muted small"><b>${n.title}</b> was on the plan for ${weekdayName(n.date)} and isn’t marked cooked. Marking it takes what it used out of the pantry, so the shopping list stays right.</p>
+    const when = n.date === addDays(today, -1) ? 'Last night' : weekdayName(n.date);
+    return html`<section class="forgot-card" id="catch-card" aria-labelledby="catch-h">
+      <p class="forgot-q" id="catch-h"><b>${when}: ${n.title}.</b> Did you cook it?</p>
       <div class="forgot-acts">
-        <button type="button" class="btn btn-small btn-primary" data-action="night:cooked" data-date="${n.date}">${ic('checkCircle', { size: 18 })}Yes, mark it cooked</button>
-        <button type="button" class="btn btn-small btn-secondary" data-action="night:move" data-date="${n.date}" aria-haspopup="dialog">No, move it to another night</button>
+        <button type="button" class="btn btn-small btn-primary" data-action="night:cooked" data-date="${n.date}">${ic('checkCircle', { size: 18 })}Yes, cooked</button>
+        <button type="button" class="btn btn-small btn-secondary" data-action="night:move" data-date="${n.date}" aria-haspopup="dialog">Move it</button>
         <button type="button" class="btn btn-small btn-quiet" data-action="catch:skip" data-date="${n.date}">We skipped it</button>
       </div>
     </section>`;
@@ -504,7 +520,7 @@ export function catchUpCard(app) {
   const parts = [c.nights.length ? count(c.nights.length, 'dinner') : '', c.lunches.length ? count(c.lunches.length, 'packed lunch', 'packed lunches') : ''].filter(Boolean);
   return html`<section class="catch-card" id="catch-card" aria-labelledby="catch-h">
     <span class="left-ic" aria-hidden="true">${ic('pantry', { size: 22 })}</span>
-    <p class="left-text"><b id="catch-h">Is the pantry still right?</b><small>${listJoin(parts)} from the last week ${c.total === 1 ? 'was' : 'were'} never taken off the shelves. If the food was eaten, the list thinks it’s still here.</small></p>
+    <p class="left-text"><b id="catch-h">Is the pantry still right?</b><small>${listJoin(parts)} from the last week never came off the shelves.</small></p>
     <span class="left-acts"><button type="button" class="btn btn-small btn-primary" data-action="catch:open" aria-haspopup="dialog">Catch up</button></span>
   </section>`;
 }

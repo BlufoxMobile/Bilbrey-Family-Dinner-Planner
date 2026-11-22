@@ -123,20 +123,17 @@ after(async () => {
   api?.server.close();
 });
 
-test('Tonight is the home screen: dinner, start cooking, prep, use first, lunches, the week', async () => {
+test('Tonight is the home screen: dinner and start cooking first; use first lives on the Pantry (docs/spec/29)', async () => {
   await go(page, '#/tonight', '.page-tonight');
   assert.match(await page.textContent('.hero-title'), /smashburgers/i);
   assert.equal(await page.getAttribute('#tonight-cook', 'href'), `#/cook/${TODAY}`);
   assert.match(await page.textContent('.hero .nutri'), /≈ [\d,]+ cal.*\d+ g protein/s);
-  assert.match(await page.textContent('.hero .why'), /Uses up the romaine hearts from Nov 12 \(best by tomorrow\)/, 'the burgers take the lettuce that is about to turn');
   assert.ok(await page.$('.prep-card'), 'thaw and prep');
-  assert.match(await page.textContent('.use-first'), /romaine|lettuce/i);
-  assert.match(await page.textContent('.lunch-today'), /Jeff/);
-  const week = await page.textContent('.week-card');
-  assert.match(week, /calories, an average dinner plate/);
-  assert.match(week, /dinners have a vegetable or salad\s*\d of \d/);
-  assert.match(week, /nights cooking at home\s*\d/);
+  for (const gone of ['.hero .why', '.use-first', '.lunch-today', '.week-card']) assert.equal(await page.$(gone), null, `${gone} isn’t on Tonight any more: one job per screen`);
   assert.doesNotMatch(await page.textContent('.page-tonight'), /goal|target|limit|too many|bad/i, 'no targets, no judgement');
+  await go(page, '#/pantry', '.page-pantry');
+  assert.match(await page.textContent('.use-first'), /romaine|lettuce/i, 'the lettuce about to turn is first in Use first');
+  await go(page, '#/tonight', '.page-tonight');
   assert.ok(await noOverflow(page));
   await shot(page, 'tonight-390', true);
   await waitFor(async () => (await (await fetch(`${apiBase}/__mock/state`)).json()).state.pantry?.lettuce);
@@ -155,7 +152,6 @@ test('Tonight is the home screen: dinner, start cooking, prep, use first, lunche
 
 test('the recipe page: why, times, equipment, pantry check, the plate timed together, steps, safe temps, nutrition', async () => {
   await go(page, '#/recipe/smashburgers', '.page-recipe');
-  assert.match(await page.textContent('.recipe-why'), /Why it’s on the plan tonight/);
   assert.match(await page.textContent('.time-strip'), /30 min/);
   assert.match(await page.textContent('.gear'), /Blackstone\s*Medium-high/);
   assert.doesNotMatch(await page.textContent('.gear'), /Blackstone\s*Blackstone/, 'the appliance is named once');
@@ -174,17 +170,18 @@ test('the recipe page: why, times, equipment, pantry check, the plate timed toge
   assert.match(await page.textContent('.recipe-leftovers'), /Cooked patties keep 3 days in the fridge/, 'the recipe’s own leftovers note');
   assert.match(await page.textContent('.recipe-nutrition'), /≈ [\d,]+\s*calories/);
   assert.equal((await page.$$('.nutri-table tbody tr')).length, 2, 'the dinner and the side');
-  // The plate guide shows once, in plain words, and goes away for good.
-  const guide = await page.textContent('.plate-guide');
+  assert.equal(await page.$('.page-recipe > .plate-guide'), null, 'the plate guide is a link now, not a card');
+  assert.ok(await noOverflow(page));
+  await shot(page, 'recipe-390', true);
+  // The plate guide, in plain words, one tap away.
+  await page.click('[data-action="rec:plate-guide"]');
+  const guide = await page.textContent('dialog[open] .plate-guide');
   assert.match(guide, /Half the plate/);
   assert.match(guide, /A palm/);
   assert.match(guide, /A cupped hand/);
   assert.doesNotMatch(guide, /calorie|kid|bad|should/i);
-  assert.ok(await noOverflow(page));
-  await shot(page, 'recipe-390', true);
-  await page.click('.plate-guide [data-action="lighter:dismiss"]');
-  await waitFor(async () => !(await page.$('.plate-guide')));
-  await page.waitForSelector('[data-action="rec:plate-guide"]');
+  await page.keyboard.press('Escape');
+  await waitFor(async () => !(await page.$('dialog[open]')));
   for (const [vp, name] of [[DESKTOP, '1280'], [TV, '1920x1080']]) {
     const p = await join(big, vp);
     await go(p, '#/recipe/smashburgers', '.page-recipe');
@@ -219,7 +216,7 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
   assert.match(await page.textContent('.cook-title'), /Step 1 of 8/);
   assert.match(await page.textContent('.cook-setting'), /Blackstone, medium-high/);
   assert.match(await page.textContent('.cook-ings'), /2 lb lean ground beef/);
-  assert.match(await page.textContent('.cook-dish-tag'), /Blackstone smashburgers\s*step 1 of 5/);
+  assert.match(await page.textContent('.cook-dish-tag'), /^\s*Blackstone smashburgers\s*$/, 'one step counter: the header’s');
   // Arrow keys (and a TV remote's left / right).
   await page.keyboard.press('ArrowRight');
   await waitFor(async () => (await stepKey(page)) === 'side0:0');
@@ -237,7 +234,7 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
   });
   await waitFor(async () => (await stepKey(page)) === 'side0:1');
   assert.match(await page.textContent('.cook-setting'), /400°F/);
-  assert.match(await page.textContent('.cook-dish-tag'), /Air-fryer fries\s*step 2 of 3/);
+  assert.match(await page.textContent('.cook-dish-tag'), /Air-fryer fries/);
   assert.ok(await noOverflow(page));
   await shot(page, 'step-390');
   await next(page);
@@ -436,12 +433,12 @@ test('finish: mark cooked (the pantry drops), then the leftovers question', asyn
 test('leftovers wait on Tonight: eat one, or make it a leftover night', async () => {
   await go(page, '#/tonight', '.page-tonight');
   await hideToast(page);
-  assert.match(await page.textContent('.use-first .lo-row'), /Blackstone smashburgers.*Leftovers: 4 servings, good through Thursday/s);
+  assert.match(await page.textContent('.left-fridge .lo-row'), /Blackstone smashburgers.*Leftovers: 4 servings, good through Thursday/s);
   assert.equal(await page.locator('.lo-card').count(), 0, 'the question was already answered');
   await page.click('[data-action="leftovers:ate"]');
   await waitFor(async () => (await familyState(page)).leftovers[TODAY].servings === 3);
   await hideToast(page);
-  await page.evaluate(() => document.querySelector('.use-first')?.scrollIntoView({ block: 'start' }));
+  await page.evaluate(() => document.querySelector('.left-fridge')?.scrollIntoView({ block: 'start' }));
   await shot(page, 'tonight-leftovers-390');
   await page.click('[data-action="leftovers:night"]');
   await page.waitForSelector('dialog[open] [data-action="leftovers:night-set"]');
@@ -451,8 +448,6 @@ test('leftovers wait on Tonight: eat one, or make it a leftover night', async ()
   assert.deepEqual(s.plan[TOMORROW].away, { reason: 'Leftovers', note: 'Blackstone smashburgers, from Monday', from: TODAY });
   assert.equal(s.plan[TOMORROW].dinner, 'tikka-masala', 'the dinner it bumped is kept, to bring back');
   assert.equal(s.leftovers[TODAY].night, TOMORROW);
-  await page.waitForSelector('.menu-row.is-away');
-  assert.match(await page.textContent('.menu-row.is-away'), /Leftover night/);
   // The next day Tonight says so; cooking after all brings the dinner back.
   await page.clock.setSystemTime(new Date('2026-11-17T17:30:00-06:00'));
   await page.reload();
@@ -485,6 +480,10 @@ test('the recipe box: search and the filters that matter to this family', async 
   const all = (await page.$$('.r-card')).length;
   assert.ok(all > 30);
   assert.match(await page.textContent('.r-card'), /≈ [\d,]+ cal, \d+ g protein/);
+  // Three chips up front; the rest are one tap away under More filters (docs/spec/29).
+  assert.ok(await page.isVisible('#rf-makeable') && await page.isVisible('#rf-fav') && await page.isVisible('#rf-quick'));
+  assert.ok(!(await page.isVisible('#rf-lean')), 'Lean waits under More filters');
+  await page.click('.filters-more > summary');
   await page.click('#rf-lean');
   await page.waitForSelector('#rf-lean.is-on');
   const lean = (await page.$$('.r-card')).length;
@@ -520,11 +519,11 @@ test('the recipe box: search and the filters that matter to this family', async 
   // "Can make now": nothing until the pantry covers a whole dinner, with a way out.
   await page.click('#rf-makeable');
   await page.waitForSelector('.r-empty');
-  assert.match(await page.textContent('.r-empty'), /Closest to ready/);
+  assert.match(await page.textContent('.r-empty'), /can be made from the pantry alone/);
   await page.click('.r-empty [data-action="rec:clear"]');
   await waitFor(async () => (await cards(page)) === all);
   await page.selectOption('#rf-sort', 'ready');
-  await waitFor(async () => /\d+ of \d+ ingredients on hand/.test(await page.textContent('.r-card .r-pantry')));
+  await waitFor(async () => (await page.inputValue('#rf-sort')) === 'ready');
   await page.selectOption('#rf-sort', 'az');
   await waitFor(async () => (await page.inputValue('#rf-sort')) === 'az' && (await cards(page)) === all);
   assert.ok(await noOverflow(page));
@@ -564,7 +563,7 @@ test('a dinner that was cooked but never marked: Tonight asks the next day, then
   await page.clock.setSystemTime(new Date('2026-11-18T07:45:00-06:00'));
   await go(page, '#/tonight', '.page-tonight');
   await page.waitForSelector('.forgot-card');
-  assert.match(await page.textContent('.forgot-card'), /Chicken tikka masala was on the plan for Tuesday and isn’t marked cooked/);
+  assert.match(await page.textContent('.forgot-card'), /(Last night|Tuesday): Chicken tikka masala\.\s*Did you cook it\?/);
   await page.click('.forgot-card [data-action="night:cooked"]');
   const s = await waitFor(async () => { const x = await familyState(page); return x.plan[TOMORROW].status === 'cooked' ? x : null; });
   assert.equal(s.plan[TOMORROW].cookedBy, 'Family');
@@ -576,7 +575,7 @@ test('a dinner that was cooked but never marked: Tonight asks the next day, then
   await shot(page, 'tonight-morning-after-390');
   await page.click('.lo-card [data-action="leftovers:save"][data-n="2"]');
   await waitFor(async () => (await familyState(page)).leftovers?.[TOMORROW]?.servings === 2);
-  await page.waitForSelector('.use-first .lo-row');
+  await page.waitForSelector('.left-fridge .lo-row');
   await page.clock.setSystemTime(NOW);
   assert.equal(errors.length, 0, errors.join('\n'));
 });

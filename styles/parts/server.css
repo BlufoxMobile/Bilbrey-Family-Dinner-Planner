@@ -55,7 +55,7 @@
 .aisle-note .ic { flex: none; margin-top: 1px; color: var(--sage); }
 .aisle.is-stop .aisle-h { font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--t-lg); color: var(--ink); letter-spacing: .01em; padding: 10px 0 6px; }
 .aisle-h small { font-family: var(--font-text); font-weight: 600; font-size: var(--t-xs); color: var(--ink-3); letter-spacing: 0; }
-.aisle-chip { display: inline-block; padding: 1px 7px; margin-right: 2px; border-radius: 999px; font-size: 0.75rem; font-weight: 800; letter-spacing: .02em; color: var(--pine-ink); background: var(--pine); vertical-align: 1px; }
+.aisle-chip { display: inline-block; padding: 1px 7px; margin-right: 2px; border-radius: 999px; font-size: var(--t-xs); font-weight: 800; letter-spacing: .02em; color: var(--pine-ink); background: var(--pine); vertical-align: 1px; }
 .aisle-chip.is-family { background: var(--sage); }
 
 /* In the store: the product big enough to spot on the shelf. */

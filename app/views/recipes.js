@@ -16,9 +16,9 @@ import { cheapestFirst } from '../cost.js';
 export const title = () => 'Recipes';
 
 const TABS = [
-  { id: 'rotation', label: 'In rotation' },
-  { id: 'bench', label: 'Bench' },
-  { id: 'out', label: 'Dropped' },
+  { id: 'rotation', label: 'On the menu' },
+  { id: 'bench', label: 'Maybe later' },
+  { id: 'out', label: 'Not for us' },
 ];
 
 function inTab(app, d, tab) {
@@ -85,7 +85,7 @@ function card(app, { d, facts }) {
       <span class="r-meta">${timeLabel(d)}${facts.minutes ? ', ' : ''}${d.category}${when(isFavorite(app.state, d), () => html`<span class="r-fav">${ic('star', { size: 14 })}<span class="sr-only">Family favorite</span></span>`)}</span>
       ${when(nutri, () => html`<span class="r-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein${leanMark(facts, { compact: true })}</span>`)}
       ${costNote(facts.cost, { short: true, tag: 'span', cls: 'r-cost' })}
-      ${when(facts.total, () => html`<span class="r-pantry ${facts.makeable ? 'is-ready' : ''}">${facts.makeable ? html`${ic('check', { size: 14 })}Everything’s in the pantry` : `${facts.total - facts.missing} of ${facts.total} ingredients on hand`}</span>`)}
+      ${when(facts.makeable, () => html`<span class="r-pantry is-ready">${ic('check', { size: 14 })}All in the house</span>`)}
     </span>
   </a></li>`;
 }
@@ -97,7 +97,7 @@ function emptyGrid(app) {
   if (!hasFilters(app)) {
     return html`<p class="empty-body pad">${app.ui.recipeTab === 'bench' ? 'Every bench dinner has joined the rotation.' : 'No dinners here yet.'}</p>`;
   }
-  const why = f.makeable ? 'Nothing here can be made from the pantry alone right now. Scan the pantry so it’s up to date, or sort by “Closest to ready” to see what needs the least.'
+  const why = f.makeable ? 'Nothing here can be made from the pantry alone right now.'
     : f.equipment ? `No ${equipLabel(f.equipment)} dinners ${q || activeFilters(app).length > 1 ? 'match these filters' : `are in this tab yet${f.equipment === 'possible cooker' ? '. Ask Claude for PossibleCooker ideas from “What can I make?” on the Plan' : ''}`}.`
       : q ? `No dinners match “${q}”${activeFilters(app).length ? ' with these filters' : ''}.` : 'No dinners match these filters.';
   return html`<div class="empty r-empty">
@@ -136,18 +136,33 @@ export function render(app) {
     <label class="search">${ic('search', { size: 20 })}<input type="search" id="recipe-search" placeholder="Search chicken, tikka, air fryer…" value="${app.ui.recipeQuery}" data-input="rec:search" aria-label="Search recipes by name, ingredient or appliance" autocomplete="off"></label>
     <div class="filters" role="group" aria-label="Filters">
       ${chip('makeable', 'Can make now', 'Everything for it, sides included, is in the pantry')}
-      ${when(showNutrition(app), () => chip('lean', 'Lean', 'Lighter plates with plenty of protein'))}
       ${chip('fav', 'Favorites')}
-      ${select('equipment', 'Any appliance', appliances.map((e) => ({ id: e.id, label: equipLabel(e.id) })), 'Appliance')}
-      ${select('time', 'Any time', TIME_FILTERS, 'Time')}
-      ${select('protein', 'Any protein', PROTEINS.map((p) => ({ id: p, label: p[0].toUpperCase() + p.slice(1) })), 'Protein')}
-      ${select('category', 'Any category', CATEGORIES.map((c) => ({ id: c, label: c })), 'Category')}
-      <select id="rf-sort" class="input input-chip r-sort" data-change="rec:sort" aria-label="Sort">
-        ${RECIPE_SORTS.filter((s) => showNutrition(app) || !['protein', 'light'].includes(s.id)).map((s) => html`<option value="${s.id}" ${(app.ui.recipeSort || 'az') === s.id ? 'selected' : ''}>Sort: ${s.label}</option>`)}
-      </select>
+      ${chip('quick', '30 min or less')}
     </div>
+    ${(() => {
+      // Three chips cover most looks; the rest wait one tap away (gauntlet r1: eight controls at once).
+      const more = ['equipment', 'time', 'protein', 'category', 'lean'].filter((k) => f[k]).length + ((app.ui.recipeSort || 'az') !== 'az' ? 1 : 0);
+      return html`<details class="filters-more" ${more || app.ui.recipeMoreOpen ? 'open' : ''}>
+        <summary>More filters${more ? ` (${more} on)` : ''}</summary>
+        <div class="filters" role="group" aria-label="More filters">
+          ${when(showNutrition(app), () => chip('lean', 'Lean', 'Lighter plates with plenty of protein'))}
+          ${select('equipment', 'Any appliance', appliances.map((e) => ({ id: e.id, label: equipLabel(e.id) })), 'Appliance')}
+          ${select('time', 'Any time', TIME_FILTERS, 'Time')}
+          ${select('protein', 'Any protein', PROTEINS.map((p) => ({ id: p, label: p[0].toUpperCase() + p.slice(1) })), 'Protein')}
+          ${select('category', 'Any category', CATEGORIES.map((c) => ({ id: c, label: c })), 'Category')}
+          <select id="rf-sort" class="input input-chip r-sort" data-change="rec:sort" aria-label="Sort">
+            ${RECIPE_SORTS.filter((s) => showNutrition(app) || !['protein', 'light'].includes(s.id)).map((s) => html`<option value="${s.id}" ${(app.ui.recipeSort || 'az') === s.id ? 'selected' : ''}>Sort: ${s.label}</option>`)}
+          </select>
+        </div>
+      </details>`;
+    })()}
     <div id="recipe-results">${grid(app)}</div>
   </div>`;
+}
+
+/** More filters stays open (or shut) through redraws. */
+export function mount(app, main) {
+  main.querySelector('.filters-more')?.addEventListener('toggle', (ev) => { app.ui.recipeMoreOpen = ev.target.open; });
 }
 
 export const actions = {

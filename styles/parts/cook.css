@@ -76,8 +76,6 @@
 
 .lo-card { box-shadow: var(--sh-1), inset 0 3px 0 var(--butter); display: grid; gap: 10px; justify-items: start; }
 .tonight-main > .lo-card { margin-top: var(--s5); }
-.forgot-card { display: grid; gap: 10px; margin-top: 0; box-shadow: var(--sh-1), inset 0 3px 0 var(--butter); }
-.forgot-acts { display: flex; flex-wrap: wrap; gap: 8px; }
 .lo-list, .soon-list, .lt-list { display: grid; }
 .lo-row { display: grid; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .lo-main { display: grid; gap: 1px; }
