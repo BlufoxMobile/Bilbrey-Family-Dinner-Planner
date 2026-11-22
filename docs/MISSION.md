@@ -12,8 +12,8 @@ on groceries, reducing spoilage, and helping me lose weight**", "healthy options
 - **No oven.** Equipment: Blackstone griddle, air fryer, stovetop, electric grill, microwave, and now a
   **Ninja 10-in-1 Everyday PossibleCooker Pro 6.5 qt (MC1101)** — slow cook, sear/sauté, braise, steam,
   rice, keep warm and more. Use the equipment id `possible cooker`.
-- Dinners are a main + 2 sides for 5. **No tofu. No seafood** (only an occasional snow-crab boil with Old
-  Bay, and occasional soups). **Never anything Caesar.** **No raw cucumbers** (pickles are fine), **no
+- Dinners are a main + 2 sides for 5. **No tofu. No seafood** except **fried shrimp night** (Jeff, 2026-11-22:
+  two 18 oz bags of SeaPak butterfly shrimp with fries) and an occasional snow-crab boil with Old Bay; occasional soups. **Never anything Caesar.** **No raw cucumbers** (pickles are fine), **no
   raw onions, no raw tomatoes** (cooked onions and tomato sauces are fine).
 - Organic fruit and vegetables when possible. Knox only eats Cool Ranch Doritos. Jeff's lunches: a Boar's
   Head deli sandwich (pickles, hot giardiniera) and/or a store-made salad bowl, with an Orange Mango

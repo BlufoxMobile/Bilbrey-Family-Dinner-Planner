@@ -57,18 +57,17 @@ test('no dinner and no side has turkey in it: not an ingredient, not a word, not
   }
   assert.ok(!db.dinnerList.some((d) => d.protein === 'turkey'));
   // The thirteen that had it are chicken now.
-  for (const id of ['ginger-beef-cabbage', 'chickpea-pepper-pasta', 'sweet-potato-tacos', 'chili-jacket-potatoes', 'breakfast-tacos', 'egg-roll-in-a-bowl',
-    'sausage-broccoli-penne', 'chicken-taco-salad', 'chicken-bean-chili', 'cooker-chicken-meatballs', 'cooker-sausage-minestrone', 'cooker-lasagna-soup']) {
+  // (sweet-potato-tacos, cooker-sausage-minestrone and cooker-lasagna-soup were marked No on 2026-11-22)
+  for (const id of ['ginger-beef-cabbage', 'chickpea-pepper-pasta', 'chili-jacket-potatoes', 'breakfast-tacos', 'egg-roll-in-a-bowl',
+    'sausage-broccoli-penne', 'chicken-taco-salad', 'chicken-bean-chili', 'cooker-chicken-meatballs']) {
     const d = db.dinners[id];
     assert.equal(d.protein, 'chicken', id);
     assert.ok(d.items.groundChicken >= 1.5, `${id} uses ground chicken`);
     assert.match(d.steps.join(' '), /165°F/, `${id} states chicken's safe temperature`);
     assert.match(d.steps.join(' '), /ground chicken/, id);
   }
-  const hoagies = db.dinners['sausage-pepper-hoagies'];
-  assert.ok(hoagies.items.chickenSausage > 0 && /fully cooked/.test(hoagies.steps.join(' ')) && /165°F/.test(hoagies.steps.join(' ')));
   // A dish that wants sausage gets its seasoning in the pan.
-  for (const id of ['chickpea-pepper-pasta', 'sausage-broccoli-penne', 'cooker-sausage-minestrone', 'breakfast-tacos']) assert.ok(db.dinners[id].items.italianSeasoning > 0 && db.dinners[id].items.garlicPowder > 0, id);
+  for (const id of ['chickpea-pepper-pasta', 'sausage-broccoli-penne', 'breakfast-tacos']) assert.ok(db.dinners[id].items.italianSeasoning > 0 && db.dinners[id].items.garlicPowder > 0, id);
 });
 
 test('the validator refuses turkey in a dinner or a side, however it arrives', () => {
@@ -139,8 +138,12 @@ test('a handful of pork dinners in the core rotation, the pulled pork among them
   const core = db.dinnerList.filter((d) => d.rotation === 'core' && Object.keys(d.items).some((id) => PORK.includes(id))).map((d) => d.id);
   assert.ok(core.length <= MAX_CORE_PORK && MAX_CORE_PORK <= 5, `${core.length} core pork dinners: ${core}`);
   assert.ok(core.includes('jd-pulled-pork-sandwiches'), 'the pulled pork in the freezer stays');
-  assert.deepEqual(db.dinnerList.filter((d) => d.rotation === 'core' && d.protein === 'pork').map((d) => d.id).sort(), ['jd-pulled-pork-sandwiches', 'mustard-pork-apples']);
-  for (const id of ['apple-glazed-pork-chops', 'cooker-braised-pork-apples', 'sweet-sour-pork', 'pork-carnitas-tacos', 'pork-souvlaki-plates', 'breaded-pork-sandwiches', 'honey-garlic-pork-chops']) assert.equal(db.dinners[id].rotation, 'bench', id);
+  // 2026-11-22: the family marked every other pork dinner No, so the pulled pork is the one pork dinner left.
+  assert.deepEqual(db.dinnerList.filter((d) => d.protein === 'pork').map((d) => d.id), ['jd-pulled-pork-sandwiches']);
+  for (const id of ['apple-glazed-pork-chops', 'cooker-braised-pork-apples', 'sweet-sour-pork', 'pork-carnitas-tacos', 'pork-souvlaki-plates', 'breaded-pork-sandwiches', 'honey-garlic-pork-chops', 'mustard-pork-apples']) {
+    assert.equal(db.dinners[id], undefined, id);
+    assert.ok(RETIRED_DINNERS[id], `${id} is retired by name`);
+  }
   // The two that had to stay core (prototype ids) changed their meat instead.
   assert.equal(db.dinners['egg-fried-rice'].protein, 'beef');
   assert.ok(db.dinners['egg-fried-rice'].items.sirloinTip > 0 && !db.dinners['egg-fried-rice'].items.porkLoin);
@@ -153,9 +156,10 @@ test('a handful of pork dinners in the core rotation, the pulled pork among them
 });
 
 test('the validator holds the pork line', () => {
-  assert.ok(says(check((d) => { dinner(d, 'apple-glazed-pork-chops').rotation = 'core'; }), /5 pork dinners in the core rotation .*at most 4: move the rest to the bench/));
+  const porky = (d, id) => { dinner(d, id).items.smokedSausage = 1; };
+  assert.ok(says(check((d) => { porky(d, 'beef-tacos'); porky(d, 'chicken-fajitas'); }), /5 pork dinners in the core rotation .*at most 4: move the rest to the bench/));
   assert.ok(says(check((d) => { dinner(d, 'jd-pulled-pork-sandwiches').rotation = 'bench'; }), /jd-pulled-pork-sandwiches: stays in the core rotation/));
-  assert.deepEqual(check((d) => { dinner(d, 'chorizo-nopalitos-tacos').rotation = 'bench'; dinner(d, 'apple-glazed-pork-chops').rotation = 'core'; }).errors, []);
+  assert.deepEqual(check((d) => { porky(d, 'beef-tacos'); }).errors.filter((e) => /pork dinners/.test(e)), []);
 });
 
 // ---------------------------------------------------------------- the BLT bowl, minus the T
@@ -266,7 +270,8 @@ test('the bulk buys are in the catalog honestly: real Sam’s packs, read prices
   for (const id of ['stewMeat', 'sirloinTip', 'chuckRoast', 'groundChicken', 'chickenSausage', 'stirFryVeg', 'normandyVeg']) {
     const n = db.nutrition.per[id];
     assert.ok(n.kcal > 0 && n.protein > 0 && n.carbs >= 0 && n.fat >= 0 && n.fiber >= 0, `${id} has nutrition`);
-    assert.ok(db.dinnerList.some((d) => d.items[id]) || db.sideList.some((s) => s.items[id]), `${id} is used`);
+    // chicken sausage left with the dinners the family marked No on 2026-11-22; it stays in the catalog so receipts still match
+    if (id !== 'chickenSausage') assert.ok(db.dinnerList.some((d) => d.items[id]) || db.sideList.some((s) => s.items[id]), `${id} is used`);
     assert.ok(catalog[id].aliases.length >= 4, `${id} matches a receipt by several names`);
   }
   assert.ok(says(check((d) => { delete d.catalog.ingredients.stewMeat.packs.sams.generic.url; }), /stewMeat: packs\.sams\.generic says its price was read from the store \("listed"\) but has no url/));
@@ -306,7 +311,7 @@ test('a dinner is tagged "bulk" exactly when its raw meat comes from a Sam’s b
     assert.equal(d.tags.includes('bulk'), fromBulk, d.id);
   }
   // Heat-and-serve meats and Jewel-only packs are not bulk buys.
-  for (const id of ['jd-pulled-pork-sandwiches', 'chicken-alfredo-night', 'chicago-italian-beef', 'sausage-pepper-hoagies', 'chicken-fajitas']) assert.ok(!db.dinners[id].tags.includes('bulk'), id);
+  for (const id of ['jd-pulled-pork-sandwiches', 'chicken-alfredo-night', 'chicago-italian-beef', 'french-dip-sandwiches', 'chicken-fajitas']) assert.ok(!db.dinners[id].tags.includes('bulk'), id);
   assert.ok(says(check((d) => { dinner(d, 'chicago-italian-beef').tags.push('bulk'); }), /chicago-italian-beef: tagged "bulk" but none of its meat comes from a Sam's bulk pack/));
   assert.ok(says(check((d) => { const t = dinner(d, 'pepper-steak').tags; t.splice(t.indexOf('bulk'), 1); }), /pepper-steak: its sirloinTip comes from a Sam's bulk pack, so it must be tagged "bulk"/));
   assert.ok(says(check((d) => { dinner(d, 'cooker-beef-tips-gravy').leftovers = 'Keeps 4 days in the fridge in a covered container.'; }), /cooker-beef-tips-gravy: tagged "freezer friendly" but leftovers doesn't say how to freeze it/));
@@ -394,7 +399,7 @@ test('steamed sides in the PossibleCooker use its STEAM setting', () => {
     assert.ok(!text(s).includes('If your panel has'), `${id}: the button is confirmed`);
   }
   // The stovetop steamed sides stay on the stove (the cooker is often busy with dinner) and say the cooker can do it.
-  for (const id of ['steamed-broccoli', 'steamed-mixed-vegetables']) {
+  for (const id of ['steamed-broccoli']) {
     assert.deepEqual(db.sides[id].equipment, ['stovetop'], id);
     assert.match(db.sides[id].tips.join(' '), /STEAM for 6 minutes/, id);
   }

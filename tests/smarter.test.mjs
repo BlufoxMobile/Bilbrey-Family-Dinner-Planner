@@ -322,7 +322,7 @@ test('busy nights get the slow cooker or a 30-minute dinner, never a long cook',
   // Effort is hands-on time (data.js handsOnMinutes): a long simmer with little work isn't a long cook, and the real cooker dinners are hands-off.
   assert.equal(effortOf({ minutes: 75, prepMinutes: 20, equipment: ['stovetop'], tags: [] }), 'quick');
   assert.equal(effortOf({ minutes: 75, prepMinutes: 50, equipment: ['stovetop'], tags: [] }), 'long');
-  assert.equal(effortOf(db.dinners['cooker-beef-stew']), 'handsOff');
+  assert.equal(effortOf(db.dinners['cooker-pot-roast']), 'handsOff');
   assert.equal(isSlowCooked(db.dinners['cooker-chicken-tortilla-soup']), true);
   assert.equal(isSlowCooked(db.dinners.smashburgers), false);
   assert.ok(busyScore(slow) > busyScore({ minutes: 25 }) && busyScore({ minutes: 25 }) > busyScore({ minutes: 40 }) && busyScore({ minutes: 40 }) > busyScore({ minutes: 60 }));

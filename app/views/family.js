@@ -276,7 +276,7 @@ export function render(app) {
         <li>Sam’s Club and Jewel-Osco don’t let apps read live prices or fill a cart. Prices here are researched estimates${app.db.pricesUpdated ? ` (as of ${mediumDate(app.db.pricesUpdated)})` : ''}; fix any price on the list and the whole family gets it.</li>
         <li>Ordering means copying a store-ready list and opening the store’s app. You check out there.</li>
         <li>Pantry scans are AI suggestions. You confirm every item and amount.</li>
-        <li>No recipe uses the oven, and there is never seafood or tofu.</li>
+        <li>No recipe uses the oven, there is never tofu, and the only seafood is fried shrimp night (two bags of SeaPak with fries).</li>
         <li>Days and dates follow Glen Ellyn (Central) time, wherever a phone happens to be.</li>
       </ul>
     </section>

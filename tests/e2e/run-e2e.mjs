@@ -754,7 +754,9 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   const seed = Object.entries({
     chickenThighs: item(9, '2026-09-03'), eyeRoundSteak: item(2.5, '2026-10-20'), cornCobs: item(10, '2026-10-20'),
     tikka: item(30, '2026-11-02'), basmati: item(8, '2026-11-02'), naan: item(10, '2026-11-14'), butter: item(16, '2026-11-14'),
-    potatoes: item(5, '2026-11-14'), milk: item(8, '2026-11-14'),
+    // 10 lb: tonight's dinner (picked by an earlier test) may be one with smashed potatoes, and a kept night's
+    // food is set aside before the pantry nights are chosen (SPEC §21.1).
+    potatoes: item(10, '2026-11-14'), milk: item(8, '2026-11-14'),
     turmeric: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' }, cajunSeasoning: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' }, soy: { qty: null, stocked: true, by: 'Candi', at: '2026-11-02T18:00:00.000Z' },
   }).map(([id, value]) => ({ op: 'set', path: ['pantry', id], value }));
   const sent = await fetch(`${apiBase}/api/ops`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Family-Key': key }, body: JSON.stringify({ ops: seed, by: 'Candi', clientId: 'e2e-candi', batchId: 'freezer' }) });

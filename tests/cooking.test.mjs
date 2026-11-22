@@ -91,9 +91,9 @@ test('equipment: each appliance with the settings its steps call for; the Possib
   const db = realDb();
   // The recipe box names the appliance in each step's setting ("Blackstone, medium-high"): it goes there, once, without the name.
   assert.deepEqual(equipmentSettings(db.dinners.smashburgers), [{ id: 'blackstone', label: 'Blackstone', settings: ['Medium-high'] }]);
-  const tacos = equipmentSettings(db.dinners['sweet-potato-tacos']);
-  assert.deepEqual(tacos.find((e) => e.id === 'air fryer').settings, ['400°F']);
-  assert.ok(!tacos.find((e) => e.id === 'stovetop').settings.includes('400°F'));
+  const tenders = equipmentSettings(db.dinners['chicken-tender-night']);
+  assert.deepEqual(tenders.find((e) => e.id === 'air fryer').settings, ['400°F']);
+  assert.ok(!equipmentSettings(db.dinners['honey-garlic-chicken-bites']).find((e) => e.id === 'stovetop').settings.includes('400°F'));
   assert.deepEqual(equipmentSettings(db.dinners['cooker-chicken-tortilla-soup']), [{ id: 'possible cooker', label: 'PossibleCooker', settings: ['SLOW COOK on LO'] }]);
   assert.deepEqual(settingOwner('Stovetop, medium-low, lid on'), { id: 'stovetop', what: 'Medium-low, lid on' });
   assert.deepEqual(settingOwner('sear/sauté, high'), { id: 'possible cooker', what: 'sear/sauté, high' });
@@ -102,7 +102,7 @@ test('equipment: each appliance with the settings its steps call for; the Possib
   assert.deepEqual(equipmentSettings({ equipment: ['blackstone'], steps: ['Heat the Blackstone over medium-high for about 10 minutes.'] }), [{ id: 'blackstone', label: 'Blackstone', settings: ['Medium-high heat'] }]);
   // Every dinner in the box: each appliance it lists gets at least one setting from its steps, and a slow cook reads as hands-on plus the total.
   for (const d of db.dinnerList) for (const e of equipmentSettings(d)) assert.ok(e.label && Array.isArray(e.settings), `${d.id}: ${e.id}`);
-  assert.equal(timeLabel(db.dinners['cooker-beef-stew']), '25 min hands-on, 8 hr 40 min in all');
+  assert.equal(timeLabel(db.dinners['cooker-pot-roast']), '20 min hands-on, 8 hr 40 min in all');
   assert.equal(timeLabel(db.dinners.smashburgers), fmtMinutes(db.dinners.smashburgers.minutes));
   assert.equal(timeLabel({}), '');
   assert.equal(equipmentLabel('possible cooker'), 'PossibleCooker');

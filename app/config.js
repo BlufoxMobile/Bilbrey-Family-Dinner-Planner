@@ -1,5 +1,5 @@
 // App-wide constants. Keep VERSION in step with CACHE_VERSION in sw.js.
-export const VERSION = '3.2.0';
+export const VERSION = '3.3.0';
 
 /** The family's Cloudflare Worker (SPEC §5). */
 export const API_BASE = 'https://bilbrey-dinner-planner.jeff-bilbrey-jb.workers.dev';
@@ -45,7 +45,8 @@ export const STORAGE = [
 
 export const CATEGORIES = ['Burgers', 'Asian-inspired', 'Pasta', 'Tex-Mex', 'Grill', 'Comfort', 'Salads'];
 // No dinner in the box is built on turkey (docs/spec/24 §24.1: the family prefers chicken), so it isn't offered.
-export const PROTEINS = ['chicken', 'beef', 'pork', 'sausage', 'mixed'];
+// 'seafood' is fried shrimp night, the one seafood dinner (Jeff, 2026-11-22).
+export const PROTEINS = ['chicken', 'beef', 'pork', 'sausage', 'seafood', 'mixed'];
 
 export const EQUIPMENT_LABELS = {
   stovetop: 'Stovetop',

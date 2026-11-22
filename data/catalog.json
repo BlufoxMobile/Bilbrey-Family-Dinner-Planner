@@ -1,7 +1,7 @@
 {
  "version": 2,
  "updated": "2026-11-15",
- "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos. 2026-11-15 (v2.5): Jewel salad bowls and the hot-deli chicken sandwich for Jeff’s lunches; organic produce at Jewel (prices read from jewelosco.com, Glen Ellyn, Nov 15) used when the family buys organic; frozen sirloin patties cook from frozen. 2026-11-15 (v2.5.3): Boar’s Head Blazing Buffalo chicken and Miss Vickie’s for Jeff’s sandwich lunches; the hot-deli sandwich is gone. 2026-11-15 (v3): five ingredients for the PossibleCooker dinners (white beans, celery, lean turkey Italian sausage, canned mild green chiles, beef stock). Their packs and prices are estimates, marked (est.), until a receipt or a price check says otherwise. 2026-11-15 night (docs/spec/24-chicken-bulk-and-meal-cost.md): Jeff: the family prefers chicken to turkey and eats little pork, so no dinner uses groundTurkey or turkeySausage any more (both ids stay so receipts and the pantry still match, like groundPork and italianSausage; turkey lunch meat is still Jeff’s). Ranch is Wish-Bone (the Hidden Valley bottle was bought by mistake and still matches by alias). New for the Sam’s Club bulk dinners: stewMeat, sirloinTip, chuckRoast and groundChicken (their Sam’s prices were read from samsclub.com on Nov 15, 2026 and carry \"confidence\": \"listed\" and the page url), chickenSausage (al fresco, Jewel; price estimated), stirFryVeg and normandyVeg (Member’s Mark pack sizes from samsclub.com; prices estimated). \"bulk\": { \"freezes\": true|false, \"portionLb\": pounds in one meal-size freezer bag (lb items only), \"note\": how to portion or keep it } marks an item the family buys as a Sam’s Club bulk pack; it needs a Sam’s pack, and a dinner whose raw meat has it is tagged \"bulk\".",
+ "notes": "Pack sizes/prices are ESTIMATES (Chicago-suburb Sam’s Club Addison / Jewel-Osco Glen Ellyn, late 2026). The 67 prototype ingredients keep the prototype’s generic packs; name-brand packs = generic × the prototype’s nameBrandMultiplier, rounded to a shelf price. Produce has no name-brand premium (name pack = generic). data/prices.json overrides any pack it lists. \"meat\": true marks proteins (bulk freezer packs). \"extra\": true marks everyday staples offered in the extras picker (some are also dinner ingredients). A store is omitted from \"packs\" when it does not carry the item. v2.2: \"brand\" names the family’s usual brand and \"usual\": {store, tier} points at the pack they actually buy (prices paid Aug–Nov 2026); the app should default an item’s store/tier to \"usual\" unless the family overrides it. \"cooked\": true marks fully cooked meats (reheat to 165°F); \"prepared\": true marks heat-and-serve dishes; \"lbPerUnit\" converts countable meat (patties) to pounds. 2026-11-15: added the seasonings and sauces seen in the family’s pantry photos (Slap Ya Mama, Old Bay, Badia mango pepper, turmeric, cinnamon, Crystal, Buffalo Wild Wings mango habanero, Buona giardiniera, apple jelly, French’s crispy onions) plus deli roast beef for Italian beef; soy is Kikkoman and ranch is Hidden Valley, the bottles in their fridge. 2026-11-15 pm: eye of round (Member’s Mark, paid $6.74/lb), pork chorizo, jarred nopalitos and La Preferida charro beans, from the freezer photos. 2026-11-15 (v2.5): Jewel salad bowls and the hot-deli chicken sandwich for Jeff’s lunches; organic produce at Jewel (prices read from jewelosco.com, Glen Ellyn, Nov 15) used when the family buys organic; frozen sirloin patties cook from frozen. 2026-11-15 (v2.5.3): Boar’s Head Blazing Buffalo chicken and Miss Vickie’s for Jeff’s sandwich lunches; the hot-deli sandwich is gone. 2026-11-15 (v3): five ingredients for the PossibleCooker dinners (white beans, celery, lean turkey Italian sausage, canned mild green chiles, beef stock). Their packs and prices are estimates, marked (est.), until a receipt or a price check says otherwise. 2026-11-15 night (docs/spec/24-chicken-bulk-and-meal-cost.md): Jeff: the family prefers chicken to turkey and eats little pork, so no dinner uses groundTurkey or turkeySausage any more (both ids stay so receipts and the pantry still match, like groundPork and italianSausage; turkey lunch meat is still Jeff’s). Ranch is Wish-Bone (the Hidden Valley bottle was bought by mistake and still matches by alias). New for the Sam’s Club bulk dinners: stewMeat, sirloinTip, chuckRoast and groundChicken (their Sam’s prices were read from samsclub.com on Nov 15, 2026 and carry \"confidence\": \"listed\" and the page url), chickenSausage (al fresco, Jewel; price estimated), stirFryVeg and normandyVeg (Member’s Mark pack sizes from samsclub.com; prices estimated). \"bulk\": { \"freezes\": true|false, \"portionLb\": pounds in one meal-size freezer bag (lb items only), \"note\": how to portion or keep it } marks an item the family buys as a Sam’s Club bulk pack; it needs a Sam’s pack, and a dinner whose raw meat has it is tagged \"bulk\". 2026-11-22: Jeff and Candi marked 22 dinners and 7 sides No; the replacements (30 minutes or less, little pork) brought SeaPak butterfly shrimp for a fried shrimp night (two 18 oz bags, the family’s usual), frozen breaded chicken tenders, refrigerated biscuits for dumplings, and three canned sides Candi likes (Mexicorn, cream-style corn, whole new potatoes). Prices are estimates, marked (est.).",
  "units": {
   "bags": "bags",
   "bars": "bars",
@@ -38,7 +38,8 @@
   "tortillas": "tortillas",
   "tsp": "tsp",
   "waffles": "waffles",
-  "yogurt cups": "yogurt cups"
+  "yogurt cups": "yogurt cups",
+  "biscuits": "biscuits"
  },
  "ingredients": {
   "chicken": {
@@ -7900,6 +7901,225 @@
       "size": 0.75,
       "price": 2.99,
       "label": "Birds Eye broccoli, cauliflower & carrots, 12 oz bag (est.)"
+     }
+    }
+   }
+  },
+  "seapakShrimp": {
+   "name": "SeaPak breaded butterfly shrimp, 18 oz family size (frozen)",
+   "unit": "oz",
+   "aisle": "Frozen",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "seapak shrimp",
+    "seapak butterfly shrimp",
+    "butterfly shrimp",
+    "breaded shrimp",
+    "fried shrimp",
+    "popcorn shrimp"
+   ],
+   "brand": "SeaPak",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "meat": true,
+   "lbPerUnit": 0.0625,
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 18,
+      "price": 11.99,
+      "label": "SeaPak Butterfly Shrimp, 18 oz family size (est.)"
+     },
+     "name": {
+      "size": 18,
+      "price": 11.99,
+      "label": "SeaPak Butterfly Shrimp, 18 oz family size (the family’s usual; they cook two bags) (est.)"
+     }
+    }
+   }
+  },
+  "frozenTenders": {
+   "name": "Breaded chicken tenders (frozen, fully cooked)",
+   "unit": "lb",
+   "aisle": "Frozen",
+   "storage": "freezer",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "aliases": [
+    "chicken tenders",
+    "chicken strips",
+    "crispy chicken strips",
+    "breaded chicken tenders",
+    "frozen chicken tenders",
+    "tyson crispy chicken strips"
+   ],
+   "brand": "Tyson",
+   "usual": {
+    "store": "sams",
+    "tier": "name"
+   },
+   "meat": true,
+   "cooked": true,
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 3.75,
+      "price": 13.98,
+      "label": "Breaded chicken strips, about 3.75 lb bag (est.)"
+     },
+     "name": {
+      "size": 3.75,
+      "price": 14.98,
+      "label": "Tyson Crispy Chicken Strips, 3.75 lb bag (est.)"
+     }
+    },
+    "jewel": {
+     "generic": {
+      "size": 1.56,
+      "price": 7.99,
+      "label": "Store-brand breaded chicken strips, about 25 oz (est.)"
+     },
+     "name": {
+      "size": 1.56,
+      "price": 9.99,
+      "label": "Tyson Crispy Chicken Strips, 25 oz (est.)"
+     }
+    }
+   }
+  },
+  "biscuits": {
+   "name": "Refrigerated biscuits (Grands-size)",
+   "unit": "biscuits",
+   "aisle": "Dairy & Eggs",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "biscuits",
+    "refrigerated biscuits",
+    "biscuit dough",
+    "grands biscuits",
+    "pillsbury grands"
+   ],
+   "brand": "Pillsbury",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 8,
+      "price": 2.49,
+      "label": "Signature Select Southern-style biscuits, 8 ct, 16.3 oz (est.)"
+     },
+     "name": {
+      "size": 8,
+      "price": 3.49,
+      "label": "Pillsbury Grands! Southern Homestyle buttermilk biscuits, 8 ct, 16.3 oz (est.)"
+     }
+    }
+   }
+  },
+  "mexicorn": {
+   "name": "Mexicorn (corn with red and green peppers), 11 oz cans",
+   "unit": "cans",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "mexicorn",
+    "mexican style corn",
+    "green giant mexicorn",
+    "corn with peppers"
+   ],
+   "brand": "Green Giant",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 1.29,
+      "label": "Signature Select Mexican-style corn, 11 oz (est.)"
+     },
+     "name": {
+      "size": 1,
+      "price": 1.79,
+      "label": "Green Giant Mexicorn, 11 oz (est.)"
+     }
+    }
+   }
+  },
+  "creamCorn": {
+   "name": "Cream-style corn, 14.75 oz cans",
+   "unit": "cans",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "cream style corn",
+    "cream-style corn",
+    "creamed corn",
+    "cream corn"
+   ],
+   "brand": "Del Monte",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 1.09,
+      "label": "Signature Select cream style golden corn, 14.75 oz (est.)"
+     },
+     "name": {
+      "size": 1,
+      "price": 1.49,
+      "label": "Del Monte Cream Style Golden Sweet Corn, 14.75 oz (est.)"
+     }
+    }
+   }
+  },
+  "newPotatoes": {
+   "name": "Whole new potatoes, 15 oz cans",
+   "unit": "cans",
+   "aisle": "Canned & Jarred",
+   "storage": "pantry",
+   "kind": "measured",
+   "defaultStore": "jewel",
+   "aliases": [
+    "new potatoes",
+    "canned potatoes",
+    "whole new potatoes",
+    "canned new potatoes"
+   ],
+   "brand": "Del Monte",
+   "usual": {
+    "store": "jewel",
+    "tier": "name"
+   },
+   "packs": {
+    "jewel": {
+     "generic": {
+      "size": 1,
+      "price": 1.19,
+      "label": "Signature Select whole white potatoes, 15 oz (est.)"
+     },
+     "name": {
+      "size": 1,
+      "price": 1.59,
+      "label": "Del Monte Whole New Potatoes, 15 oz (est.)"
      }
     }
    }

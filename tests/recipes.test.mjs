@@ -15,7 +15,7 @@ import { EQUIPMENT_LABELS } from '../app/config.js';
 import { EQUIPMENT_ICON, icon } from '../app/icons.js';
 import { photo } from '../app/ui.js';
 import { normalizeIdea } from '../app/ideas.js';
-import { validateData, loadData, bannedWords, rawProduce, COOKER_SETTING, RETIRED_DINNERS, EQUIPMENT } from '../scripts/validate-data.mjs';
+import { validateData, loadData, bannedWords, rawProduce, COOKER_SETTING, RETIRED_DINNERS, EQUIPMENT, SHRIMP_NIGHT } from '../scripts/validate-data.mjs';
 
 const db = realDb();
 const disk = loadData();
@@ -38,7 +38,7 @@ const cookerDinners = () => db.dinnerList.filter((d) => d.equipment.includes('po
 test('the recipe box passes every rule', () => {
   const res = check();
   assert.deepEqual(res.errors, []);
-  assert.ok(res.stats.core >= 50 && res.stats.bench >= 20);
+  assert.ok(res.stats.core >= 50 && res.stats.bench >= 10); // the family pruned the bench on 2026-11-22
 });
 
 test('the two tofu-named dinners are gone, everywhere', () => {
@@ -48,7 +48,8 @@ test('the two tofu-named dinners are gone, everywhere', () => {
     assert.equal(db.photos.dinners[id], undefined, 'no picture entry');
     assert.ok(!existsSync(path.join(ROOT, `img/dinners/${id}.webp`)), 'no picture file');
   }
-  for (const d of [...db.dinnerList, ...db.sideList, ...db.lunch.itemList]) assert.deepEqual(bannedWords(d.id), [], d.id);
+  // Fried shrimp night is the one dish whose id may say shrimp (Jeff, 2026-11-22).
+  for (const d of [...db.dinnerList, ...db.sideList, ...db.lunch.itemList]) assert.deepEqual(bannedWords(d.id).filter((w) => !(d.id === SHRIMP_NIGHT.dinner && w === 'shrimp')), [], d.id);
 });
 
 test('a night the family planned with a removed dinner neither breaks the list nor the plate', () => {
@@ -144,8 +145,8 @@ test('every dinner has a vegetable: on the side, or on the burger', () => {
     assert.ok(d.sides.some((id) => ['vegetable', 'salad'].includes(db.sides[id].kind)), `${d.id} has a vegetable or salad side`);
     assert.ok(h.vegServings >= 1, `${d.id} ${h.vegServings} servings`);
   }
-  const noVeg = check((d) => { dinner(d, 'mustard-pork-apples').sides = ['sweet-potatoes', 'grilled-apples']; });
-  assert.ok(says(noVeg, /mustard-pork-apples: neither default side is a vegetable or a salad/));
+  const noVeg = check((d) => { dinner(d, 'honey-mustard-chicken-thighs').sides = ['new-potatoes', 'grilled-apples']; });
+  assert.ok(says(noVeg, /honey-mustard-chicken-thighs: neither default side is a vegetable or a salad/));
 });
 
 test('the box is lighter than it was, without shrinking the protein', () => {
@@ -178,9 +179,10 @@ test('"possible cooker" is a piece of equipment everywhere equipment is listed',
   assert.deepEqual(idea.equipment, ['possible cooker', 'stovetop']);
 });
 
-test('about 14 PossibleCooker dinners, each with real settings a cook can follow', () => {
+test('about a dozen PossibleCooker dinners, each with real settings a cook can follow', () => {
   const list = cookerDinners();
-  assert.ok(list.length >= 14, `${list.length} dinners`);
+  // 14 until 2026-11-22, when the family marked five of them No.
+  assert.ok(list.length >= 10, `${list.length} dinners`);
   assert.ok(db.sideList.filter((s) => s.equipment.includes('possible cooker')).length >= 3, 'a few sides too');
   const used = new Set();
   for (const d of list) {
@@ -197,7 +199,7 @@ test('about 14 PossibleCooker dinners, each with real settings a cook can follow
   }
   for (const s of ['SLOW COOK on LO', 'SEAR/SAUTÉ on HI', 'BRAISE', 'KEEP WARM']) assert.ok(used.has(s), s);
   assert.ok(list.filter((d) => d.tags.includes('freezer friendly')).length >= 8, 'made for two or three shopping trips a month');
-  assert.ok(list.filter((d) => d.tags.includes('soup')).length >= 4);
+  assert.ok(list.filter((d) => d.tags.includes('soup')).length >= 3) // the family kept the chicken soups (2026-11-22);
   assert.ok(list.every((d) => Object.keys(d.items).some((id) => db.ingredients[id].meat)), 'meat in every one');
 });
 
@@ -314,8 +316,8 @@ test('every built-in dinner: prep + cook = total, a timer, tips, leftovers and i
   }
   assert.equal(fmtMinutes(25), '25 min');
   assert.equal(fmtMinutes(60), '1 hr');
-  assert.equal(fmtMinutes(db.dinners['cooker-beef-stew'].minutes), '8 hr 40 min');
-  assert.equal(handsOnMinutes(db.dinners['cooker-beef-stew']), 25);
+  assert.equal(fmtMinutes(db.dinners['cooker-pot-roast'].minutes), '8 hr 40 min');
+  assert.equal(handsOnMinutes(db.dinners['cooker-pot-roast']), 20);
   const bad = check((d) => { dinner(d, 'smashburgers').cookMinutes = 99; });
   assert.ok(says(bad, /smashburgers: minutes \(30\) must be prepMinutes \+ cookMinutes \(114\)/));
   assert.ok(says(check((d) => { delete dinner(d, 'smashburgers').leftovers; }), /smashburgers: leftovers must say/));
@@ -440,7 +442,7 @@ test('a dish without a picture shows the placeholder, never a broken image', () 
   // Every dish has its picture now, so take some away in a copy: the PossibleCooker dinners, as on the day they were added.
   const bare = { ...db, photos: { ...db.photos, dinners: { ...db.photos.dinners } } };
   const waiting = cookerDinners();
-  assert.ok(waiting.length >= 14);
+  assert.ok(waiting.length >= 10);
   for (const d of waiting) delete bare.photos.dinners[d.id];
   for (const d of waiting) {
     const htmlText = String(photo(bare, 'dinner', d.id, { category: d.category, alt: d.title }));
@@ -467,28 +469,30 @@ test('dev/photo-jobs.json queues every dish that needs a picture', () => {
     assert.equal(j.file, `${dir[j.kind]}/${j.id}.webp`);
     assert.ok(j.prompt.length > 150 && j.prompt.includes('Do not show cucumber, raw tomato, raw onion or scallions'));
     assert.deepEqual(rawProduce(j.prompt.split('No text')[0], { picture: true }), [], `${key(j)} prompt`);
-    assert.deepEqual(bannedWords(j.prompt), [], `${key(j)} prompt`);
+    assert.deepEqual(bannedWords(j.prompt).filter((w) => !(j.id === SHRIMP_NIGHT.dinner && w === 'shrimp')), [], `${key(j)} prompt`);
   }
   // the four the brief named, every new dish, and every lunch that never had a picture
-  for (const k of ['dinner:greek-chicken-pitas', 'dinner:hummus-grill-plates', 'dinner:pork-souvlaki-plates', 'side:romaine-salad']) assert.ok(queued.has(k), k);
+  for (const k of ['dinner:greek-chicken-pitas', 'dinner:hummus-grill-plates', 'side:romaine-salad']) assert.ok(queued.has(k), k);
+  // and the dinners that replaced the ones the family marked No (2026-11-22)
+  for (const k of ['dinner:seapak-shrimp-night', 'dinner:hamburger-steaks-gravy', 'side:mexicorn', 'side:canned-green-beans']) assert.ok(queued.has(k), k);
   for (const d of db.dinnerList) if (!db.photos.dinners[d.id]) assert.ok(queued.has(`dinner:${d.id}`), d.id);
   for (const s of db.sideList) if (!db.photos.sides[s.id]) assert.ok(queued.has(`side:${s.id}`), s.id);
   for (const l of db.lunch.itemList) if (!db.photos.lunches[l.id]) assert.ok(queued.has(`lunch:${l.id}`), l.id);
-  assert.ok(jobs.filter((j) => /cucumber/.test(j.why || '')).length >= 15, 'the cucumber pictures the contact sheets turned up');
+  assert.ok(jobs.filter((j) => /cucumber/.test(j.why || '')).length >= 12, 'the cucumber pictures the contact sheets turned up (a few of those dinners were marked No since)');
 });
 
 test('validator: pictures on disk, and a job for whatever is missing', () => {
   // A picture listed in photos.json whose file isn't there.
-  const ghost = check((d) => { d.photos.dinners['cooker-beef-stew'] = 'img/dinners/never-made.webp'; });
-  assert.ok(says(ghost, /dinners\.cooker-beef-stew points at img\/dinners\/never-made\.webp, which is not on disk/));
+  const ghost = check((d) => { d.photos.dinners['cooker-pot-roast'] = 'img/dinners/never-made.webp'; });
+  assert.ok(says(ghost, /dinners\.cooker-pot-roast points at img\/dinners\/never-made\.webp, which is not on disk/));
   const stale = check((d) => { d.photos.dinners['orange-tofu-bowls'] = 'img/dinners/orange-tofu-bowls.webp'; });
   assert.ok(says(stale, /orange-tofu-bowls is a picture of a dinner that isn't in the recipe box/));
   // A dish with no picture: an error with no job, only a warning while one is queued.
-  const forgotten = check((d) => { delete d.photos.dinners['cooker-beef-stew']; d.photoJobs = d.photoJobs.filter((j) => j.id !== 'cooker-beef-stew'); });
-  assert.ok(says(forgotten, /dinner cooker-beef-stew: no picture yet and no job/));
-  const queued = check((d) => { delete d.photos.dinners['cooker-beef-stew']; });
+  const forgotten = check((d) => { delete d.photos.dinners['cooker-pot-roast']; d.photoJobs = d.photoJobs.filter((j) => j.id !== 'cooker-pot-roast'); });
+  assert.ok(says(forgotten, /dinner cooker-pot-roast: no picture yet and no job/));
+  const queued = check((d) => { delete d.photos.dinners['cooker-pot-roast']; });
   assert.deepEqual(queued.errors, []);
-  assert.ok(queued.warnings.some((w) => /dinner cooker-beef-stew: no picture yet \(queued/.test(w)), 'queued is a warning, not an error');
+  assert.ok(queued.warnings.some((w) => /dinner cooker-pot-roast: no picture yet \(queued/.test(w)), 'queued is a warning, not an error');
   assert.ok(!check().warnings.some((w) => /no picture yet/.test(w)), 'every dish has its picture today');
   assert.ok(says(check((d) => { d.photoJobs[0].file = 'img/elsewhere.png'; }), /file must be img\//));
   assert.ok(says(check((d) => { d.photoJobs[0].prompt = `${'A plate of noodles with cucumber slices and scallions. '.repeat(2)}No text.`; }), /prompt: no cucumber/));

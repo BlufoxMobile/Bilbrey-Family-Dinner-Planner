@@ -147,7 +147,7 @@ const INSTRUCTIONS = [
   "House rules for anything you suggest: dinner is one meat main plus two sides for five full adult plates;",
   "never the oven or broiler. They cook on a Blackstone griddle, air fryer, gas stovetop, electric or outdoor grill, microwave, and a",
   "Ninja 10-in-1 PossibleCooker Pro 6.5 qt (equipment id \"possible cooker\": slow cook, sear/sauté, braise, steam, rice, keep warm).",
-  "No tofu; no seafood except an occasional snow crab boil with Old Bay; soups now and then; nothing Caesar; no raw cucumbers (pickles",
+  "No tofu; no seafood except fried shrimp night (SeaPak, in the recipe box) and an occasional snow crab boil with Old Bay; soups now and then; nothing Caesar; no raw cucumbers (pickles",
   "are fine), raw onions or raw tomatoes; organic fruits and vegetables when possible; Knox only eats Cool Ranch Doritos.",
   "Dinners should be lean and high in protein with a vegetable or a salad: leaner cuts, more vegetables, less frying. Lighter never means",
   "small portions (three growing kids eat these dinners). Show calories and protein per plate when you have them, but never set a calorie",
@@ -437,8 +437,8 @@ const TOOL_DEFS = [
       "cuts, more vegetables, air-fry, grill, griddle, braise or slow cook instead of frying; full portions all the same. New recipes must " +
       "follow the house rules or they're refused: no oven or broiler " +
       "ever (Blackstone griddle, air fryer, stovetop, electric or outdoor grill, microwave, and the Ninja PossibleCooker: equipment " +
-      "'possible cooker', for slow cook, sear/sauté, braise, steam, rice and keep warm), no tofu, no seafood (the one exception is an " +
-      "occasional snow crab boil with Old Bay), nothing Caesar, no raw cucumbers, raw onions or raw tomatoes (cooked onions and tomato " +
+      "'possible cooker', for slow cook, sear/sauté, braise, steam, rice and keep warm), no tofu, no seafood (the exceptions are the family's " +
+      "fried shrimp night, already in the box, and an occasional snow crab boil with Old Bay), nothing Caesar, no raw cucumbers, raw onions or raw tomatoes (cooked onions and tomato " +
       "sauces are fine), meat in every dinner, and steps that state safe temperatures (chicken 165°F, ground beef and sausage " +
       "160°F, whole cuts of beef and pork chops 145°F then rest 3 minutes). The family prefers chicken to turkey and eats little pork; " +
       "dinners built on Sam's Club bulk packs (chicken thighs or breasts, ground chicken, lean ground beef, beef tips, sirloin tip, chuck roast) are welcome. Recipe items should use recipe-box ingredient ids (from list_recipes with id) where " +
@@ -586,7 +586,7 @@ const HOUSE_RULES = [
   "Never the oven or broiler (it leaks propane). Cook on the Blackstone griddle, air fryer, gas stovetop, indoor electric grill, outdoor grill, microwave or the Ninja PossibleCooker (slow cook, sear/sauté, braise, steam, rice, keep warm).",
   "Lean, high-protein dinners with a vegetable or a salad, for the whole family: leaner cuts, more vegetables, less frying. Lighter never means small portions: three growing kids eat these dinners.",
   "Show calories and protein per plate, but never set a calorie target for anyone and never call a food good or bad.",
-  "No tofu. No seafood, apart from an occasional (every few months) snow crab boil with Old Bay. Soups now and then are welcome.",
+  "No tofu. No seafood, apart from the family's fried shrimp night (two bags of SeaPak butterfly shrimp with fries, in the recipe box) and an occasional (every few months) snow crab boil with Old Bay. Soups now and then are welcome.",
   "Never anything Caesar.",
   "No raw cucumbers (pickles are fine), no raw onions and no raw tomatoes. Cooked onions and tomato sauces are fine; only Candi eats raw tomato.",
   "Buy organic fruits and vegetables when the store has them.",

@@ -20,7 +20,8 @@ const KINDS = ['measured', 'staple'];
 const STORES = ['sams', 'jewel'];
 const CATEGORIES = ['Burgers', 'Asian-inspired', 'Pasta', 'Tex-Mex', 'Grill', 'Comfort', 'Salads'];
 // No 'turkey': the family prefers chicken (Jeff, 2026-11-15), so no dinner is a turkey dinner.
-const PROTEINS = ['chicken', 'beef', 'pork', 'sausage', 'mixed'];
+// 'seafood' is fried shrimp night and nothing else (Jeff, 2026-11-22; see SHRIMP_NIGHT).
+const PROTEINS = ['chicken', 'beef', 'pork', 'sausage', 'seafood', 'mixed'];
 export const EQUIPMENT = ['stovetop', 'blackstone', 'electric grill', 'outdoor grill', 'air fryer', 'microwave', 'possible cooker'];
 const TAGS = ['burger', 'pizza', 'rice', 'family favorite', 'family usual', 'from your pantry', 'noodle night', 'taco night', 'grill night', 'salad', 'healthier', 'sandwiches', 'wraps', 'soup', 'freezer friendly', 'bulk'];
 const SIDE_KINDS = ['vegetable', 'starch', 'salad', 'fruit', 'bread', 'soup'];
@@ -28,7 +29,8 @@ const VEG_KINDS = ['vegetable', 'salad'];
 const LUNCH_SLOTS = ['main', 'side', 'snack', 'drink'];
 const RICE_IDS = ['jasmine', 'basmati'];
 const MAX_COST = 28, MIN_COST = 6; // v2.2: recalibrated from $22 to real prices paid (93/7 beef $6.17/lb, ⅓-lb sirloin patties, pre-seasoned/cooked meats) — ≈ $5.60 a plate
-const MIN_CORE = 50, MIN_BENCH = 20;
+// 2026-11-22: Jeff and Candi went through the box and took 22 dinners out, most of them bench dinners, so the bench is smaller now.
+const MIN_CORE = 50, MIN_BENCH = 10;
 const PLATES = 5;
 // A dinner plate (main + default sides ÷ 5). v3 lightened the box: nothing over PLATE_MAX_KCAL may come back.
 const PLATE_MIN_KCAL = 350, PLATE_MAX_KCAL = 1000, PLATE_MIN_PROTEIN = 25;
@@ -36,6 +38,7 @@ const PLATE_MIN_KCAL = 350, PLATE_MAX_KCAL = 1000, PLATE_MIN_PROTEIN = 25;
 // fries (Jeff's rule), so the burger itself has to carry some: lettuce, griddled onions, mushrooms or slaw.
 const MIN_VEG = 1, MIN_VEG_BURGER = 0.4;
 
+const NO_2026_11_22 = 'Jeff and Candi marked it No when they went through the recipe box on 2026-11-22';
 /** Reference dinners that are gone for good, and why. The reference-id rule may never bring them back. */
 export const RETIRED_DINNERS = {
   'sesame-tofu-noodles': 'the family never eats tofu, and the id (which shows in links and file names) said tofu',
@@ -44,16 +47,42 @@ export const RETIRED_DINNERS = {
   'turkey-taco-salad': 'the family prefers chicken to turkey, and the id said turkey; it is chicken-taco-salad now',
   'turkey-chili': 'the family prefers chicken to turkey, and the id said turkey; it is chicken-bean-chili now',
   'cooker-turkey-meatballs': 'the family prefers chicken to turkey, and the id said turkey; it is cooker-chicken-meatballs now',
+  // Jeff and Candi went through every dinner on 2026-11-22 and marked these No.
+  'apple-glazed-pork-chops': NO_2026_11_22,
+  'breaded-pork-sandwiches': NO_2026_11_22,
+  'chicken-katsu': NO_2026_11_22,
+  'chicken-pepper-plates': NO_2026_11_22,
+  'chicken-tostadas': NO_2026_11_22,
+  'cooker-beef-stew': NO_2026_11_22,
+  'cooker-braised-pork-apples': NO_2026_11_22,
+  'cooker-chicken-cacciatore': NO_2026_11_22,
+  'cooker-italian-beef': NO_2026_11_22,
+  'cooker-lasagna-soup': NO_2026_11_22,
+  'cooker-sausage-minestrone': NO_2026_11_22,
+  'cooker-sesame-ginger-chicken': NO_2026_11_22,
+  'hibachi-chicken-noodles': NO_2026_11_22,
+  'honey-garlic-pork-chops': NO_2026_11_22,
+  'kung-pao-chicken': NO_2026_11_22,
+  'mustard-pork-apples': NO_2026_11_22,
+  'peanut-sweet-potatoes': NO_2026_11_22,
+  'pork-carnitas-tacos': NO_2026_11_22,
+  'pork-souvlaki-plates': NO_2026_11_22,
+  'sausage-pepper-hoagies': NO_2026_11_22,
+  'sweet-potato-tacos': NO_2026_11_22,
+  'sweet-sour-pork': NO_2026_11_22,
 };
 // Removed on purpose (Jeff, 2026-11-15: no raw cucumbers).
-const REMOVED_SIDES = new Set(['tomato-cucumber', 'cucumber-spears', 'sesame-cucumber']);
+// And these sides, marked No on 2026-11-22 (Candi: "we like french style green beans, and other simple, easy canned goods").
+const REMOVED_SIDES = new Set(['tomato-cucumber', 'cucumber-spears', 'sesame-cucumber',
+  'air-fryer-veggies', 'applesauce-cups', 'asian-slaw', 'lime-slaw', 'spinach-apple-salad', 'steamed-mixed-vegetables', 'sweet-potatoes']);
 
 // Which catalog meat ids satisfy each "protein" value.
 const PROTEIN_IDS = {
-  chicken: ['chicken', 'chickenThighs', 'groundChicken', 'fajitaChicken', 'pulledChicken', 'chickenAlfredoDeli'],
+  chicken: ['chicken', 'chickenThighs', 'groundChicken', 'fajitaChicken', 'pulledChicken', 'chickenAlfredoDeli', 'frozenTenders'],
   beef: ['beef', 'beefPatties', 'roastBeef', 'eyeRoundSteak', 'stewMeat', 'sirloinTip', 'chuckRoast'],
   pork: ['pork', 'porkLoin', 'groundPork', 'pulledPork'],
   sausage: ['italianSausage', 'smokedSausage', 'chorizo', 'chickenSausage'],
+  seafood: ['seapakShrimp'],
 };
 // Safe-temperature rules: if a dinner uses one of these ids, its steps must state the temp.
 const TEMP_RULES = [
@@ -83,6 +112,11 @@ const WRONG_RANCH = /hidden valley/i;
 const COMES_WITH_RAW_TOMATO = ['bonduelleBltBowl', 'tfBltChickenBowl'];
 export const TOMATO_LEFT_OUT = { 'bonduelle-chicken-blt': ['Jeff'] };
 const LEAVES_TOMATO_OUT = /\b(leave|hold|pick|take)\b[^.]*\btomato(es)?\b[^.]*\b(out|off)\b|\bwithout the tomato(es)?\b/i;
+
+// Jeff, 2026-11-22: "I would be good with a fried shrimp night with some SeaPak fried shrimp. We usually eat two packs
+// when we cook that and we cook that with fries." The one seafood dinner in the box, and the one shrimp in the catalog.
+// Its plate is what the family eats (two bags for five), so the protein floor doesn't move it.
+export const SHRIMP_NIGHT = { dinner: 'seapak-shrimp-night', item: 'seapakShrimp', where: /\bseapak-shrimp-night\b|\bcatalog\.seapakShrimp\b/ };
 
 // ---------------------------------------------------------------- house rules in words
 // Banned words (whole-text, case-insensitive). "seafood-free" is the one allowed seafood phrase.
@@ -149,6 +183,7 @@ const STEP_WORDS = {
   beef: ['beef'], pork: ['chop', 'pork'], porkLoin: ['pork'], groundPork: ['pork'], groundTurkey: ['turkey'], italianSausage: ['sausage'],
   turkeySausage: ['sausage'], groundChicken: ['ground chicken', 'chicken'], chickenSausage: ['sausage'], stewMeat: ['beef tips', 'stew meat', 'beef'],
   sirloinTip: ['sirloin', 'steak'], chuckRoast: ['chuck', 'roast'], stirFryVeg: ['stir-fry vegetables', 'vegetables'], normandyVeg: ['normandy', 'vegetables'], whiteBeans: ['white beans', 'beans'], greenChiles: ['green chiles'], celery: ['celery'], beefBroth: ['beef stock', 'beef broth'],
+  seapakShrimp: ['shrimp'], frozenTenders: ['tenders'], biscuits: ['biscuit'], mexicorn: ['mexicorn'], creamCorn: ['cream-style corn'], newPotatoes: ['new potatoes', 'potatoes'],
   greenBeans: ['green beans'], cannedCorn: ['corn'], cannedCarrots: ['carrot'], corn: ['corn'], freshGreenBeans: ['green beans', 'beans'],
   cornCobs: ['ears', 'corn'], buns: ['bun'], hoagies: ['roll'], bread: ['bread', 'slice'], naan: ['naan'], tortillas: ['tortilla'],
   yogurt: ['yogurt', 'tzatziki'], potatoes: ['potato'], sweet: ['sweet potato'], ginger: ['ginger'], garlic: ['garlic'], limes: ['lime'],
@@ -200,9 +235,10 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
   const warn = (m) => warnings.push(m);
   if (!catalog || !recipes) return { errors: errors.length ? errors : ['catalog or recipes missing'], warnings, rows: [], stats: {} };
 
-  /** Banned words in any text. */
+  /** Banned words in any text. Fried shrimp night (and its shrimp) may say shrimp; nothing else may. */
   function scanText(where, text) {
-    for (const word of bannedWords(text)) err(`${where}: banned word "${word}" in: ${String(text).slice(0, 120)}`);
+    const shrimpNight = SHRIMP_NIGHT.where.test(where);
+    for (const word of bannedWords(text)) if (!(shrimpNight && (word === 'shrimp' || word === 'seafood'))) err(`${where}: banned word "${word}" in: ${String(text).slice(0, 120)}`);
   }
   /** fn(text, key) for every string inside a dish, the id included ("items" are ids and amounts, checked on their own). */
   function eachString(value, fn, key = '') {
@@ -495,6 +531,7 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
     }
     if ((d.tags || []).includes('freezer friendly') && !/freez/i.test(String(d.leftovers || ''))) err(`${w}: tagged "freezer friendly" but leftovers doesn't say how to freeze it`);
     if (d.rotation === 'core' && Object.keys(d.items || {}).some((id) => PORK_MAIN_IDS.includes(id))) corePork.push(d.id);
+    if (d.items?.[SHRIMP_NIGHT.item] && d.id !== SHRIMP_NIGHT.dinner) err(`${w}: only fried shrimp night uses the shrimp; the family doesn't eat other seafood`);
 
     // sides + sideSlots
     const isBurger = (d.tags || []).includes('burger');
@@ -554,7 +591,7 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
       if (!t.missing.length) {
         if (p.kcal < PLATE_MIN_KCAL) err(`${w}: ${Math.round(p.kcal)} kcal a plate is under ${PLATE_MIN_KCAL} (portions stay normal)`);
         if (p.kcal > PLATE_MAX_KCAL) err(`${w}: ${Math.round(p.kcal)} kcal a plate is over ${PLATE_MAX_KCAL}`);
-        if (p.protein < PLATE_MIN_PROTEIN) err(`${w}: ${Math.round(p.protein)} g protein a plate is under ${PLATE_MIN_PROTEIN} g`);
+        if (p.protein < PLATE_MIN_PROTEIN && d.id !== SHRIMP_NIGHT.dinner) err(`${w}: ${Math.round(p.protein)} g protein a plate is under ${PLATE_MIN_PROTEIN} g`);
         const minVeg = isBurger ? MIN_VEG_BURGER : MIN_VEG;
         if (Math.round(p.veg * 10) / 10 < minVeg) err(`${w}: only ${p.veg.toFixed(1)} vegetable servings a plate (needs ${minVeg})`);
       }
@@ -719,7 +756,8 @@ export function validateData({ catalog, recipes, lunches = null, nutrition = nul
     return { id: d.id, rot: d.rotation, protein: d.protein, entree, sides, total: entree + sides, res, fam, plate: plates[d.id] || null };
   });
   for (const r of rows) {
-    if (r.total > MAX_COST) err(`dinner ${r.id}: estimated cost $${r.total.toFixed(2)} is over $${MAX_COST}`);
+    // Fried shrimp night is what the family already buys (two bags of SeaPak), so the cap doesn't push it around.
+    if (r.total > MAX_COST && r.id !== SHRIMP_NIGHT.dinner) err(`dinner ${r.id}: estimated cost $${r.total.toFixed(2)} is over $${MAX_COST}`);
     if (r.total < MIN_COST) err(`dinner ${r.id}: estimated cost $${r.total.toFixed(2)} is under $${MIN_COST}`);
   }
 

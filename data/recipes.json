@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated": "2026-11-15",
+  "updated": "2026-11-22",
   "notes": "Quantities are per dinner for five adult-size portions, in catalog units. \"items\" = entrée only; default sides carry their own items. Equipment used: stovetop burners, Blackstone griddle, electric grill, outdoor grill, air fryer, microwave and the Ninja PossibleCooker Pro (equipment id \"possible cooker\") only. Every dinner carries meat; the family food rules are enforced by scripts/validate-data.mjs. Several prototype ids no longer describe their dish (they are kept only so photos and saved family data still match); always show the title, never the id. Sides tagged \"rice\" count toward the rice-per-week limit. v2.2: recipes are built around the brands the family actually buys (see catalog \"brand\"/\"usual\"); where a seasoned product (Rao’s, Maya Kaimal, La Preferida, Buena Mesa, Cholula, Bush’s chili beans, Del Monte Cajun potatoes, Knorr) covers the seasoning, the separate spices were dropped. Dinners tagged \"family usual\" are built from their regular purchases. 2026-11-15: dinners tagged \"from your pantry\" were built around the seasonings and sauces in the family’s pantry photos (Slap Ya Mama, Badia mango pepper, Buffalo Wild Wings mango habanero, Crystal, Buona giardiniera, apple jelly, turmeric, Old Bay, French’s crispy onions). 2026-11-15 pm: Cajun butter steak bites (eye of round), chorizo & nopalitos street tacos and smoky beef & bean chili were built from the family’s freezer and pantry photos. 2026-11-15 (v2.5.3): the creamy Parmesan-and-crouton romaine side was removed for good (the family never eats that kind of salad). 2026-11-15 (v3, docs/spec/18-recipe-box.md): two prototype dinners were retired for good (RETIRED_DINNERS in the validator); every dinner was lightened (leaner cuts, more vegetables, less butter, oil and sugar, a vegetable or salad among every pair of default sides) and its steps rewritten in full; steps may be { text, minutes, setting }; prepMinutes + cookMinutes = minutes; tips and leftovers were added; 14 PossibleCooker dinners and 6 sides joined the box. 2026-11-15 night (docs/spec/24-chicken-bulk-and-meal-cost.md): the family prefers chicken to turkey and eats little pork, so no dinner uses turkey (ground chicken, seasoned like Italian sausage where a dish wants sausage; three ids that named turkey were replaced, see RETIRED_DINNERS and \"renamed\"); pork fried rice and pork chow mein became steak and chicken, and two pork dinners moved to the bench. Ten dinners were built on Sam’s Club bulk buys (beef tips, sirloin tip, chuck roast, chicken thighs and breasts, frozen stir-fry and Normandy vegetables). The tag \"bulk\" marks a dinner whose meat comes from a Sam’s bulk pack that is portioned and frozen (catalog \"bulk\"). Steamed PossibleCooker sides use its STEAM setting (Jeff confirmed the button).",
   "dinners": [
     {
@@ -1052,59 +1052,6 @@
       "photo": "Stir-fried noodles with seared strips of chicken, sliced mushrooms, shredded cabbage and strips of egg, piled on a platter."
     },
     {
-      "id": "peanut-sweet-potatoes",
-      "title": "Peanut chicken sweet potatoes",
-      "subtitle": "Split sweet potatoes stuffed with grilled chicken, crunchy slaw and peanut-lime sauce.",
-      "category": "Asian-inspired",
-      "protein": "chicken",
-      "minutes": 40,
-      "prepMinutes": 10,
-      "cookMinutes": 30,
-      "equipment": [
-        "microwave",
-        "electric grill"
-      ],
-      "tags": [
-        "healthier",
-        "bulk"
-      ],
-      "rotation": "core",
-      "items": {
-        "chickenThighs": 2.25,
-        "sweet": 3,
-        "slaw": 10,
-        "peanut": 4,
-        "limes": 2,
-        "soy": 3,
-        "honey": 1,
-        "oil": 1
-      },
-      "steps": [
-        {
-          "text": "Scrub the 3 lb of sweet potatoes (5 medium) and poke each one 5 or 6 times with a fork. Microwave on a plate, three at a time, turning them over halfway, until a knife slides into the center with no resistance: 8–10 minutes for three, a few minutes more for big ones. Careful, they’re steaming hot.",
-          "minutes": 8,
-          "setting": "Microwave, high"
-        },
-        {
-          "text": "Preheat the electric grill on medium-high for 5 minutes. Rub the chicken thighs with the oil and 1 tablespoon of the soy sauce. Grill the thighs, turning once halfway, until browned and a thermometer pushed into the thickest one reads 165°F: 10–14 minutes on an open grill, 6–8 minutes if yours closes like a press. Move to a clean plate, rest 5 minutes so the juices stay in, then slice across the grain.",
-          "minutes": 10,
-          "setting": "Electric grill, medium-high"
-        },
-        "Whisk the peanut butter, the juice of both limes, the remaining soy sauce, the honey and 3–4 tablespoons of warm water into a smooth sauce you can pour.",
-        "Split the sweet potatoes, fluff the insides with a fork, fill with the coleslaw mix and sliced chicken and drizzle with the peanut sauce."
-      ],
-      "tips": [
-        "Similar-size sweet potatoes cook evenly; put any big one in the first batch."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; store the potatoes, chicken and sauce separately and rebuild for lunch.",
-      "sides": [
-        "canned-green-beans",
-        "orange-wedges"
-      ],
-      "sideSlots": 2,
-      "photo": "Split orange sweet potatoes stuffed with sliced grilled chicken and crunchy shredded cabbage, drizzled with creamy peanut sauce."
-    },
-    {
       "id": "brown-butter-spaghetti",
       "title": "Brown butter spaghetti with grilled chicken",
       "subtitle": "Spaghetti tossed in nutty brown butter, Parmesan and cracked pepper, topped with sliced grilled chicken.",
@@ -1764,104 +1711,6 @@
       "photo": "A toasted bun piled high with sliced barbecue-glazed grilled chicken and crunchy apple coleslaw, on a plate."
     },
     {
-      "id": "chicken-pepper-plates",
-      "title": "Garlic yogurt chicken",
-      "subtitle": "Paprika-grilled chicken finished with a garlicky lemon-yogurt sauce.",
-      "category": "Grill",
-      "protein": "chicken",
-      "minutes": 25,
-      "prepMinutes": 10,
-      "cookMinutes": 15,
-      "equipment": [
-        "electric grill"
-      ],
-      "tags": [
-        "grill night",
-        "healthier",
-        "bulk"
-      ],
-      "rotation": "core",
-      "items": {
-        "chicken": 2.25,
-        "yogurt": 8,
-        "lemons": 1,
-        "garlic": 3,
-        "oil": 1,
-        "paprika": 1,
-        "salt": 1
-      },
-      "steps": [
-        {
-          "text": "Preheat the electric grill on medium-high for 5 minutes. Lay the chicken breasts between two sheets of plastic wrap (or in a zip bag) and pound the thick ends with a rolling pin or the bottom of a pan until each is an even ¾ inch thick, so they cook through without drying out. Rub them with the oil and season with the paprika and salt. Grill, turning once halfway, until marked and a thermometer in the thickest part reads 165°F: 10–14 minutes on an open grill, 6–8 minutes if yours closes like a press. Move to a clean plate, rest 5 minutes so the juices stay in, then slice across the grain.",
-          "minutes": 10,
-          "setting": "Electric grill, medium-high"
-        },
-        "Whisk the yogurt with the 3 minced garlic cloves and the juice of the lemon.",
-        "Drizzle some of the sauce over the sliced chicken and serve the rest on the side."
-      ],
-      "tips": [
-        "Grill the peppers and onions first, then the chicken; the vegetables are fine at room temperature."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; good cold in a wrap with the sauce.",
-      "sides": [
-        "pepper-onions",
-        "warm-naan"
-      ],
-      "sideSlots": 2,
-      "photo": "Sliced paprika-dusted grilled chicken breast drizzled with a thick white garlic-lemon yogurt sauce, on a platter with lemon wedges."
-    },
-    {
-      "id": "mustard-pork-apples",
-      "title": "Honey mustard pork chops",
-      "subtitle": "Grilled boneless chops brushed with a sweet honey-mustard glaze.",
-      "category": "Grill",
-      "protein": "pork",
-      "minutes": 25,
-      "prepMinutes": 10,
-      "cookMinutes": 15,
-      "equipment": [
-        "electric grill"
-      ],
-      "tags": [
-        "grill night",
-        "bulk"
-      ],
-      "rotation": "core",
-      "items": {
-        "pork": 2.25,
-        "mustard": 4,
-        "honey": 2,
-        "oil": 1,
-        "salt": 1,
-        "pepper": 0.5,
-        "garlicPowder": 0.5
-      },
-      "steps": [
-        "Stir the mustard and honey together and set half aside in a clean bowl for serving.",
-        "Pat the pork chops dry with paper towels, rub with the oil and season with the salt, pepper and garlic powder.",
-        {
-          "text": "Preheat the electric grill on medium for 5 minutes. Grill the chops 4–6 minutes per side, brushing with the other half of the glaze during the last 2 minutes, until a thermometer in the center reads 145°F. A little pink in the middle is right for pork.",
-          "minutes": 8,
-          "setting": "Electric grill, medium"
-        },
-        {
-          "text": "Rest the chops on a clean plate for at least 3 minutes, then spoon the reserved glaze over the top.",
-          "minutes": 3
-        }
-      ],
-      "tips": [
-        "Pull the chops at 145°F; a few degrees more and lean pork turns dry.",
-        "Use the reserved glaze for serving, never the bowl the raw-meat brush went into."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; slice thin for sandwiches.",
-      "sides": [
-        "sweet-potatoes",
-        "garlic-green-beans"
-      ],
-      "sideSlots": 2,
-      "photo": "Boneless pork chops with crosshatch grill marks and a shiny golden honey-mustard glaze, on a plate."
-    },
-    {
       "id": "griddle-beef-pitas",
       "title": "Spiced beef flatbreads",
       "subtitle": "Grilled naan spread with hummus and topped with cumin-spiced lean beef, shredded romaine and a lemony yogurt drizzle.",
@@ -2076,7 +1925,7 @@
       "leftovers": "Keeps 3 days in the fridge in a covered container. The filling reheats well in a skillet; warm fresh tortillas to go with it.",
       "sides": [
         "black-beans",
-        "lime-slaw"
+        "mexicorn"
       ],
       "sideSlots": 2,
       "photo": "Sizzling strips of seasoned chicken with charred red, green and yellow pepper strips and onions beside small warm flour tortillas and a dollop of white cream."
@@ -2135,8 +1984,8 @@
       ],
       "leftovers": "Keeps 3 days in the fridge in a covered container; reheat in a dry skillet so they crisp back up.",
       "sides": [
-        "canned-corn",
-        "lime-slaw"
+        "mexicorn",
+        "orange-wedges"
       ],
       "sideSlots": 2,
       "photo": "Golden crispy quesadilla wedges oozing melted cheddar, seasoned chicken and black beans, with salsa and a dollop of cream on the side."
@@ -2198,131 +2047,11 @@
       ],
       "leftovers": "Keeps 3 days in the fridge in a covered container; pack rice, beef and beans together for lunch and add the lettuce fresh.",
       "sides": [
-        "lime-slaw",
+        "mexicorn",
         "orange-wedges"
       ],
       "sideSlots": 2,
       "photo": "A burrito bowl with basmati rice, taco-seasoned ground beef, black beans, corn, shredded lettuce, cheddar and salsa, with a lime wedge."
-    },
-    {
-      "id": "sweet-potato-tacos",
-      "title": "Chicken & sweet potato tacos",
-      "subtitle": "Taco-seasoned ground chicken and crispy air-fried sweet potato cubes in warm street-taco corn tortillas.",
-      "category": "Tex-Mex",
-      "protein": "chicken",
-      "minutes": 45,
-      "prepMinutes": 15,
-      "cookMinutes": 30,
-      "equipment": [
-        "air fryer",
-        "stovetop"
-      ],
-      "tags": [
-        "taco night",
-        "healthier",
-        "bulk"
-      ],
-      "rotation": "core",
-      "items": {
-        "groundChicken": 2,
-        "sweet": 1.5,
-        "streetTacoCorn": 15,
-        "taco": 6,
-        "oil": 1,
-        "salsa": 8,
-        "yogurt": 4
-      },
-      "steps": [
-        {
-          "text": "Heat the air fryer to 400°F. Peel the 1½ lb of sweet potatoes, cut into ½-inch cubes and toss with the oil and 1 tablespoon of the taco seasoning. Air-fry in two batches, shaking the basket halfway, until tender and golden at the edges, 15–18 minutes per batch.",
-          "minutes": 15,
-          "setting": "Air fryer, 400°F"
-        },
-        {
-          "text": "Set a large skillet over medium-high heat; lean ground chicken browns fine without oil in a nonstick pan. Add the 2 lb of ground chicken and break it into small crumbles with a wooden spoon as it cooks. Keep going until no pink is left and a thermometer in the meat reads 165°F, 8–10 minutes.",
-          "minutes": 8,
-          "setting": "Stovetop, medium-high"
-        },
-        {
-          "text": "Stir in the rest of the taco seasoning (the packets carry all the spices) and about 1 cup of water and simmer until saucy, 3–5 minutes.",
-          "minutes": 3,
-          "setting": "Stovetop, medium"
-        },
-        {
-          "text": "Warm the street-taco tortillas two or three at a time in a dry skillet over medium-high heat, 20–30 seconds per side, until soft with a few toasted spots. Stack them inside a clean kitchen towel so they stay warm and bendy.",
-          "setting": "Stovetop, medium-high"
-        },
-        "Fill three tortillas per person with chicken and sweet potatoes and top with salsa and yogurt."
-      ],
-      "tips": [
-        "Cut the sweet potato cubes the same size so they finish together."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container. The filling reheats well in a skillet; warm fresh tortillas to go with it.",
-      "sides": [
-        "black-beans",
-        "lime-slaw"
-      ],
-      "sideSlots": 2,
-      "photo": "Corn tortilla tacos filled with seasoned ground chicken and golden crispy sweet potato cubes, topped with salsa and a drizzle of yogurt, lime wedges alongside."
-    },
-    {
-      "id": "chicken-tostadas",
-      "title": "Crispy chicken tostadas",
-      "subtitle": "Air-crisped corn tortillas layered with mashed black beans, grilled chicken, lots of lettuce and cheddar.",
-      "category": "Tex-Mex",
-      "protein": "chicken",
-      "minutes": 45,
-      "prepMinutes": 15,
-      "cookMinutes": 30,
-      "equipment": [
-        "electric grill",
-        "air fryer",
-        "stovetop"
-      ],
-      "tags": [
-        "taco night",
-        "bulk"
-      ],
-      "rotation": "core",
-      "items": {
-        "chickenThighs": 2.25,
-        "cornwrap": 15,
-        "beans": 2,
-        "lettuce": 2,
-        "salsa": 10,
-        "cheese": 4,
-        "taco": 2,
-        "oil": 1,
-        "limes": 1
-      },
-      "steps": [
-        {
-          "text": "Preheat the electric grill on medium-high for 5 minutes. Season the chicken thighs on both sides with the taco seasoning. Grill the thighs, turning once halfway, until browned and a thermometer pushed into the thickest one reads 165°F: 10–14 minutes on an open grill, 6–8 minutes if yours closes like a press. Move to a clean plate, rest 5 minutes so the juices stay in, then slice across the grain.",
-          "minutes": 10,
-          "setting": "Electric grill, medium-high"
-        },
-        {
-          "text": "Heat the air fryer to 370°F. Brush the tortillas very lightly with the oil and air-fry in single layers (a rack on top keeps them flat), turning halfway, until crisp, 4–6 minutes per batch.",
-          "minutes": 4,
-          "setting": "Air fryer, 370°F"
-        },
-        {
-          "text": "Drain the 2 cans of black beans and mash them with 4 tablespoons of the salsa in a saucepan. Warm over medium heat, stirring, until hot, 3–4 minutes.",
-          "minutes": 3,
-          "setting": "Stovetop, medium"
-        },
-        "Shred the 2 romaine hearts. Spread beans on each tostada and top with chicken, lettuce, cheddar, the remaining salsa and a squeeze of lime. Three per person."
-      ],
-      "tips": [
-        "The beans are the glue: spread them first so the toppings stay put."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container. Store the parts separately; crisp fresh tortillas when you rebuild them.",
-      "sides": [
-        "canned-corn",
-        "lime-slaw"
-      ],
-      "sideSlots": 2,
-      "photo": "Three crisp flat corn tostadas layered with mashed black beans, sliced chicken, shredded lettuce, cheddar and salsa, on a plate."
     },
     {
       "id": "potato-beef-burritos",
@@ -2387,8 +2116,8 @@
       ],
       "leftovers": "Wrap extra burritos in foil: they keep 3 days in the fridge or 2 months in the freezer, and reheat in a dry skillet.",
       "sides": [
-        "lime-slaw",
-        "canned-corn"
+        "canned-corn",
+        "orange-wedges"
       ],
       "sideSlots": 2,
       "photo": "Two golden toasted flour tortilla burritos, one cut open to show seasoned ground beef, crispy potato cubes, peppers and melted cheese, with salsa on the side."
@@ -2450,7 +2179,7 @@
       ],
       "leftovers": "Keeps 3 days in the fridge in a covered container; keep the toppings separate and warm fresh naan.",
       "sides": [
-        "lime-slaw",
+        "carrot-sticks",
         "apple-slices"
       ],
       "sideSlots": 2,
@@ -2633,7 +2362,7 @@
       "leftovers": "Keeps 3 days in the fridge in a covered container; roll the filling in a tortilla and microwave 45 seconds for tomorrow’s breakfast.",
       "sides": [
         "canned-corn",
-        "applesauce-cups"
+        "orange-wedges"
       ],
       "sideSlots": 2,
       "photo": "Soft flour tortilla tacos filled with fluffy scrambled eggs, crumbled chicken sausage, golden potato cubes, peppers and melted cheddar, topped with salsa."
@@ -2793,7 +2522,7 @@
       "leftovers": "Keeps 3 days in the fridge in a covered container; reheat in the air fryer at 370°F for 4 minutes to bring the crunch back.",
       "sides": [
         "carrot-sticks",
-        "sweet-potatoes"
+        "new-potatoes"
       ],
       "sideSlots": 2,
       "photo": "Golden crispy panko-crusted chicken tenders stacked on a plate with a small bowl of creamy honey-mustard dip."
@@ -2899,7 +2628,7 @@
       ],
       "leftovers": "Keeps 4 days in the fridge in a covered container; reheat with a splash of water.",
       "sides": [
-        "lime-slaw",
+        "canned-green-beans",
         "jewel-fries"
       ],
       "sideSlots": 2,
@@ -2956,7 +2685,7 @@
       "leftovers": "Keeps 3 days in the fridge in a covered container; reheat in a skillet, and try it with a fried egg on top.",
       "sides": [
         "canned-green-beans",
-        "applesauce-cups"
+        "apple-slices"
       ],
       "sideSlots": 2,
       "photo": "A big skillet of browned smoked sausage coins and diced chicken with golden potatoes and strips of red and green bell pepper and cooked onion, flecked with Cajun spice."
@@ -3172,147 +2901,6 @@
       "photo": "Sliced grilled chicken thighs glazed in glossy dark teriyaki sauce over a mound of white jasmine rice, extra sauce drizzled on top."
     },
     {
-      "id": "hibachi-chicken-noodles",
-      "title": "Hibachi chicken & garlic butter noodles",
-      "subtitle": "Blackstone hibachi night: soy-garlic chicken, zucchini, onions and mushrooms with garlic noodles and a lighter yum yum sauce.",
-      "category": "Asian-inspired",
-      "protein": "chicken",
-      "minutes": 45,
-      "prepMinutes": 20,
-      "cookMinutes": 25,
-      "equipment": [
-        "stovetop",
-        "blackstone"
-      ],
-      "tags": [
-        "noodle night",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "chickenThighs": 2.25,
-        "spaghetti": 10,
-        "zucchini": 1.5,
-        "onions": 1,
-        "mushrooms": 8,
-        "butter": 2,
-        "garlic": 5,
-        "soy": 5,
-        "oil": 1,
-        "mayo": 2,
-        "yogurt": 4,
-        "ketchup": 1,
-        "honey": 1,
-        "paprika": 0.5,
-        "garlicPowder": 0.5,
-        "riceVinegar": 1,
-        "salt": 3
-      },
-      "steps": [
-        "Stir the mayo, yogurt, ketchup, honey, paprika, garlic powder, rice vinegar and 1 tablespoon of water into a smooth yum yum sauce and put it in the fridge.",
-        {
-          "text": "Fill your largest pot with about 5 quarts of water, add 1 tablespoon of the salt, cover and bring to a full rolling boil over high heat. It takes 10–15 minutes, so start it first. While it heats, cut the chicken thighs into 1-inch pieces, the zucchini into half-moons and the onion into 1-inch chunks. Mince the 5 garlic cloves.",
-          "minutes": 10,
-          "setting": "Stovetop, high"
-        },
-        {
-          "text": "Add the 10 oz of spaghetti (a little over half a 1 lb box) to the boiling water, stir for the first minute so it doesn’t stick, and boil uncovered until tender with a little bite, 9–11 minutes (check the box). Drain.",
-          "minutes": 9,
-          "setting": "Stovetop, high"
-        },
-        {
-          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
-          "minutes": 10,
-          "setting": "Blackstone, medium-high"
-        },
-        {
-          "text": "Spread the oil on the griddle. Cook the chicken on one side and the zucchini, onion chunks and mushrooms on the other, turning both, until the vegetables are browned and tender and the thickest chicken pieces read 165°F, 8–10 minutes. Splash both with half the soy sauce and move them to a cooler part.",
-          "minutes": 8,
-          "setting": "Blackstone, medium-high"
-        },
-        {
-          "text": "Melt the butter with the garlic on the hot part, add the noodles and the remaining soy sauce and toss until glossy, 1–2 minutes.",
-          "minutes": 1,
-          "setting": "Blackstone, medium-high"
-        },
-        "Serve the noodles with the chicken and vegetables and pass the yum yum sauce."
-      ],
-      "tips": [
-        "Cut everything before you light the griddle; once it is hot, it all moves fast."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; keep the sauce separate and reheat the rest in a skillet.",
-      "sides": [
-        "edamame",
-        "asian-slaw"
-      ],
-      "sideSlots": 2,
-      "photo": "A hibachi-style plate of buttery garlic noodles, seared bite-size chicken, browned zucchini, onions and mushrooms, with a small cup of pale orange yum yum sauce."
-    },
-    {
-      "id": "kung-pao-chicken",
-      "title": "Kung pao–style chicken",
-      "subtitle": "Saucy, gently spicy chicken thighs with lots of bell pepper over jasmine rice (peanuts optional).",
-      "category": "Asian-inspired",
-      "protein": "chicken",
-      "minutes": 45,
-      "prepMinutes": 20,
-      "cookMinutes": 25,
-      "equipment": [
-        "stovetop"
-      ],
-      "tags": [
-        "rice",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "chickenThighs": 2.25,
-        "jasmine": 1.5,
-        "peppers": 3,
-        "onions": 0.5,
-        "garlic": 4,
-        "ginger": 0.5,
-        "soy": 5,
-        "riceVinegar": 2,
-        "brownSugar": 1,
-        "starch": 3,
-        "sesame": 1,
-        "oil": 2,
-        "redPepperFlakes": 0.5,
-        "salt": 0.5
-      },
-      "steps": [
-        {
-          "text": "Rinse the 1½ cups of jasmine rice in a fine strainer under cold water until the water runs mostly clear. Put it in a medium saucepan with 2¼ cups of water and ½ teaspoon of the salt and bring to a boil over high heat. Cover, turn the heat to low and cook 15 minutes without lifting the lid, then take it off the heat and leave it covered 10 minutes more. Fluff with a fork.",
-          "minutes": 15,
-          "setting": "Stovetop, low, lid on"
-        },
-        "Cut the chicken thighs into ¾-inch pieces and toss with 2 tablespoons of the soy sauce and 2 tablespoons of the cornstarch. Cut the 3 peppers and the onion into 1-inch pieces. Mince the 4 garlic cloves and grate the ginger.",
-        "For the sauce, whisk the remaining soy sauce, the rice vinegar, brown sugar, the last tablespoon of cornstarch, the sesame oil and ⅓ cup of water.",
-        {
-          "text": "Heat half the oil in a large skillet over medium-high heat until it shimmers. Cook the chicken in two batches, stirring, until browned and the thickest pieces read 165°F, 5–6 minutes per batch. Move it to a plate.",
-          "minutes": 10,
-          "setting": "Stovetop, medium-high"
-        },
-        {
-          "text": "Add the remaining oil, the peppers and the onion pieces and stir-fry until crisp-tender and the onion is soft at the edges, 3–4 minutes. Add the garlic, ginger and red pepper flakes (halve or skip them for less heat) for 30 seconds.",
-          "minutes": 3,
-          "setting": "Stovetop, medium-high"
-        },
-        "Return the chicken, whisk the sauce again, pour it in and toss until thick and glossy, about 1 minute. Serve over the rice. Peanuts are optional and not on the shopping list; toss in a handful if you have them."
-      ],
-      "tips": [
-        "Leave the red pepper flakes on the table and let the heat-lovers add their own."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; reheat with a splash of water.",
-      "sides": [
-        "edamame",
-        "orange-wedges"
-      ],
-      "sideSlots": 2,
-      "photo": "Glossy kung pao–style chicken with stir-fried red and green bell pepper chunks in a dark spicy-sweet sauce, beside white jasmine rice in a bowl."
-    },
-    {
       "id": "egg-roll-in-a-bowl",
       "title": "Egg roll in a bowl",
       "subtitle": "All the flavor of an egg roll (lean ground chicken, a bag and a half of cabbage, carrots, ginger and garlic) in one big skillet.",
@@ -3364,58 +2952,6 @@
       ],
       "sideSlots": 2,
       "photo": "A bowl of savory stir-fried ground chicken with wilted shredded cabbage and carrots, glistening with soy and sesame oil."
-    },
-    {
-      "id": "chicken-katsu",
-      "title": "Air-fryer chicken katsu",
-      "subtitle": "Panko-crusted chicken cutlets from the air fryer with a sweet-tangy homemade katsu sauce.",
-      "category": "Asian-inspired",
-      "protein": "chicken",
-      "minutes": 50,
-      "prepMinutes": 25,
-      "cookMinutes": 25,
-      "equipment": [
-        "air fryer"
-      ],
-      "tags": [
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "chicken": 2.25,
-        "panko": 6,
-        "flour": 0.33,
-        "eggs": 2,
-        "oil": 1,
-        "salt": 1,
-        "pepper": 0.5,
-        "ketchup": 3,
-        "soy": 2,
-        "honey": 1,
-        "ciderVinegar": 1,
-        "mustard": 0.5
-      },
-      "steps": [
-        "Slice each chicken breast in half through the middle like opening a book, so you have thinner cutlets, and pound them to an even ½ inch. Season with the salt and pepper.",
-        "Set up three shallow dishes: the flour, the 2 beaten eggs, and the panko rubbed with the oil until it feels like damp sand. Coat each cutlet in flour, dip in egg, then press firmly into the panko on both sides. Throw away any coating left over; it touched raw chicken.",
-        {
-          "text": "Heat the air fryer to 390°F. Cook the cutlets in single layers, flipping halfway, until deep golden and a thermometer in the thickest part reads 165°F, 10–14 minutes per batch. Rest them on a rack 2 minutes so the bottoms stay crisp.",
-          "minutes": 10,
-          "setting": "Air fryer, 390°F"
-        },
-        "Stir the ketchup, soy sauce, honey, cider vinegar and mustard into a smooth katsu sauce. Slice the cutlets into strips and drizzle with the sauce."
-      ],
-      "tips": [
-        "Use one hand for the dry dishes and the other for the egg so your fingers don’t get breaded.",
-        "Don’t stack the cutlets in the basket; air has to reach both sides."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; reheat in the air fryer at 370°F for 4 minutes to bring the crunch back.",
-      "sides": [
-        "asian-slaw",
-        "crispy-potstickers"
-      ],
-      "sideSlots": 2,
-      "photo": "Golden crispy panko-breaded chicken cutlets sliced into strips and drizzled with dark brown katsu sauce, beside a mound of finely shredded cabbage."
     },
     {
       "id": "korean-beef-bowls",
@@ -3476,301 +3012,6 @@
       ],
       "sideSlots": 2,
       "photo": "A bowl of white jasmine rice topped with glossy caramelized Korean-style ground beef and shredded carrots, drizzled with sesame oil."
-    },
-    {
-      "id": "sweet-sour-pork",
-      "title": "Sweet & sour pork",
-      "subtitle": "Air-crisped lean pork with pineapple and lots of peppers in a bright sweet-and-sour sauce over rice.",
-      "category": "Asian-inspired",
-      "protein": "pork",
-      "minutes": 55,
-      "prepMinutes": 20,
-      "cookMinutes": 35,
-      "equipment": [
-        "air fryer",
-        "stovetop"
-      ],
-      "tags": [
-        "rice",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "porkLoin": 2,
-        "starch": 4,
-        "eggs": 1,
-        "oil": 2,
-        "salt": 1,
-        "pineapple": 1,
-        "peppers": 3,
-        "onions": 0.5,
-        "ketchup": 3,
-        "riceVinegar": 3,
-        "brownSugar": 1,
-        "soy": 2,
-        "garlic": 2,
-        "jasmine": 1.5
-      },
-      "steps": [
-        {
-          "text": "Rinse the 1½ cups of jasmine rice in a fine strainer under cold water until the water runs mostly clear. Put it in a medium saucepan with 2¼ cups of water and ½ teaspoon of the salt and bring to a boil over high heat. Cover, turn the heat to low and cook 15 minutes without lifting the lid, then take it off the heat and leave it covered 10 minutes more. Fluff with a fork.",
-          "minutes": 15,
-          "setting": "Stovetop, low, lid on"
-        },
-        "Trim the fat cap off the pork loin and cut the meat into 1-inch cubes. Toss with the beaten egg and the remaining ½ teaspoon of salt, then with 3 tablespoons of the cornstarch until coated; shake off the extra and drizzle with 1 tablespoon of the oil.",
-        {
-          "text": "Heat the air fryer to 400°F. Cook the pork in single-layer batches, shaking the basket halfway, until golden and crisp and the thickest pieces read 145°F, 10–12 minutes per batch. Rest it 3 minutes.",
-          "minutes": 10,
-          "setting": "Air fryer, 400°F"
-        },
-        "Drain the pineapple over a bowl and save ½ cup of the juice. Whisk that juice with the ketchup, rice vinegar, brown sugar, soy sauce and the last tablespoon of cornstarch. Cut the 3 peppers and the onion into 1-inch pieces and mince the 2 garlic cloves.",
-        {
-          "text": "Heat the remaining oil in a large skillet over medium-high heat and stir-fry the peppers, onion pieces and garlic until crisp-tender and the onion has softened, 3–4 minutes. Add the pineapple and the sauce and simmer until glossy, 1–2 minutes. Toss in the pork and serve over the rice.",
-          "minutes": 4,
-          "setting": "Stovetop, medium-high"
-        }
-      ],
-      "tips": [
-        "Toss the pork into the sauce right before serving so it stays crisp."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container. The coating softens overnight but the flavor holds; reheat in a skillet.",
-      "sides": [
-        "steamed-broccoli",
-        "carrot-sticks"
-      ],
-      "sideSlots": 2,
-      "photo": "Crispy golden pork bites tossed with pineapple chunks and stir-fried red and green bell pepper in a shiny red sweet-and-sour sauce, beside white rice."
-    },
-    {
-      "id": "pork-carnitas-tacos",
-      "title": "Griddle pork carnitas tacos",
-      "subtitle": "Citrus-and-cumin lean pork simmered tender, then crisped on the Blackstone and tucked into corn tortillas.",
-      "category": "Tex-Mex",
-      "protein": "pork",
-      "minutes": 60,
-      "prepMinutes": 15,
-      "cookMinutes": 45,
-      "equipment": [
-        "stovetop",
-        "blackstone"
-      ],
-      "tags": [
-        "taco night",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "porkLoin": 2.25,
-        "oranges": 1,
-        "limes": 3,
-        "cumin": 2,
-        "oregano": 1,
-        "garlic": 4,
-        "onions": 0.5,
-        "salt": 1.5,
-        "oil": 1,
-        "salsa": 8,
-        "cilantro": 1,
-        "streetTacoCorn": 15
-      },
-      "steps": [
-        "Trim the fat cap off the pork loin and cut the meat into 1-inch cubes. Put them in a large, deep skillet with the juice of the orange and 2 of the limes, the cumin, oregano, the 4 smashed garlic cloves, the salt, the onion cut into chunks and 1 cup of water.",
-        {
-          "text": "Bring to a boil, then cover, turn the heat to medium-low and simmer until the pork is very tender and the onion has cooked down soft, about 30 minutes (it will be well past the safe 145°F).",
-          "minutes": 30,
-          "setting": "Stovetop, medium-low, lid on"
-        },
-        {
-          "text": "Uncover, turn the heat up and boil off the remaining liquid, stirring, 5–8 minutes. Rest 3 minutes, then pull the chunks apart with two forks.",
-          "minutes": 5,
-          "setting": "Stovetop, medium-high"
-        },
-        {
-          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
-          "minutes": 10,
-          "setting": "Blackstone, medium-high"
-        },
-        {
-          "text": "Spread the oil on the griddle, spread out the pork, press it down with a spatula and cook without moving until crisp underneath, 3–4 minutes. Flip and crisp the other side. Warm the tortillas on the griddle.",
-          "minutes": 3,
-          "setting": "Blackstone, medium-high"
-        },
-        "Chop the cilantro. Fill three tortillas per person with pork, cilantro, salsa and a squeeze of the last lime."
-      ],
-      "tips": [
-        "The simmering can be done a day ahead; crisp the pork on the griddle right before dinner.",
-        "Loin is much leaner than the usual pork shoulder, so don’t skip the simmer: that is what makes it tender."
-      ],
-      "leftovers": "The pulled pork keeps 4 days in the fridge or 3 months in the freezer; crisp it in a hot skillet to serve.",
-      "sides": [
-        "black-beans",
-        "lime-slaw"
-      ],
-      "sideSlots": 2,
-      "photo": "Corn tortilla street tacos piled with crispy-edged pulled pork carnitas, chopped cilantro and salsa, with lime wedges."
-    },
-    {
-      "id": "pork-souvlaki-plates",
-      "title": "Pork souvlaki plates",
-      "subtitle": "Lemon-garlic-oregano pork grilled until juicy, on warm naan with shredded romaine and a lemon-garlic yogurt sauce.",
-      "category": "Grill",
-      "protein": "pork",
-      "minutes": 40,
-      "prepMinutes": 25,
-      "cookMinutes": 15,
-      "equipment": [
-        "electric grill"
-      ],
-      "tags": [
-        "grill night",
-        "healthier",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "porkLoin": 2.25,
-        "lemons": 2,
-        "garlic": 4,
-        "oregano": 2,
-        "oil": 2,
-        "salt": 1,
-        "pepper": 0.5,
-        "naan": 5,
-        "yogurt": 8,
-        "lettuce": 1
-      },
-      "steps": [
-        {
-          "text": "Trim the fat cap off the pork loin and cut the meat into ¾-inch-thick slices. Toss with the juice of 1 lemon, the oil, half the minced garlic, the oregano, salt and pepper. Marinate 15 minutes on the counter (or up to a day in the fridge).",
-          "minutes": 15
-        },
-        "For the sauce, stir the remaining garlic and the juice of half the second lemon into the yogurt. Shred the romaine heart and cut the last lemon half into wedges.",
-        {
-          "text": "Preheat the electric grill on medium-high for 5 minutes. Grill the pork, turning once, until browned and a thermometer in the center of a slice reads 145°F, 8–12 minutes. Rest 3 minutes, then cut into strips.",
-          "minutes": 8,
-          "setting": "Electric grill, medium-high"
-        },
-        {
-          "text": "Warm the naan on the grill, about 1 minute per side. Serve the pork on the naan with shredded romaine, the yogurt sauce and the lemon wedges.",
-          "minutes": 2,
-          "setting": "Electric grill, medium-high"
-        }
-      ],
-      "tips": [
-        "Pull the pork at 145°F and let it rest; it stays juicy with a hint of pink."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; slice it into a salad or a wrap.",
-      "sides": [
-        "lemon-chickpeas",
-        "steamed-broccoli"
-      ],
-      "sideSlots": 2,
-      "photo": "Grilled lemon-oregano pork strips with char marks on warm flatbread with shredded romaine, a creamy lemon-garlic yogurt sauce and lemon wedges."
-    },
-    {
-      "id": "breaded-pork-sandwiches",
-      "title": "Midwest breaded pork sandwiches",
-      "subtitle": "Crispy panko-crusted lean pork cutlets bigger than the bun, with pickles, mustard and lettuce.",
-      "category": "Comfort",
-      "protein": "pork",
-      "minutes": 50,
-      "prepMinutes": 25,
-      "cookMinutes": 25,
-      "equipment": [
-        "air fryer"
-      ],
-      "tags": [
-        "sandwiches",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "porkLoin": 2,
-        "panko": 6,
-        "flour": 0.33,
-        "eggs": 2,
-        "oil": 1,
-        "salt": 1,
-        "pepper": 0.5,
-        "garlicPowder": 1,
-        "buns": 5,
-        "pickles": 4,
-        "mustard": 3,
-        "lettuce": 1
-      },
-      "steps": [
-        "Trim the fat cap off the pork loin, cut the meat into 5 equal slices and pound each one between sheets of plastic wrap to about ¼ inch thick (they get big). Season with the salt, pepper and garlic powder.",
-        "Coat each cutlet in the flour, then the 2 beaten eggs, then the panko rubbed with the oil, pressing firmly. Throw away any coating left over; it touched raw pork.",
-        {
-          "text": "Heat the air fryer to 390°F. Cook the cutlets one or two at a time, flipping halfway, until deep golden and a thermometer in the center reads 145°F, 8–10 minutes per batch. Rest 3 minutes.",
-          "minutes": 8,
-          "setting": "Air fryer, 390°F"
-        },
-        "Toast the buns, spread with the mustard, and stack each with a cutlet, pickles and romaine leaves."
-      ],
-      "tips": [
-        "Pound from the center out so the cutlets end up an even thickness."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; reheat in the air fryer at 370°F for 4 minutes.",
-      "sides": [
-        "corn-on-the-cob",
-        "lime-slaw"
-      ],
-      "sideSlots": 2,
-      "photo": "A huge golden breaded pork cutlet hanging well past the edges of a toasted bun, topped with dill pickles, mustard and lettuce."
-    },
-    {
-      "id": "honey-garlic-pork-chops",
-      "title": "Honey garlic pork chops",
-      "subtitle": "Skillet-seared boneless chops in a sticky honey, garlic and soy pan sauce.",
-      "category": "Comfort",
-      "protein": "pork",
-      "minutes": 30,
-      "prepMinutes": 10,
-      "cookMinutes": 20,
-      "equipment": [
-        "stovetop"
-      ],
-      "tags": [
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "pork": 2.25,
-        "honey": 3,
-        "garlic": 5,
-        "soy": 3,
-        "ciderVinegar": 1,
-        "butter": 1,
-        "oil": 1,
-        "salt": 1,
-        "pepper": 0.5,
-        "garlicPowder": 0.5
-      },
-      "steps": [
-        "Pat the pork chops dry and season both sides with the salt, pepper and garlic powder. Whisk the honey, soy sauce and cider vinegar. Mince the 5 garlic cloves.",
-        {
-          "text": "Heat the oil in a large skillet over medium-high heat until it shimmers. Sear the chops (in two batches if they are crowded) until golden, 4–5 minutes per side, and a thermometer in the center reads 145°F. Move to a plate and rest at least 3 minutes.",
-          "minutes": 8,
-          "setting": "Stovetop, medium-high"
-        },
-        {
-          "text": "Turn the heat down to medium, melt the butter and cook the garlic 30 seconds. Pour in the honey mixture and simmer until syrupy, 1–2 minutes.",
-          "minutes": 1,
-          "setting": "Stovetop, medium"
-        },
-        "Return the chops and any juices from the plate, turn to coat in the glaze and serve with the sauce spooned over."
-      ],
-      "tips": [
-        "Don’t move the chops for the first few minutes; that is what builds the golden crust."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; slice thin and reheat gently in the sauce.",
-      "sides": [
-        "smashed-potatoes",
-        "garlic-green-beans"
-      ],
-      "sideSlots": 2,
-      "photo": "Golden seared boneless pork chops glistening with a sticky amber honey garlic glaze in a skillet."
     },
     {
       "id": "sausage-broccoli-penne",
@@ -3834,68 +3075,6 @@
       ],
       "sideSlots": 2,
       "photo": "Penne tossed with browned crumbled chicken sausage, bright green broccoli florets, garlic and grated Parmesan in a wide pasta bowl."
-    },
-    {
-      "id": "sausage-pepper-hoagies",
-      "title": "Chicken sausage, pepper & onion hoagies",
-      "subtitle": "Griddled Italian chicken sausage with a big pile of sweet peppers and onions under melted mozzarella on toasted rolls.",
-      "category": "Grill",
-      "protein": "sausage",
-      "minutes": 35,
-      "prepMinutes": 10,
-      "cookMinutes": 25,
-      "equipment": [
-        "blackstone"
-      ],
-      "tags": [
-        "sandwiches",
-        "grill night"
-      ],
-      "rotation": "bench",
-      "items": {
-        "chickenSausage": 1.4,
-        "hoagies": 5,
-        "peppers": 3,
-        "onions": 1,
-        "mozzarella": 4,
-        "oil": 1,
-        "italianSeasoning": 1,
-        "salt": 0.5,
-        "giardiniera": 4
-      },
-      "steps": [
-        {
-          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two. While it heats, cut the 3 peppers into strips and the onions into thin half-moons.",
-          "minutes": 10,
-          "setting": "Blackstone, medium-high"
-        },
-        {
-          "text": "Toss the peppers and onions with the oil, Italian seasoning and salt on one side of the griddle and cook, stirring now and then, until soft and charred at the edges, 10–12 minutes.",
-          "minutes": 10,
-          "setting": "Blackstone, medium-high"
-        },
-        {
-          "text": "Meanwhile brown the 8 Italian chicken sausage links (two 11 oz packs; they come fully cooked) on the other side, turning every couple of minutes, about 5 minutes. Split each one lengthwise and griddle cut side down until hot all the way through and a thermometer in the center reads 165°F, 2–3 minutes more.",
-          "minutes": 7,
-          "setting": "Blackstone, medium-high"
-        },
-        {
-          "text": "Gather the sausage and peppers into five piles, top with the mozzarella and cover with a dome or a sheet of foil for 1 minute to melt. Toast the split rolls on the griddle.",
-          "minutes": 1,
-          "setting": "Blackstone, medium-high"
-        },
-        "Scoop a pile into each roll and add a spoonful of Buona hot giardiniera for anyone who likes heat."
-      ],
-      "tips": [
-        "The chicken sausage links are already cooked, so they only need browning and heating through; take them off as soon as they read 165°F and they stay juicy."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; reheat the filling in a skillet and toast a fresh roll.",
-      "sides": [
-        "potato-wedges",
-        "canned-green-beans"
-      ],
-      "sideSlots": 2,
-      "photo": "A toasted hoagie roll stuffed with griddled Italian chicken sausage, charred peppers and onions under melted mozzarella."
     },
     {
       "id": "chicken-cobb-salad",
@@ -4006,7 +3185,7 @@
       "leftovers": "Keeps 3 days in the fridge in a covered container; reheat the taco meat and build a fresh salad for lunch.",
       "sides": [
         "canned-corn",
-        "applesauce-cups"
+        "chips-and-salsa"
       ],
       "sideSlots": 2,
       "photo": "A big taco salad of chopped romaine topped with seasoned ground chicken, black beans, shredded cheddar, salsa, a dollop of yogurt and crushed tortilla chips, with a lime wedge."
@@ -4305,7 +3484,7 @@
       "leftovers": "Keeps 3 days in the fridge in a covered container; reheat the filling in a skillet and toast a fresh roll.",
       "sides": [
         "potato-wedges",
-        "lime-slaw"
+        "canned-corn"
       ],
       "sideSlots": 2,
       "photo": "A toasted hoagie roll overflowing with thin-sliced griddled chicken, sautéed peppers and onions and gooey melted cheese."
@@ -4532,61 +3711,6 @@
       "photo": "Two buffalo chicken wraps cut in half showing spicy orange chicken, crisp romaine, cheddar and ranch, with carrot sticks and a cup of ranch."
     },
     {
-      "id": "apple-glazed-pork-chops",
-      "title": "Apple-jelly glazed pork chops",
-      "subtitle": "Grilled boneless chops brushed with a sweet-tangy apple jelly and mustard glaze.",
-      "category": "Grill",
-      "protein": "pork",
-      "minutes": 25,
-      "prepMinutes": 10,
-      "cookMinutes": 15,
-      "equipment": [
-        "electric grill",
-        "stovetop"
-      ],
-      "tags": [
-        "grill night",
-        "from your pantry",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "pork": 2.25,
-        "appleJelly": 4,
-        "mustard": 2,
-        "ciderVinegar": 1,
-        "butter": 1,
-        "salt": 1,
-        "pepper": 0.5
-      },
-      "steps": [
-        {
-          "text": "In a small saucepan over low heat, melt the apple jelly with the mustard, cider vinegar and butter, stirring until smooth. Set half aside in a clean bowl for serving.",
-          "setting": "Stovetop, low"
-        },
-        "Pat the pork chops dry and season both sides with the salt and pepper.",
-        {
-          "text": "Preheat the electric grill on medium-high for 5 minutes. Grill the chops 4–5 minutes per side, brushing with the glaze during the last 2 minutes, until a thermometer in the center reads 145°F.",
-          "minutes": 8,
-          "setting": "Electric grill, medium-high"
-        },
-        {
-          "text": "Let the chops rest 3 minutes on a clean plate, then spoon the reserved glaze over the top.",
-          "minutes": 3
-        }
-      ],
-      "tips": [
-        "Pull the chops at 145°F; lean pork dries out fast after that."
-      ],
-      "leftovers": "Keeps 3 days in the fridge in a covered container; slice thin for sandwiches.",
-      "sides": [
-        "sweet-potatoes",
-        "crispy-onion-green-beans"
-      ],
-      "sideSlots": 2,
-      "photo": "Grilled boneless pork chops with grill marks and a shiny amber apple glaze, served with a buttered sweet potato and green beans topped with crispy fried onions."
-    },
-    {
       "id": "cajun-steak-bites",
       "title": "Cajun butter steak bites",
       "subtitle": "Lean eye of round cut into bites, seared hot and fast on the Blackstone with Slap Ya Mama and a little Kerrygold.",
@@ -4693,7 +3817,7 @@
       "leftovers": "Keeps 3 days in the fridge in a covered container. The filling reheats well in a skillet; warm fresh tortillas to go with it.",
       "sides": [
         "charro-beans",
-        "lime-slaw"
+        "mexicorn"
       ],
       "sideSlots": 2,
       "photo": "Small flour street tacos filled with crumbly red chorizo, ground beef and diced green nopalitos, topped with shredded cheese and salsa, with charro beans alongside."
@@ -4800,8 +3924,8 @@
       ],
       "leftovers": "The soup (without the chips) keeps 4 days in the fridge and freezes for 3 months; cool it first and freeze flat in zip bags.",
       "sides": [
-        "lime-slaw",
-        "orange-wedges"
+        "chips-and-salsa",
+        "carrot-sticks"
       ],
       "sideSlots": 2,
       "photo": "A wide bowl of brothy chicken tortilla soup with shredded chicken, black beans, corn and cooked tomatoes, topped with shredded cheddar, crushed tortilla chips and a lime wedge."
@@ -4869,77 +3993,6 @@
       "photo": "A bowl of creamy white chicken chili with shredded chicken, white beans, corn and flecks of green chile, topped with melting shredded white cheese and a lime wedge."
     },
     {
-      "id": "cooker-beef-stew",
-      "title": "Slow-cooker beef stew",
-      "subtitle": "Lean beef simmered all day until spoon-tender with potatoes, carrots, celery and peas in a rich gravy.",
-      "category": "Comfort",
-      "protein": "beef",
-      "minutes": 520,
-      "prepMinutes": 25,
-      "cookMinutes": 495,
-      "equipment": [
-        "possible cooker"
-      ],
-      "tags": [
-        "soup",
-        "freezer friendly",
-        "bulk"
-      ],
-      "rotation": "core",
-      "items": {
-        "eyeRoundSteak": 2.25,
-        "potatoes": 1.5,
-        "carrots": 1,
-        "celery": 0.5,
-        "onions": 0.75,
-        "peas": 8,
-        "garlic": 3,
-        "flour": 0.25,
-        "beefBroth": 4,
-        "tomatoes": 1,
-        "italianSeasoning": 2,
-        "oil": 1,
-        "salt": 1.5,
-        "pepper": 0.5
-      },
-      "steps": [
-        "Cut the eye of round into 1-inch cubes and toss them in a bowl with the ¼ cup of flour, the salt and the pepper. Scrub the potatoes and cut into 1-inch chunks. Peel the carrots and cut into thick coins, slice 4 ribs of celery (half a bunch), cut the onion into chunks and mince the 3 garlic cloves.",
-        {
-          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil, then half the beef in a single layer. Brown it 3–4 minutes, turning once, and move it to a plate. Brown the second half the same way.",
-          "minutes": 8,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        {
-          "text": "Add the onion chunks and garlic to the pot and stir for 1 minute, until the onion starts to soften. Pour in the 4 cups of beef stock and scrape the browned bits off the bottom with a wooden spoon; they flavor the gravy. Press START/STOP to turn the heat off.",
-          "minutes": 1,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        "Add the beef and its juices, the can of diced tomatoes with its juice, the Italian seasoning, the potatoes, carrots and celery, and stir.",
-        {
-          "text": "Put the lid on. Select SLOW COOK, set it to LO and the time to 8 hours, and press START/STOP (or use HI for 4 hours if you are starting later in the day). Leave the lid on while it cooks; every peek lets heat out. The beef is ready when a piece falls apart under a spoon, far past the safe 145°F.",
-          "minutes": 480,
-          "setting": "SLOW COOK on LO"
-        },
-        {
-          "text": "Stir in the 8 oz of frozen peas, put the lid back on and let them heat through for 5 minutes. Taste, add a pinch more salt if it needs it, and ladle into bowls.",
-          "minutes": 5,
-          "setting": "KEEP WARM"
-        }
-      ],
-      "tips": [
-        "Browning the beef first is worth the 10 minutes: it is where the deep flavor and the gravy’s color come from.",
-        "The pot is nonstick: stir with a wooden or silicone spoon, never metal.",
-        "When the time is up the cooker switches itself to KEEP WARM, so dinner holds if someone is running late."
-      ],
-      "leftovers": "The stew keeps 4 days in the fridge and freezes for 3 months; cool it first and freeze flat in zip bags.",
-      "sides": [
-        "romaine-salad",
-        "garlic-toast"
-      ],
-      "sideSlots": 2,
-      "photo": "A deep bowl of beef stew with tender chunks of beef, potatoes, carrot coins, celery and green peas in a glossy brown gravy."
-    },
-    {
       "id": "cooker-bbq-pulled-chicken",
       "title": "Slow-cooker BBQ pulled chicken sandwiches",
       "subtitle": "Chicken breast slow-cooked until it shreds, tossed in a light barbecue sauce and piled on toasted buns with pickles.",
@@ -4997,8 +4050,8 @@
       ],
       "leftovers": "The pulled chicken keeps 4 days in the fridge and freezes for 3 months; cool it first and freeze flat in zip bags.",
       "sides": [
-        "lime-slaw",
-        "canned-green-beans"
+        "canned-green-beans",
+        "jewel-fries"
       ],
       "sideSlots": 2,
       "photo": "A toasted bun piled high with saucy shredded barbecue chicken and dill pickle chips, with creamy coleslaw and green beans on the plate."
@@ -5063,76 +4116,6 @@
       ],
       "sideSlots": 2,
       "photo": "Corn tortilla street tacos filled with juicy shredded salsa chicken, shredded lettuce and cheddar, with a dollop of yogurt and lime wedges."
-    },
-    {
-      "id": "cooker-braised-pork-apples",
-      "title": "Braised pork loin with apples & onions",
-      "subtitle": "Lean pork loin seared and gently braised with soft apples and onions, sliced and served with a cider-mustard pan sauce.",
-      "category": "Comfort",
-      "protein": "pork",
-      "minutes": 95,
-      "prepMinutes": 20,
-      "cookMinutes": 75,
-      "equipment": [
-        "possible cooker"
-      ],
-      "tags": [
-        "healthier",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "porkLoin": 2.25,
-        "apples": 1.5,
-        "onions": 1,
-        "garlic": 3,
-        "chickenBroth": 1.5,
-        "ciderVinegar": 2,
-        "mustard": 2,
-        "italianSeasoning": 1,
-        "oil": 1,
-        "salt": 1.5,
-        "pepper": 0.5,
-        "starch": 1
-      },
-      "steps": [
-        "Trim the white fat cap off the 2¼ lb piece of pork loin, pat the meat dry and season all over with the salt, pepper and Italian seasoning. Peel the onions and cut into thick half-moons. Core the apples and cut each into 8 wedges, peel on. Mince the 3 garlic cloves.",
-        {
-          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil and the pork and brown it 2–3 minutes on each of its four sides, 8–10 minutes in all. Move it to a plate.",
-          "minutes": 8,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        {
-          "text": "Add the onions to the pot and cook, stirring, until soft and golden, 4–5 minutes. Stir in the garlic for 30 seconds, then pour in the 1½ cups of chicken stock, the cider vinegar and the mustard and scrape the browned bits off the bottom with a wooden spoon. Press START/STOP to turn the heat off.",
-          "minutes": 4,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        {
-          "text": "Set the pork back in the pot with its juices and tuck the apple wedges around it. Put the lid on, select BRAISE, set the time to 45 minutes and press START/STOP. It is done when a thermometer pushed into the center of the pork reads 145°F; if it is not there yet, give it 5–10 minutes more.",
-          "minutes": 45,
-          "setting": "BRAISE"
-        },
-        {
-          "text": "Move the pork to a cutting board and rest it at least 3 minutes (10 is better) so the juices stay in.",
-          "minutes": 10
-        },
-        {
-          "text": "While it rests, stir the cornstarch into 1 tablespoon of cold water. Select SEAR/SAUTÉ on MED, stir the cornstarch into the pot and simmer until the sauce turns glossy, 1–2 minutes. Slice the pork ½ inch thick across the grain and serve with the apples, onions and sauce.",
-          "minutes": 1,
-          "setting": "SEAR/SAUTÉ on MED"
-        }
-      ],
-      "tips": [
-        "A thermometer is the whole secret with lean pork: pull it at 145°F and it stays juicy, with a hint of pink.",
-        "The pot is nonstick: stir with a wooden or silicone spoon, never metal."
-      ],
-      "leftovers": "Keeps 4 days in the fridge in a covered container; slice it thin for sandwiches, or reheat slices gently in the sauce.",
-      "sides": [
-        "smashed-potatoes",
-        "garlic-green-beans"
-      ],
-      "sideSlots": 2,
-      "photo": "Thick slices of juicy pork loin fanned on a platter with soft golden apple wedges and cooked onions, spooned with a glossy cider-mustard pan sauce."
     },
     {
       "id": "cooker-chicken-noodle-soup",
@@ -5271,138 +4254,6 @@
       "photo": "A plate of spaghetti topped with round chicken meatballs in a chunky red marinara with wilted spinach and grated Parmesan."
     },
     {
-      "id": "cooker-sausage-minestrone",
-      "title": "Chicken sausage minestrone",
-      "subtitle": "A big pot of vegetable soup with Italian-seasoned ground chicken, white beans, carrots, zucchini, spinach and little pasta.",
-      "category": "Comfort",
-      "protein": "chicken",
-      "minutes": 410,
-      "prepMinutes": 20,
-      "cookMinutes": 390,
-      "equipment": [
-        "possible cooker"
-      ],
-      "tags": [
-        "soup",
-        "freezer friendly",
-        "healthier",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "groundChicken": 1.5,
-        "whiteBeans": 2,
-        "tomatoes": 2,
-        "carrots": 0.75,
-        "celery": 0.5,
-        "onions": 0.5,
-        "zucchini": 1,
-        "spinach": 5,
-        "garlic": 3,
-        "chickenBroth": 6,
-        "elbows": 6,
-        "italianSeasoning": 3,
-        "oil": 1,
-        "parm": 2,
-        "salt": 1.5,
-        "garlicPowder": 1
-      },
-      "steps": [
-        "Peel the carrots and cut into small dice, slice 4 ribs of celery (half a bunch), peel the onion and cut it into small dice, and mince the 3 garlic cloves. Drain and rinse the 2 cans of white beans.",
-        {
-          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil and the 1½ lb of ground chicken and sprinkle it with 1 teaspoon of the Italian seasoning, the garlic powder and ½ teaspoon of the salt, so it tastes like Italian sausage. Cook, breaking it into small crumbles with a wooden spoon, until no pink is left and it reads 165°F, 8–10 minutes.",
-          "minutes": 8,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        {
-          "text": "Add the onion, carrots and celery and cook, stirring, until the onion is soft, 4–5 minutes. Stir in the garlic for 30 seconds, then press START/STOP to turn the heat off.",
-          "minutes": 4,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        "Pour in the 6 cups of chicken stock and add the 2 cans of diced tomatoes with their juice, the beans, the rest of the Italian seasoning and the rest of the salt. Stir.",
-        {
-          "text": "Put the lid on. Select SLOW COOK, set it to LO and the time to 6 hours, and press START/STOP (or use HI for 3 hours if you are starting later in the day). Leave the lid on while it cooks; every peek lets heat out.",
-          "minutes": 360,
-          "setting": "SLOW COOK on LO"
-        },
-        {
-          "text": "Cut the zucchini into half-moons. Take the lid off, select SEAR/SAUTÉ on HI and bring the soup to a gentle boil, about 8 minutes. Add the zucchini and the 6 oz of elbow macaroni and cook until the pasta is tender, 8–10 minutes. Stir in the 5 oz of spinach until it wilts and press START/STOP.",
-          "minutes": 16,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        "Ladle into bowls and top with the Parmesan."
-      ],
-      "tips": [
-        "The pasta and zucchini go in at the end so they keep their shape.",
-        "The pot is nonstick: stir with a wooden or silicone spoon, never metal."
-      ],
-      "leftovers": "Keeps 4 days in the fridge; add a splash of water when reheating because the pasta drinks the broth. To freeze, freeze it before the pasta goes in.",
-      "sides": [
-        "carrot-sticks",
-        "garlic-toast"
-      ],
-      "sideSlots": 2,
-      "photo": "A hearty bowl of minestrone with crumbled chicken sausage, white beans, diced carrots, zucchini half-moons, elbow pasta and wilted spinach in a tomato broth, topped with grated Parmesan."
-    },
-    {
-      "id": "cooker-sesame-ginger-chicken",
-      "title": "Slow-cooker sesame-ginger chicken",
-      "subtitle": "Chicken thighs and carrots slow-cooked in soy, ginger and garlic until they fall apart, in a glossy sesame sauce.",
-      "category": "Asian-inspired",
-      "protein": "chicken",
-      "minutes": 385,
-      "prepMinutes": 15,
-      "cookMinutes": 370,
-      "equipment": [
-        "possible cooker"
-      ],
-      "tags": [
-        "rice",
-        "freezer friendly",
-        "bulk"
-      ],
-      "rotation": "core",
-      "items": {
-        "chickenThighs": 2.5,
-        "carrots": 1,
-        "soy": 6,
-        "honey": 2,
-        "riceVinegar": 2,
-        "garlic": 4,
-        "ginger": 0.75,
-        "sesame": 2,
-        "starch": 2,
-        "chickenBroth": 0.5
-      },
-      "steps": [
-        "Peel the 1 lb of carrots and cut into ½-inch coins. Mince the 4 garlic cloves and grate the ginger. Whisk the soy sauce, honey, rice vinegar, garlic, ginger and the ½ cup of chicken stock in a bowl.",
-        "Spread the carrots over the bottom of the PossibleCooker pot, lay the 2½ lb of thawed chicken thighs on top and pour the sauce over everything.",
-        {
-          "text": "Put the lid on. Select SLOW COOK, set it to LO and the time to 6 hours, and press START/STOP (or use HI for 3 hours if you are starting later in the day). Leave the lid on while it cooks; every peek lets heat out.",
-          "minutes": 360,
-          "setting": "SLOW COOK on LO"
-        },
-        "Lift the chicken onto a plate. A thermometer should read at least 165°F and the meat should fall apart. Pull it into big shreds with two forks.",
-        {
-          "text": "Stir the cornstarch into 2 tablespoons of cold water. Take the lid off, select SEAR/SAUTÉ on HI, stir the cornstarch into the juices and simmer until the sauce is glossy and coats a spoon, 2–3 minutes. Press START/STOP, stir the chicken back in and drizzle with the sesame oil.",
-          "minutes": 2,
-          "setting": "SEAR/SAUTÉ on HI"
-        }
-      ],
-      "tips": [
-        "Start the rice about 30 minutes before you want to eat.",
-        "Use thawed meat in the slow cooker, never frozen, so it heats through safely.",
-        "When the time is up the cooker switches itself to KEEP WARM, so dinner holds if someone is running late."
-      ],
-      "leftovers": "The chicken in its sauce keeps 4 days in the fridge and freezes for 3 months; cool it first and freeze flat in zip bags.",
-      "sides": [
-        "steamed-jasmine-rice",
-        "steamed-broccoli"
-      ],
-      "sideSlots": 2,
-      "photo": "A bowl of white jasmine rice topped with shredded chicken thighs and carrot coins in a glossy brown sesame-ginger sauce, with steamed broccoli alongside."
-    },
-    {
       "id": "cooker-beef-broccoli",
       "title": "Slow-cooker beef & broccoli",
       "subtitle": "Thin strips of lean beef slow-cooked tender in a garlic-ginger soy sauce, finished with two pounds of broccoli.",
@@ -5457,197 +4308,6 @@
       ],
       "sideSlots": 2,
       "photo": "A bowl of tender sliced beef and bright green broccoli florets in a glossy dark garlic-ginger soy sauce, with golden potstickers on the side."
-    },
-    {
-      "id": "cooker-lasagna-soup",
-      "title": "One-pot lasagna soup",
-      "subtitle": "Everything good about lasagna in a bowl: lean ground chicken, marinara, penne and spinach under melting mozzarella and Parmesan.",
-      "category": "Pasta",
-      "protein": "chicken",
-      "minutes": 50,
-      "prepMinutes": 10,
-      "cookMinutes": 40,
-      "equipment": [
-        "possible cooker"
-      ],
-      "tags": [
-        "soup",
-        "healthier",
-        "bulk"
-      ],
-      "rotation": "core",
-      "items": {
-        "groundChicken": 2,
-        "marinara": 24,
-        "tomatoes": 1,
-        "chickenBroth": 5,
-        "penne": 8,
-        "spinach": 6,
-        "onions": 0.5,
-        "garlic": 3,
-        "italianSeasoning": 2,
-        "mozzarella": 3,
-        "parm": 2,
-        "oil": 1,
-        "salt": 1
-      },
-      "steps": [
-        "Peel the onion and cut it into small dice. Mince the 3 garlic cloves.",
-        {
-          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil, the 2 lb of ground chicken and the onion. Cook, breaking the chicken into small crumbles with a wooden spoon, until no pink is left, the onion is soft and the meat reads 165°F, 8–10 minutes. Stir in the garlic and Italian seasoning for 30 seconds.",
-          "minutes": 8,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        {
-          "text": "Pour in the jar of Rao’s marinara, the can of diced tomatoes with its juice, the 5 cups of chicken stock and the salt. Put the lid on and bring it to a boil, about 8 minutes.",
-          "minutes": 8,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        {
-          "text": "Take the lid off, stir in the 8 oz of penne (half a 1 lb box) and boil gently, stirring every couple of minutes so nothing sticks, until the pasta is tender, 11–13 minutes.",
-          "minutes": 11,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        "Press START/STOP to turn the heat off and stir in the 6 oz of spinach until it wilts. Ladle into bowls and top each with mozzarella and Parmesan; the heat of the soup melts them."
-      ],
-      "tips": [
-        "The soup thickens as it stands. Loosen leftovers with a splash of stock or water.",
-        "The pot is nonstick: stir with a wooden or silicone spoon, never metal."
-      ],
-      "leftovers": "Keeps 4 days in the fridge in a covered container; add a splash of water when reheating because the pasta drinks the broth.",
-      "sides": [
-        "romaine-salad",
-        "garlic-toast"
-      ],
-      "sideSlots": 2,
-      "photo": "A bowl of thick tomato lasagna soup with penne, crumbled ground chicken and wilted spinach, topped with melting mozzarella and grated Parmesan."
-    },
-    {
-      "id": "cooker-chicken-cacciatore",
-      "title": "Braised chicken cacciatore",
-      "subtitle": "Chicken thighs braised with peppers, mushrooms, onions and tomatoes until tender, spooned over egg noodles.",
-      "category": "Pasta",
-      "protein": "chicken",
-      "minutes": 80,
-      "prepMinutes": 20,
-      "cookMinutes": 60,
-      "equipment": [
-        "possible cooker",
-        "stovetop"
-      ],
-      "tags": [
-        "freezer friendly",
-        "bulk"
-      ],
-      "rotation": "bench",
-      "items": {
-        "chickenThighs": 2.5,
-        "peppers": 3,
-        "mushrooms": 8,
-        "onions": 0.75,
-        "garlic": 4,
-        "tomatoes": 2,
-        "chickenBroth": 0.5,
-        "italianSeasoning": 2,
-        "oil": 1,
-        "salt": 2.5,
-        "pepper": 0.5,
-        "eggNoodles": 10
-      },
-      "steps": [
-        "Pat the chicken thighs dry and season with 1½ teaspoons of the salt and the pepper. Cut the 3 peppers and the onion into strips and mince the 4 garlic cloves.",
-        {
-          "text": "Take the lid off the PossibleCooker, select SEAR/SAUTÉ, set it to HI and press START/STOP. It preheats for about 5 minutes and beeps when it is ready for food. Add the oil and half the chicken and brown it about 3 minutes per side; it finishes cooking in the sauce. Move it to a plate and brown the rest.",
-          "minutes": 12,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        {
-          "text": "Add the peppers, onion strips and the 8 oz of mushrooms to the pot and cook, stirring, until soft, 5–6 minutes. Stir in the garlic and Italian seasoning for 30 seconds. Add the 2 cans of diced tomatoes with their juice and the ½ cup of chicken stock and scrape the browned bits off the bottom. Press START/STOP to turn the heat off.",
-          "minutes": 5,
-          "setting": "SEAR/SAUTÉ on HI"
-        },
-        {
-          "text": "Tuck the chicken and its juices into the sauce. Put the lid on, select BRAISE, set the time to 35 minutes and press START/STOP. The chicken is done when a thermometer in the thickest thigh reads at least 165°F and the meat is fork-tender.",
-          "minutes": 35,
-          "setting": "BRAISE"
-        },
-        {
-          "text": "When the braise has 15 minutes left, bring a large pot of water to a boil on the stove with the remaining 1 teaspoon of salt. Cook the 10 oz of egg noodles until tender, 6–8 minutes, and drain.",
-          "minutes": 6,
-          "setting": "Stovetop, high"
-        },
-        "Serve the chicken, vegetables and sauce over the noodles."
-      ],
-      "tips": [
-        "Thighs are forgiving: unlike breasts, they only get more tender if the braise runs a few minutes long.",
-        "The pot is nonstick: stir with a wooden or silicone spoon, never metal."
-      ],
-      "leftovers": "The chicken and sauce (without the noodles) keeps 4 days in the fridge and freezes for 3 months; cool it first and freeze flat in zip bags.",
-      "sides": [
-        "canned-green-beans",
-        "garlic-toast"
-      ],
-      "sideSlots": 2,
-      "photo": "Braised chicken thighs in a chunky tomato sauce with soft strips of bell pepper, mushrooms and cooked onion, served over wide egg noodles."
-    },
-    {
-      "id": "cooker-italian-beef",
-      "title": "Slow-cooker Italian beef",
-      "subtitle": "Lean beef slow-cooked all day in a garlicky Italian jus, shredded and piled on rolls with sweet peppers and hot giardiniera.",
-      "category": "Comfort",
-      "protein": "beef",
-      "minutes": 505,
-      "prepMinutes": 10,
-      "cookMinutes": 495,
-      "equipment": [
-        "possible cooker"
-      ],
-      "tags": [
-        "sandwiches",
-        "freezer friendly",
-        "bulk"
-      ],
-      "rotation": "core",
-      "items": {
-        "eyeRoundSteak": 2.25,
-        "beefBroth": 3,
-        "italianSeasoning": 3,
-        "garlicPowder": 2,
-        "oregano": 1,
-        "redPepperFlakes": 0.5,
-        "pepper": 1,
-        "salt": 1,
-        "peppers": 2,
-        "hoagies": 5,
-        "giardiniera": 5
-      },
-      "steps": [
-        "Stir the 3 cups of beef stock with the Italian seasoning, garlic powder, oregano, crushed red pepper, black pepper and salt in the PossibleCooker pot. Add the eye of round steaks and turn them so they are covered.",
-        {
-          "text": "Put the lid on. Select SLOW COOK, set it to LO and the time to 8 hours, and press START/STOP (or use HI for 4 hours if you are starting later in the day). Leave the lid on while it cooks; every peek lets heat out. The beef is ready when it pulls apart with a fork, far past the safe 145°F.",
-          "minutes": 480,
-          "setting": "SLOW COOK on LO"
-        },
-        "Lift the beef onto a cutting board and pull it into thin shreds with two forks, or slice it as thin as you can across the grain. Cut the 2 peppers into strips.",
-        {
-          "text": "Return the beef to the jus with the pepper strips. Select SEAR/SAUTÉ on MED, put the lid on and simmer until the peppers are soft, about 10 minutes. Press START/STOP.",
-          "minutes": 10,
-          "setting": "SEAR/SAUTÉ on MED"
-        },
-        "Split the rolls without cutting all the way through. Pile in the beef and peppers with tongs and spoon jus over each one, or dip the whole sandwich, Chicago-style. Top with the Buona hot giardiniera for anyone who likes heat, and serve extra jus for dipping."
-      ],
-      "tips": [
-        "Eye of round is the classic lean cut for Italian beef; the long, slow cook is what makes it tender.",
-        "Use thawed meat in the slow cooker, never frozen, so it heats through safely.",
-        "When the time is up the cooker switches itself to KEEP WARM, so dinner holds if someone is running late."
-      ],
-      "leftovers": "The beef in its jus keeps 4 days in the fridge and freezes for 3 months; cool it first and freeze flat in zip bags. Rewarm it gently without boiling.",
-      "sides": [
-        "potato-wedges",
-        "canned-green-beans"
-      ],
-      "sideSlots": 2,
-      "photo": "A Chicago-style Italian beef sandwich on a long roll, juicy shredded beef and soft cooked sweet pepper strips topped with colorful hot giardiniera, a cup of jus beside it."
     },
     {
       "id": "cooker-beef-tips-gravy",
@@ -6016,7 +4676,7 @@
       ],
       "leftovers": "Keeps 3 days in the fridge in a covered container; slice for wraps or chop over a salad.",
       "sides": [
-        "sweet-potatoes",
+        "smashed-potatoes",
         "garlic-green-beans"
       ],
       "sideSlots": 2,
@@ -6206,7 +4866,7 @@
       ],
       "leftovers": "Keeps 3 days in the fridge in a covered container; slice thin for sandwiches or wraps.",
       "sides": [
-        "sweet-potatoes",
+        "new-potatoes",
         "crispy-onion-green-beans"
       ],
       "sideSlots": 2,
@@ -6267,6 +4927,1233 @@
       ],
       "sideSlots": 2,
       "photo": "Tender herb-rubbed chicken thighs resting on chunks of golden potato, carrot and soft cooked onion in a shallow bowl of light broth, with a lemon half beside it."
+    },
+    {
+      "id": "hamburger-steaks-gravy",
+      "title": "Hamburger steaks with onion gravy",
+      "subtitle": "Seared beef patties simmered in a brown onion gravy, the diner classic made in one skillet.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 30,
+      "prepMinutes": 10,
+      "cookMinutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "bulk",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2.25,
+        "onions": 0.75,
+        "beefBroth": 2,
+        "flour": 0.25,
+        "butter": 2,
+        "garlicPowder": 1,
+        "salt": 1,
+        "pepper": 0.75
+      },
+      "steps": [
+        "Divide the beef into 5 equal pieces and shape each into an oval patty about ¾ inch thick, pressing a shallow dimple into the middle so it stays flat. Season both sides with the garlic powder, salt and half the black pepper. Cut the onions in half and slice them into thin half-moons.",
+        {
+          "text": "Melt 1 tablespoon of the butter in a large skillet over medium-high. Brown the patties 4 minutes a side, until a deep crust forms; they finish cooking in the gravy. Move them to a plate.",
+          "minutes": 8,
+          "setting": "Stovetop, medium-high"
+        },
+        {
+          "text": "Turn the heat to medium. Add the rest of the butter and the onions to the skillet and cook, stirring and scraping up the browned bits, until the onions are soft and golden, 5–6 minutes.",
+          "minutes": 6,
+          "setting": "Stovetop, medium"
+        },
+        "Sprinkle the flour over the onions and stir for 1 minute. Pour in the beef broth a little at a time, stirring the whole time, until the gravy is smooth.",
+        {
+          "text": "Nestle the patties back into the gravy and spoon some over the top. Cover and simmer 6–8 minutes, until a thermometer in the middle of a patty reads 160°F and the gravy coats a spoon. Add the rest of the pepper and taste for salt.",
+          "minutes": 7,
+          "setting": "Stovetop, medium-low, lid on"
+        }
+      ],
+      "tips": [
+        "If the gravy gets too thick, stir in a splash of water.",
+        "Everything here is pantry and freezer food: a bag of the Sam’s ground beef, an onion and a carton of broth."
+      ],
+      "leftovers": "Keeps 3 days in the fridge in a covered container with the gravy; reheat covered in a skillet or the microwave until hot. Freezes for up to 3 months.",
+      "sides": [
+        "smashed-potatoes",
+        "canned-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "A seared hamburger steak smothered in glossy brown gravy and soft caramelized onions on a plate beside buttery smashed potatoes and French-style green beans."
+    },
+    {
+      "id": "philly-cheesesteaks",
+      "title": "Philly cheesesteaks",
+      "subtitle": "Paper-thin griddled steak, soft peppers, onions and mushrooms under melted cheese on toasted hoagie rolls.",
+      "category": "Grill",
+      "protein": "beef",
+      "minutes": 30,
+      "prepMinutes": 15,
+      "cookMinutes": 15,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "sandwiches",
+        "grill night",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "sirloinTip": 2,
+        "peppers": 2,
+        "onions": 0.75,
+        "mushrooms": 8,
+        "cheeseSlices": 8,
+        "hoagies": 5,
+        "oil": 1.5,
+        "garlicPowder": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Put the sirloin tip in the freezer for 15 minutes while the griddle heats; firm meat slices paper-thin. Then slice it across the grain as thin as you can. Cut the peppers and the onions into thin strips.",
+        {
+          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
+          "minutes": 10,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Cook the peppers, onions and mushrooms with 1 tablespoon of the oil on one side of the griddle, turning now and then, until soft and browned, 6–8 minutes.",
+          "minutes": 7,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Spread the steak in a thin layer on the other side with the rest of the oil and season it with the garlic powder, salt and black pepper. Cook 2–3 minutes, chopping and turning with two spatulas, until no pink remains; thin steak passes 145°F in seconds.",
+          "minutes": 3,
+          "setting": "Blackstone, medium-high"
+        },
+        "Mix the vegetables into the steak and push it into 5 long piles. Lay the cheese slices over the piles (about 2 each, a little less for the kids) and let them melt, about 1 minute. Split the hoagie rolls, toast them cut side down on the griddle for 30 seconds, then scoop each pile into a roll with a long spatula."
+      ],
+      "tips": [
+        "Partly frozen meat and a sharp knife are the whole trick to thin slices.",
+        "Provolone or American both melt well; use what the kids like."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; store the filling apart from the rolls and reheat it on the griddle or in a skillet.",
+      "sides": [
+        "potato-wedges",
+        "canned-corn"
+      ],
+      "sideSlots": 2,
+      "photo": "Toasted hoagie rolls stuffed with thin griddled steak, melted provolone, soft griddled peppers and caramelized onions, on a plate with air-fryer potato wedges and buttered corn."
+    },
+    {
+      "id": "steak-fajitas",
+      "title": "Steak fajitas",
+      "subtitle": "Lime-and-spice steak strips seared hard on the Blackstone with charred peppers and onions, in warm flour tortillas.",
+      "category": "Tex-Mex",
+      "protein": "beef",
+      "minutes": 30,
+      "prepMinutes": 15,
+      "cookMinutes": 15,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "taco night",
+        "grill night",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "sirloinTip": 1.75,
+        "peppers": 3,
+        "onions": 1,
+        "taco": 2,
+        "limes": 2,
+        "oil": 2,
+        "tortillas": 10,
+        "sourCream": 4,
+        "cheese": 3
+      },
+      "steps": [
+        "Slice the sirloin tip across the grain into thin strips, about ¼ inch. Toss with 1 tablespoon of the oil, the taco seasoning and the juice of 1 lime. Cut the peppers and the onions into strips.",
+        {
+          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
+          "minutes": 10,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Cook the peppers and onions with the rest of the oil on one side of the griddle, turning now and then, until tender and charred at the edges, 8–10 minutes.",
+          "minutes": 8,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Sear the steak strips on the other side in a single layer without moving them for 2 minutes, then turn and cook 2–3 minutes more, until browned and 145°F. Toss with the vegetables and squeeze the second lime over everything.",
+          "minutes": 4,
+          "setting": "Blackstone, medium-high"
+        },
+        "Warm the tortillas on a clean part of the griddle, about 15 seconds a side. Serve 2 per person with the cheddar and sour cream."
+      ],
+      "tips": [
+        "Slice across the grain (the faint lines in the meat), or the strips turn out chewy.",
+        "Start the vegetables first; they take a few minutes longer than the steak."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; reheat the filling in a skillet and use it for quesadillas or a rice bowl.",
+      "sides": [
+        "black-beans",
+        "mexicorn"
+      ],
+      "sideSlots": 2,
+      "photo": "Sizzling strips of seared steak with charred red and green pepper strips and griddled onions in a cast-iron pan beside warm flour tortillas, shredded cheddar and a dollop of sour cream."
+    },
+    {
+      "id": "cheesy-taco-pasta",
+      "title": "Cheesy taco pasta",
+      "subtitle": "Elbow macaroni and taco-seasoned beef in a melty cheddar and salsa sauce, ready in 25 minutes.",
+      "category": "Pasta",
+      "protein": "beef",
+      "minutes": 25,
+      "prepMinutes": 5,
+      "cookMinutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "bulk",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2,
+        "elbows": 12,
+        "taco": 3,
+        "salsa": 16,
+        "beefBroth": 1,
+        "cheese": 6,
+        "sourCream": 4
+      },
+      "steps": [
+        {
+          "text": "Bring a large pot of salted water to a boil and cook the elbow macaroni 1 minute less than the package says, about 6 minutes. Save ½ cup of the pasta water and drain.",
+          "minutes": 8,
+          "setting": "Stovetop, high"
+        },
+        {
+          "text": "While the pasta cooks, brown the beef in a large skillet over medium-high, breaking it up, until no pink remains and it reaches 160°F, 7–8 minutes. Drain off any fat.",
+          "minutes": 8,
+          "setting": "Stovetop, medium-high"
+        },
+        {
+          "text": "Stir in the taco seasoning, the salsa and the beef broth and simmer 3 minutes.",
+          "minutes": 3,
+          "setting": "Stovetop, medium"
+        },
+        "Add the drained pasta and two-thirds of the cheddar and stir until melty, adding a splash of the pasta water if it looks dry. Scatter the rest of the cheese on top, cover for a minute to melt, and serve with the sour cream."
+      ],
+      "tips": [
+        "Use a mild salsa for the kids and pass hot sauce at the table."
+      ],
+      "leftovers": "Keeps 4 days in the fridge; add a splash of water when you reheat it so it stays saucy.",
+      "sides": [
+        "canned-corn",
+        "carrot-sticks"
+      ],
+      "sideSlots": 2,
+      "photo": "A skillet of elbow macaroni in a creamy, cheesy taco-seasoned beef and salsa sauce topped with melted cheddar and a dollop of sour cream, beside buttered corn and carrot sticks with ranch."
+    },
+    {
+      "id": "mongolian-beef",
+      "title": "Mongolian beef",
+      "subtitle": "Crisp-edged strips of steak in a sticky soy, brown sugar and garlic sauce over jasmine rice.",
+      "category": "Asian-inspired",
+      "protein": "beef",
+      "minutes": 25,
+      "prepMinutes": 10,
+      "cookMinutes": 15,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "sirloinTip": 2,
+        "starch": 4,
+        "soy": 6,
+        "brownSugar": 5,
+        "garlic": 6,
+        "ginger": 1,
+        "oil": 3
+      },
+      "steps": [
+        "Slice the sirloin tip across the grain into thin strips, about ¼ inch thick, and toss with 3 tablespoons of the cornstarch until coated. Mince the garlic and grate the ginger.",
+        "Stir the soy sauce, brown sugar, the last tablespoon of cornstarch and ½ cup of water together in a bowl for the sauce.",
+        {
+          "text": "Heat 2 tablespoons of the oil in a large skillet over high heat until it shimmers. Sear the beef in two batches in a single layer, 1–2 minutes a side, until crisp at the edges and 145°F. Move it to a plate.",
+          "minutes": 5,
+          "setting": "Stovetop, high"
+        },
+        {
+          "text": "Turn the heat to medium. Add the last tablespoon of oil, the garlic and the ginger and stir for 30 seconds, until fragrant. Pour in the sauce and simmer, stirring, until thick and glossy, 2–3 minutes.",
+          "minutes": 3,
+          "setting": "Stovetop, medium"
+        },
+        "Return the beef and toss for 1 minute to coat. Serve over the rice with the broccoli."
+      ],
+      "tips": [
+        "Cook the beef in batches; a crowded pan steams the meat instead of crisping it.",
+        "Start the rice before you slice the beef so everything is ready together."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; reheat in a skillet with a splash of water, or in the microwave.",
+      "sides": [
+        "steamed-jasmine-rice",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "Glossy dark-brown strips of Mongolian beef in a sticky sauce over fluffy white jasmine rice with bright steamed broccoli on the side."
+    },
+    {
+      "id": "cheesy-beef-quesadillas",
+      "title": "Cheesy beef quesadillas",
+      "subtitle": "Taco-seasoned beef and plenty of cheddar griddled between flour tortillas until golden and melty.",
+      "category": "Tex-Mex",
+      "protein": "beef",
+      "minutes": 25,
+      "prepMinutes": 5,
+      "cookMinutes": 20,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "taco night",
+        "bulk",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 1.75,
+        "taco": 2,
+        "tortillas": 10,
+        "cheese": 8,
+        "salsa": 12,
+        "sourCream": 4
+      },
+      "steps": [
+        {
+          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
+          "minutes": 10,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Brown the beef on the griddle, chopping it up with a spatula, until no pink remains and it reaches 160°F, 6–7 minutes. Scrape off any fat, sprinkle on the taco seasoning and 3 tablespoons of water and toss until it coats the meat.",
+          "minutes": 7,
+          "setting": "Blackstone, medium-high"
+        },
+        "Pile the beef on one side and turn the heat to medium. Lay 5 tortillas on the griddle and cover each with a handful of cheddar, a fifth of the beef and another handful of cheese, then top with the other 5 tortillas.",
+        {
+          "text": "Cook until golden underneath and the cheese starts to melt, about 2 minutes, then flip with a wide spatula and cook 1–2 minutes more.",
+          "minutes": 4,
+          "setting": "Blackstone, medium"
+        },
+        "Rest them a minute, cut each into 4 wedges and serve with the salsa and sour cream."
+      ],
+      "tips": [
+        "Medium heat is the sweet spot: hot enough to crisp the tortilla, gentle enough to melt the cheese."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; re-crisp the wedges on the griddle or in the air fryer for a few minutes.",
+      "sides": [
+        "mexicorn",
+        "orange-wedges"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden griddled quesadilla wedges oozing melted cheddar and seasoned ground beef, with small bowls of red salsa and sour cream, beside buttered Mexicorn and fresh orange wedges."
+    },
+    {
+      "id": "one-pot-chili-mac",
+      "title": "One-pot chili mac",
+      "subtitle": "Beefy chili and elbow macaroni cooked together in one pot and finished under melted cheddar.",
+      "category": "Pasta",
+      "protein": "beef",
+      "minutes": 30,
+      "prepMinutes": 5,
+      "cookMinutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "bulk",
+        "freezer friendly",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2,
+        "onions": 0.5,
+        "elbows": 10,
+        "chiliBeans": 1,
+        "tomatoes": 1,
+        "beefBroth": 3,
+        "cumin": 2,
+        "paprika": 1,
+        "garlicPowder": 1,
+        "salt": 1,
+        "cheese": 5
+      },
+      "steps": [
+        {
+          "text": "In a large pot over medium-high, brown the beef with the chopped onion, breaking it up, until no pink remains, the beef reaches 160°F and the onion is soft, 7–8 minutes. Drain any fat.",
+          "minutes": 8,
+          "setting": "Stovetop, medium-high"
+        },
+        "Stir in the cumin, paprika, garlic powder and salt for 30 seconds, then add the chili beans with their sauce, the diced tomatoes with their juice and the beef broth.",
+        {
+          "text": "Bring it to a boil, stir in the elbow macaroni, cover and simmer, stirring every few minutes so nothing sticks, until the pasta is tender and most of the liquid is absorbed, 10–12 minutes.",
+          "minutes": 11,
+          "setting": "Stovetop, medium-low, lid on"
+        },
+        "Turn off the heat, scatter the cheddar over the top, cover for 2 minutes to melt and serve."
+      ],
+      "tips": [
+        "If it gets too thick before the pasta is done, add a splash of water."
+      ],
+      "leftovers": "Keeps 4 days in the fridge and freezes for 3 months in single portions; add a splash of water when you reheat it.",
+      "sides": [
+        "canned-green-beans",
+        "apple-slices"
+      ],
+      "sideSlots": 2,
+      "photo": "A bowl of chili mac: elbow macaroni in a thick, beefy tomato chili sauce with beans, topped with melted cheddar, beside buttered green beans and crisp apple slices."
+    },
+    {
+      "id": "french-dip-sandwiches",
+      "title": "French dip sandwiches",
+      "subtitle": "Thin roast beef warmed in a garlicky beef jus, piled on toasted rolls with melted cheese, with a cup of jus for dipping.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 20,
+      "prepMinutes": 5,
+      "cookMinutes": 15,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "sandwiches"
+      ],
+      "rotation": "core",
+      "items": {
+        "roastBeef": 1.75,
+        "hoagies": 5,
+        "cheeseSlices": 10,
+        "beefBroth": 3,
+        "butter": 2,
+        "garlicPowder": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        {
+          "text": "Bring the beef broth, garlic powder and black pepper to a simmer in a saucepan; this is the jus for dipping.",
+          "minutes": 5,
+          "setting": "Stovetop, medium"
+        },
+        {
+          "text": "Drop the roast beef into the simmering jus for 1–2 minutes, just until hot through (165°F), then lift it out with tongs and let it drip. Keep the jus warm on low.",
+          "minutes": 2,
+          "setting": "Stovetop, low"
+        },
+        {
+          "text": "Split the hoagie rolls, butter the cut sides and toast them cut side down in a large skillet over medium until golden, about 2 minutes.",
+          "minutes": 2,
+          "setting": "Stovetop, medium"
+        },
+        "Pile the beef on the bottom halves, lay 2 cheese slices over each and put the tops on; the hot meat melts the cheese. Pour the jus into small cups for dipping."
+      ],
+      "tips": [
+        "Ask the deli to shave the roast beef thin; thin slices warm through in seconds.",
+        "Anyone who doesn’t like a soggy roll can spoon the jus on instead of dipping."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; keep the beef and jus apart from the rolls and warm them together in a saucepan.",
+      "sides": [
+        "jewel-fries",
+        "canned-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "A toasted hoagie roll piled with thin sliced roast beef and melted provolone, a small cup of dark beef jus for dipping, beside golden fries and buttered green beans."
+    },
+    {
+      "id": "beef-potato-skillet",
+      "title": "Cheesy beef & potato skillet",
+      "subtitle": "Crispy golden new potatoes and browned beef with peppers and onions, under melted cheddar.",
+      "category": "Comfort",
+      "protein": "beef",
+      "minutes": 30,
+      "prepMinutes": 5,
+      "cookMinutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "bulk",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "beef": 2,
+        "newPotatoes": 3,
+        "onions": 0.5,
+        "peppers": 1,
+        "oil": 1,
+        "paprika": 1,
+        "garlicPowder": 1,
+        "salt": 1,
+        "pepper": 0.5,
+        "cheese": 6
+      },
+      "steps": [
+        "Drain the new potatoes, pat them dry and cut each into quarters. Chop the onion and the bell pepper.",
+        {
+          "text": "Heat the oil in a large skillet over medium-high. Add the potatoes cut side down and cook, turning once or twice, until golden and crisp at the edges, 8–10 minutes. Move them to a plate.",
+          "minutes": 9,
+          "setting": "Stovetop, medium-high"
+        },
+        {
+          "text": "In the same skillet, brown the beef with the onion and bell pepper, breaking it up, until no pink remains, the beef reaches 160°F and the vegetables are soft, about 8 minutes. Drain any fat.",
+          "minutes": 8,
+          "setting": "Stovetop, medium-high"
+        },
+        "Season with the paprika, garlic powder, salt and black pepper, return the potatoes and toss everything together.",
+        {
+          "text": "Scatter the cheddar over the top, cover and cook until melted, about 2 minutes.",
+          "minutes": 2,
+          "setting": "Stovetop, low, lid on"
+        }
+      ],
+      "tips": [
+        "Dry potatoes brown and wet ones steam, so pat them well.",
+        "Ketchup or hot sauce on top is everyone’s own call."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; reheat in a skillet so the potatoes crisp up again.",
+      "sides": [
+        "canned-green-beans",
+        "apple-slices"
+      ],
+      "sideSlots": 2,
+      "photo": "A skillet of crispy golden potato quarters and browned ground beef with soft cooked peppers and onions under melted cheddar, beside buttered green beans and apple slices."
+    },
+    {
+      "id": "honey-garlic-chicken-bites",
+      "title": "Honey garlic chicken bites",
+      "subtitle": "Golden bite-size chicken tossed in a sticky honey, soy and garlic glaze, over jasmine rice.",
+      "category": "Asian-inspired",
+      "protein": "chicken",
+      "minutes": 25,
+      "prepMinutes": 10,
+      "cookMinutes": 15,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "starch": 3,
+        "honey": 6,
+        "soy": 4,
+        "garlic": 6,
+        "butter": 2,
+        "oil": 2,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Cut the chicken into 1-inch pieces, pat them dry and toss with the cornstarch and black pepper until lightly coated. Mince the garlic. Stir the honey, soy sauce and 2 tablespoons of water together.",
+        {
+          "text": "Heat the oil in a large skillet over medium-high. Cook the chicken in a single layer, in two batches if it’s crowded, turning, until golden on all sides and 165°F in the middle, 6–8 minutes.",
+          "minutes": 7,
+          "setting": "Stovetop, medium-high"
+        },
+        {
+          "text": "Turn the heat to medium-low, add the butter and garlic and stir for 30 seconds, until fragrant. Pour in the honey sauce and toss until it bubbles and turns sticky, about 2 minutes.",
+          "minutes": 2,
+          "setting": "Stovetop, medium-low"
+        },
+        "Serve over the rice with the broccoli."
+      ],
+      "tips": [
+        "Start the rice first; it takes about as long as everything else together.",
+        "Watch the glaze: honey goes from sticky to scorched fast, so keep the heat low once it’s in."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; reheat in the microwave with a splash of water.",
+      "sides": [
+        "steamed-jasmine-rice",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "Bite-size golden chicken pieces in a sticky, glossy honey garlic glaze over fluffy white rice with steamed broccoli florets."
+    },
+    {
+      "id": "lemon-pepper-chicken",
+      "title": "Lemon pepper chicken",
+      "subtitle": "Chicken breasts seared on the Blackstone with lemon zest and cracked pepper, finished in lemon butter.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 25,
+      "prepMinutes": 10,
+      "cookMinutes": 15,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "grill night",
+        "bulk",
+        "healthier"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.5,
+        "lemons": 2,
+        "pepper": 2,
+        "garlicPowder": 1,
+        "salt": 1.5,
+        "butter": 3,
+        "oil": 1
+      },
+      "steps": [
+        "Pound the thick ends of the chicken breasts to an even ¾ inch between two sheets of plastic wrap. Zest 1 lemon and mix the zest with the black pepper, garlic powder and salt. Rub the chicken with the oil and season it all over.",
+        {
+          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
+          "minutes": 10,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Lay the chicken on the griddle and leave it alone 5–6 minutes, until golden and it lets go easily. Flip and cook 4–5 minutes more, until 165°F in the thickest part.",
+          "minutes": 10,
+          "setting": "Blackstone, medium-high"
+        },
+        "Melt the butter on the griddle next to the chicken, squeeze in the juice of the zested lemon and turn the chicken through it. Rest 5 minutes, then slice. Cut the second lemon into wedges for the table."
+      ],
+      "tips": [
+        "An even thickness is what keeps it juicy; don’t skip the pounding."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; slice it for salads, wraps or Jeff’s lunch.",
+      "sides": [
+        "new-potatoes",
+        "canned-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden seared lemon pepper chicken breasts flecked with cracked black pepper and lemon zest, lemon wedges on the side, with buttered new potatoes and French-style green beans."
+    },
+    {
+      "id": "smothered-chicken",
+      "title": "Smothered chicken",
+      "subtitle": "Thin golden chicken cutlets simmered in a creamy mushroom and onion gravy.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 30,
+      "prepMinutes": 10,
+      "cookMinutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "flour": 0.33,
+        "onions": 0.5,
+        "mushrooms": 8,
+        "chickenBroth": 1.5,
+        "milk": 0.5,
+        "butter": 2,
+        "oil": 1,
+        "paprika": 1,
+        "garlicPowder": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Slice each chicken breast in half through the middle to make thin cutlets. Mix the paprika, garlic powder, salt and pepper and season both sides, then dredge the cutlets in ¼ cup of the flour and shake off the extra. Slice the onion and the mushrooms.",
+        {
+          "text": "Heat the oil and 1 tablespoon of the butter in a large skillet over medium-high. Brown the cutlets in two batches, 3 minutes a side, until golden; they finish in the gravy. Move them to a plate.",
+          "minutes": 6,
+          "setting": "Stovetop, medium-high"
+        },
+        {
+          "text": "Turn the heat to medium. Add the rest of the butter, the onion and the mushrooms and cook, scraping up the browned bits, until soft and golden, about 5 minutes.",
+          "minutes": 5,
+          "setting": "Stovetop, medium"
+        },
+        "Sprinkle in the rest of the flour and stir for 1 minute, then slowly stir in the chicken broth and the milk until smooth.",
+        {
+          "text": "Return the chicken, spoon the gravy over it, cover and simmer until the chicken reads 165°F and the gravy has thickened, 5–6 minutes.",
+          "minutes": 5,
+          "setting": "Stovetop, medium-low, lid on"
+        }
+      ],
+      "tips": [
+        "Start the potatoes before the chicken; the gravy goes over both."
+      ],
+      "leftovers": "Keeps 3 days in the fridge with its gravy; reheat covered over low heat.",
+      "sides": [
+        "smashed-potatoes",
+        "buttered-peas"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden pan-fried chicken cutlets smothered in creamy mushroom gravy with soft cooked onions, beside mashed potatoes and buttered peas."
+    },
+    {
+      "id": "chicken-ranch-pasta",
+      "title": "Chicken ranch pasta",
+      "subtitle": "Penne and golden chicken in a creamy Wish-Bone ranch and cheddar sauce.",
+      "category": "Pasta",
+      "protein": "chicken",
+      "minutes": 25,
+      "prepMinutes": 5,
+      "cookMinutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 1.75,
+        "penne": 12,
+        "ranch": 6,
+        "cheese": 4,
+        "milk": 1,
+        "parm": 1,
+        "garlicPowder": 1,
+        "salt": 1,
+        "pepper": 0.5,
+        "oil": 1
+      },
+      "steps": [
+        {
+          "text": "Bring a large pot of salted water to a boil and cook the penne 1 minute less than the package says. Save 1 cup of the pasta water and drain.",
+          "minutes": 11,
+          "setting": "Stovetop, high"
+        },
+        "While the water heats, cut the chicken into bite-size pieces and season with the garlic powder, salt and black pepper.",
+        {
+          "text": "Heat the oil in a large skillet over medium-high and cook the chicken, turning, until golden and 165°F in the middle, 7–8 minutes.",
+          "minutes": 8,
+          "setting": "Stovetop, medium-high"
+        },
+        {
+          "text": "Turn the heat to low. Stir in the milk, the Wish-Bone ranch, the cheddar and the Parmesan until smooth and melted, about 2 minutes.",
+          "minutes": 2,
+          "setting": "Stovetop, low"
+        },
+        "Add the penne and a splash of the pasta water and toss until every piece is coated."
+      ],
+      "tips": [
+        "Keep the heat low once the cheese goes in, or the sauce turns grainy."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; reheat with a splash of milk or water.",
+      "sides": [
+        "steamed-broccoli",
+        "apple-slices"
+      ],
+      "sideSlots": 2,
+      "photo": "Penne tossed with bite-size golden chicken in a creamy, cheesy ranch sauce dusted with Parmesan, beside steamed broccoli and crisp apple slices."
+    },
+    {
+      "id": "southwest-chicken-rice",
+      "title": "Southwest chicken & rice skillet",
+      "subtitle": "Chicken, rice, black beans, corn and salsa simmered together in one pan and topped with cheddar.",
+      "category": "Tex-Mex",
+      "protein": "chicken",
+      "minutes": 30,
+      "prepMinutes": 5,
+      "cookMinutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice",
+        "bulk",
+        "from your pantry"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2,
+        "jasmine": 1.5,
+        "beans": 1,
+        "cannedCorn": 1,
+        "salsa": 16,
+        "chickenBroth": 2.25,
+        "taco": 2,
+        "oil": 1,
+        "cheese": 5
+      },
+      "steps": [
+        "Cut the chicken into bite-size pieces and toss with the taco seasoning. Drain and rinse the black beans and drain the corn.",
+        {
+          "text": "Heat the oil in a large, deep skillet over medium-high. Cook the chicken, turning, until browned on the outside, 4–5 minutes; it finishes with the rice.",
+          "minutes": 5,
+          "setting": "Stovetop, medium-high"
+        },
+        "Stir in the rice for 1 minute, then add the chicken broth, the salsa, the beans and the corn and bring it to a boil.",
+        {
+          "text": "Cover, turn the heat to low and simmer without lifting the lid until the rice is tender and the chicken reads 165°F, about 18 minutes.",
+          "minutes": 18,
+          "setting": "Stovetop, low, lid on"
+        },
+        "Fluff it with a fork, scatter the cheddar over the top, cover for 2 minutes to melt and serve."
+      ],
+      "tips": [
+        "Keep the lid on: the steam is what cooks the rice."
+      ],
+      "leftovers": "Keeps 4 days in the fridge; it makes a good burrito filling the next day.",
+      "sides": [
+        "carrot-sticks",
+        "orange-wedges"
+      ],
+      "sideSlots": 2,
+      "photo": "A skillet of rice simmered red with salsa, with tender chicken, black beans and corn under melted cheddar, beside carrot sticks with ranch and orange wedges."
+    },
+    {
+      "id": "hawaiian-bbq-chicken",
+      "title": "Hawaiian BBQ chicken",
+      "subtitle": "Grilled chicken thighs glazed with a pineapple barbecue sauce, with charred pineapple over rice.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 25,
+      "prepMinutes": 5,
+      "cookMinutes": 20,
+      "equipment": [
+        "electric grill"
+      ],
+      "tags": [
+        "grill night",
+        "rice",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.5,
+        "bbq": 8,
+        "pineapple": 1,
+        "soy": 1,
+        "garlicPowder": 1,
+        "salt": 0.5,
+        "oil": 1
+      },
+      "steps": [
+        "Drain the pineapple chunks, saving 3 tablespoons of the juice. Stir the juice and the soy sauce into the barbecue sauce. Season the chicken thighs with the garlic powder and salt and rub them with the oil.",
+        {
+          "text": "Heat the electric grill on medium-high for 5 minutes.",
+          "minutes": 5,
+          "setting": "Electric grill, medium-high"
+        },
+        {
+          "text": "Grill the thighs 5–6 minutes a side, until charred and 165°F. Brush them with half the sauce in the last 2 minutes.",
+          "minutes": 12,
+          "setting": "Electric grill, medium-high"
+        },
+        {
+          "text": "Lay the pineapple chunks on the grill until marked, 2–3 minutes.",
+          "minutes": 3,
+          "setting": "Electric grill, medium-high"
+        },
+        "Brush the chicken with the rest of the sauce and serve with the pineapple over the rice."
+      ],
+      "tips": [
+        "Sauce goes on at the end: barbecue sauce burns if it cooks the whole time."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; chop it for a rice bowl or a quesadilla.",
+      "sides": [
+        "steamed-jasmine-rice",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "Charred, glossy barbecue-glazed chicken thighs with grilled golden pineapple chunks over white rice, with steamed broccoli on the side."
+    },
+    {
+      "id": "chicken-tender-night",
+      "title": "Chicken tender night",
+      "subtitle": "Crispy air-fried chicken tenders with barbecue, ranch and honey-mustard dips, mac & cheese and corn.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 20,
+      "prepMinutes": 5,
+      "cookMinutes": 15,
+      "equipment": [
+        "air fryer"
+      ],
+      "tags": [],
+      "rotation": "core",
+      "items": {
+        "frozenTenders": 2,
+        "bbq": 4,
+        "ranch": 4,
+        "honey": 2,
+        "mustard": 2
+      },
+      "steps": [
+        {
+          "text": "Heat the air fryer to 400°F for 3 minutes.",
+          "minutes": 3,
+          "setting": "Air fryer, 400°F"
+        },
+        {
+          "text": "Air-fry the frozen tenders in a single layer, in batches, 10–12 minutes, turning them halfway, until crisp and 165°F in the thickest one. The bag has the exact time for your brand.",
+          "minutes": 11,
+          "setting": "Air fryer, 400°F"
+        },
+        "While they cook, stir the honey and mustard together for a honey-mustard dip, and set out the barbecue sauce and Wish-Bone ranch in small bowls.",
+        "Keep the first batch warm under a loose sheet of foil while the second batch cooks."
+      ],
+      "tips": [
+        "Make the mac & cheese and corn while the tenders cook; everything lands at once.",
+        "A single layer is the difference between crispy and soggy."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; re-crisp in the air fryer at 400°F for 3–4 minutes.",
+      "sides": [
+        "stovetop-mac",
+        "canned-corn"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden, crispy breaded chicken tenders on a plate with small bowls of barbecue sauce, ranch and honey mustard for dipping, beside creamy stovetop mac and cheese and buttered corn."
+    },
+    {
+      "id": "chicken-street-tacos",
+      "title": "Chicken street tacos",
+      "subtitle": "Crispy chopped chicken thighs from the Blackstone in small flour tortillas with cheese, salsa and lime.",
+      "category": "Tex-Mex",
+      "protein": "chicken",
+      "minutes": 25,
+      "prepMinutes": 10,
+      "cookMinutes": 15,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "taco night",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chickenThighs": 2.25,
+        "taco": 2,
+        "limes": 2,
+        "oil": 1,
+        "streetTacoFlour": 15,
+        "cheese": 3,
+        "sourCream": 4,
+        "salsa": 8,
+        "cilantro": 0.5
+      },
+      "steps": [
+        "Cut the chicken thighs into ½-inch pieces and toss them with the oil, the taco seasoning and the juice of 1 lime. Chop the cilantro.",
+        {
+          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
+          "minutes": 10,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Spread the chicken on the griddle in a single layer and leave it 3 minutes to brown, then chop and turn it with two spatulas and cook 4–5 minutes more, until crisp at the edges and 165°F.",
+          "minutes": 8,
+          "setting": "Blackstone, medium-high"
+        },
+        "Warm the street taco tortillas on a clean part of the griddle, about 15 seconds a side, and stack them under a towel.",
+        "Fill each tortilla with chicken and top with the cheese, salsa, sour cream, cilantro and a squeeze from the second lime."
+      ],
+      "tips": [
+        "Thighs stay juicy on a hot griddle; breasts work too but come off a minute sooner.",
+        "Leave the cilantro off anyone’s taco who doesn’t like it."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; reheat the chicken on the griddle or in a skillet.",
+      "sides": [
+        "black-beans",
+        "mexicorn"
+      ],
+      "sideSlots": 2,
+      "photo": "Small flour street tacos filled with crispy chopped seasoned chicken, shredded cheese, a spoon of red salsa, sour cream and chopped cilantro, with lime wedges, beside black beans and buttered Mexicorn."
+    },
+    {
+      "id": "garlic-butter-chicken-noodles",
+      "title": "Garlic butter chicken & noodles",
+      "subtitle": "Wide egg noodles and golden chicken bites in a garlic butter sauce with Parmesan.",
+      "category": "Pasta",
+      "protein": "chicken",
+      "minutes": 25,
+      "prepMinutes": 5,
+      "cookMinutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2,
+        "eggNoodles": 12,
+        "butter": 4,
+        "garlic": 6,
+        "parm": 1.5,
+        "chickenBroth": 1,
+        "italianSeasoning": 1,
+        "salt": 1,
+        "pepper": 0.5,
+        "oil": 1
+      },
+      "steps": [
+        {
+          "text": "Bring a large pot of salted water to a boil and cook the egg noodles until just tender, 6–7 minutes. Drain.",
+          "minutes": 7,
+          "setting": "Stovetop, high"
+        },
+        "While the water heats, cut the chicken into bite-size pieces, season with the Italian seasoning, salt and black pepper, and mince the garlic.",
+        {
+          "text": "Heat the oil in a large skillet over medium-high and cook the chicken, turning, until golden and 165°F, about 7 minutes.",
+          "minutes": 7,
+          "setting": "Stovetop, medium-high"
+        },
+        {
+          "text": "Turn the heat to medium-low. Add the butter and garlic and stir for 1 minute, then pour in the chicken broth and simmer 2 minutes.",
+          "minutes": 3,
+          "setting": "Stovetop, medium-low"
+        },
+        "Add the noodles and the Parmesan and toss until glossy."
+      ],
+      "tips": [
+        "Keep the garlic moving; it turns bitter if it browns."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; reheat with a splash of broth or water.",
+      "sides": [
+        "steamed-broccoli",
+        "canned-carrots"
+      ],
+      "sideSlots": 2,
+      "photo": "Wide egg noodles tossed with golden garlic butter chicken bites and grated Parmesan, beside steamed broccoli and honey-glazed carrots."
+    },
+    {
+      "id": "chicken-and-dumplings",
+      "title": "Chicken & dumplings",
+      "subtitle": "Tender chicken, carrots and celery in a creamy broth with fluffy biscuit dumplings.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 30,
+      "prepMinutes": 10,
+      "cookMinutes": 20,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "bulk",
+        "soup"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2,
+        "biscuits": 8,
+        "chickenBroth": 6,
+        "carrots": 0.5,
+        "celery": 0.5,
+        "onions": 0.5,
+        "butter": 3,
+        "flour": 0.25,
+        "milk": 1,
+        "italianSeasoning": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Chop the onion, slice the carrots and celery thin, and cut the chicken into 1-inch pieces. Cut each biscuit into quarters.",
+        {
+          "text": "Melt the butter in a large pot over medium. Cook the onion, carrots and celery until the onion is soft, about 5 minutes. Sprinkle in the flour and stir for 1 minute.",
+          "minutes": 6,
+          "setting": "Stovetop, medium"
+        },
+        "Slowly stir in the chicken broth and the milk, then add the chicken, the Italian seasoning, salt and black pepper.",
+        {
+          "text": "Bring it to a gentle boil, drop in the biscuit pieces one at a time, cover and simmer without lifting the lid until the dumplings are puffed and cooked through and the chicken reads 165°F, 12–15 minutes.",
+          "minutes": 13,
+          "setting": "Stovetop, medium-low, lid on"
+        }
+      ],
+      "tips": [
+        "Don’t peek: the lid holds in the steam that cooks the dumplings.",
+        "Refrigerated biscuit dough makes the dumplings; no rolling or mixing."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; the dumplings soak up broth, so add a splash of broth or water when you reheat it.",
+      "sides": [
+        "canned-green-beans",
+        "apple-slices"
+      ],
+      "sideSlots": 2,
+      "photo": "A bowl of creamy chicken and dumplings with tender chicken, carrots and celery in a thick, pale gravy and fluffy dumplings, beside buttered green beans and apple slices."
+    },
+    {
+      "id": "garlic-parmesan-chicken",
+      "title": "Garlic Parmesan chicken",
+      "subtitle": "Chicken breasts seared on the Blackstone and finished in garlic butter under a snow of Parmesan.",
+      "category": "Grill",
+      "protein": "chicken",
+      "minutes": 25,
+      "prepMinutes": 10,
+      "cookMinutes": 15,
+      "equipment": [
+        "blackstone"
+      ],
+      "tags": [
+        "grill night",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2.25,
+        "parm": 2,
+        "garlic": 4,
+        "butter": 3,
+        "italianSeasoning": 1,
+        "garlicPowder": 1,
+        "salt": 1,
+        "pepper": 0.5,
+        "oil": 1
+      },
+      "steps": [
+        "Pound the thick ends of the chicken breasts to an even ¾ inch. Rub with the oil and season with the Italian seasoning, garlic powder, salt and black pepper. Mince the garlic.",
+        {
+          "text": "Light the Blackstone and heat it on medium-high for 10 minutes; it’s ready when a few drops of water skitter and vanish in a second or two.",
+          "minutes": 10,
+          "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "Lay the chicken on the griddle and leave it 5–6 minutes, until golden and it lets go easily. Flip and cook 4–5 minutes more, until 165°F in the thickest part.",
+          "minutes": 10,
+          "setting": "Blackstone, medium-high"
+        },
+        "Melt the butter on the griddle beside the chicken, stir in the garlic for 30 seconds, and spoon the garlic butter over each piece. Shower with the Parmesan and rest 5 minutes before slicing."
+      ],
+      "tips": [
+        "Add the garlic at the very end; on a hot griddle it burns in a minute."
+      ],
+      "leftovers": "Keeps 3 days in the fridge; slice it over pasta or a salad.",
+      "sides": [
+        "potato-wedges",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "Seared golden chicken breasts glossy with garlic butter and a snowy layer of grated Parmesan, beside crispy air-fryer potato wedges and steamed broccoli."
+    },
+    {
+      "id": "cheesy-chicken-broccoli-rice",
+      "title": "Cheesy chicken, broccoli & rice",
+      "subtitle": "Chicken, rice and broccoli cooked together in one skillet and stirred into a creamy cheddar sauce.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 30,
+      "prepMinutes": 5,
+      "cookMinutes": 25,
+      "equipment": [
+        "stovetop"
+      ],
+      "tags": [
+        "rice",
+        "bulk"
+      ],
+      "rotation": "core",
+      "items": {
+        "chicken": 2,
+        "jasmine": 1.5,
+        "broccoli": 1,
+        "chickenBroth": 3,
+        "cheese": 6,
+        "milk": 0.5,
+        "butter": 1,
+        "garlicPowder": 1,
+        "salt": 1,
+        "pepper": 0.5
+      },
+      "steps": [
+        "Cut the chicken into bite-size pieces and season with the garlic powder, salt and black pepper.",
+        {
+          "text": "Melt the butter in a large, deep skillet over medium-high and cook the chicken, turning, until browned on the outside, 4–5 minutes.",
+          "minutes": 5,
+          "setting": "Stovetop, medium-high"
+        },
+        "Stir in the rice for 1 minute, then add the chicken broth and bring it to a boil.",
+        {
+          "text": "Cover, turn the heat to low and simmer 15 minutes without lifting the lid.",
+          "minutes": 15,
+          "setting": "Stovetop, low, lid on"
+        },
+        {
+          "text": "Lay the frozen broccoli on top, cover again and cook 5 minutes more, until the rice is tender, the broccoli is hot and the chicken reads 165°F.",
+          "minutes": 5,
+          "setting": "Stovetop, low, lid on"
+        },
+        "Stir in the milk and the cheddar until creamy and serve."
+      ],
+      "tips": [
+        "If the rice is still firm, add ¼ cup of water and give it 3 more minutes."
+      ],
+      "leftovers": "Keeps 4 days in the fridge; reheat with a splash of milk.",
+      "sides": [
+        "canned-carrots",
+        "apple-slices"
+      ],
+      "sideSlots": 2,
+      "photo": "A creamy skillet of cheesy rice with tender chicken pieces and bright green broccoli florets, beside honey-glazed carrots and apple slices."
+    },
+    {
+      "id": "seapak-shrimp-night",
+      "title": "Fried shrimp night",
+      "subtitle": "Two bags of SeaPak butterfly shrimp crisped in the air fryer, with a big pile of fries and lemon for squeezing.",
+      "category": "Comfort",
+      "protein": "seafood",
+      "minutes": 30,
+      "prepMinutes": 5,
+      "cookMinutes": 25,
+      "equipment": [
+        "air fryer"
+      ],
+      "tags": [
+        "family usual"
+      ],
+      "rotation": "core",
+      "items": {
+        "seapakShrimp": 36,
+        "lemons": 1,
+        "ketchup": 5
+      },
+      "steps": [
+        "Make the fries first and keep them warm under a loose sheet of foil; the shrimp take about 10 minutes a batch and are best straight out of the air fryer.",
+        {
+          "text": "Heat the air fryer to 400°F for 3 minutes.",
+          "minutes": 3,
+          "setting": "Air fryer, 400°F"
+        },
+        {
+          "text": "Spread the frozen shrimp in the basket in a single layer, with no stacking, and air-fry 9–11 minutes, shaking the basket halfway, until golden and crisp and the thickest shrimp reads 145°F. The box has the exact time for your shrimp.",
+          "minutes": 10,
+          "setting": "Air fryer, 400°F"
+        },
+        "Tip the first batch onto a plate under the foil and cook the rest the same way.",
+        "Cut the lemon into wedges and serve the shrimp with the lemon and ketchup or cocktail sauce for dipping."
+      ],
+      "tips": [
+        "Two 18 oz bags feed the five of you.",
+        "A single layer is the whole secret: stacked shrimp come out soft."
+      ],
+      "leftovers": "Best right away. Leftovers keep 2 days in the fridge; re-crisp them in the air fryer at 400°F for 3–4 minutes.",
+      "sides": [
+        "jewel-fries",
+        "canned-corn"
+      ],
+      "sideSlots": 2,
+      "photo": "A plate piled with golden, crispy breaded butterfly shrimp with lemon wedges and a small cup of red cocktail sauce, beside a heap of golden fries and buttered corn."
     }
   ],
   "sides": [
@@ -6324,26 +6211,6 @@
       ]
     },
     {
-      "id": "lime-slaw",
-      "title": "Creamy lime slaw",
-      "kind": "salad",
-      "minutes": 10,
-      "equipment": [],
-      "items": {
-        "slaw": 14,
-        "limes": 1,
-        "yogurt": 4,
-        "honey": 1,
-        "salt": 0.25
-      },
-      "steps": [
-        "Zest and juice the lime into a large bowl. Whisk in the yogurt, honey, salt and 1 tablespoon of water until smooth.",
-        "Add the coleslaw mix and toss until evenly coated.",
-        "Chill until serving (up to 2 hours) and toss again before serving."
-      ],
-      "photo": "A bowl of creamy shredded green and purple cabbage slaw with carrot strands and flecks of lime zest."
-    },
-    {
       "id": "romaine-salad",
       "title": "Chopped romaine salad",
       "kind": "salad",
@@ -6385,7 +6252,7 @@
     },
     {
       "id": "canned-green-beans",
-      "title": "Buttered green beans",
+      "title": "Buttered French-style green beans",
       "kind": "vegetable",
       "minutes": 10,
       "equipment": [
@@ -6401,7 +6268,7 @@
         "Cover and heat over medium, stirring once or twice, until steaming, 4–5 minutes. Drain off any liquid.",
         "Toss with the butter and black pepper and serve."
       ],
-      "photo": "A bowl of tender cut green beans glossy with butter and cracked black pepper."
+      "photo": "A bowl of tender, thin French-style green beans glossy with butter and cracked black pepper."
     },
     {
       "id": "canned-corn",
@@ -6561,27 +6428,6 @@
         "Soaking the cut wedges in cold water for 10 minutes and drying them well makes them crisper."
       ],
       "photo": "Golden crispy seasoned potato wedges with browned edges piled in a bowl."
-    },
-    {
-      "id": "sweet-potatoes",
-      "title": "Cinnamon-butter sweet potatoes",
-      "kind": "starch",
-      "minutes": 20,
-      "equipment": [
-        "microwave"
-      ],
-      "items": {
-        "sweet": 2.5,
-        "butter": 1,
-        "salt": 0.25,
-        "cinnamon": 0.5
-      },
-      "steps": [
-        "Scrub the sweet potatoes and pierce each several times with a fork.",
-        "Microwave on a plate in batches, turning halfway, until a knife slides easily into the centers, 8–15 minutes per batch depending on size.",
-        "Split open and top with the butter, a pinch of salt and a light dusting of the ground cinnamon."
-      ],
-      "photo": "Split sweet potatoes with bright orange fluffy flesh topped with melting butter."
     },
     {
       "id": "warm-naan",
@@ -6844,28 +6690,6 @@
       "photo": "A bowl of creamy, cheesy elbow macaroni with a glossy golden cheddar sauce."
     },
     {
-      "id": "asian-slaw",
-      "title": "Sesame-ginger slaw",
-      "kind": "salad",
-      "minutes": 10,
-      "equipment": [],
-      "items": {
-        "slaw": 14,
-        "carrots": 0.25,
-        "riceVinegar": 2,
-        "sesame": 1,
-        "soy": 1,
-        "honey": 0.5,
-        "ginger": 0.25
-      },
-      "steps": [
-        "Shred the carrot and toss it with the coleslaw mix in a large bowl.",
-        "Whisk the rice vinegar, sesame oil, soy sauce, honey and grated ginger.",
-        "Toss the slaw with the dressing and let stand 10 minutes before serving."
-      ],
-      "photo": "A bowl of crunchy shredded cabbage and carrot slaw glossy with sesame-ginger dressing."
-    },
-    {
       "id": "edamame",
       "title": "Sesame edamame",
       "kind": "vegetable",
@@ -6912,48 +6736,6 @@
         "Uncover and cook 1 minute more to re-crisp. Stir the soy sauce and rice vinegar together for dipping. Three per person."
       ],
       "photo": "Golden pan-fried potstickers with crispy browned bottoms arranged on a plate with a small bowl of soy dipping sauce."
-    },
-    {
-      "id": "air-fryer-veggies",
-      "title": "Air-fryer zucchini & peppers",
-      "kind": "vegetable",
-      "minutes": 20,
-      "equipment": [
-        "air fryer"
-      ],
-      "items": {
-        "zucchini": 1.5,
-        "peppers": 2,
-        "onions": 0.5,
-        "oil": 1,
-        "italianSeasoning": 1,
-        "garlicPowder": 0.5,
-        "salt": 0.5
-      },
-      "steps": [
-        "Cut the zucchini into half-moons and the 2 peppers and the onion into 1-inch pieces.",
-        "Toss with the oil, Italian seasoning, garlic powder and salt.",
-        {
-          "text": "Air-fry at 400°F in single layers, shaking halfway, until tender and browned at the edges and the onion is soft, 10–14 minutes per batch.",
-          "minutes": 10,
-          "setting": "Air fryer, 400°F"
-        }
-      ],
-      "photo": "Browned zucchini half-moons with red and yellow bell pepper pieces and soft browned onion on a platter."
-    },
-    {
-      "id": "applesauce-cups",
-      "title": "Applesauce cups",
-      "kind": "fruit",
-      "minutes": 1,
-      "equipment": [],
-      "items": {
-        "applesauce": 5
-      },
-      "steps": [
-        "Chill the applesauce cups and set one at each plate."
-      ],
-      "photo": "A small glass dish of smooth golden applesauce."
     },
     {
       "id": "pineapple-chunks",
@@ -7214,56 +6996,6 @@
       "photo": "A neat mound of fluffy steamed white jasmine rice in a bowl with a rice paddle."
     },
     {
-      "id": "steamed-mixed-vegetables",
-      "title": "Steamed mixed vegetables",
-      "kind": "vegetable",
-      "minutes": 10,
-      "equipment": [
-        "stovetop"
-      ],
-      "items": {
-        "vegetables": 1.5,
-        "butter": 1,
-        "salt": 0.25,
-        "pepper": 0.25
-      },
-      "steps": [
-        "Bring about ½ inch of water to a boil in a large saucepan over high heat.",
-        {
-          "text": "Add the 1½ lb of frozen mixed vegetables, cover and steam over medium heat until hot and tender, 5–7 minutes.",
-          "minutes": 5,
-          "setting": "Stovetop, medium, lid on"
-        },
-        "Drain well and toss with the butter, salt and pepper."
-      ],
-      "photo": "A bowl of steamed mixed vegetables (peas, corn, diced carrots and cut green beans) glistening with a little butter.",
-      "tips": [
-        "When the PossibleCooker is free it steams these hands-off: 1 cup of water, the frozen vegetables, lid on, STEAM for 6 minutes."
-      ]
-    },
-    {
-      "id": "spinach-apple-salad",
-      "title": "Spinach & apple salad",
-      "kind": "salad",
-      "minutes": 10,
-      "equipment": [],
-      "items": {
-        "spinach": 6,
-        "apples": 0.75,
-        "lemons": 1,
-        "oil": 1.5,
-        "honey": 0.5,
-        "salt": 0.25,
-        "pepper": 0.25
-      },
-      "steps": [
-        "Whisk the juice of the lemon with the oil, honey, salt and pepper in a large bowl.",
-        "Core the apples and slice them thin. Toss them in the dressing right away so they stay bright.",
-        "Add the 6 oz of baby spinach and toss just before serving."
-      ],
-      "photo": "A bowl of fresh baby spinach tossed with thin slices of crisp red apple in a light lemon dressing."
-    },
-    {
       "id": "cooker-mashed-potatoes",
       "title": "Lighter mashed potatoes",
       "kind": "starch",
@@ -7326,6 +7058,81 @@
         "If the cooker is busy with the main dish, ½ inch of boiling water in a covered pan on the stove does the same job in 5–7 minutes."
       ],
       "photo": "A bowl of steamed broccoli florets, cauliflower florets and crinkle-cut carrot slices glistening with a little melted butter."
+    },
+    {
+      "id": "mexicorn",
+      "title": "Buttered Mexicorn",
+      "kind": "vegetable",
+      "minutes": 8,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "mexicorn": 3,
+        "butter": 1,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Drain the Mexicorn and put it in a saucepan with 2 tablespoons of water.",
+        {
+          "text": "Heat over medium, stirring once or twice, until steaming, 4–5 minutes.",
+          "minutes": 5,
+          "setting": "Stovetop, medium"
+        },
+        "Stir in the butter and the black pepper and serve."
+      ],
+      "photo": "A bowl of golden Mexicorn, sweet corn kernels with little pieces of red and green bell pepper, glossy with melted butter."
+    },
+    {
+      "id": "cream-corn",
+      "title": "Cream-style corn",
+      "kind": "vegetable",
+      "minutes": 8,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "creamCorn": 2,
+        "butter": 0.5,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Pour the cream-style corn into a saucepan.",
+        {
+          "text": "Heat over medium-low, stirring often so it doesn’t stick, until hot and bubbling at the edges, 5–6 minutes.",
+          "minutes": 6,
+          "setting": "Stovetop, medium-low"
+        },
+        "Stir in the butter and a little black pepper and serve."
+      ],
+      "photo": "A bowl of creamy golden cream-style corn with a pat of melting butter and cracked black pepper."
+    },
+    {
+      "id": "new-potatoes",
+      "title": "Buttered new potatoes",
+      "kind": "starch",
+      "minutes": 12,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "newPotatoes": 3,
+        "butter": 2,
+        "garlicPowder": 0.5,
+        "italianSeasoning": 0.5,
+        "salt": 0.5,
+        "pepper": 0.25
+      },
+      "steps": [
+        "Drain the new potatoes and cut any big ones in half.",
+        {
+          "text": "Melt the butter in a skillet over medium-high, add the potatoes and cook, shaking the pan now and then, until golden in spots and hot through, 8–10 minutes.",
+          "minutes": 9,
+          "setting": "Stovetop, medium-high"
+        },
+        "Sprinkle with the garlic powder, Italian seasoning, salt and black pepper, toss and serve."
+      ],
+      "photo": "A bowl of small golden whole new potatoes glossy with butter and flecked with herbs and cracked black pepper."
     }
   ],
   "renamed": {

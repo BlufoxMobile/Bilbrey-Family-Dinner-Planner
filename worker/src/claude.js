@@ -546,7 +546,7 @@ export const IDEAS_SYSTEM_PROMPT = [
   "HOUSE RULES (never break one):",
   "- NO OVEN, ever (it leaks propane): no baking, roasting in an oven, broiling or sheet-pan dinners.",
   "- Every dinner is one meat main plus two sides, sized for five full adult plates. Meat in every dinner (chicken, beef, sometimes pork, sausage, bacon). No vegetarian dinners.",
-  "- No tofu. No seafood or fish of any kind (no shrimp, salmon, tuna, tilapia, fish sauce, oyster sauce, Worcestershire). The ONE exception: an occasional snow-crab boil with Old Bay, every few months — suggest it only if the family's note asks for crab or seafood.",
+  "- No tofu. No seafood or fish of any kind (no shrimp, salmon, tuna, tilapia, fish sauce, oyster sauce, Worcestershire). The exceptions: an occasional snow-crab boil with Old Bay, every few months — suggest it only if the family's note asks for crab or seafood — and the family's own fried shrimp night (SeaPak butterfly shrimp with fries), which is already in their recipe box; don't invent other seafood dinners.",
   "- Never anything Caesar.",
   "- No raw cucumbers (pickles are fine), no raw onions, no raw tomatoes. Cooked onions, tomato sauce, crushed or canned tomatoes and salsa from a jar are fine.",
   "- Organic produce when possible. Soups now and then are welcome.",
