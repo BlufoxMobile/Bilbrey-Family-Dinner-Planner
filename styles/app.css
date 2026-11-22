@@ -1348,3 +1348,12 @@ textarea.input.idea-note { min-height: 64px; }
   .idea-acts .btn { padding: 0 10px; font-size: var(--t-sm); }
 }
 @media print { .ideas-cta { display: none !important; } }
+
+/* Photo pickers (docs/spec/28.6): the file input itself covers its button, invisible, so a tap lands
+   on the phone's own picker (on an iPhone: Photo Library, Take Photo, Choose File). A "Photo library"
+   button sits first, "Take a photo" (straight to the camera) second. */
+.file-btn { position: relative; overflow: hidden; cursor: pointer; }
+.file-btn:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.file-over { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; font-size: 16px; }
+.file-over:disabled { cursor: not-allowed; }
+.scan-pick { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }

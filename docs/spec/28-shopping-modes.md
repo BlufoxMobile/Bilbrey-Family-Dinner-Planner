@@ -44,3 +44,12 @@ The same day, the store's own pictures for 35 items on the family's list were sa
 server with `bfdp.importStorePhotos` (§23.1), so 49 of the list's 52 items show the real package. The
 three without: a hummus and a snack tray the club and store don't list, and a pizza whose flavor
 isn't recorded.
+
+## 28.6 Photos from the iPhone's photo library (v3.4.1)
+Jeff, the same evening: "this doesn't let me upload pics from my iPhone photo gallery. It would only
+let me upload from the files section." Every place that takes a photo (receipt scan, What can I make?,
+the pantry scan, an item's picture) now has two buttons: **Photo library** first (`accept="image/*"`,
+several at once where that makes sense) and **Take a photo** (`capture="environment"`, straight to the
+camera). The file input itself covers its button (`.file-over`: absolutely placed, invisible), so the
+tap lands on the phone's own control instead of being passed through a label to a 1 px hidden input;
+on an iPhone that opens the system menu with Photo Library first.

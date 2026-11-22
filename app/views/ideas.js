@@ -79,8 +79,8 @@ function pick(app) {
   return html`
     ${when(warn, () => html`<p class="hint hint-warn">${ic('info', { size: 18 })}<span>${warn}</span></p>`)}
     <div class="rcpt-pick">
-      <label class="btn btn-secondary rcpt-file ${room ? '' : 'is-off'}">${ic('camera', { size: 20 })}Take a photo<input type="file" accept="image/*" capture="environment" data-change="ideas:files" class="sr-only" ${room ? '' : 'disabled'}></label>
-      <label class="btn btn-secondary rcpt-file ${room ? '' : 'is-off'}">${ic('plus', { size: 20 })}Add photos<input type="file" accept="image/*" multiple data-change="ideas:files" class="sr-only" data-testid="ideas-files" ${room ? '' : 'disabled'}></label>
+      <label class="btn btn-secondary rcpt-file file-btn ${room ? '' : 'is-off'}">${ic('image', { size: 20 })}Photo library<input type="file" accept="image/*" multiple data-change="ideas:files" class="file-over" data-testid="ideas-files" aria-label="Choose photos from the photo library" ${room ? '' : 'disabled'}></label>
+      <label class="btn btn-secondary rcpt-file file-btn ${room ? '' : 'is-off'}">${ic('camera', { size: 20 })}Take a photo<input type="file" accept="image/*" capture="environment" data-change="ideas:files" class="file-over" aria-label="Take a photo" ${room ? '' : 'disabled'}></label>
     </div>
     ${when(st.photos.length, () => html`<ul class="rcpt-thumbs idea-thumbs">${st.photos.map((p, k) => html`<li><img src="${p.preview}" alt="Photo ${k + 1}"><button type="button" class="icon-btn" data-action="ideas:unpick" data-k="${k}" aria-label="Remove photo ${k + 1}">${ic('close', { size: 18 })}</button></li>`)}</ul>`)}
     <label class="field idea-note-field"><span class="field-label">Anything to use up or skip? <small>Optional</small></span>

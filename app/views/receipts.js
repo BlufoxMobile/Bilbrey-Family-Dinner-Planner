@@ -50,8 +50,8 @@ export function openReceiptScan(app) {
         ${segmented('rcptStore', [{ id: 'sams', label: "Sam's Club" }, { id: 'jewel', label: 'Jewel-Osco' }, { id: '', label: 'Not sure' }], st.store, { label: 'Which store', action: 'rcpt:store', small: true })}
       </fieldset>
       <div class="rcpt-pick">
-        <label class="btn btn-secondary rcpt-file">${ic('camera', { size: 20 })}Take a photo<input type="file" accept="image/*" capture="environment" data-change="rcpt:files" class="sr-only"></label>
-        <label class="btn btn-secondary rcpt-file">${ic('receipt', { size: 20 })}Choose screenshots<input type="file" accept="image/*" multiple data-change="rcpt:files" class="sr-only" data-testid="rcpt-files"></label>
+        <label class="btn btn-secondary rcpt-file file-btn">${ic('image', { size: 20 })}Photo library<input type="file" accept="image/*" multiple data-change="rcpt:files" class="file-over" data-testid="rcpt-files" aria-label="Choose receipt photos or screenshots from the photo library"></label>
+        <label class="btn btn-secondary rcpt-file file-btn">${ic('camera', { size: 20 })}Take a photo<input type="file" accept="image/*" capture="environment" data-change="rcpt:files" class="file-over" aria-label="Take a photo of the receipt"></label>
       </div>
       <p class="muted small">Long receipt? Take two or three photos from top to bottom, or scroll the app’s receipt and screenshot each part. Up to ${MAX_IMAGES} images, all of one receipt. Flat, bright and in focus reads best.</p>
       ${when(st.files.length, () => html`<ul class="rcpt-thumbs">${st.files.map((f, k) => html`<li><img src="${f.preview}" alt="Receipt image ${k + 1}"><button type="button" class="icon-btn" data-action="rcpt:unpick" data-k="${k}" aria-label="Remove image ${k + 1}">${ic('close', { size: 18 })}</button></li>`)}</ul>`)}

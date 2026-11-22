@@ -27,6 +27,8 @@ const P = {
   minus: '<path d="M5 12h14"/>',
   close: '<path d="M6 6l12 12"/><path d="M18 6L6 18"/>',
   search: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/>',
+  // A photo (the photo library): a framed picture with a hill and a sun.
+  image: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 15.5l-4.5-4.5-8.5 8.5"/>',
   camera: '<path d="M4 8.5A2 2 0 0 1 6 6.5h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/>',
   up_vote: '<path d="M7.5 10.5v9.5H4.5v-9.5z"/><path d="M7.5 10.5l3.6-6.3c.9-.4 2.3.2 2.3 1.6l-.6 3.7H18a2 2 0 0 1 2 2.3l-1.1 6.2a2.4 2.4 0 0 1-2.4 2H7.5"/>',
   down_vote: '<path d="M7.5 13.5V4H4.5v9.5z"/><path d="M7.5 13.5l3.6 6.3c.9.4 2.3-.2 2.3-1.6l-.6-3.7H18a2 2 0 0 0 2-2.3l-1.1-6.2A2.4 2.4 0 0 0 16.5 4H7.5"/>',

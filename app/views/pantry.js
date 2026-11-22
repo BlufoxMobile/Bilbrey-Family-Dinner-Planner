@@ -217,10 +217,10 @@ export function render(app) {
         <h2 class="scan-title">Scan the pantry before you shop</h2>
         <p class="small">Take photos of the shelves, fridge and freezer. The app suggests what it sees, keeps a picture of each item, and you confirm each one, so the list only buys what’s missing.</p>
       </div>
-      <label class="btn btn-primary btn-block scan-btn">
-        ${ic('camera', { size: 22 })}Take or choose photos
-        <input type="file" accept="image/*" multiple class="sr-only" data-change="pan:scan" aria-label="Take or choose pantry photos">
-      </label>
+      <div class="scan-pick">
+        <label class="btn btn-primary scan-btn file-btn">${ic('image', { size: 22 })}Photo library<input type="file" accept="image/*" multiple class="file-over" data-change="pan:scan" aria-label="Choose pantry photos from the photo library"></label>
+        <label class="btn btn-primary scan-btn file-btn">${ic('camera', { size: 22 })}Take a photo<input type="file" accept="image/*" capture="environment" class="file-over" data-change="pan:scan" aria-label="Take a pantry photo"></label>
+      </div>
       ${when(!canScan, () => html`<p class="muted small">${app.store.device.localOnly ? 'Scanning needs the family server, and this device is set to “this device only.” Add items by hand below.' : !app.store.device.key ? 'Scanning needs the family server. Connect with the family passcode, or add items by hand below.' : 'Pantry scanning isn’t available on the family server right now. Add items by hand below.'}</p>`)}
     </section>
     <section class="ideas-cta" aria-label="Dinner ideas from Claude">
@@ -280,8 +280,10 @@ function photoSheet(app, itemId) {
       return html`
         ${ph ? html`<img class="photo-big" data-photo="${ph}" alt="${m.name}">` : html`<div class="photo-big photo-empty">${ic('camera', { size: 36 })}<span>No picture yet</span></div>`}
         ${when(st.busy, () => html`<div class="scan-progress" role="status"><span class="spinner" aria-hidden="true"></span><p>Saving the picture…</p></div>`)}
-        ${canSave ? html`<label class="btn btn-primary btn-block">${ic('camera', { size: 20 })}${ph ? 'Take a new picture' : 'Take or choose a picture'}
-            <input type="file" accept="image/*" class="sr-only" data-change="pan:photo-file" data-id="${itemId}" aria-label="Picture of ${m.name}"></label>
+        ${canSave ? html`<div class="scan-pick">
+            <label class="btn btn-primary file-btn">${ic('image', { size: 20 })}Photo library<input type="file" accept="image/*" class="file-over" data-change="pan:photo-file" data-id="${itemId}" aria-label="Choose a picture of ${m.name} from the photo library"></label>
+            <label class="btn btn-secondary file-btn">${ic('camera', { size: 20 })}${ph ? 'Take a new one' : 'Take a picture'}<input type="file" accept="image/*" capture="environment" class="file-over" data-change="pan:photo-file" data-id="${itemId}" aria-label="Take a picture of ${m.name}"></label>
+          </div>
           <p class="muted small">Fill the square with the package so the label shows. Pictures stay in the family’s private storage.</p>`
           : html`<p class="sheet-text">Pictures are kept on the family server. Connect this device with the family passcode in Family & settings to add one.</p>`}
         ${when(ph, () => html`<button type="button" class="btn btn-quiet btn-block" data-action="pan:photo-off" data-id="${itemId}">Remove the picture</button>`)}
