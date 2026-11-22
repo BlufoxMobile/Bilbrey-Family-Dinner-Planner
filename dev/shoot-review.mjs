@@ -19,7 +19,7 @@ const NOW = new Date('2026-11-16T17:30:00-06:00');
 const TODAY = '2026-11-16';
 const SCREENS = [['tonight', '#/tonight', '.page-tonight'], ['plan', '#/plan', '.page-plan'], ['pantry', '#/pantry', '.page-pantry'], ['budget', '#/budget', '.page-budget'],
   ['family', '#/family', '.page-family'], ['lunch', '#/lunch', '.page-lunch'], ['list', '#/list', '.page-list'], ['recipes', '#/recipes', '.page-recipes'],
-  ['recipe', '#/recipe/cooker-beef-stew', '.page-recipe'], ['cook', `#/cook/${TODAY}`, '.cook']];
+  ['recipe', '#/recipe/cooker-pot-roast', '.page-recipe'], ['cook', `#/cook/${TODAY}`, '.cook'], ['checkin', '#/checkin', '.page-checkin'], ['products', '#/products', '.page-products']];
 
 const SHEETS = [['ahead', '#/plan', '.page-plan', '[data-action="ahead:open"]'], ['ideas', '#/plan', '.page-plan', '[data-action="ideas:open"]'], ['leftovers', '#/plan', '.page-plan', '[data-action="leftovers:more"]'],
   ['move', '#/plan', '.page-plan', '[data-action="night:move"]'], ['prefs', '#/plan', '.page-plan', '[data-action="plan:prefs"]'], ['night', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]'],
@@ -34,12 +34,17 @@ const api = await startMockApi({ port: 0, quiet: true });
 const base = `http://127.0.0.1:${staticSrv.address().port}/Bilbrey-Family-Dinner-Planner/`;
 const apiBase = `http://127.0.0.1:${api.server.address().port}`;
 const browser = await chromium.launch();
+// OUT=dir puts the pictures somewhere else (the gauntlet keeps one folder per round).
+const OUT = process.env.OUT || 'dev/screenshots';
+await import('node:fs').then((fs) => fs.mkdirSync(OUT, { recursive: true }));
 
 const seed = await browser.newContext({ viewport: VIEW });
 const sp = await seed.newPage();
 await sp.clock.install({ time: NOW });
 await sp.goto(`${base}?api=${encodeURIComponent(apiBase)}`);
 await sp.waitForSelector('#pc-new');
+await sp.waitForTimeout(500);
+await sp.screenshot({ path: `${OUT}/review-first-run.png` });
 await sp.fill('#pc-new', 'tacos');
 await sp.fill('#pc-again', 'tacos');
 await sp.click('button[type=submit]');
@@ -100,7 +105,7 @@ for (const theme of ['light', 'dark']) {
       for (let n = 0; n < 3 && n * (step.h - 80) < step.total - 80; n++) {
         await page.evaluate((top) => window.__scroller.scrollTo({ top, behavior: 'instant' }), n * (step.h - 80));
         await page.waitForTimeout(150);
-        await page.screenshot({ path: `dev/screenshots/review-${name}-${theme}-${wide}${n ? `-${n + 1}` : ''}.png` });
+        await page.screenshot({ path: `${OUT}/review-${name}-${theme}-${wide}${n ? `-${n + 1}` : ''}.png` });
       }
       continue;
     }
@@ -113,7 +118,7 @@ for (const theme of ['light', 'dark']) {
     }
     for (let i = 0; i < tiles.length; i += 4) {
       await sheet.setContent(`<body style="margin:0;display:flex;gap:10px;padding:10px;background:#888">${tiles.slice(i, i + 4).map((t) => `<img width="${VIEW.width}" height="${VIEW.height}" src="data:image/png;base64,${t}">`).join('')}</body>`);
-      await sheet.screenshot({ path: `dev/screenshots/review-${name}-${theme}${i ? `-${i / 4 + 1}` : ''}.png` });
+      await sheet.screenshot({ path: `${OUT}/review-${name}-${theme}${i ? `-${i / 4 + 1}` : ''}.png` });
     }
   }
   // The sheets the feature teams added, each opened from the screen that owns it.
@@ -129,7 +134,7 @@ for (const theme of ['light', 'dark']) {
         if (name !== 'prefs') await page.waitForSelector(shown, { timeout: 6000 });
         if (shown !== 'dialog[open]') await page.locator(shown).first().scrollIntoViewIfNeeded();
         await page.waitForTimeout(700);
-        if (WIDE) await page.screenshot({ path: `dev/screenshots/review-sheet-${name}-${theme}-${wide}.png` });
+        if (WIDE) await page.screenshot({ path: `${OUT}/review-sheet-${name}-${theme}-${wide}.png` });
         else tiles.push((await page.screenshot()).toString('base64'));
         await page.keyboard.press('Escape');
         await page.waitForTimeout(350);
@@ -137,7 +142,7 @@ for (const theme of ['light', 'dark']) {
     }
     for (let i = 0; i < tiles.length; i += 4) {
       await sheet.setContent(`<body style="margin:0;display:flex;gap:10px;padding:10px;background:#888">${tiles.slice(i, i + 4).map((t) => `<img width="${VIEW.width}" height="${VIEW.height}" src="data:image/png;base64,${t}">`).join('')}</body>`);
-      await sheet.screenshot({ path: `dev/screenshots/review-sheets-${theme}${i ? `-${i / 4 + 1}` : ''}.png` });
+      await sheet.screenshot({ path: `${OUT}/review-sheets-${theme}${i ? `-${i / 4 + 1}` : ''}.png` });
     }
   }
   await ctx.close();
