@@ -14,9 +14,25 @@ import { productLabel, findItUrl, priceSource } from '../products.js';
 import { openProductPicker, productSource, photoImg, hydrateSheetSoon, productPhoto } from './products.js';
 import { openReceiptScan } from './receipts.js';
 import { itemPhoto, hydratePhotos, ensureStorePhotos } from '../photos.js';
+import { LIST_MODES, aisleFor, shopStops, storeProductUrl, cleanAisle, aisleCoverage } from '../aisles.js';
 
 export const title = () => 'Shopping list';
 const NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
+const SHORT = { sams: "Sam's", jewel: 'Jewel' };
+
+/** How this phone is shopping the list (docs/spec/28): 'store' (in the aisles) or 'online'. Per device. */
+const MODE_KEY = 'bfdp.v2.listMode';
+export function listMode(app) {
+  if (!app.ui.listMode) {
+    try { app.ui.listMode = localStorage.getItem(MODE_KEY) || ''; } catch { app.ui.listMode = ''; }
+  }
+  return LIST_MODES.some((m) => m.id === app.ui.listMode) ? app.ui.listMode : 'store';
+}
+
+/** Where an item opens online: the exact product page when we know it, else the store's search. */
+export function orderUrl(app, i) {
+  return storeProductUrl(app.db, i.store, i.id) || findItUrl(app.db, i.store, i.product?.chosen ? i.product : null, i.product?.name || i.name);
+}
 
 /** The trip in progress (SPEC §12): one store, today through the last day it shops for. */
 export function activeTrip(app) {
@@ -271,26 +287,29 @@ function priceTag(i) {
 let listHasPhotos = false;
 
 /** The picture of what to pick up: the family's own photo of it, else the store's product picture. */
-function itemThumb(app, i) {
-  if (!listHasPhotos) return '';
+function itemThumb(app, i, mode = null) {
+  if (!listHasPhotos && !mode) return '';
   const ph = i.freeText ? null : itemPhoto(app.state, i.id);
   return html`<button type="button" class="item-thumb ${ph ? 'has-photo' : ''}" data-action="list:item" data-key="${i.key}" tabindex="-1" aria-hidden="true">${ph ? photoImg(ph) : ''}</button>`;
 }
 
-function itemRow(app, i, listKey) {
+function itemRow(app, i, listKey, mode = null) {
   const qty = i.freeText ? (i.qty ? unitText(i.qty, i.unit || 'each') : '') : formatPackQty(i);
   const chosen = i.product?.chosen;
-  return html`<li class="item ${i.checked ? 'is-checked' : ''} ${listHasPhotos ? 'has-thumb' : ''}">
-    <button type="button" class="check" role="checkbox" aria-checked="${i.checked ? 'true' : 'false'}" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-label="${i.name}${i.checked ? ', in the cart' : ''}"><span class="check-box">${ic('check', { size: 18 })}</span></button>
-    ${itemThumb(app, i)}
+  const aisle = mode === 'store' && !i.freeText ? aisleFor(app.db, app.state, i.store, i.id) : null;
+  const inCart = mode === 'online' ? 'added to the cart' : 'in the cart';
+  return html`<li class="item ${i.checked ? 'is-checked' : ''} ${listHasPhotos || mode ? 'has-thumb' : ''} ${mode ? `is-${mode}` : ''}">
+    <button type="button" class="check" role="checkbox" aria-checked="${i.checked ? 'true' : 'false'}" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-label="${i.name}${i.checked ? `, ${inCart}` : ''}"><span class="check-box">${ic('check', { size: 18 })}</span></button>
+    ${itemThumb(app, i, mode)}
     <button type="button" class="item-main" data-action="list:item" data-key="${i.key}">
       <span class="item-name">${i.name}</span>
       ${when(!i.freeText && i.product?.label, () => html`<span class="item-product ${chosen ? '' : 'is-usual'}">${i.product.label}</span>`)}
-      <span class="item-qty">${qty}${i.reasons.includes('lunches') ? html` <span class="tag tag-lunch">Lunch</span>` : ''}${i.organic ? html` <span class="tag tag-organic">Organic</span>` : ''}${i.pack?.sale ? html` <span class="tag tag-sale">Sale</span>` : ''}${i.coupon ? html` <span class="tag tag-coupon">Clip coupon</span>` : ''}${i.pack?.source === 'family' ? html` <span class="tag">family price</span>` : ''}</span>
+      <span class="item-qty">${when(aisle, () => html`<span class="aisle-chip ${aisle.source === 'family' ? 'is-family' : ''}">${aisle.label}</span> `)}${qty}${i.reasons.includes('lunches') ? html` <span class="tag tag-lunch">Lunch</span>` : ''}${i.organic ? html` <span class="tag tag-organic">Organic</span>` : ''}${i.pack?.sale ? html` <span class="tag tag-sale">Sale</span>` : ''}${i.coupon ? html` <span class="tag tag-coupon">Clip coupon</span>` : ''}${i.pack?.source === 'family' ? html` <span class="tag">family price</span>` : ''}</span>
       <span class="item-detail">${detail(app, i)}</span>
     </button>
     <span class="item-price">${i.cost == null ? html`<span class="muted">add price</span>` : html`${money(i.cost)}${priceTag(i)}`}
-      ${when(!i.freeText, () => html`<a class="find-it" href="${findItUrl(app.db, i.store, i.product?.chosen ? i.product : null, i.product?.name || i.name)}" target="_blank" rel="noopener" data-findit="${i.id}" aria-label="Find ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">Find it</a>`)}</span>
+      ${when(!i.freeText && mode !== 'online', () => html`<a class="find-it" href="${findItUrl(app.db, i.store, i.product?.chosen ? i.product : null, i.product?.name || i.name)}" target="_blank" rel="noopener" data-findit="${i.id}" aria-label="Find ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">Find it</a>`)}</span>
+    ${when(mode === 'online' && !i.freeText, () => html`<a class="btn btn-small ${i.checked ? 'btn-quiet' : 'btn-secondary'} order-it" href="${orderUrl(app, i)}" target="_blank" rel="noopener" data-findit="${i.id}" data-order="${storeProductUrl(app.db, i.store, i.id) ? 'product' : 'search'}" aria-label="Open ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">${ic('cart', { size: 18 })}${i.checked ? 'Open again' : `Open on ${SHORT[i.store]}`}</a>`)}
   </li>`;
 }
 
@@ -312,12 +331,25 @@ export function filterShare(f, i) {
   return i.cost || 0;
 }
 
+/** The line under a store's name in "In the store": where the aisle numbers come from. */
+function aisleNote(app, store, items) {
+  const { known, total } = aisleCoverage(app.db, app.state, store, items);
+  const src = app.db.aisles?.stores?.[store];
+  if (store === 'jewel' && !known) return html`<p class="aisle-note">${ic('info', { size: 16 })}<span>Jewel-Osco’s website doesn’t show aisles, so this is in the order of the store’s sections. Tap an item to add its aisle once; everyone sees it next time.</span></p>`;
+  if (!known) return '';
+  return html`<p class="aisle-note">${ic('store', { size: 16 })}<span>Aisles for ${known} of ${total} ${total === 1 ? 'item' : 'items'}${store === 'sams' && src?.checked ? `, from samsclub.com for ${src.name || 'the Addison club'} on ${shortDate(src.checked)}` : ''}. Stores move things: tap an item to fix its aisle.</span></p>`;
+}
+
 function storeSection(app, list, store, listKey) {
   const s = list.stores[store];
   if (!s.items.length) return '';
   const info = app.db.stores[store];
   const f = activeFilter(app, list);
-  const aisles = s.aisles.map((a) => ({ ...a, items: a.items.filter((i) => shown(f, i)) })).filter((a) => a.items.length);
+  const mode = listMode(app);
+  const visibleItems = s.items.filter((i) => shown(f, i));
+  const aisles = mode === 'store'
+    ? shopStops(app.db, app.state, store, s.aisles.flatMap((a) => a.items.filter((i) => shown(f, i)))).map((g) => ({ aisle: g.label, stop: g.aisle, items: g.items, also: g.aisle ? [...new Set(g.items.map((i) => i.aisle).filter(Boolean))].join(', ') : '' }))
+    : s.aisles.map((a) => ({ ...a, items: a.items.filter((i) => shown(f, i)) })).filter((a) => a.items.length);
   if (!aisles.length) return '';
   const visible = aisles.reduce((n, a) => n + a.items.length, 0);
   const share = round2(aisles.reduce((t, a) => t + a.items.reduce((u, i) => u + filterShare(f, i), 0), 0));
@@ -328,8 +360,9 @@ function storeSection(app, list, store, listKey) {
         ? html`<p class="store-total"><b>${money(s.subtotal)}</b><small>${s.items.length} ${s.items.length === 1 ? 'item' : 'items'}${s.remaining < s.items.length ? `, ${s.remaining} left` : ''}</small></p>`
         : html`<p class="store-total"><b>${money(share)}</b><small>for ${f}: ${visible} of ${s.items.length} ${s.items.length === 1 ? 'item' : 'items'}</small></p>`}
     </header>
-    <button type="button" class="btn btn-secondary btn-block store-handoff" data-action="list:handoff" data-store="${store}">${ic('copy', { size: 20 })}Copy & open ${info?.name || NAMES[store]}</button>
-    ${aisles.map((a) => html`<div class="aisle"><h3 class="aisle-h">${a.aisle}</h3><ul class="items">${a.items.map((i) => itemRow(app, i, listKey))}</ul></div>`)}
+    ${mode === 'store' ? aisleNote(app, store, visibleItems) : ''}
+    ${when(mode === 'online', () => html`<button type="button" class="btn btn-secondary btn-block store-handoff" data-action="list:handoff" data-store="${store}">${ic('copy', { size: 20 })}${store === 'jewel' ? 'Copy for Jewel-Osco AI & open' : `Copy & open ${info?.name || NAMES[store]}`}</button>`)}
+    ${aisles.map((a) => html`<div class="aisle ${a.stop ? 'is-stop' : ''}"><h3 class="aisle-h">${a.aisle}${a.also ? html` <small>${a.also}</small>` : ''}</h3><ul class="items">${a.items.map((i) => itemRow(app, i, listKey, mode))}</ul></div>`)}
   </section>`;
 }
 
@@ -422,6 +455,19 @@ export function mount(app, root) {
   ensureStorePhotos(app);
 }
 
+/** The two ways to shop the list (docs/spec/28). */
+function modeSwitch(app, list) {
+  const mode = listMode(app);
+  const left = list.items.filter((i) => !i.checked).length;
+  return html`<section class="list-mode" aria-labelledby="list-mode-h">
+    <h2 class="section-title" id="list-mode-h">How are you shopping?</h2>
+    ${segmented('listMode', LIST_MODES, mode, { label: 'How are you shopping?', action: 'list:mode' })}
+    <p class="muted small list-mode-how">${mode === 'online'
+      ? `Each item opens on the store’s website, where you add it to your cart (the planner can’t fill a cart for you). Tick it here once it’s in. ${left} to go.`
+      : `Big pictures of the exact product, in the order you’ll walk the store. Tick each one as it goes in the cart. ${left} to go.`}</p>
+  </section>`;
+}
+
 export function render(app) {
   const { range, listKey, list, trip } = current(app);
   listHasPhotos = list.items.some((i) => !i.freeText && itemPhoto(app.state, i.id));
@@ -442,6 +488,7 @@ export function render(app) {
     </header>
     ${trip ? html`${tripBar(app, trip, range, list)}${afterTrip(app, trip, list)}` : html`${periodNav(app, range, { compact: true })}
       <button type="button" class="btn btn-secondary btn-block trip-start" data-action="trip:new">${ic('cart', { size: 20 })}Shopping today? Make a list for just this trip</button>`}
+    ${when(list.items.length, () => modeSwitch(app, list))}
     ${noNights && !list.lunches.length && !list.items.length ? html`<div class="empty">
         <span class="empty-ic">${ic('list', { size: 28 })}</span>
         <h3 class="empty-title">Nothing planned for ${rangeLabel(range.start, range.end)}</h3>
@@ -500,6 +547,23 @@ export function render(app) {
   </div>`;
 }
 
+/** The item sheet's aisle: what we know, where it came from, and a box to fix it for everyone. */
+function aisleBox(app, i) {
+  const a = aisleFor(app.db, app.state, i.store, i.id);
+  const fam = app.state.aisles?.[i.store]?.[i.id];
+  const src = app.db.aisles?.stores?.[i.store];
+  const from = !a ? `Not known yet at ${NAMES[i.store]}.`
+    : a.source === 'family' ? `Added by ${byLabel(fam?.by) || 'the family'}.`
+      : `From samsclub.com for ${src?.name || 'the Addison club'}${src?.checked ? `, ${shortDate(src.checked)}` : ''}${a.near ? ' (for the closest product on the same shelf)' : ''}.`;
+  return html`<form class="form aisle-box" data-submit="list:aisle" data-store="${i.store}" data-id="${i.id}">
+    <label class="field"><span class="field-label">Aisle at ${NAMES[i.store]}</span>
+      <input class="input" name="aisle" value="${a?.code || ''}" maxlength="10" autocomplete="off" autocapitalize="characters" inputmode="text" placeholder="${i.store === 'sams' ? 'Like M9' : 'Like 12'}"></label>
+    <button type="submit" class="btn btn-secondary">Save</button>
+    <p class="muted small">${from}</p>
+    ${when(fam, () => html`<button type="button" class="btn btn-quiet btn-small" data-action="list:aisle-clear" data-store="${i.store}" data-id="${i.id}">${src?.items?.[i.id]?.aisle ? 'Use the store’s aisle again' : 'Clear it'}</button>`)}
+  </form>`;
+}
+
 function itemSheet(app, key) {
   openSheet({
     id: `item:${key}`,
@@ -533,6 +597,7 @@ function itemSheet(app, key) {
             <button type="button" class="btn btn-small btn-quiet" data-action="item:product" data-store="${i.store}" data-id="${i.id}">Change</button>
           </span>
         </div>
+        ${aisleBox(app, i)}
         ${when(i.store === 'sams' && app.db.ingredients[i.id]?.bulk?.note, () => html`<p class="hint bulk-note">${ic('snow', { size: 18 })}<span><b>${app.db.ingredients[i.id].bulk.freezes ? 'When it comes home:' : 'Keeping it:'}</b> ${app.db.ingredients[i.id].bulk.note}</span></p>`)}
         <div class="kv">
           <p><span>Buying</span><b>${formatPackQty(i)}</b></p>
@@ -684,6 +749,25 @@ export const actions = {
   'list:handoff': (app, el) => handoff(app, el.dataset.store),
   'list:coupons': (app, el) => openCoupons(app, el.dataset.store),
   'list:filter': (app, el) => { app.ui.listFilter = el.dataset.value; app.render(); },
+  'list:mode': (app, el) => {
+    app.ui.listMode = el.dataset.value === 'online' ? 'online' : 'store';
+    try { localStorage.setItem(MODE_KEY, app.ui.listMode); } catch { /* private mode: this visit only */ }
+    app.render();
+  },
+  'list:aisle': (app, form) => {
+    const raw = String(new FormData(form).get('aisle') || '').trim();
+    const { store, id } = form.dataset;
+    const code = cleanAisle(raw);
+    if (raw && !code) { toast('Type the aisle from the sign, like 12 or M9.'); return; }
+    const ops = code ? [set(['aisles', store, id], { aisle: code, by: app.who() || 'Family', at: new Date().toISOString() })] : [del(['aisles', store, id])];
+    app.commit({ ops, undo: undoFor(app.state, ops), message: code ? `Aisle ${code} at ${NAMES[store]}, for everyone.` : 'Aisle cleared.' });
+    renderSheet();
+  },
+  'list:aisle-clear': (app, el) => {
+    const ops = [del(['aisles', el.dataset.store, el.dataset.id])];
+    app.commit({ ops, undo: undoFor(app.state, ops), message: 'Back to the store’s aisle.' });
+    renderSheet();
+  },
   'list:find-coupons': (app) => openCouponFinder(app),
   'list:finder-open': (app, el) => {
     // The click handler stops links with an action, so open it here (still inside the tap).

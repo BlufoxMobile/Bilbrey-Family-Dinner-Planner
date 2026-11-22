@@ -1,0 +1,163 @@
+{
+  "updated": "2026-11-22",
+  "notes": "Where things are in the family's two stores (docs/spec/28). Sam's Club aisle codes were read off samsclub.com product pages with the Addison club (6487) selected and Pickup chosen, on 2026-11-22. 'near': the club doesn't list the family's exact product, so the code is for the closest one on the same shelf and there is no product link. A product with no aisle didn't show one for this club. Jewel-Osco's website doesn't show aisles, so Jewel items are grouped by section until the family types an aisle in the app (state.aisles). Stores move things: a family entry always wins.",
+  "stores": {
+    "sams": {
+      "store": "Addison Sam's Club",
+      "club": "6487",
+      "checked": "2026-11-22",
+      "source": "samsclub.com product pages (Pickup at Addison)",
+      "items": {
+        "bananas": {
+          "aisle": "G1",
+          "product": "Organic Bananas, 3 lbs.",
+          "url": "https://www.samsclub.com/ip/Organic-Bananas-3-lbs/13791069811"
+        },
+        "beef": {
+          "aisle": "J3",
+          "product": "Member's Mark 93/7 Ground Beef, priced per pound",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-93-7-Ground-Beef-priced-per-pound/13865573229"
+        },
+        "beefPatties": {
+          "aisle": "M9",
+          "product": "Member's Mark 85/15 Ground Sirloin Beef Patties, Frozen, 1/3 lb., 18 ct.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-85-15-Ground-Sirloin-Beef-Patties-Frozen-1-3-lb-18-ct/13725751796"
+        },
+        "bread": {
+          "aisle": "K6",
+          "product": "Oroweat Italian Bread, 2pk, 40OZ",
+          "near": true
+        },
+        "broccoli": {
+          "product": "Member's Mark Steamable Broccoli Florets 1 lb., 4 pk.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Steamable-Broccoli-Florets-1-lb-4-pk/13585719539"
+        },
+        "cannedCorn": {
+          "aisle": "A1",
+          "product": "Del Monte Golden Sweet Whole Kernel Corn, 15.25 oz., 8 pk.",
+          "url": "https://www.samsclub.com/ip/Del-Monte-Golden-Sweet-Whole-Kernel-Corn-15-25-oz-8-pk/13596361849"
+        },
+        "carrots": {
+          "aisle": "G11",
+          "product": "Organic Sweet Petite Baby Carrots, 3 lbs.",
+          "near": true
+        },
+        "cheese": {
+          "aisle": "M3",
+          "product": "Member's Mark Mild Cheddar Shredded Cheese 16 oz., 2 pk.",
+          "near": true
+        },
+        "chicken": {
+          "aisle": "M9",
+          "product": "Member's Mark Boneless and Skinless Chicken Breasts, Frozen, 10 lbs.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Boneless-and-Skinless-Chicken-Breasts-Frozen-10-lbs/13896820369"
+        },
+        "chickenThighs": {
+          "aisle": "J4",
+          "product": "Member's Mark Boneless and Skinless Chicken Thighs, priced per pound",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Boneless-and-Skinless-Chicken-Thighs-priced-per-pound/5993283101"
+        },
+        "doritosCoolRanchBag": {
+          "aisle": "C7",
+          "product": "Doritos Cool Ranch Tortilla Chips, 18.38 oz.",
+          "url": "https://www.samsclub.com/ip/Doritos-Cool-Ranch-Tortilla-Chips-18-38-oz/13577316692"
+        },
+        "freshGreenBeans": {
+          "aisle": "G8",
+          "product": "Organic Green Beans, 28 oz.",
+          "url": "https://www.samsclub.com/ip/Organic-Green-Beans-28-oz/13600204686"
+        },
+        "honey": {
+          "aisle": "F7",
+          "product": "Member’s Mark Wildflower Pure Premium Honey, 48 oz.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Wildflower-Pure-Premium-Honey-48-oz/15006863838"
+        },
+        "hummus": {
+          "aisle": "J6",
+          "product": "Member's Mark Roasted Red Pepper Hummus, 32 oz.",
+          "near": true
+        },
+        "lettuce": {
+          "aisle": "G10",
+          "product": "Romaine Hearts, 6 ct.",
+          "url": "https://www.samsclub.com/ip/Romaine-Hearts-6-ct/13554766983"
+        },
+        "marinara": {
+          "aisle": "F3",
+          "product": "Rao's Homemade Marinara Sauce, 22 oz., 2 pk.",
+          "url": "https://www.samsclub.com/ip/Rao-s-Homemade-Marinara-Sauce-22-oz-2-pk/13898155759"
+        },
+        "naan": {
+          "aisle": "K4",
+          "product": "Member's Mark Original Stone Baked Naan 35.2 oz.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Original-Stone-Baked-Naan-35-2-oz/13866724907"
+        },
+        "nabiscoMix": {
+          "aisle": "C9",
+          "product": "Nabisco Classic Mix Cookie & Cracker Variety Pack, 1 oz., 40 pk.",
+          "url": "https://www.samsclub.com/ip/Nabisco-Classic-Mix-Cookie-Cracker-Variety-Pack-1-oz-40-pk/13879917726"
+        },
+        "oil": {
+          "aisle": "F3",
+          "product": "Member's Mark Canola Oil, 192 fl. oz.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Canola-Oil-192-fl-oz/7874222699"
+        },
+        "onions": {
+          "aisle": "G6",
+          "product": "Yellow Onions, 10 lbs.",
+          "url": "https://www.samsclub.com/ip/Yellow-Onions-10-lbs/13599313206"
+        },
+        "oranges": {
+          "aisle": "G4",
+          "product": "Navel Oranges, 6 lbs.",
+          "url": "https://www.samsclub.com/ip/Navel-Oranges-6-lbs/13755565839"
+        },
+        "parm": {
+          "aisle": "F4",
+          "product": "Member's Mark Grated Parmesan Cheese, 24 oz.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Grated-Parmesan-Cheese-24-oz/15176922436"
+        },
+        "pepper": {
+          "aisle": "F1",
+          "product": "Member's Mark Black Pepper Grinder, 7 oz.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Black-Pepper-Grinder-7-oz/13628557011"
+        },
+        "potstickers": {
+          "aisle": "M2",
+          "product": "Member's Mark Chicken Potstickers with Vegetables, 48 oz.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Chicken-Potstickers-with-Vegetables-48-oz/13723316484"
+        },
+        "salt": {
+          "aisle": "F1",
+          "product": "Member’s Mark Himalayan Pink Salt Grinder, 14.3 oz.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Himalayan-Pink-Salt-Grinder-14-3-oz/13884202518"
+        },
+        "spaghetti": {
+          "product": "Member's Mark Spaghetti Pasta Pantry Pack, 1 lb., 6 pk.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Spaghetti-Pasta-Pantry-Pack-1-lb-6-pk/17863853694"
+        },
+        "tomatoes": {
+          "aisle": "F6",
+          "product": "Member's Mark Diced Tomatoes in Tomato Juice, 14.5 oz., 12 pk.",
+          "url": "https://www.samsclub.com/ip/Member-s-Mark-Diced-Tomatoes-in-Tomato-Juice-14-5-oz-12-pk/19396803121"
+        },
+        "yogurt": {
+          "aisle": "M2",
+          "product": "Member's Mark Plain Nonfat Greek Yogurt, 40 oz.",
+          "near": true
+        },
+        "yoohoo": {
+          "product": "Yoo-hoo Chocolate Drink 6.5 fl. oz., 40 pk.",
+          "url": "https://www.samsclub.com/ip/Yoo-hoo-Chocolate-Drink-6-5-fl-oz-40-pk/13585924237"
+        }
+      }
+    },
+    "jewel": {
+      "store": "Jewel-Osco Roosevelt & Park, Glen Ellyn",
+      "storeId": "3340",
+      "checked": "2026-11-22",
+      "source": "jewelosco.com shows no aisle numbers; type them in the app",
+      "items": {}
+    }
+  }
+}

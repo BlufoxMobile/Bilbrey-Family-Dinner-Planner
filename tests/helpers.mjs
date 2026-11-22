@@ -22,6 +22,7 @@ export function realDb({ lunches = true, nutrition = true } = {}) {
     catalog, recipes, prices: maybe('data/prices.json'), stores: maybe('data/stores.json'), photos: maybe('img/photos.json'),
     lunches: lunches ? lunchesDoc() : null, nutrition: nutrition ? nutritionDoc() : null,
     products: maybe('data/products.json'),
+    aisles: maybe('data/aisles.json'),
   });
 }
 

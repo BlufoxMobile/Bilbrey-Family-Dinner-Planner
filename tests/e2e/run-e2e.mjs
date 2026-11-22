@@ -52,6 +52,9 @@ async function waitFor(fn, { timeout = 8000, step = 100 } = {}) {
 
 /** Waits for a toast whose text matches (an earlier toast may still be showing). */
 const toastMatch = (p, re) => waitFor(async () => re.test((await p.textContent('.toast-root .toast-msg').catch(() => '')) || ''));
+/** Switches the list to "Order online" (docs/spec/28), where Copy & open and the product buttons live. */
+const inStore = async (p) => { if (!(await p.$('.item.is-store'))) { await p.click('[data-action="list:mode"][data-value="store"]'); await p.waitForSelector('.item.is-store'); } };
+const orderOnline = async (p) => { if (!(await p.$('.item.is-online'))) { await p.click('[data-action="list:mode"][data-value="online"]'); await p.waitForSelector('.item.is-online'); } };
 const noOverflow = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 /** No change is on its way to the family server: a sync landing later would redraw the page under the test's hands. */
 const synced = (p) => p.evaluate(() => { const s = window.bfdp?.status?.(); return !s || (s.pending === 0 && s.status !== 'syncing'); }).catch(() => true);
@@ -299,6 +302,7 @@ test('shopping: fix a price, copy & open a store, check off, done shopping fills
   let s = (await familyState(page)).state;
   assert.ok(Object.entries(s.myProducts || {}).some(([k, v]) => k === `jewel/${key}` && v.price === 1.11 && v.source === 'typed'), 'the family’s price is saved on the item’s product');
   await page.keyboard.press('Escape');
+  await orderOnline(page); // Copy & open lives in "Order online" (docs/spec/28)
   await page.click('[data-action="list:handoff"][data-store="jewel"]');
   await page.waitForSelector('dialog[open] .steps-small li');
   const href = await page.getAttribute('dialog[open] a.btn-primary', 'href');
@@ -514,6 +518,7 @@ test('coupons: Clip Jewel coupons and Sam’s Instant Savings, honestly explaine
   await page.waitForTimeout(350);
   await shot(page, 'e2e-24-coupons');
   await page.keyboard.press('Escape');
+  await orderOnline(page); // Copy & open lives in "Order online" (docs/spec/28)
   await page.click('[data-action="list:handoff"][data-store="jewel"]');
   await page.waitForSelector('dialog[open] .hint a[href*="jewelosco"]');
   await page.keyboard.press('Escape');
@@ -629,6 +634,7 @@ test('“How was dinner?” shows after it’s cooked and the next morning, then
 test('receipts: scan → check every line → save; the list shows “paid”, Find it, and My products', async () => {
   await go(page, '#/list', '.page-list');
   await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await inStore(page); // "Find it" is on the in-store rows
   // A line for something that's surely on this week's Sam's list.
   const id0 = await page.getAttribute('.store-sams .item:not(.is-checked):has(a.find-it) .item-main', 'data-key');
   const name0 = (await page.textContent(`.store-sams .item-main[data-key="${id0}"] .item-name`)).trim();
@@ -688,6 +694,7 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   await waitFor(() => row.scrollIntoViewIfNeeded().then(() => true, () => false)); // a sync can redraw the list mid-scroll; try again
   await shot(page, 'e2e-29-list-paid');
   // Copy & open uses the exact product name.
+  await orderOnline(page);
   await page.click('[data-action="list:handoff"][data-store="sams"]');
   await page.waitForSelector('dialog[open] .copy-box');
   assert.ok((await page.evaluate(() => navigator.clipboard.readText())).includes(expectName));
@@ -1390,6 +1397,55 @@ test('after 6 pm Central, what gets saved is still dated today (not the UTC day)
   assert.equal(s.pantry[id].since, '2026-11-16', 'the pantry’s “came home” day is Monday in Glen Ellyn');
   await waitFor(async () => (await familyState(p)).pending === 0);
   await p.close();
+});
+
+test('two ways to shop (docs/spec/28): in the store by aisle with big pictures, or each item opened on the store’s site', async () => {
+  await go(page, '#/list', '.page-list');
+  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
+  await inStore(page);
+  assert.equal(await page.getAttribute('[data-action="list:mode"][data-value="store"]', 'aria-checked'), 'true');
+  // Sam's: stops in aisle order, each row with its picture square and an aisle chip.
+  const stops = await page.$$eval('.store-sams .aisle.is-stop .aisle-h', (h) => h.map((x) => x.firstChild.textContent.trim()));
+  assert.ok(stops.length >= 2, `aisle stops: ${stops.join(', ')}`);
+  const key = (c) => { const m = /^Aisle ([A-Z]*)(\d+)/.exec(c); return `${m[1].padEnd(2, ' ')}${m[2].padStart(3, '0')}`; };
+  assert.deepEqual(stops, [...stops].sort((a, b) => key(a).localeCompare(key(b))), 'walked in aisle order');
+  assert.ok(await page.locator('.store-sams .item.is-store .aisle-chip').count() >= 2);
+  assert.ok(await page.locator('.store-sams .item.is-store .item-thumb').count() >= 2, 'every row keeps a picture square');
+  assert.match(await page.textContent('.store-sams .aisle-note'), /samsclub\.com for Addison/);
+  assert.equal(await page.locator('.store-sams .store-handoff').count(), 0, 'Copy & open is for ordering');
+  // The family adds a Jewel aisle once; everyone sees it.
+  const jewelKey = await page.getAttribute('.store-jewel .item:not(.is-checked) .item-main', 'data-key');
+  await page.click(`.store-jewel .item-main[data-key="${jewelKey}"]`);
+  await page.waitForSelector('.aisle-box');
+  await page.fill('.aisle-box input[name="aisle"]', 'produce');
+  await page.click('.aisle-box button[type="submit"]');
+  await toastMatch(page, /like 12 or M9/);
+  await page.fill('.aisle-box input[name="aisle"]', 'aisle 7');
+  await page.click('.aisle-box button[type="submit"]');
+  await toastMatch(page, /Aisle 7 at Jewel-Osco, for everyone/);
+  const s = await waitFor(async () => { const st = (await familyState(page)).state; return st.aisles?.jewel?.[jewelKey]?.aisle === '7' ? st : null; });
+  assert.ok(s.aisles.jewel[jewelKey].by);
+  await page.keyboard.press('Escape');
+  await page.waitForSelector(`.store-jewel .aisle.is-stop .item-main[data-key="${jewelKey}"]`);
+  assert.match(await page.textContent(`.store-jewel .item:has(.item-main[data-key="${jewelKey}"]) .aisle-chip`), /Aisle 7/);
+  await shot(page, 'e2e-60-list-in-store');
+  // Order online: each item opens on the store's site; the exact product page when we know it.
+  await orderOnline(page);
+  assert.ok(await page.locator('.store-sams .store-handoff').count());
+  const links = await page.$$eval('.store-sams .order-it', (a) => a.map((x) => ({ kind: x.dataset.order, href: x.getAttribute('href'), target: x.target })));
+  assert.ok(links.length >= 2);
+  for (const l of links) {
+    assert.equal(l.target, '_blank');
+    assert.match(l.href, l.kind === 'product' ? /^https:\/\/www\.samsclub\.com\/ip\/[^/]+\/\d+$/ : /^https:\/\/www\.samsclub\.com\/s\//);
+  }
+  assert.ok(links.some((l) => l.kind === 'product'), 'at least one exact product page');
+  assert.ok(await noOverflow(page));
+  await shot(page, 'e2e-61-list-order-online');
+  // The choice is this phone's: it survives a reload.
+  await page.reload();
+  await page.waitForSelector('.page-list .item.is-online');
+  await inStore(page);
+  assert.equal(errors.length, 0, errors.join('\n'));
 });
 
 test('dark theme renders without overflow', async () => {

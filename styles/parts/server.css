@@ -46,3 +46,40 @@
   .item.has-thumb { grid-template-columns: 48px 1fr auto; }
   .item-thumb, .item-sheet-photo { display: none; }
 }
+
+/* The two ways to shop the list (docs/spec/28): "In the store" and "Order online". */
+.list-mode { display: grid; gap: var(--s2, 8px); margin-bottom: var(--s5, 20px); padding: 16px; border-radius: var(--r-card, 18px); background: var(--card); border: 1px solid var(--line); }
+.list-mode .section-title { margin: 0; }
+.list-mode-how { margin: 0; }
+.aisle-note { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 var(--s3, 12px); font-size: var(--t-xs); color: var(--ink-2); line-height: 1.4; }
+.aisle-note .ic { flex: none; margin-top: 1px; color: var(--sage); }
+.aisle.is-stop .aisle-h { font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--t-lg); color: var(--ink); letter-spacing: .01em; padding: 10px 0 6px; }
+.aisle-h small { font-family: var(--font-text); font-weight: 600; font-size: var(--t-xs); color: var(--ink-3); letter-spacing: 0; }
+.aisle-chip { display: inline-block; padding: 1px 7px; margin-right: 2px; border-radius: 999px; font-size: 0.75rem; font-weight: 800; letter-spacing: .02em; color: var(--pine-ink); background: var(--pine); vertical-align: 1px; }
+.aisle-chip.is-family { background: var(--sage); }
+
+/* In the store: the product big enough to spot on the shelf. */
+.item.is-store.has-thumb { grid-template-columns: 44px 84px minmax(0, 1fr) auto; column-gap: 10px; }
+.item.is-store .item-thumb { width: 84px; height: 84px; border-radius: 16px; }
+.item.is-store .item-main { padding: 12px 0; }
+.item.is-store .item-name { font-size: var(--t-md, 1.0625rem); }
+
+/* Order online: a picture, the product, and the button that opens it on the store's site. */
+.item.is-online.has-thumb { grid-template-columns: 44px 60px minmax(0, 1fr) auto; column-gap: 10px; }
+.item.is-online .item-thumb { width: 60px; height: 60px; }
+.item.is-online .order-it { grid-column: 3 / -1; justify-self: start; margin: 0 0 12px; }
+.item.is-online .item-price { align-self: start; padding-top: 12px; }
+@media (min-width: 640px) {
+  .item.is-online.has-thumb { grid-template-columns: 44px 60px minmax(0, 1fr) auto auto; }
+  .item.is-online .order-it { grid-column: auto; margin: 0; align-self: center; }
+  .item.is-online .item-price { align-self: center; padding-top: 0; }
+}
+
+/* The item sheet's aisle box. */
+.aisle-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px 10px; margin: var(--s3, 12px) 0; }
+.aisle-box > p, .aisle-box > .btn-small { grid-column: 1 / -1; justify-self: start; margin: 0; }
+
+@media print {
+  .list-mode, .aisle-note, .order-it { display: none; }
+  .item.is-store.has-thumb, .item.is-online.has-thumb { grid-template-columns: 18px 1fr auto; }
+}

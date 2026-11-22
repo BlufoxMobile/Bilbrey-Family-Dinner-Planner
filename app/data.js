@@ -3,6 +3,8 @@
 // data/stores.json and img/photos.json are optional. prices.json packs override
 // catalog packs. Nothing here touches the DOM.
 
+import { normalizeAisles } from './aisles.js';
+
 const BRANDS = ['generic', 'name'];
 const STORES = ['sams', 'jewel'];
 
@@ -424,7 +426,7 @@ export function normalizeProducts(raw) {
 }
 
 /** Pure: builds the normalized db from raw JSON documents. */
-export function buildDb({ catalog, recipes, prices = null, stores = null, photos = null, lunches = null, nutrition = null, products = null }) {
+export function buildDb({ catalog, recipes, prices = null, stores = null, photos = null, lunches = null, nutrition = null, products = null, aisles = null }) {
   const ingredients = {};
   for (const [id, raw] of Object.entries(catalog?.ingredients || {})) ingredients[id] = normalizeIngredient(id, raw);
 
@@ -494,6 +496,7 @@ export function buildDb({ catalog, recipes, prices = null, stores = null, photos
     lunch: normalizeLunches(lunches),
     nutrition: normalizeNutrition(nutrition),
     products: normalizeProducts(products),
+    aisles: normalizeAisles(aisles),
   };
 }
 
@@ -514,7 +517,7 @@ async function getJSON(fetchFn, url, required) {
 /** Fetches the data files relative to the app's base URL. */
 export async function loadDb({ base = './', fetchFn = globalThis.fetch.bind(globalThis) } = {}) {
   const u = (p) => new URL(p, new URL(base, globalThis.location?.href || 'http://localhost/')).href;
-  const [catalog, recipes, prices, stores, photos, lunches, nutrition, products] = await Promise.all([
+  const [catalog, recipes, prices, stores, photos, lunches, nutrition, products, aisles] = await Promise.all([
     getJSON(fetchFn, u('data/catalog.json'), true),
     getJSON(fetchFn, u('data/recipes.json'), true),
     getJSON(fetchFn, u('data/prices.json'), false),
@@ -523,6 +526,7 @@ export async function loadDb({ base = './', fetchFn = globalThis.fetch.bind(glob
     getJSON(fetchFn, u('data/lunches.json'), false),
     getJSON(fetchFn, u('data/nutrition.json'), false),
     getJSON(fetchFn, u('data/products.json'), false),
+    getJSON(fetchFn, u('data/aisles.json'), false),
   ]);
-  return buildDb({ catalog, recipes, prices, stores, photos, lunches, nutrition, products });
+  return buildDb({ catalog, recipes, prices, stores, photos, lunches, nutrition, products, aisles });
 }

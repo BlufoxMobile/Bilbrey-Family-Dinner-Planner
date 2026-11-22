@@ -3,7 +3,7 @@
 // GitHub Pages' 10-minute HTTP cache can't mix an old file into a new version.
 // Photos, fonts, icons: cache-first.
 // The family API (/api/*) is never cached. Bump CACHE_VERSION with app/config.js VERSION.
-const CACHE_VERSION = 'v3.3.1';
+const CACHE_VERSION = 'v3.4.0';
 const SHELL = `bfdp-shell-${CACHE_VERSION}`;
 const DATA = `bfdp-data-${CACHE_VERSION}`;
 const IMAGES = 'bfdp-images-v1';
@@ -25,6 +25,7 @@ const SHELL_FILES = [
   'app/config.js',
   'app/util.js',
   'app/data.js',
+  'app/aisles.js',
   'app/state.js',
   'app/planner.js',
   'app/shopping.js',
@@ -87,7 +88,7 @@ const SHELL_FILES = [
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
 ];
-const DATA_FILES = ['data/catalog.json', 'data/recipes.json', 'data/prices.json', 'data/stores.json', 'data/lunches.json', 'data/nutrition.json', 'data/products.json', 'img/photos.json'];
+const DATA_FILES = ['data/catalog.json', 'data/recipes.json', 'data/prices.json', 'data/stores.json', 'data/lunches.json', 'data/nutrition.json', 'data/products.json', 'data/aisles.json', 'img/photos.json'];
 
 const scopeURL = new URL('./', self.location);
 const abs = (p) => new URL(p, scopeURL).href;
