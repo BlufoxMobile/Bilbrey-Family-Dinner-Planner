@@ -335,7 +335,7 @@ export function plateGuide({ dismissKey = '' } = {}) {
 
 // ---------------------------------------------------------------- v2.5: the prep schedule (SPEC §12.5)
 
-const PREP_WHEN = { morning: 'Morning', anytime: 'Today', evening: 'Evening' };
+const PREP_WHEN = { morning: 'Morning', anytime: 'Any time', evening: 'Evening' };
 const PREP_ICON = { thaw: 'snow', freeze: 'snow', cook: 'flame', lunch: 'lunch', buy: 'store', slow: 'clock', use: 'info', leftovers: 'bowl', catchup: 'pantry' };
 /** A prep job with something to tap (SPEC §21): a link to the pantry or the plan (`nav`), or an action. */
 const prepAction = (a) => (a.name === 'nav'

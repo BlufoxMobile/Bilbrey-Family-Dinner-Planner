@@ -489,7 +489,7 @@ function modeSwitch(app, list, trip) {
   const mode = listMode(app);
   return html`<section class="list-mode" aria-label="How are you shopping?">
     ${segmented('listMode', LIST_MODES, mode, { label: 'How are you shopping?', action: 'list:mode' })}
-    <p class="muted small list-mode-how">${mode === 'online' ? 'Each item opens on the store’s site; tick it once it’s in your cart there.' : 'In the order you walk the store. Tap an item to tick it.'}${trip ? '' : html` <button type="button" class="link-btn" data-action="trip:new">Just this trip?</button>`}</p>
+    <div class="list-mode-row"><p class="muted small list-mode-how">${mode === 'online' ? 'Each item opens on the store’s site; tick it once it’s in your cart.' : 'In the order you walk the store. Tap an item to tick it.'}</p>${trip ? '' : html`<button type="button" class="link-btn trip-link" data-action="trip:new">Just this trip?</button>`}</div>
   </section>`;
 }
 

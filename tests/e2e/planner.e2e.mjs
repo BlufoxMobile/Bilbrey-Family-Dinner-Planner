@@ -249,13 +249,13 @@ test('taking food off the shelf asks why: “threw it out” goes in the waste l
   // No came-home date: a rough answer gives it a use-by.
   const ask = await page.textContent('#when-card');
   assert.match(ask, /About when did these go in\?/);
-  assert.match(ask, /3 things have no date/, 'the beef, the milk and the garlic were never dated');
+  assert.equal(await page.locator('#when-card .when-list li').count(), 3, 'the beef, the milk and the garlic were never dated');
   await shotOf(page, '#when-card', 'planner-06-when-did-this-go-in-390');
   await page.click('#when-card [data-action="pan:about"][data-id="beef"][data-about="older"]');
   await toastMatch(page, /went in a while ago\. It has a use-by now\./);
   assert.equal((await familyState()).pantry.beef.since, '2026-08-18', '“older” is about three months back');
   await closeToast(page);
-  await textMatch(page, '#when-card', /2 things have no date/);
+  await waitFor(async () => (await page.locator('#when-card .when-list li').count()) === 2);
   await textMatch(page, '.use-first', /In the freezer about 3 months, since Aug 18/);
 
   // The trash can on a row opens the question.
@@ -269,9 +269,9 @@ test('taking food off the shelf asks why: “threw it out” goes in the waste l
   assert.match(sheet, /about \$\d+\.\d\d for all of it/);
   await page.waitForTimeout(350);
   await shot(page, 'planner-07-why-is-it-leaving-390');
-  // The pantry counts corn in bags, so the sheet does too: half a bag of the ¾ that's there.
-  assert.match(sheet, /all ¾ bags unless you change it/);
-  await page.fill('dialog[open] #gone-qty', '0.5');
+  // The pantry counts corn by the ear (a real thing you can count, docs/spec/29), so the sheet does too: half of the 10 there.
+  assert.match(sheet, /all 10 ears unless you change it/);
+  await page.fill('dialog[open] #gone-qty', '5');
   await page.click('dialog[open] [data-action="pan:gone"][data-reason="tossed"]');
   await toastMatch(page, /^Logged: [\d½¼¾.]+ ears of .+ thrown out, about \$\d+\.\d\d\. The planner will use it sooner next time\.$/);
   let s = await familyState();
@@ -301,6 +301,7 @@ test('taking food off the shelf asks why: “threw it out” goes in the waste l
   assert.ok(await noOverflow(page));
 
   await go(page, '#/budget', '.page-budget');
+  if (await page.$('.budget-more:not([open]) > summary')) await page.click('.budget-more > summary');
   const waste = await page.textContent('#waste-card');
   assert.match(waste, new RegExp(`\\$${total.toFixed(2).replace('.', '\\.')}\\s*2 things wasted`));
   assert.match(waste, /What gets wasted most/);
@@ -325,6 +326,8 @@ test('the Budget shows trips against the goal and the year at this rate; a short
     { id: 'r7', date: '2026-11-09', store: 'jewel', amount: 48.75, by: 'Candi' },
   ])], (s) => s.receipts?.length === 7);
   await go(page, '#/budget', '.page-budget');
+  // Trips and the year are details now, folded under "How it’s worked out" (docs/spec/29).
+  if (await page.$('.budget-more:not([open]) > summary')) await page.click('.budget-more > summary');
   const trips = await page.textContent('#trips-card');
   assert.match(trips, /Store trips in November/);
   assert.match(trips, /2\s*of 3 trips/, 'Sam’s and Jewel on Nov 1 are one trip; Nov 9 is the second');

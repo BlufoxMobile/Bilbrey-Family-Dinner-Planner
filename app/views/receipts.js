@@ -44,7 +44,7 @@ export function openReceiptScan(app) {
     id: 'rcpt-scan',
     size: 'tall',
     title: 'Scan a receipt',
-    subtitle: 'A photo of the paper receipt, or screenshots of the digital receipt in the Sam’s Club or Jewel-Osco app.',
+    subtitle: 'A photo of the receipt, or screenshots from the store’s app.',
     render: () => html`
       <fieldset class="field"><legend class="field-label">Store</legend>
         ${segmented('rcptStore', [{ id: 'sams', label: "Sam's Club" }, { id: 'jewel', label: 'Jewel-Osco' }, { id: '', label: 'Not sure' }], st.store, { label: 'Which store', action: 'rcpt:store', small: true })}
@@ -53,10 +53,10 @@ export function openReceiptScan(app) {
         <label class="btn btn-secondary rcpt-file file-btn">${ic('image', { size: 20 })}Photo library<input type="file" accept="image/*" multiple data-change="rcpt:files" class="file-over" data-testid="rcpt-files" aria-label="Choose receipt photos or screenshots from the photo library"></label>
         <label class="btn btn-secondary rcpt-file file-btn">${ic('camera', { size: 20 })}Take a photo<input type="file" accept="image/*" capture="environment" data-change="rcpt:files" class="file-over" aria-label="Take a photo of the receipt"></label>
       </div>
-      <p class="muted small">Long receipt? Take two or three photos from top to bottom, or scroll the app’s receipt and screenshot each part. Up to ${MAX_IMAGES} images, all of one receipt. Flat, bright and in focus reads best.</p>
+      <p class="muted small">Long receipt? Up to ${MAX_IMAGES} photos, top to bottom.</p>
       ${when(st.files.length, () => html`<ul class="rcpt-thumbs">${st.files.map((f, k) => html`<li><img src="${f.preview}" alt="Receipt image ${k + 1}"><button type="button" class="icon-btn" data-action="rcpt:unpick" data-k="${k}" aria-label="Remove image ${k + 1}">${ic('close', { size: 18 })}</button></li>`)}</ul>`)}
       <button type="button" class="btn btn-primary btn-block" data-action="rcpt:read" ${st.files.length ? '' : 'disabled'}>${ic('sparkle', { size: 20 })}${st.files.length ? `Read ${st.files.length === 1 ? 'the receipt' : `these ${st.files.length} images`}` : 'Add a photo or screenshot first'}</button>
-      <p class="muted small">The images are read once and not kept. You check every line before anything is saved.</p>`,
+      <p class="muted small">You check every line before it’s saved. Photos aren’t kept.</p>`,
   });
 }
 

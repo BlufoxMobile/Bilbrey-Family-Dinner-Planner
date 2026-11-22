@@ -143,8 +143,8 @@ export function render(app) {
 
     ${tripAdviceCard(app)}
 
-    <details class="budget-more">
-      <summary><span>How it’s worked out</span><small>Trips, waste, the year</small></summary>
+    <details class="budget-more" ${app.ui.budgetMoreOpen ? 'open' : ''}>
+      <summary><span>How it’s worked out: trips, waste, the year</span></summary>
       <p class="muted small">${money(b.spent)} on receipts so far + ${money(b.stillToBuy)} still on the list for the rest of ${month}${b.unplanned ? ` + ${b.unplanned} open ${b.unplanned === 1 ? 'night' : 'nights'} at the usual ${money(b.average)}` : ''}. Prices ${app.db.pricesUpdated ? `estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'are estimates'}.</p>
       ${when(b.savings > 0, () => html`<p class="budget-save">${ic('leaf', { size: 20 })}<span>About ${money(b.savings)} less than the old ${money(b.baseline, { whole: true })} month.</span></p>`)}
     ${tripsCard(app, b)}
@@ -203,6 +203,11 @@ export function render(app) {
         : b.receipts.length ? '' : html`<p class="muted small">No receipts logged for ${month} yet.</p>`}
     </section>
   </div>`;
+}
+
+/** "How it’s worked out" stays open through redraws once opened. */
+export function mount(app, main) {
+  main.querySelector('.budget-more')?.addEventListener('toggle', (ev) => { app.ui.budgetMoreOpen = ev.target.open; });
 }
 
 export const actions = {

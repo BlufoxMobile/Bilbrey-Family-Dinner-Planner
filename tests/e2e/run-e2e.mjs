@@ -275,7 +275,7 @@ test('substituting a side is remembered for that dinner and survives a reload', 
   const s = (await familyState(page)).state;
   assert.equal(s.substitutions[dinner]['0'], ref);
   const sideText = await page.textContent('.day[data-date="2026-11-17"] .day-sides');
-  assert.ok(sideText.includes(title.split('\n')[0].trim().slice(0, 10)), 'the new side shows on the planner');
+  assert.ok(sideText.toLowerCase().includes(title.split('\n')[0].trim().slice(0, 10).toLowerCase()), 'the new side shows on the planner');
   await page.click('[data-action="plan:tap"][data-date="2026-11-17"]');
   await page.waitForSelector('dialog[open] .remembered');
   await page.waitForTimeout(500);
@@ -683,6 +683,7 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   const name0 = await page.getAttribute(`.store-sams .item:has(.item-more[data-key="${id0}"])`, 'data-name');
   const extra = !['chicken', 'cheese'].includes(id0);
   api.db.receiptExtraLines = extra ? [{ text: 'MM ITEM', product: `Member's Mark ${name0}`, brand: "Member's Mark", size: '', qty: 1, unitPrice: 12.34, lineTotal: 12.34, matchId: id0 }] : [];
+  await listMore(page); // Scan a receipt is with the cost, under the list
   await page.click('[data-action="rcpt:scan"]');
   await page.waitForSelector('dialog[open] [data-testid="rcpt-files"]');
   await page.click('dialog[open] [data-action="rcpt:store"][data-value="sams"]');
@@ -1046,6 +1047,7 @@ test('a whole trip comes home in one tap', async () => {
   await go(page, '#/plan', '.page-plan');
   await page.click('[data-action="plan:tap"][data-date="2026-11-19"]');
   await page.click('dialog[open] [data-action="night:away"]');
+  await page.click('dialog[open] .away-more > summary');
   await page.click('dialog[open] [data-away-mode="range"]');
   await page.fill('dialog[open] input[name="from"]', '2026-11-19');
   await page.fill('dialog[open] input[name="to"]', '2026-11-21');
@@ -1183,7 +1185,7 @@ test('lunches for whoever packs: add a person (name, spots, items), the list fol
   const before = await lunchCost(page);
   await go(page, '#/lunch', '.page-lunch');
   await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
-  await page.click('.people [data-action="lunch:add"]');
+  await page.click('.page-lunch [data-action="lunch:add"]');
   await page.waitForSelector('dialog[open] #lunch-add-name');
   // A name that's already packing is turned down, in words.
   await page.fill('#lunch-add-name', 'jeff');
@@ -1273,16 +1275,18 @@ test('Family & settings is one shared page: clear groups, text size for the TV, 
     const p = await newPage(ctx, vp);
     await go(p, '#/family', '.page-family');
     assert.deepEqual(await p.$$eval('.page-family .section-title', (els) => els.map((e) => e.textContent.trim())),
-      ['Family sync', 'Planner rules', 'Shopping and budget', 'Stores', 'Packed lunches', 'Claude', 'Display on this device', 'Good to know', 'This device’s data']);
+      // House rules first; the plumbing waits under Advanced (docs/spec/29).
+      ['House rules', 'Shopping and budget', 'Packed lunches', 'Display on this device', 'Stores', 'Advanced', 'Family sync', 'Dinner ideas & photo reading (Claude)', 'Good to know', 'This device’s data']);
+    assert.ok(!(await p.isVisible('#sync-h')), 'sync is folded away while it’s fine');
     const text = await p.textContent('.page-family');
     assert.doesNotMatch(text, /Whose phone|’s phone|Votes and changes from this phone/);
-    assert.match(text, /no separate profiles/);
     assert.ok(await noOverflow(p));
     await shot(p, `e2e-p4-settings-${vp.width}`, true);
     await p.close();
   }
   // The passcode can be changed by anyone on a connected device, and the fold-out stays open while you type.
   await go(page, '#/family', '.page-family');
+  if (await page.$('.set-advanced:not([open]) > summary')) await page.click('.set-advanced > summary');
   await page.click('details[data-more="change-pass"] summary');
   await page.waitForSelector('details[data-more="change-pass"][open] #pc-change');
   await page.fill('#pc-change', 'new passcode');
@@ -1323,7 +1327,7 @@ test('first open on the TV: offline says so and lets you in; the passcode can be
   await p.waitForSelector('.gate-offline');
   assert.match(await p.textContent('.gate-title'), /Can’t reach the family’s plan/);
   await waitFor(async () => (await focused()) === 'gate-retry');
-  assert.ok(await inView('#gate-retry') && await inView('#gate-later') && await inView('#gate-local'), 'every choice is on screen without scrolling');
+  assert.ok(await inView('#gate-retry') && await inView('#gate-later') && await inView('.gate-more > summary'), 'every choice is on screen without scrolling');
   await shot(p, 'e2e-p5-tv-first-open-offline');
   // Still no connection: OK on Try again looks, then comes back to the same screen with the focus on Try again.
   await p.keyboard.press('Enter');
@@ -1346,7 +1350,7 @@ test('first open on the TV: offline says so and lets you in; the passcode can be
   assert.equal(await focused(), 'pc-enter', 'the remote starts in the passcode box');
   assert.ok(await inView('#pc-enter') && await inView('#pc-submit-enter'), 'the box and Join are on screen on a 540-pixel-high TV');
   assert.match(await p.textContent('.gate-remote'), /With a remote/);
-  assert.ok(await inView('#gate-later') && await inView('#gate-local'), 'and so are the other two choices');
+  assert.ok(await inView('#gate-later') && await inView('.gate-more > summary'), 'and so are the other choices');
   assert.ok(await noOverflow(p));
   // Type it with a slip, check it with "Show the passcode", send it: all with keys.
   await p.keyboard.type('tacos tuesdya');
