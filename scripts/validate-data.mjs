@@ -74,7 +74,8 @@ export const RETIRED_DINNERS = {
 // Removed on purpose (Jeff, 2026-11-15: no raw cucumbers).
 // And these sides, marked No on 2026-11-22 (Candi: "we like french style green beans, and other simple, easy canned goods").
 const REMOVED_SIDES = new Set(['tomato-cucumber', 'cucumber-spears', 'sesame-cucumber',
-  'air-fryer-veggies', 'applesauce-cups', 'asian-slaw', 'lime-slaw', 'spinach-apple-salad', 'steamed-mixed-vegetables', 'sweet-potatoes']);
+  'air-fryer-veggies', 'applesauce-cups', 'asian-slaw', 'lime-slaw', 'spinach-apple-salad', 'steamed-mixed-vegetables', 'sweet-potatoes',
+  'cream-corn']); // Jeff, 2026-11-22: "no cream style corn, only regular"
 
 // Which catalog meat ids satisfy each "protein" value.
 const PROTEIN_IDS = {
@@ -183,7 +184,7 @@ const STEP_WORDS = {
   beef: ['beef'], pork: ['chop', 'pork'], porkLoin: ['pork'], groundPork: ['pork'], groundTurkey: ['turkey'], italianSausage: ['sausage'],
   turkeySausage: ['sausage'], groundChicken: ['ground chicken', 'chicken'], chickenSausage: ['sausage'], stewMeat: ['beef tips', 'stew meat', 'beef'],
   sirloinTip: ['sirloin', 'steak'], chuckRoast: ['chuck', 'roast'], stirFryVeg: ['stir-fry vegetables', 'vegetables'], normandyVeg: ['normandy', 'vegetables'], whiteBeans: ['white beans', 'beans'], greenChiles: ['green chiles'], celery: ['celery'], beefBroth: ['beef stock', 'beef broth'],
-  seapakShrimp: ['shrimp'], frozenTenders: ['tenders'], biscuits: ['biscuit'], mexicorn: ['mexicorn'], creamCorn: ['cream-style corn'], newPotatoes: ['new potatoes', 'potatoes'],
+  seapakShrimp: ['shrimp'], frozenTenders: ['tenders'], biscuits: ['biscuit'], mexicorn: ['mexicorn'], newPotatoes: ['new potatoes', 'potatoes'],
   greenBeans: ['green beans'], cannedCorn: ['corn'], cannedCarrots: ['carrot'], corn: ['corn'], freshGreenBeans: ['green beans', 'beans'],
   cornCobs: ['ears', 'corn'], buns: ['bun'], hoagies: ['roll'], bread: ['bread', 'slice'], naan: ['naan'], tortillas: ['tortilla'],
   yogurt: ['yogurt', 'tzatziki'], potatoes: ['potato'], sweet: ['sweet potato'], ginger: ['ginger'], garlic: ['garlic'], limes: ['lime'],

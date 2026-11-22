@@ -58,9 +58,13 @@ test('fried shrimp night: two bags of SeaPak with fries, and the only seafood in
   assert.deepEqual(bannedWords('Fried shrimp night'), ['shrimp'], 'the word is still banned by itself');
 });
 
-test('simple canned sides: French-style green beans, Mexicorn, cream-style corn, new potatoes', () => {
+test('simple canned sides: French-style green beans, Mexicorn, new potatoes (regular corn, never cream-style)', () => {
+  // Jeff, 16:09: "no cream style corn, only regular"
+  assert.equal(db.sides['cream-corn'], undefined);
+  assert.equal(db.ingredients.creamCorn, undefined);
+  assert.ok(db.sides['canned-corn'], 'regular buttered corn stays');
   assert.match(db.sides['canned-green-beans'].title, /French-style green beans/);
-  for (const id of ['mexicorn', 'cream-corn', 'new-potatoes']) {
+  for (const id of ['mexicorn', 'new-potatoes']) {
     const s = db.sides[id];
     assert.ok(s && s.minutes <= 12 && db.photos.sides[id], id);
     assert.ok(Object.keys(s.items).some((x) => db.ingredients[x].unit === 'cans'), `${id} comes from a can`);

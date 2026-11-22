@@ -914,4 +914,4 @@ brief they were built to. Where they differ from the sections above, they win.
 - `docs/spec/24-chicken-bulk-and-meal-cost.md` — chicken over turkey, Sam's bulk cuts, estimated cost per meal (`app/cost.js`)
 - `docs/spec/25-weekly-check-in.md` — v3.1.0: the weekly money check-in, an optional weigh-in the family shares (v3.1.1; the TV can be turned off for it), Easy tonight, one dinner on two plates
 - `docs/spec/26-cinematic-motion.md` — v3.2.0: the week-by-week progress record, and the cinematic motion layer (`app/fx.js`)
-- `docs/spec/27-family-picks-2026-11-22.md` — v3.3.0: the 22 dinners and 7 sides the family said No to, 22 thirty-minute replacements without pork, simple canned sides, and fried shrimp night
+- `docs/spec/27-family-picks-2026-11-22.md` — v3.3.0–3.3.1: the 22 dinners and 7 sides the family said No to, 22 thirty-minute replacements without pork, simple canned sides, and fried shrimp night

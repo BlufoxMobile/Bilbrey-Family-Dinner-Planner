@@ -37,8 +37,10 @@ for five, with its own picture.
 
 ## 27.3 Simple canned sides
 - `canned-green-beans` is now **Buttered French-style green beans**.
-- New: **Buttered Mexicorn**, **Cream-style corn**, **Buttered new potatoes** (canned whole new
-  potatoes, browned in butter). Each is 12 minutes or less from a can.
+- New: **Buttered Mexicorn** and **Buttered new potatoes** (canned whole new potatoes, browned in
+  butter). Each is 12 minutes or less from a can.
+- Cream-style corn was added and taken out the same day (v3.3.1). Jeff: "no cream style corn, only
+  regular". Regular buttered corn (`canned-corn`) stays; `cream-corn` is in `REMOVED_SIDES`.
 
 ## 27.4 The seafood rule
 The house rule stays: no seafood. The two exceptions are the occasional snow-crab boil and fried shrimp
@@ -47,4 +49,4 @@ words shrimp/seafood and the `seapakShrimp` item appear only in that dinner, and
 anywhere else. The family page, Claude's planning prompt and the MCP tools say the same.
 
 ## 27.5 Numbers
-105 dinners, 43 sides. The bench minimum is now 10 (most of the bench was what the family said No to).
+105 dinners, 42 sides. The bench minimum is now 10 (most of the bench was what the family said No to).

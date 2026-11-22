@@ -7084,30 +7084,6 @@
       "photo": "A bowl of golden Mexicorn, sweet corn kernels with little pieces of red and green bell pepper, glossy with melted butter."
     },
     {
-      "id": "cream-corn",
-      "title": "Cream-style corn",
-      "kind": "vegetable",
-      "minutes": 8,
-      "equipment": [
-        "stovetop"
-      ],
-      "items": {
-        "creamCorn": 2,
-        "butter": 0.5,
-        "pepper": 0.25
-      },
-      "steps": [
-        "Pour the cream-style corn into a saucepan.",
-        {
-          "text": "Heat over medium-low, stirring often so it doesn’t stick, until hot and bubbling at the edges, 5–6 minutes.",
-          "minutes": 6,
-          "setting": "Stovetop, medium-low"
-        },
-        "Stir in the butter and a little black pepper and serve."
-      ],
-      "photo": "A bowl of creamy golden cream-style corn with a pat of melting butter and cracked black pepper."
-    },
-    {
       "id": "new-potatoes",
       "title": "Buttered new potatoes",
       "kind": "starch",

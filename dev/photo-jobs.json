@@ -681,14 +681,6 @@
   },
   {
     "kind": "side",
-    "id": "cream-corn",
-    "file": "img/sides/cream-corn.webp",
-    "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A bowl of creamy golden cream-style corn with a pat of melting butter and cracked black pepper. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",
-    "why": "New canned side (2026-11-22): Candi likes simple canned sides.",
-    "done": "2026-11-22"
-  },
-  {
-    "kind": "side",
     "id": "new-potatoes",
     "file": "img/sides/new-potatoes.webp",
     "prompt": "Appetizing, realistic food photograph of a side dish for a family dinner app, square 1:1. A bowl of small golden whole new potatoes glossy with butter and flecked with herbs and cracked black pepper. Served in a speckled cream ceramic bowl on a warm wooden farmhouse table with a folded linen napkin, soft golden window light from the left, shallow depth of field. No text, no logos, no brand names, no hands. Do not show cucumber, raw tomato, raw onion or scallions anywhere in the picture.",

@@ -8058,39 +8058,6 @@
     }
    }
   },
-  "creamCorn": {
-   "name": "Cream-style corn, 14.75 oz cans",
-   "unit": "cans",
-   "aisle": "Canned & Jarred",
-   "storage": "pantry",
-   "kind": "measured",
-   "defaultStore": "jewel",
-   "aliases": [
-    "cream style corn",
-    "cream-style corn",
-    "creamed corn",
-    "cream corn"
-   ],
-   "brand": "Del Monte",
-   "usual": {
-    "store": "jewel",
-    "tier": "name"
-   },
-   "packs": {
-    "jewel": {
-     "generic": {
-      "size": 1,
-      "price": 1.09,
-      "label": "Signature Select cream style golden corn, 14.75 oz (est.)"
-     },
-     "name": {
-      "size": 1,
-      "price": 1.49,
-      "label": "Del Monte Cream Style Golden Sweet Corn, 14.75 oz (est.)"
-     }
-    }
-   }
-  },
   "newPotatoes": {
    "name": "Whole new potatoes, 15 oz cans",
    "unit": "cans",
