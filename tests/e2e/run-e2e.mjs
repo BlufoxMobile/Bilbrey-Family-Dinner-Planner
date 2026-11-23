@@ -1261,7 +1261,8 @@ test('lunches for whoever packs: add a person (name, spots, items), the list fol
   await page.click('[data-action="lunch:who"][data-who="Candi"]');
   await page.click('.lunch-paused [data-action="lunch:resume"]');
   await toastMatch(page, /Candi’s lunches are back on/);
-  await page.waitForSelector('.lunch-day');
+  // Tomorrow's card is folded under "Change tomorrow's lunch" (gauntlet r5): the week is there, the first card hidden.
+  await page.waitForSelector('.lunch-person .lunch-day', { state: 'attached' });
   await page.click('[data-action="lunch:edit"][data-who="Candi"]');
   await page.click('dialog[open] [data-action="lunch:remove"]');
   await page.waitForSelector('dialog[open] [data-confirm="yes"]');
