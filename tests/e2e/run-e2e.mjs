@@ -1871,7 +1871,8 @@ test('the “TV display” switch lives in settings, on this device only, and pr
   await p.click('[data-action="tv:toggle"]');
   await toastMatch(p, /TV display is on/);
   await waitFor(() => p.evaluate(() => document.documentElement.classList.contains('is-tv')));
-  assert.equal(await p.getAttribute('.tv-row .switch', 'aria-checked'), 'true');
+  // The page redraws on the next frame after the class flips.
+  await waitFor(async () => (await p.getAttribute('.tv-row .switch', 'aria-checked')) === 'true');
   assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('bfdp.v2.display')).tv), 'on', 'kept on this device');
   const shared = await (await fetch(`${apiBase}/__mock/state`)).json();
   assert.ok(!JSON.stringify(shared.state).includes('"tv"'), 'never in the family’s shared state');

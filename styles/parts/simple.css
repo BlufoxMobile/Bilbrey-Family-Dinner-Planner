@@ -287,11 +287,10 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 /* Pantry rows, round 4: one control row on a 390px phone (the trash no longer drops onto its own line). */
 @media (min-width: 375px) {
   .pan-ctrl { flex-wrap: nowrap; gap: 4px; }
-  .pan-ctrl .stepper-btn { width: 40px; }
-  .pan-ctrl .qty-input { width: 40px; }
+  .pan-ctrl .qty-input { width: 44px; }
   .pan-ctrl .qty-edit .qty-unit { margin: 0 8px 0 0; }
   .pan-ctrl .btn-small { padding: 0 8px; }
-  .pan-ctrl .icon-btn { width: 40px; flex: none; }
+  .pan-ctrl .icon-btn { flex: none; }
 }
 /* Check-in, round 4: the month in one quiet line under the week's number; the buttons side by side. */
 .ck-verdict { margin: 2px 0 12px; font-size: var(--t-sm); line-height: 1.45; color: var(--ink-2); }
@@ -311,3 +310,4 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .use-ask-name { display: grid; }
 .use-ask-name small { color: var(--ink-2); font-size: var(--t-xs); }
 .when-chips .chip { min-height: 44px; }
+.pan-jump { flex-wrap: wrap; overflow: visible; }

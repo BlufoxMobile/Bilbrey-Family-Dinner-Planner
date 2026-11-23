@@ -192,7 +192,7 @@ function shopping(app) {
   const s = app.settings;
   return html`<section class="set-sec" aria-labelledby="shop-h">
     <h2 id="shop-h" class="section-title">Shopping and budget</h2>
-    <div class="set-row"><span class="set-label">Monthly grocery target<small>$${s.monthlyTarget}</small></span><a class="link-btn trip-link" href="#/budget" aria-label="Change the $${s.monthlyTarget} monthly target on Budget">Change on Budget ›</a></div>
+    <div class="set-row"><span class="set-label">Monthly grocery target<small>$${s.monthlyTarget}</small></span><a class="link-btn trip-link" href="#/budget" aria-label="Change the $${s.monthlyTarget} monthly target on Budget">Change ›</a></div>
     <div class="set-row"><span class="set-label">Organic fruits and vegetables<small>When the store has one.</small></span>${switchToggle({ on: s.organic, action: 'fam:organic', label: 'Buy organic fruits and vegetables' })}</div>
     <div class="set-row set-col"><span class="set-label">Meat per dinner<small>Lighter uses 15% less meat.</small></span>${segmented('meatScale', MEAT_OPTS, String(s.meatScale), { label: 'Meat per dinner', action: 'fam:meat', small: true })}</div>
   </section>`;
