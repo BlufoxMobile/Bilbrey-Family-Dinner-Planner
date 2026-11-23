@@ -62,10 +62,10 @@ function tripBar(app, trip, range, list) {
   // One slim line (gauntlet r2): which store, through when, Change, End.
   return html`<div class="trip-bar">
     <span class="trip-ic">${ic('cart', { size: 20 })}</span>
-    <p class="trip-what"><b>This trip: ${trip.store === 'both' ? 'Sam’s Club and Jewel-Osco' : NAMES[trip.store]}</b> <small>through ${dayAndDate(range.end, app.today())}</small></p>
+    <p class="trip-what"><b>Shopping through ${dayAndDate(range.end, app.today())}</b> <small>${trip.store === 'both' ? 'Sam’s Club and Jewel-Osco' : NAMES[trip.store]}</small></p>
     <span class="trip-acts">
-      <button type="button" class="btn btn-small btn-quiet" data-action="trip:new">Change</button>
-      <button type="button" class="btn btn-small btn-quiet" data-action="trip:end">End trip</button>
+      <button type="button" class="link-btn trip-link" data-action="trip:new">Change</button>
+      <button type="button" class="link-btn trip-link" data-action="trip:end">End trip</button>
     </span>
   </div>`;
 }
@@ -333,9 +333,11 @@ function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
   const chosen = i.product?.chosen;
   // What it is first, in the family's words; the store's product name small under it (gauntlet r2:
   // "Member's Mark Wildflower Pure…" hid that it's honey).
-  const label = i.name;
+  const label = (!i.freeText && app.db.ingredients[i.id]?.short) || i.name;
   const product = !i.freeText && i.product?.label && i.product.label.toLowerCase() !== i.name.toLowerCase() ? i.product.label : '';
-  const many = i.freeText ? (i.qty > 1 ? `${fmtQty(i.qty)} of them` : '') : i.pack ? (i.packs > 1 ? `${i.packs} packs` : '') : unitText(i.shortfall || i.qty || 0, i.unit);
+  // The size rides on the amount line ("2 × 3.1 lb"), so a cut-off product name never hides it (gauntlet r4).
+  const size = i.pack?.size > 0 ? unitText(Math.round(i.pack.size * 100) / 100, i.unit) : '';
+  const many = i.freeText ? (i.qty > 1 ? `${fmtQty(i.qty)} of them` : '') : i.pack ? (i.packs > 1 ? `${i.packs} × ${size || 'packs'}` : size) : unitText(i.shortfall || i.qty || 0, i.unit);
   const inCart = mode === 'online' ? 'added to the cart' : 'in the cart';
   const tags = [
     i.pack?.sale ? html`<span class="tag tag-sale">Sale</span>` : '',
@@ -348,7 +350,7 @@ function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
     <span class="item-thumb-hit" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-hidden="true">${itemThumb(app, i, mode || 'store')}</span>
     <button type="button" class="item-main" data-action="list:check" data-key="${i.key}" data-list="${listKey}" tabindex="-1" aria-hidden="true">
       <span class="item-name">${label}</span>${product ? html`<span class="item-product" id="${rid}-p">${product}</span>` : ''}
-      <span class="item-qty" id="${rid}-q">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? 'total ' : ''}${money(i.cost)}</span>`}${tags}</span>
+      <span class="item-qty" id="${rid}-q">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? '· ' : ''}${money(i.cost)}</span>`}${tags}</span>
     </button>
     ${when(mode === 'online' && !i.freeText, () => html`<a class="btn btn-small ${i.checked ? 'btn-quiet' : 'btn-secondary'} order-it" href="${orderUrl(app, i)}" target="_blank" rel="noopener" data-findit="${i.id}" data-order="${storeProductUrl(app.db, i.store, i.id) ? 'product' : 'search'}" aria-label="Open ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">${ic('cart', { size: 18 })}${i.checked ? 'Again' : 'Open'}</a>`)}
     <button type="button" class="item-more" data-action="list:item" data-key="${i.key}" aria-label="More about ${label}">${ic('right', { size: 20 })}</button>
@@ -489,7 +491,6 @@ function modeSwitch(app, list, trip) {
   const mode = listMode(app);
   return html`<section class="list-mode" aria-label="How are you shopping?">
     ${segmented('listMode', LIST_MODES, mode, { label: 'How are you shopping?', action: 'list:mode' })}
-    ${trip ? '' : html`<div class="list-mode-row"><span></span><button type="button" class="link-btn trip-link" data-action="trip:new">Just this trip?</button></div>`}
   </section>`;
 }
 
@@ -517,6 +518,7 @@ export function render(app) {
     <header class="page-head">
       <h1 class="page-title">List</h1>
       <div class="head-tools">
+        ${trip ? '' : html`<button type="button" class="link-btn trip-link" data-action="trip:new">Just this trip?</button>`}
         <button type="button" class="icon-btn" data-action="list:share" aria-label="Share the list">${ic('share')}</button>
         <button type="button" class="icon-btn" data-action="list:print" aria-label="Print the list">${ic('print')}</button>
       </div>
@@ -719,7 +721,7 @@ function handoff(app, store) {
       render: () => html`
         ${when(ai.length, () => html`<ol class="steps-small">
             <li>${ok ? 'The list is copied' : 'Copy the list (More, below)'}${ai.length > 1 ? `: part 1 of ${ai.length}` : ''}.</li>
-            <li>In the Jewel-Osco app, tap <b>Jewel-Osco AI</b>, then <b>Shop my grocery list</b>.</li>
+            <li>Tap the button below, then <b>Jewel-Osco AI</b> and <b>Shop my grocery list</b>.</li>
             <li>Paste and send, then check what it picked.</li>
           </ol>`)}
         ${when(!ai.length, () => html`<ol class="steps-small">${info.handoff.filter((s, k) => !(k === 0 && /^tap copy/i.test(s))).map((s) => html`<li>${s}</li>`)}</ol>`)}

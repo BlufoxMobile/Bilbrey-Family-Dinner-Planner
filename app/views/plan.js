@@ -343,15 +343,20 @@ function openPlanAhead(app) {
       return html`
         <h3 class="sheet-h" id="ahead-through-h">Plan through</h3>
         <div class="ahead-quick" role="group" aria-labelledby="ahead-through-h">
-          ${AHEAD_QUICK.map((q) => {
+          ${AHEAD_QUICK.filter((q) => q.id === 'week' || q.id === 'two').map((q) => {
             const e = aheadEnd(today, q.id);
             const on = e === st.end;
             return html`<button type="button" class="chip chip-lg ${on ? 'is-on' : ''}" aria-pressed="${tf(on)}" data-action="ahead:quick" data-end="${e}">${q.label}<small>to ${weekdayShort(e)} ${shortDate(e)}</small></button>`;
           })}
         </div>
-        <details class="ahead-date"><summary>Pick a date</summary>
-          <label class="field"><span class="field-label">Last night to plan</span>
-          <input class="input" type="date" id="ahead-end" min="${today}" max="${aheadLimit(today)}" value="${st.end}" data-change="ahead:end"></label></details>
+        ${(() => {
+          // Two quick choices; three weeks, a month or any day are one fold away (gauntlet r4).
+          const other = !AHEAD_QUICK.some((q) => (q.id === 'week' || q.id === 'two') && aheadEnd(today, q.id) === st.end);
+          return html`<details class="ahead-date" ${other ? 'open' : ''}><summary>${other ? `Through ${weekdayShort(st.end)} ${shortDate(st.end)}` : 'Longer, or pick a date'}</summary>
+            <div class="ahead-quick">${AHEAD_QUICK.filter((q) => q.id === 'three' || q.id === 'month').map((q) => { const e = aheadEnd(today, q.id); const on = e === st.end; return html`<button type="button" class="chip ${on ? 'is-on' : ''}" aria-pressed="${tf(on)}" data-action="ahead:quick" data-end="${e}">${q.label}<small>to ${weekdayShort(e)} ${shortDate(e)}</small></button>`; })}</div>
+            <label class="field"><span class="field-label">Or the last night to plan</span>
+            <input class="input" type="date" id="ahead-end" min="${today}" max="${aheadLimit(today)}" value="${st.end}" data-change="ahead:end"></label></details>`;
+        })()}
         <details class="ahead-opts" ${aheadOptsOpen ? 'open' : ''}><summary>Options</summary>
         <div class="set-row ahead-switch"><span class="set-label">Use what we have first</span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
         <div class="set-row ahead-switch"><span class="set-label">Let it replace dinners it picked before<small>${own ? 'Never tonight, and never one you chose.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Let it replace dinners it picked before' })}</div>

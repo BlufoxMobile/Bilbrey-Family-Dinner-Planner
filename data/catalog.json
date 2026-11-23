@@ -4985,7 +4985,8 @@
      }
     }
    },
-   "lunch": true
+   "lunch": true,
+   "short": "Black Forest ham"
   },
   "bhGenoaProvolone": {
    "name": "Boar's Head Genoa salame & provolone snack pack (4 oz)",
@@ -5016,7 +5017,8 @@
      }
     }
    },
-   "lunch": true
+   "lunch": true,
+   "short": "Salame & provolone snack pack"
   },
   "doritosMix": {
    "name": "Doritos snack bags, variety pack (with Cool Ranch)",
@@ -5183,7 +5185,8 @@
      }
     }
    },
-   "lunch": true
+   "lunch": true,
+   "short": "Oreo Mini snack packs"
   },
   "yoohoo": {
    "name": "Yoo-hoo chocolate drink boxes (6.5 fl oz)",
@@ -5364,7 +5367,8 @@
      }
     }
    },
-   "lunch": true
+   "lunch": true,
+   "short": "Cobb salad (deli tray)"
   },
   "tfRanchChickenBowl": {
    "name": "Taylor Farms ranch salad bowl with chicken (single serve)",
@@ -5393,7 +5397,8 @@
      }
     }
    },
-   "lunch": true
+   "lunch": true,
+   "short": "Ranch chicken salad bowl"
   },
   "tfBltChickenBowl": {
    "name": "Taylor Farms BLT salad bowl with chicken & avocado ranch",
@@ -5421,7 +5426,8 @@
      }
     }
    },
-   "lunch": true
+   "lunch": true,
+   "short": "BLT chicken salad bowl"
   },
   "gardenSalad": {
    "name": "Garden salad mix (bagged greens)",
@@ -7321,7 +7327,8 @@
       "confidence": "listed"
      }
     }
-   }
+   },
+   "short": "Miss Vickie's kettle chips"
   },
   "bonduelleQuesoBowl": {
    "name": "Bonduelle Bistro Bowl, Chicken Queso Fresco",
@@ -7438,7 +7445,8 @@
       "label": "Bush's Best great northern beans, 15.8 oz can (est.)"
      }
     }
-   }
+   },
+   "short": "White beans, 15.5 oz cans"
   },
   "celery": {
    "name": "Celery",
@@ -7627,7 +7635,8 @@
       "label": "USDA Choice beef for stew, ~1 lb ($8.99/lb) (est.)"
      }
     }
-   }
+   },
+   "short": "Beef stew meat"
   },
   "sirloinTip": {
    "name": "Sirloin tip roast (Member’s Mark Choice Angus)",
@@ -7907,7 +7916,8 @@
       "label": "Birds Eye broccoli, cauliflower & carrots, 12 oz bag (est.)"
      }
     }
-   }
+   },
+   "short": "Frozen Normandy blend"
   },
   "seapakShrimp": {
    "name": "SeaPak breaded butterfly shrimp, 18 oz family size (frozen)",
@@ -7944,7 +7954,8 @@
       "label": "SeaPak Butterfly Shrimp, 18 oz family size (the family’s usual; they cook two bags) (est.)"
      }
     }
-   }
+   },
+   "short": "Breaded butterfly shrimp"
   },
   "frozenTenders": {
    "name": "Breaded chicken tenders (frozen, fully cooked)",
@@ -8130,7 +8141,8 @@
       "label": "Member's Mark Hatch Chile and Chicken Enchiladas, deli tray, ~2.7 lb ($4.74/lb) (no national brand)"
      }
     }
-   }
+   },
+   "short": "Hatch chicken enchiladas"
   },
   "pankoChicken": {
    "name": "Breaded chicken breasts, fully cooked (Member's Mark deli)",
@@ -8166,7 +8178,8 @@
       "label": "Member's Mark Panko Breaded Chicken Breast, deli case, ~1.6 lb ($6.24/lb) (no national brand)"
      }
     }
-   }
+   },
+   "short": "Breaded chicken breasts"
   },
   "macCheeseDeli": {
    "name": "Mac & cheese (Member's Mark deli)",
@@ -8200,7 +8213,8 @@
       "label": "Member's Mark Macaroni and Cheese, deli tray, ~2.4 lb ($3.24/lb) (no national brand)"
      }
     }
-   }
+   },
+   "short": "Deli mac & cheese"
   },
   "ranaLasagna": {
    "name": "Chicken Alfredo & mushroom lasagna (Giovanni Rana, family size)",
@@ -8236,7 +8250,8 @@
       "label": "Giovanni Rana Chicken Alfredo & Mushroom Lasagna, 40 oz (no national brand)"
      }
     }
-   }
+   },
+   "short": "Chicken Alfredo lasagna (Rana)"
   },
   "resersPotatoes": {
    "name": "Roasted potatoes, ready to heat (Reser's Main St. Bistro)",
@@ -8270,7 +8285,8 @@
       "label": "Reser's Main St. Bistro Roasted Potatoes, 2 × 17 oz (no national brand)"
      }
     }
-   }
+   },
+   "short": "Reser's roasted potatoes"
   }
  }
 }

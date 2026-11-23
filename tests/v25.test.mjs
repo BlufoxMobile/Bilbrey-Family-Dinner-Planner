@@ -136,13 +136,13 @@ test('the prep schedule: thaw the evening before, brown once for two nights, pac
   let sched;
   try { sched = prepSchedule(db, state, { today: SUN, days: 7 }); } finally { delete db.ingredients.bhSalsalitoTurkey.buyOnDay; }
   const sun = sched.find((d) => d.date === SUN).tasks;
-  assert.ok(sun.some((t) => t.kind === 'thaw' && /1½ lb of boneless chicken/i.test(t.text) && t.when === 'evening'), 'tonight: the 1½ lb in the freezer goes to the fridge for Monday');
+  assert.ok(sun.some((t) => t.kind === 'thaw' && /boneless chicken breast \(1½ lb\)/i.test(t.text) && t.when === 'evening'), 'tonight: the 1½ lb in the freezer goes to the fridge for Monday');
   assert.ok(sun.some((t) => t.kind === 'lunch' && /snack bags/i.test(t.text)), 'portion the party bag or the Ritz once for the week');
   const mon = sched.find((d) => d.date === MON).tasks;
   assert.ok(mon.some((t) => t.kind === 'thaw' && /chorizo/i.test(t.text)), 'Monday night: chorizo for Tuesday');
   const tue = sched.find((d) => d.date === TUE).tasks;
   assert.ok(tue.some((t) => t.kind === 'cook' && /ground beef/i.test(t.text) && /Thursday/.test(t.text)), 'brown Thursday’s chili beef with Tuesday’s tacos');
-  assert.ok(mon.some((t) => t.kind === 'thaw' && /3\.1 lb of lean ground beef/.test(t.text) && /Thursday/.test(t.text)), 'the beef for both nights thaws together on Monday');
+  assert.ok(mon.some((t) => t.kind === 'thaw' && /lean ground beef (93\/7) (3\.1 lb)|lean ground beef \(3\.1 lb\)/.test(t.text) && /Thursday/.test(t.text)), 'the beef for both nights thaws together on Monday');
   assert.ok(!sched.some((d) => d.date === '2026-11-18' && d.tasks.some((t) => t.kind === 'thaw' && /ground beef/.test(t.text))), 'no second thaw for Thursday');
   assert.ok(tue.some((t) => t.kind === 'buy' && /Jeff/.test(t.text)), 'Tuesday morning: anything bought fresh that day');
   assert.ok(sched.some((d) => d.tasks.some((t) => /Pack .* lunches/.test(t.text))), 'pack tomorrow’s lunches each evening');

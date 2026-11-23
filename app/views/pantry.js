@@ -59,6 +59,12 @@ function useByText(app, s) {
   return `Use by ${weekdayName(s.useBy)}`;
 }
 
+/**
+ * Packages on the shelf as you'd count them: an opened one is still one (gauntlet r4: "1¼ jugs" read
+ * like a math problem). The amount line under the name says how much is really there.
+ */
+const wholePacks = (n) => (n > 0.05 ? Math.ceil(n - 0.1) || 1 : 0);
+
 function pantryRow(app, id, p) {
   const m = meta(app, id);
   if (!m) return '';
@@ -80,7 +86,7 @@ function pantryRow(app, id, p) {
         ? html`<span class="have-it"><span class="have-label" aria-hidden="true">Have it</span>${switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `Have ${m.name}` })}</span>`
         : byPack ? html`<span class="qty-edit qty-pack">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${pk.per}" aria-label="One less ${pk.word} of ${m.name}">${ic('minus', { size: 18 })}</button>
-            <input class="qty-input" type="text" inputmode="decimal" value="${typeof p.qty === 'number' ? fmtQty(count) : ''}" data-change="pan:qty" data-id="${id}" data-per="${pk.per}" aria-label="How many ${plural(pk.word, 2)} of ${m.name}">
+            <input class="qty-input" type="text" inputmode="decimal" value="${typeof p.qty === 'number' ? String(wholePacks(count)) : ''}" data-change="pan:qty" data-id="${id}" data-per="${pk.per}" aria-label="How many ${plural(pk.word, 2)} of ${m.name} (an opened one counts)">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${pk.per}" aria-label="One more ${pk.word} of ${m.name}">${ic('plus', { size: 18 })}</button>
             <span class="qty-unit">${plural(pk.word, 2)}</span>
           </span>`
@@ -494,7 +500,7 @@ export const actions = {
     const id = el.dataset.id;
     if (!app.state.pantry?.[id] || !PLACES.some((p) => p.id === el.dataset.place)) return;
     const ops = [set(['pantry', id, 'place'], el.dataset.place)];
-    app.commit({ ops, undo: undoFor(app.state, ops), message: `Moved to ${PLACES.find((p) => p.id === el.dataset.place).label.toLowerCase()}.` });
+    app.commit({ ops, undo: undoFor(app.state, ops), message: `Now kept ${PLACES.find((p) => p.id === el.dataset.place).label.toLowerCase()}.` });
     renderSheet();
     setTimeout(() => hydratePhotos(document.getElementById('sheet'), app.store), 0);
   },

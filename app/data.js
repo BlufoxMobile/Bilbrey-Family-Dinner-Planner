@@ -73,6 +73,8 @@ export function normalizeIngredient(id, raw) {
   return {
     id,
     name: String(raw?.name || id),
+    // A shorter name for a list row, where the full one would wrap to three lines (gauntlet r4).
+    ...(typeof raw?.short === 'string' && raw.short.trim() ? { short: raw.short.trim() } : {}),
     unit: String(raw?.unit || 'each'),
     aisle: String(raw?.aisle || 'Snacks & Extras'),
     storage: ['freezer', 'fridge', 'pantry', 'counter'].includes(raw?.storage) ? raw.storage : 'pantry',

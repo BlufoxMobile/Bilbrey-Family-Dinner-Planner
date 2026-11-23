@@ -203,15 +203,16 @@ function stores(app) {
     <h2 id="st-h" class="section-title">Stores</h2>
     <div class="store-cards">${['sams', 'jewel'].map((id) => {
       const s = app.db.stores[id];
-      return html`<article class="store-card">
-        <h3>${s.name}</h3>
+      // One row each (gauntlet r4: the family knows where their stores are); the details fold.
+      return html`<details class="store-card store-row">
+        <summary><b>${s.name}</b><small>${String(s.address || '').split(',')[0]}</small></summary>
         ${when(s.address, () => html`<p>${s.address}</p>`)}
         ${when(s.hours, () => html`<p class="muted small">${s.hours}</p>`)}
         <p class="store-links">
           ${when(s.phone, () => html`<a href="tel:${s.phone.replace(/[^\d+]/g, '')}">${s.phone}</a>`)}
           <a href="${s.website}" target="_blank" rel="noopener">Website</a>
         </p>
-      </article>`;
+      </details>`;
     })}</div>
     <div class="action-list">
       <a class="action-row" href="#/products">${ic('cart')}<span><b>My products</b><small>The exact product you buy for each item, at each store. Learned from receipts.</small></span></a>

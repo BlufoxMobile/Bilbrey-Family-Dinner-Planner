@@ -70,6 +70,23 @@ function dayCard(app, name, date, { packTonight = false } = {}) {
 /** After 2 PM, the lunch to think about is tomorrow's (gauntlet r1). */
 const packTonightAny = (app) => hourIn(new Date()) >= 14;
 
+/**
+ * Everyone's next lunch on one card (gauntlet r4: packing meant reading one person, tapping the next,
+ * reading again). Just what goes in the bag, no calories; the tabs below stay for changing things.
+ */
+function packCard(app, people) {
+  const today = app.today();
+  const day = packTonightAny(app) ? addDays(today, 1) : today;
+  const rows = people.filter((p) => !p.paused).map((p) => ({ name: p.name, l: lunchFor(app.db, app.state, p.name, day) }))
+    .filter((r) => r.l && !r.l.empty);
+  if (!rows.length) return '';
+  const label = day === today ? 'Today’s lunches' : day === addDays(today, 1) ? 'Tomorrow’s lunches' : `${weekdayName(day)}’s lunches`;
+  return html`<section class="pack-card" aria-labelledby="pack-h">
+    <h2 id="pack-h" class="section-title">${ic('lunch', { size: 22 })}<span>${label}</span>${day !== today ? html`<small class="pack-when">Pack them tonight</small>` : ''}</h2>
+    <ul class="pack-list">${rows.map((r) => html`<li><b style="${personStyle(r.name)}">${r.name}</b><span>${r.l.skip ? html`<i>${r.l.reason || 'No packed lunch'}</i>` : listJoin(r.l.slots.filter((s) => s.item).map((s) => s.item.title))}</span></li>`)}</ul>
+  </section>`;
+}
+
 const SWAP_KIND = { lighter: 'Lighter idea', protein: 'More protein', idea: 'Idea' };
 
 /**
@@ -140,6 +157,7 @@ export function render(app) {
   const ordered = focus ? [...days.filter((d) => d >= focus), ...days.filter((d) => d < focus)] : days;
   return html`<div class="page page-lunch">
     <header class="page-head"><h1 class="page-title">Lunch</h1></header>
+    ${packCard(app, people)}
     <div class="people" role="tablist" aria-label="Whose lunches">
       ${people.map((p) => html`<button type="button" role="tab" class="person ${p.name === name ? 'is-on' : ''} ${p.paused ? 'is-paused' : ''}" style="${personStyle(p.name)}" aria-selected="${tf(p.name === name)}" data-action="lunch:who" data-who="${p.name}">${avatar(p.name, { size: 'sm' })}<span>${p.name}${p.paused ? html`<small> · paused</small>` : ''}</span></button>`)}
     </div>

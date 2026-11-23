@@ -86,10 +86,10 @@ function thawTasks(db, state, today, end, pairs) {
       const lead = meta.unit === 'lb' && qty > 5 ? 2 : 1; // about a day for every 5 lb in the fridge
       const on = addDays(date, -lead);
       if (on >= today) {
-        if (on <= end) out.push({ date: on, when: 'evening', kind: 'thaw', id, text: `Move ${amount} of ${what} from the freezer to the fridge for ${forWhat}.` });
+        if (on <= end) out.push({ date: on, when: 'evening', kind: 'thaw', id, text: `Move the ${what} (${amount}) to the fridge for ${forWhat}.` });
       } else if (date >= today && date <= end) {
         const minutes = meta.unit === 'lb' ? Math.max(30, Math.round((qty * 30) / 15) * 15) : null;
-        out.push({ date: today, when: 'morning', kind: 'thaw', id, forDate: date, qty, unit: meta.unit, what, minutes, text: `Still frozen? Thaw the ${what} for ${forWhat} sealed in a zip bag in cold water, about 30 minutes a pound, changing the water every 30 minutes.` });
+        out.push({ date: today, when: 'morning', kind: 'thaw', id, forDate: date, qty, unit: meta.unit, what, minutes, text: `Still frozen? Thaw the ${what} for ${forWhat} in a sealed bag in cold water, about 30 minutes a pound; change the water every 30 minutes.` });
       }
     }
   }
@@ -217,6 +217,18 @@ function pantryTasks(db, state, today) {
 export function thawNow(db, state, today) {
   return thawTasks(db, state, today, today, []).filter((t) => t.forDate === today).map(({ id, what, qty, unit, minutes }) => ({ id, what, qty, unit, minutes }));
 }
+
+/**
+ * A job's name for "done" (gauntlet r4: jobs can be ticked off). The kind and the item, or the first
+ * words of the text, so a small wording change in an amount doesn't bring a done job back.
+ */
+export function prepKey(t) {
+  const words = String(t?.text || '').toLowerCase().replace(/[^a-z ]+/g, ' ').replace(/\s+/g, ' ').trim().split(' ').slice(0, 6).join('-');
+  return `${t?.kind || 'job'}:${t?.id || words}${t?.forDate ? `:${t.forDate}` : ''}`;
+}
+
+/** Whether the family ticked this job off on that day. */
+export const prepDone = (state, date, t) => !!state?.prepDone?.[date]?.[prepKey(t)];
 
 export function prepSchedule(db, state, { today, days = 7 }) {
   const end = addDays(today, days - 1);

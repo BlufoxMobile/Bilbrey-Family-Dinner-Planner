@@ -397,6 +397,19 @@ export function tossLeftoversOps(db, state, { date, today, who, at }) {
   return result(state, ops, `Logged: ${servingsText(l.servings)} of ${midSentence(name)} thrown out${cost ? `, about $${cost.toFixed(2)}` : ''}. Next time, a leftover night or the freezer saves it.`);
 }
 
+// ---------------------------------------------------------------- thaw & prep jobs (gauntlet r4)
+
+/**
+ * Tick a thaw or prep job off (or back on) for that day. Shared with the family, so whoever did it
+ * clears it for everyone; days more than a week old are dropped as the record grows.
+ */
+export function prepDoneOps(state, { date, key, done = true, who = SHARED_PROFILE, at = null, today = null }) {
+  if (!date || !key) return result(state, [], '');
+  const ops = [done ? set(['prepDone', date, key], { by: who, at: at || new Date().toISOString() }) : del(['prepDone', date, key])];
+  if (today) for (const d of Object.keys(state?.prepDone || {})) if (d < addDays(today, -7)) ops.push(del(['prepDone', d]));
+  return result(state, ops, done ? 'Done. It’s off the list for everyone.' : 'It’s back on the list.');
+}
+
 // ---------------------------------------------------------------- sides
 
 export function substituteOps(db, state, { dinnerId, slot, ref }) {

@@ -10,7 +10,7 @@ import {
   dinnerFeasibleAt, sideSlotsFor, isRetired, isSideDropped,
 } from '../planner.js';
 import {
-  placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps, nightSideOps,
+  placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps, nightSideOps, prepDoneOps,
   resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName, awayBlock, bringBackTripOps,
   voteOps, sideVoteOps, lunchVoteOps, saveLeftoversOps, useLeftoverOps, clearLeftoversOps, leftoverNightOps,
   leftoverLunchChoices, leftoverLunchOps, freezeLeftoversOps, tossLeftoversOps,
@@ -690,6 +690,7 @@ export const actions = {
     app.commit(lunchVoteOps(app.db, app.state, { itemId: el.dataset.id, person: el.dataset.person, value: Number(el.dataset.value) }));
     renderSheet();
   },
+  'prep:done': (app, el) => app.commit(prepDoneOps(app.state, { date: el.dataset.date, key: el.dataset.key, who: app.who(), today: app.today() })),
   'lighter:dismiss': (app, el) => {
     const list = [...new Set([...(app.store.device.dismissed || []), el.dataset.key])].slice(-60);
     app.store.setDevice({ dismissed: list });

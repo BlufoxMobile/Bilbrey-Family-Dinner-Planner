@@ -34,9 +34,13 @@
       },
       "steps": [
         {
-          "text": "Heat the Blackstone on medium-high for 10 minutes (drops of water skitter when it’s ready). While it heats, roll the 2 lb of beef into 10 loose balls, a little over 3 oz each, shred the romaine heart, and set out the cheese, pickles and buns.",
+          "text": "Heat the Blackstone on medium-high for 10 minutes; it’s ready when drops of water skitter and vanish.",
           "minutes": 10,
           "setting": "Blackstone, medium-high"
+        },
+        {
+          "text": "While the Blackstone heats, roll the 2 lb of beef into 10 loose balls, a little over 3 oz each (don’t pack them tight), shred the romaine heart and set out the cheese, pickles and buns.",
+          "minutes": 0
         },
         {
           "text": "Set 5 balls on the hot griddle a few inches apart (two rounds keeps it calm). Press each one flat and thin with a sturdy spatula, leaning on it for 10 seconds, then season with a pinch of the salt and pepper. Cook without moving until the edges are deep brown and crisp, 2–3 minutes.",

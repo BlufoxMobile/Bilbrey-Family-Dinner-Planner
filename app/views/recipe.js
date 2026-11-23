@@ -101,7 +101,7 @@ function stepItem(st, ings) {
       ${when(st.setting, () => html`<span class="step-chip step-chip-heat">${ic('flame', { size: 15 })}${st.setting}</span>`)}
       ${st.timers.map((t) => html`<span class="step-chip">${cic('timer', { size: 15 })}${t.label}</span>`)}
     </p>`)}
-    ${when(ings?.length, () => html`<p class="step-ings"><span class="sr-only">Uses: </span>${ings.filter((x) => !x.again).map((x) => x.label).join(' · ')}</p>`)}
+    ${''/* the amounts per step live in cook mode (gauntlet r4: the page listed every ingredient twice) */}
   </li>`;
 }
 
@@ -200,7 +200,7 @@ export function render(app) {
       <div class="recipe-need">
         ${when(gear.length, () => html`<section aria-labelledby="gear-h" class="recipe-gear">
           <h2 id="gear-h" class="section-title">Equipment</h2>
-          <ul class="gear">${gear.map((g) => html`<li>${equipIcon(g.id, { size: 22 })}<span><b>${equipLabel(g.id)}${g.id === 'possible cooker' ? ' (slow cooker)' : ''}</b>${g.settings.length ? html`<small>${g.settings.join(', ')}</small>` : ''}</span></li>`)}</ul>
+          <ul class="gear">${gear.map((g) => { const set = [...new Set(g.settings.map((x) => (g.id === 'possible cooker' ? x.replace(/\s+on\s+\w+$/i, '') : x)))]; return html`<li>${equipIcon(g.id, { size: 22 })}<span><b>${equipLabel(g.id)}${g.id === 'possible cooker' ? ' (slow cooker)' : ''}</b>${set.length ? html`<small>${set.join(', ')}</small>` : ''}</span></li>`; })}</ul>
           <p class="muted small">No oven needed, ever.</p>
         </section>`)}
         <section class="recipe-ings" aria-labelledby="ing-h">
@@ -216,11 +216,11 @@ export function render(app) {
       </div>
 
       <div class="recipe-method">
-        ${when(tl.tracks.length > 1, () => html`<section class="recipe-timing" aria-labelledby="timing-h">
-          <h2 id="timing-h" class="section-title">Timing the whole plate</h2>
+        ${when(tl.tracks.length > 1, () => html`<details class="recipe-timing recipe-fold">
+          <summary><span class="section-title">Timing the whole plate</span><small>${fmtMinutes(tl.total)} start to finish</small></summary>
           ${when(tl.tracks.every((t) => t.minutes / tl.total >= 0.08), () => timelineChart(tl))}
           <ul class="cook-cues">${tl.cues.map((c) => html`<li><b>${c.title}.</b> ${c.text}</li>`)}</ul>
-        </section>`)}
+        </details>`)}
 
         <section class="recipe-steps" aria-labelledby="steps-h">
           <h2 id="steps-h" class="section-title">Steps</h2>
@@ -237,7 +237,7 @@ export function render(app) {
             const cue = tl.cues.find((c) => c.id === `side${i}`);
             const sn = showNutrition(app) ? sideNutrition(app.db, app.state, s.parsed) : null;
             const sGear = rec ? equipmentSettings(rec.recipe) : [];
-            return html`<div class="side-block"><details class="side-detail" open>
+            return html`<div class="side-block"><details class="side-detail">
               <summary>${sidePhoto(app, s, { size: 'thumb' })}<span><b>${s.info?.title}</b>${replacedNote(app, s)}${when(s.remembered && !s.replaced, () => html`<small>Remembered substitute</small>`)}
                 <small class="side-kcal">${[s.info?.minutes ? fmtMinutes(s.info.minutes) : '', ...sGear.map((g) => `${equipLabel(g.id)}${g.settings.length ? ` (${g.settings.join(', ')})` : ''}`), showNutrition(app) ? (sn ? `${fmtKcal(sn.kcal)} cal a plate` : 'no calorie data') : ''].filter(Boolean).join(' · ')}</small></span></summary>
               ${when(cue && tl.tracks.length < 2, () => html`<p class="side-cue">${ic('clock', { size: 16 })}<span>${cue.text}</span></p>`)}

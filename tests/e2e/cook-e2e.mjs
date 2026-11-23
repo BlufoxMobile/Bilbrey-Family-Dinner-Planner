@@ -160,10 +160,10 @@ test('the recipe page: why, times, equipment, pantry check, the plate timed toge
   assert.match(await page.textContent('.ing-have'), /In the pantry/);
   assert.ok((await page.$$('.ing-none, .ing-short')).length > 0, 'missing ingredients are marked');
   assert.equal((await page.$$('.tl-row')).length, 2, 'the dinner and its side on one clock');
-  assert.match(await page.textContent('.recipe-timing .cook-cues'), /Air-fryer fries\. Start it about \d+ min in/);
+  assert.match(await page.textContent('.recipe-timing .cook-cues'), /Air-fryer fries\. Start it about \d+ min before dinner is ready/);
   assert.ok((await page.$$('.steps-detail .step')).length >= 4);
   assert.match(await page.textContent('.steps-detail'), /Blackstone, medium-high/);
-  assert.match(await page.textContent('.steps-detail .step-ings'), /2 lb lean ground beef/);
+  assert.equal(await page.locator('.steps-detail .step-ings').count(), 0, 'the amounts per step live in cook mode, not twice on the page');
   assert.match(await page.textContent('.recipe-tips'), /Cold beef smashes best/, 'the recipe’s own tips');
   assert.ok((await page.$$('.recipe-sides .steps-side li')).length >= 2, 'the side has its own method');
   assert.match(await page.textContent('.temps'), /160°F/);
@@ -209,11 +209,11 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
   await page.click('#cook-next');
   await page.waitForSelector('.cook.is-step');
   const n = Number(await page.getAttribute('.cook', 'data-n'));
-  assert.equal(n, 7, 'five burger steps and two for the fries, in one list (picking the bag is not a step)');
+  assert.equal(n, 8, 'six burger steps (heating the griddle is its own step) and two for the fries, in one list');
   assert.equal(await stepKey(page), 'main:0', 'the griddle heats first: the burgers take the longest');
   const size = await page.$eval('.cook-step-text', (el) => parseFloat(getComputedStyle(el).fontSize));
   assert.ok(size >= 23, `step text is large on a phone (${size}px)`);
-  assert.match(await page.textContent('.cook-title'), /Step 1 of 7/);
+  assert.match(await page.textContent('.cook-title'), /Step 1 of 8/);
   assert.match(await page.textContent('.cook-setting'), /Blackstone, medium-high/);
   assert.match(await page.textContent('.cook-ings'), /2 lb lean ground beef/);
   assert.match(await page.textContent('.cook-dish-tag'), /^\s*Blackstone smashburgers\s*$/, 'one step counter: the header’s');
@@ -240,7 +240,7 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
   // Every step, in order; tap one to go there.
   await page.click('[data-action="cook:steps"]');
   await page.waitForSelector('dialog[open] .cook-step');
-  assert.equal((await page.$$('dialog[open] .cook-step')).length, 7);
+  assert.equal((await page.$$('dialog[open] .cook-step')).length, 8);
   assert.equal((await page.$$('dialog[open] .cook-step.is-done')).length, 2);
   await shot(page, 'steps-sheet-390');
   await page.click('dialog[open] .cook-step >> nth=1');

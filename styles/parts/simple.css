@@ -311,3 +311,41 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .use-ask-name small { color: var(--ink-2); font-size: var(--t-xs); }
 .when-chips .chip { min-height: 44px; }
 .pan-jump { flex-wrap: wrap; overflow: visible; }
+
+/* Thaw & prep, round 5: tick a job off and it's gone for everyone. */
+.prep-task { grid-template-columns: auto 1fr 44px; }
+.prep-check { display: grid; place-items: center; width: 44px; height: 44px; margin: -6px -6px 0 0; padding: 0; border: 0; background: transparent; }
+.prep-check .check-box { display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid var(--line-2); border-radius: 8px; color: transparent; background: var(--card); }
+.prep-check:hover .check-box { border-color: var(--pine); color: var(--ink-3); }
+.prep-done-line { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--sage); }
+
+/* Lunch, round 5: everyone's next lunch on one card. */
+.pack-card { margin: 0 0 var(--s4); padding: 14px 16px; border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1); }
+.pack-card .section-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0 0 6px; }
+.pack-card .pack-when { font-family: var(--font-body, inherit); font-size: var(--t-sm); font-weight: 600; color: var(--ink-2); letter-spacing: 0; }
+.pack-list { display: grid; gap: 8px; }
+.pack-list li { display: grid; grid-template-columns: 64px 1fr; gap: 10px; font-size: var(--t-md); line-height: 1.4; }
+.pack-list b { font-weight: 700; color: var(--person, var(--ink)); }
+/* The trip on one line: what and through when, then two text links (gauntlet r4). */
+.trip-bar { grid-template-columns: auto minmax(0, 1fr) auto; padding: 8px 12px; }
+.trip-acts { grid-column: auto; gap: 2px; flex-wrap: nowrap; }
+.trip-acts .trip-link { padding: 0 8px; }
+@media (max-width: 380px) { .trip-bar { grid-template-columns: auto minmax(0, 1fr); } .trip-acts { grid-column: 1 / -1; justify-content: flex-end; } }
+/* Recipe page, round 5: the plate's timing folds like the sides. */
+.recipe-fold { margin: var(--s5) 0; }
+.recipe-fold > summary { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; cursor: pointer; list-style: none; min-height: 44px; }
+.recipe-fold > summary::-webkit-details-marker { display: none; }
+.recipe-fold > summary .section-title { margin: 0; }
+.recipe-fold > summary small { color: var(--ink-2); font-size: var(--t-sm); }
+.recipe-fold > summary::after { content: ''; width: 9px; height: 9px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); margin-left: auto; align-self: center; transition: transform var(--dur-fast) var(--ease); }
+.recipe-fold[open] > summary::after { transform: rotate(-135deg); }
+/* Family: each store is one row; address, hours and links fold (round 5). */
+.store-cards:has(.store-row) { display: grid; gap: 0; }
+.store-row { padding: 0; border-bottom: 1px solid var(--line); background: transparent; box-shadow: none; border-radius: 0; }
+.store-row > summary { display: flex; align-items: baseline; gap: 10px; min-height: 48px; padding: 10px 0; cursor: pointer; list-style: none; }
+.store-row > summary::-webkit-details-marker { display: none; }
+.store-row > summary small { color: var(--ink-2); font-size: var(--t-sm); }
+.store-row > summary::after { content: ''; width: 8px; height: 8px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); margin-left: auto; align-self: center; }
+.store-row[open] > summary::after { transform: rotate(-135deg); }
+.store-row[open] { padding-bottom: 10px; }
+.page-list .head-tools { align-items: center; }

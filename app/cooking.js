@@ -263,8 +263,9 @@ export function cookTimeline(tracks, { order = 'together' } = {}) {
     cues.push({
       id: sp.id,
       title: sp.title,
+      // Counted back from dinner being ready (gauntlet r4: "8 hr 30 min in, around step 5" was arithmetic).
       text: during && sp.start > 1
-        ? `Start it about ${fmtMinutes(sp.start)} in, around step ${during.index + 1} of the dinner. It needs ${fmtMinutes(sp.minutes)}.`
+        ? `Start it about ${fmtMinutes(sp.minutes)} before dinner is ready.`
         : `Start it when you start the dinner. It needs ${fmtMinutes(sp.minutes)}.`,
     });
   }

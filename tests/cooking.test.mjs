@@ -138,7 +138,7 @@ test('timeline: every dish finishes together, and the steps come in the order to
   for (const id of ['main', 'side0']) assert.deepEqual(tl.steps.filter((s) => s.track === id).map((s) => s.index), tl.steps.filter((s) => s.track === id).map((s, i) => i));
   for (let i = 1; i < tl.steps.length; i++) assert.ok(tl.steps[i].at >= tl.steps[i - 1].at, 'in starting order');
   assert.deepEqual(tl.cues.map((c) => [c.id, c.title]), [['side0', 'Air-fryer fries']]);
-  assert.match(tl.cues[0].text, /^(Start here\. About \d+ min, the longest thing on the plate\.|Start it about \d+ min in, around step \d of the dinner\. It needs \d+ min\.)$/);
+  assert.match(tl.cues[0].text, /^(Start here\. About \d+ min, the longest thing on the plate\.|Start it about \d+ min before dinner is ready\.)$/);
 
   // One dish at a time, for a cook who'd rather not juggle.
   const byDish = cookTimeline(cookTracks(plateRecipes(db, {}, 'smashburgers', null)), { order: 'dish' });
@@ -149,7 +149,7 @@ test('timeline cues: a side that starts partway through, and a quick one left fo
   const db = realDb();
   const tl = cookTimeline(cookTracks(plateRecipes(db, {}, 'teriyaki-chicken-bowls', null)));
   const broccoli = tl.cues.find((c) => /broccoli/i.test(c.title));
-  assert.match(broccoli.text, /^Start it about \d+ min in, around step \d of the dinner\. It needs 10 min\.$/);
+  assert.match(broccoli.text, /^Start it about 10 min before dinner is ready\.$/);
   const pineapple = tl.cues.find((c) => /pineapple/i.test(c.title));
   assert.match(pineapple.text, /Leave it for last/);
   // The night's own sides (a shelf item) are what gets timed.

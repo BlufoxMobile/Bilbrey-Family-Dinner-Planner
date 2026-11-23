@@ -7,7 +7,7 @@ import { lunchVote } from '../lunch.js';
 import { listJoin, midSentence, relativeDay, shortWeekday, weekdayName, hourIn, fmtQty } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
-import { prepSchedule, thawNow } from '../prep.js';
+import { prepSchedule, thawNow, prepKey, prepDone } from '../prep.js';
 import { dinnerCost, costLine } from '../cost.js';
 import { plateFacts, timeLabel, fmtMinutes, equipmentLabel, LEFTOVER_REASON, leftoversOnHand, leftoversToAsk, leftoverNightChoices, servingsText, useByText } from '../cooking.js';
 
@@ -345,16 +345,19 @@ const prepActionButton = (a) => html`<button type="button" class="btn btn-small 
 export function prepCard(app, { days = 7, title = 'Thaw & prep', empty = true, emptyText = 'Nothing to thaw or pack in the next few days.', skip = [], collapsed = false, skipTonightThaw = false } = {}) {
   const today = app.today();
   // skipTonightThaw: Tonight already says it right above "Start cooking".
-  const sched = prepSchedule(app.db, app.state, { today, days })
-    .map((d) => ({ ...d, tasks: d.tasks.filter((t) => !skip.includes(t.kind) && !(skipTonightThaw && t.kind === 'thaw' && t.forDate === today && t.date === today)) })).filter((d) => d.tasks.length);
-  if (!sched.length && !empty) return '';
+  const all = prepSchedule(app.db, app.state, { today, days })
+    .map((d) => ({ ...d, tasks: d.tasks.filter((t) => !skip.includes(t.kind) && !(skipTonightThaw && t.kind === 'thaw' && t.forDate === today && t.date === today)) }));
+  // A job ticked off is gone for everyone (gauntlet r4); the count of done ones stays as a quiet line.
+  const doneCount = all.reduce((k, d) => k + d.tasks.filter((t) => prepDone(app.state, d.date, t)).length, 0);
+  const sched = all.map((d) => ({ ...d, tasks: d.tasks.filter((t) => !prepDone(app.state, d.date, t)) })).filter((d) => d.tasks.length);
+  if (!sched.length && !empty && !doneCount) return '';
   // A morning job still undone in the afternoon is a "now" job, not a "morning" one.
   const late = hourIn(new Date()) >= 12;
   const whenLabel = (d, t) => (d.date === today && t.when === 'morning' && late ? 'Now' : PREP_WHEN[t.when] || '');
   const body = sched.length ? html`<ol class="prep-days">${sched.map((d) => html`<li class="prep-day">
       <h3 class="prep-date">${d.date === today ? 'Today' : relativeDay(d.date, today)}</h3>
-      <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${whenLabel(d, t)}</small>${t.text}${t.action ? prepAction(t.action) : ''}</span></li>`)}</ul>
-    </li>`)}</ol>` : html`<p class="muted small">${emptyText}</p>`;
+      <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${whenLabel(d, t)}</small>${t.text}${t.action ? prepAction(t.action) : ''}</span>${when(t.kind !== 'use', () => html`<button type="button" class="prep-check" role="checkbox" aria-checked="false" data-action="prep:done" data-date="${d.date}" data-key="${prepKey(t)}" aria-label="Done: ${t.text}"><span class="check-box">${ic('check', { size: 18 })}</span></button>`)}</li>`)}</ul>
+    </li>`)}</ol>${when(doneCount, () => html`<p class="muted small prep-done-line">${ic('checkCircle', { size: 16 })}${doneCount} ${doneCount === 1 ? 'job' : 'jobs'} done</p>`)}` : html`<p class="muted small">${doneCount ? `All done${days === 1 ? ' for today' : ''}.` : emptyText}</p>`;
   if (collapsed) {
     const n = sched.reduce((k, d) => k + d.tasks.length, 0);
     return html`<details class="prep-card prep-fold"><summary class="section-title">${ic('clock', { size: 22 })}<span>${title}</span><small>${n ? `${n} ${n === 1 ? 'job' : 'jobs'}` : 'nothing yet'}</small></summary>${body}</details>`;
