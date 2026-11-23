@@ -172,7 +172,10 @@ test('every tab renders cleanly at 390×844 and 1280×800', async () => {
   // Month view and the 360px small phone.
   const small = await newPage(ctx, { width: 360, height: 740 });
   await go(small, '#/plan', '.page-plan');
-  await small.click('[data-action="plan:period"][data-value="month"]');
+  // How much to show lives under More (docs/spec/29), so the page has one set of range choices: Plan ahead's.
+  await small.click('[data-action="plan:more"]');
+  await small.click('dialog[open] [data-action="plan:period"][data-value="month"]');
+  await small.keyboard.press('Escape');
   await small.waitForSelector('.month');
   assert.ok(await noOverflow(small), 'month view fits 360px');
   for (const [hash, sel] of routes) { await go(small, hash, sel); assert.ok(await noOverflow(small), `${hash} fits 360px`); }
@@ -183,7 +186,8 @@ test('every tab renders cleanly at 390×844 and 1280×800', async () => {
   await go(desk, '#/plan', '.page-plan');
   await desk.waitForSelector('.month');
   await shot(desk, 'e2e-06-month-1280');
-  await desk.click('[data-action="plan:period"][data-value="week"]');
+  await desk.click('[data-action="plan:more"]');
+  await desk.click('dialog[open] [data-action="plan:period"][data-value="week"]');
   await desk.close();
   assert.equal(errors.length, 0, errors.join('\n'));
 });
@@ -377,7 +381,7 @@ test('budget: log a receipt, switch meat to lighter, the projection follows', as
   await go(page, '#/budget', '.page-budget');
   const before = Number((await page.textContent('.budget-num')).replace(/[^0-9.]/g, ''));
   // One number on Budget and on the check-in: where the month is heading (docs/spec/29).
-  assert.match(await page.textContent('.budget-of'), /is heading · target \$650/);
+  assert.match(await page.textContent('.budget-answer'), /^About \$[\d,]+ (over|under)\s*the \$650 target$/, 'the answer first');
   await page.click('.log-by-hand > summary');
   await page.fill('form[data-submit="bud:receipt"] input[name="amount"]', '86.40');
   await page.click('form[data-submit="bud:receipt"] button[type=submit]');
@@ -567,7 +571,7 @@ test('thumbs: the family’s one signal, labelled. “Not for us” asks first, 
   await page.click('dialog[open] .night-rate [data-action="vote:dinner"][data-value="-1"]');
   await page.waitForSelector('dialog[open] [data-confirm="yes"]');
   assert.match(await page.textContent('dialog[open]'), /off the menu for everyone\?/);
-  assert.match(await page.textContent('dialog[open]'), /Tonight stays as it is/);
+  assert.match(await page.textContent('dialog[open]'), /Tonight stays\./);
   await page.click('dialog[open] [data-confirm="no"]');
   await page.waitForSelector('dialog[open] .night-rate');
   assert.equal((await familyState(page)).state.votes?.[before]?.Family === -1, false, 'Keep it kept it');
@@ -647,6 +651,10 @@ test('“How was dinner?” shows after it’s cooked and the next morning, then
   await go(page, '#/tonight', '.page-tonight');
   assert.equal(await page.locator('.howwas').count(), 0, 'not before dinner is cooked');
   await page.click('[data-action="tonight:cooked"]');
+  // One after-dinner question at a time (docs/spec/29): leftovers first, then how it was.
+  await page.waitForSelector('.lo-card .lo-ask');
+  assert.equal(await page.locator('.howwas').count(), 0, 'not two questions at once');
+  await page.click('.lo-card [data-action="leftovers:save"][data-n="0"]');
   await page.waitForSelector('.howwas .rate-row');
   assert.equal(await page.locator('.hero-rate').count(), 0, 'no second set of thumbs on the card above');
   await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
@@ -832,7 +840,7 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   await page.waitForTimeout(400);
   await shot(page, 'e2e-31-plan-ahead-sheet');
   await page.click('dialog[open] [data-action="ahead:go"]');
-  await toastMatch(page, /^Planned \d+ dinners? through Sunday, Nov 29: \d+ straight from the pantry/);
+  await toastMatch(page, /^Planned \d+ dinners? through Sunday, Nov 29\./);
   await page.waitForSelector('#ahead-card');
   const s = (await familyState(page)).state;
   for (let d = 23; d <= 29; d++) assert.ok(s.plan[`2026-11-${d}`]?.dinner, `Nov ${d} is planned`);

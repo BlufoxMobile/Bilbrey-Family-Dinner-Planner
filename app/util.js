@@ -186,6 +186,17 @@ export function fmtQty(n) {
   return String(Math.round(v * 100) / 100);
 }
 
+/** What someone typed for an amount → a number: "1¼", "1 1/4", "1.25", "¾" → 1.25 / 0.75; else NaN. */
+export function parseQty(text) {
+  const t = String(text ?? '').trim().replace(/¼/g, ' 1/4').replace(/½/g, ' 1/2').replace(/¾/g, ' 3/4').replace(/,/g, '.').trim();
+  if (!t) return NaN;
+  const m = /^(\d+(?:\.\d+)?)?\s*(?:(\d+)\/(\d+))?$/.exec(t);
+  if (!m || (!m[1] && !m[2])) return NaN;
+  const whole = m[1] ? Number(m[1]) : 0;
+  const frac = m[2] ? Number(m[2]) / Number(m[3] || 1) : 0;
+  return Number.isFinite(whole + frac) ? whole + frac : NaN;
+}
+
 export function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }

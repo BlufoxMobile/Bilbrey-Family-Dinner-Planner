@@ -168,7 +168,7 @@ test('the check-in page: weigh-ins are shared in the open, the TV included, unle
   // Nobody set up: an offer, with the caution, and no form until asked.
   const fresh = checkinView.render(fakeApp({ state })).s;
   assert.match(fresh, /A weekly weigh-in, if you want one/);
-  assert.match(fresh, /one for your doctor/);
+  assert.match(fresh, /one for a doctor/);
   assert.doesNotMatch(fresh, /data-submit="weigh:setup"/);
   assert.match(checkinView.render(fakeApp({ state, ui: { weighSetup: true } })).s, /data-submit="weigh:setup"/);
 });

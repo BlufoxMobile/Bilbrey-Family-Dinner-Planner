@@ -158,7 +158,8 @@ export function render(app) {
             <p class="muted small">${lunches.length} packed this week${food > 0 ? `, about ${money(food)} of food` : ''}. ${daysText(cfg)}.</p></div>
           <button type="button" class="btn btn-small btn-secondary" data-action="lunch:edit" data-who="${name}">${ic('edit', { size: 18 })}Edit ${name}’s lunches</button>
         </div>
-        ${days.length ? html`<div class="lunch-days">${ordered.map((d) => dayCard(app, name, d, { packTonight: d === focus && focus !== today }))}</div>`
+        ${days.length ? html`<div class="lunch-days">${days.filter((d) => !focus || d >= focus).map((d) => dayCard(app, name, d, { packTonight: d === focus && focus !== today }))}</div>
+          ${when(focus && days.some((d) => d < focus), () => { const earlier = days.filter((d) => d < focus); return html`<details class="lunch-earlier"><summary>Earlier this week (${earlier.length})</summary><div class="lunch-days">${earlier.map((d) => dayCard(app, name, d))}</div></details>`; })}`
           : html`<p class="empty-body pad">No lunch days picked for ${name}. Edit ${name}’s lunches to choose days.</p>`}
       </section>`}
     ${when(person, () => html`<p class="muted small lunch-foot">${showNutrition(app) ? 'Calories count packed lunches and dinners at home; breakfast and snacks aren’t tracked. ' : ''}${packing

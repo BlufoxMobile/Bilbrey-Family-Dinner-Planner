@@ -141,7 +141,7 @@ test('plan ahead re-plans the nights the planner chose itself, never a hand-set,
   assert.equal(r.after.dinners, r.before.dinners, 'the same nights are planned');
   assert.deepEqual(aheadStats(db, s, { start: TUE, end: NEXT_MON }), r.after, 'the after numbers are the plan that was written');
   assert.ok(planOps(r).some((o) => itemsForNight(db, s, o.value.dinner, o.value).chickenThighs > 0), 'an August-dated pack of thighs gets a night');
-  assert.match(r.message, /^Planned \d+ dinners? through Monday, Nov 23: \d+ straight from the pantry\. (It replaces|Both replace|All \d+ replace) the planner’s earlier picks?\./);
+  assert.match(r.message, /^Planned \d+ dinners? through Monday, Nov 23\.$/, 'one line; the result card has the rest');
   // The result card's record rides along, so it survives a reload, and Undo takes all of it back.
   assert.deepEqual(s.planAhead, { start: TUE, end: NEXT_MON, pantryFirst: true, replan: true, before: r.before, changed: touched.length, by: 'Jeff', at: ctx.at });
   assert.deepEqual(aheadRecord(s, TUE), s.planAhead);

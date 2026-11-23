@@ -66,7 +66,6 @@ function dayCard(app, date, { compact = false } = {}) {
       ${dayStamp(date, today)}
       ${away ? html`<span class="day-ph day-ph-away">${ic('moon', { size: compact ? 20 : 26 })}</span>` : d ? dinnerPhoto(app, d, { size: compact ? 'thumb' : 'card' }) : html`<span class="day-ph">${ic('plus', { size: 22 })}</span>`}
       <span class="day-title">${label}</span>
-      ${when(d && !away && !compact && showNutrition(app), () => { const n = plateNutrition(app.db, app.state, d.id, e); return n ? html`<span class="day-kcal">≈ ${fmtKcal(n.kcal)} cal, ${Math.round(n.protein)} g protein</span>` : ''; })}
       ${when(d && !away && !compact, () => costNote(costOf(app, d.id, e), { short: true, tag: 'span', cls: 'day-cost' }))}
       ${when(away && e.away?.note, () => html`<span class="day-note">${e.away.note}</span>`)}
       ${when(!d && !away && !past, () => html`<span class="day-note">${type === 'burger' ? 'Burger night' : type === 'pizza' ? 'Pizza night' : 'Tap to plan'}</span>`)}
@@ -121,14 +120,13 @@ export function render(app) {
   return html`<div class="page page-plan">
     <header class="page-head">
       <div class="title-row"><h1 class="page-title">Plan</h1><a class="btn btn-small btn-secondary recipes-link" href="#/recipes">${ic('recipes', { size: 18 })}Recipes</a></div>
-      ${segmented('period', PERIODS.map((p) => ({ id: p.id, label: p.label })), s.period, { label: 'How long to plan', action: 'plan:period' })}
     </header>
     ${periodNav(app, range)}
     <div class="plan-actions">
-      <button type="button" class="btn btn-primary" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}${open ? `Plan ahead (${open} open)` : 'Plan ahead'}</button>
+      <button type="button" class="btn ${open ? 'btn-primary' : 'btn-secondary'} plan-ahead-btn" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}${open ? `Plan ahead (${open} open)` : 'Plan ahead'}</button>
       ${app.ui.swapMode
         ? html`<button type="button" class="btn btn-primary" data-action="plan:swapmode" aria-pressed="true">${ic('swap', { size: 20 })}Done swapping</button>`
-        : html`<button type="button" class="btn btn-secondary" data-action="plan:more" aria-haspopup="dialog">${ic('more', { size: 20 })}More</button>`}
+        : html`<button type="button" class="btn btn-secondary plan-more-btn" data-action="plan:more" aria-haspopup="dialog">${ic('more', { size: 20 })}More</button>`}
     </div>
     ${when(app.ui.swapMode, () => html`<p class="swap-banner" role="status">${app.ui.swapPick ? html`Now tap the night to trade with <b>${shortDate(app.ui.swapPick)}</b>.` : 'Tap the first night, then the night to trade with.'}</p>`)}
     ${aheadCard(app)}
@@ -188,6 +186,8 @@ function openMore(app) {
           <button type="button" class="action-row" data-action="plan:swapmode">${ic('swap')}<span><b>Swap two nights</b><small>Tap one night, then the other.</small></span></button>
           ${when(auto, () => html`<button type="button" class="action-row" data-action="plan:replan">${ic('refresh')}<span><b>Pick new dinners for this week</b><small>Keeps cooked nights and anything set by hand. Undo brings the old ones back.</small></span></button>`)}
         </div>
+        <h3 class="sheet-h">Show</h3>
+        ${segmented('period', PERIODS.map((p) => ({ id: p.id, label: p.label })), s.period, { label: 'How much of the plan to show', action: 'plan:period', small: true })}
         <h3 class="sheet-h" id="pf-l">Plan from</h3>
         ${segmented('planStore', STORE_OPTS, s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}
         ${when(cov, () => html`<p class="muted small">${cov.ok} of ${cov.total} dinners can be made from ${s.planStore === 'jewel' ? 'Jewel-Osco' : "Sam's Club"} alone.</p>`)}
@@ -349,7 +349,7 @@ function openPlanAhead(app) {
             return html`<button type="button" class="chip chip-lg ${on ? 'is-on' : ''}" aria-pressed="${tf(on)}" data-action="ahead:quick" data-end="${e}">${q.label}<small>to ${weekdayShort(e)} ${shortDate(e)}</small></button>`;
           })}
         </div>
-        <details class="ahead-date"><summary>Another last night</summary>
+        <details class="ahead-date"><summary>Pick a date</summary>
           <label class="field"><span class="field-label">Last night to plan</span>
           <input class="input" type="date" id="ahead-end" min="${today}" max="${aheadLimit(today)}" value="${st.end}" data-change="ahead:end"></label></details>
         <p class="muted small ahead-count">${count(dates.length, 'night')}: ${listJoin([open ? `${open} empty` : '', own ? `${own} the app picked` : '', kept ? `${kept} stay as ${kept === 1 ? 'it is' : 'they are'}` : ''])}.</p>
@@ -376,11 +376,18 @@ function aheadCard(app) {
   const covers = [s.dinnersCovered ? count(s.dinnersCovered, 'dinner') : '', s.lunchesCovered ? count(s.lunchesCovered, 'packed lunch', 'packed lunches') : ''].filter(Boolean);
   const gap = s.firstGap ? s.nights.find((n) => n.date === s.firstGap) : null;
   const row = (n) => html`<li><span class="cover-day">${n.date === today ? 'Tonight' : `${weekdayShort(n.date)} ${shortDate(n.date)}`}</span><span class="cover-what"><b>${n.title}</b><small>Needs ${listJoin(n.dinnerMissing.slice(0, 4).map((m) => foodName(m.name)))}${n.dinnerMissing.length > 4 ? ` and ${n.dinnerMissing.length - 4} more` : ''}</small></span></li>`;
+  // Success first, one number, one next step (gauntlet r2); the pantry math is folded underneath.
+  const saved = was ? Math.round((was.groceries - now.groceries) * 100) / 100 : 0;
   return html`<section class="ahead-card" id="ahead-card" aria-labelledby="ahead-h">
     <div class="ahead-head">
-      <h2 id="ahead-h" class="section-title">${ic('pantry', { size: 22 })}<span>${s.dinnersCovered || s.lunchesCovered ? `Your pantry covers ${listJoin(covers)}` : 'The pantry doesn’t cover a whole meal yet'}</span></h2>
+      <h2 id="ahead-h" class="section-title">${ic('checkCircle', { size: 22 })}<span>Planned through ${dayText(a.end, today)}</span></h2>
       <button type="button" class="icon-btn" data-action="ahead:close" aria-label="Close this summary">${ic('close', { size: 20 })}</button>
     </div>
+    ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html` <span class="ahead-save">· about ${money(saved, { whole: true })} less than before</span>` : ''}</p>`)}
+    ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
+    <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}Make the shopping list</button>
+    <details class="ahead-details"><summary>The pantry, each night and the cost</summary>
+    <p class="ahead-covers"><b>${s.dinnersCovered || s.lunchesCovered ? `Your pantry covers ${listJoin(covers)}.` : 'No dinner is all in the pantry yet.'}</b></p>
     <p class="ahead-through">${s.coveredThrough
       ? html`Without a trip to the store, it carries you through <b>${dayText(s.coveredThrough, today)}</b>${s.firstGap ? '.' : ', the whole plan.'}`
       : gap?.open ? html`Nothing is planned for ${dayText(gap.date, today)} yet.`
@@ -392,14 +399,12 @@ function aheadCard(app) {
     </div>`)}
     ${aheadCost(app, start, a.end)}
     <div class="cover-meter" role="img" aria-label="${s.nights.filter((n) => n.covered).length} of ${s.nights.length} days covered by the pantry">${s.nights.map((n) => html`<span class="cover-pip ${n.covered ? 'is-on' : ''} ${n.away ? 'is-away' : ''}" title="${weekdayShort(n.date)} ${shortDate(n.date)}: ${n.away ? 'away' : n.covered ? 'covered' : n.open ? 'nothing planned' : 'needs groceries'}"></span>`)}</div>
-    ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
     ${need.length ? html`<h3 class="ahead-sub">Still needs groceries<span class="count">${count(need.length, 'night')}</span></h3>
       <ul class="cover-list ahead-list">${need.slice(0, 5).map(row)}</ul>
       ${when(need.length > 5, () => html`<details class="cover-more"><summary>${need.length - 5} more ${need.length - 5 === 1 ? 'night' : 'nights'}</summary><ul class="cover-list ahead-list">${need.slice(5).map(row)}</ul></details>`)}`
       : html`<p class="small">${s.dinners ? `Every planned dinner through ${dayText(a.end, today)} comes from the pantry.` : 'No dinners are planned in this stretch yet.'}</p>`}
     ${when(lunchDays, () => html`<p class="muted small">Packed lunches need something from the store on ${count(lunchDays, 'day')}.</p>`)}
-    <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}Make the shopping list</button>
-    <p class="muted small">One list for ${start === a.end ? shortDate(start) : rangeLabel(start, a.end)}, both stores, with only what the pantry doesn’t cover.</p>
+    </details>
   </section>`;
 }
 

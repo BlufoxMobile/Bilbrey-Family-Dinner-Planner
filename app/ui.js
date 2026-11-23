@@ -280,6 +280,12 @@ export function confirmSheet({ title, body = '', confirm = 'Confirm', cancel = '
 
 let toastTimer = null;
 let toastAbort = null;
+let toastAt = 0;
+/** A message from another screen doesn't follow you around (gauntlet r2); one shown just now stays. */
+export function hideStaleToast(ms = 1500) {
+  if (Date.now() - toastAt < ms) return;
+  document.getElementById('toast')?.classList.remove('is-on');
+}
 // A toast with a button stays at least 15 seconds and waits while a finger, the mouse or keyboard focus
 // is on it (gauntlet r1: 6.5 s was too short to read and reach Undo). A plain note stays 6.5 s.
 export function toast(message, { undo = null, action = null, duration = null } = {}) {
@@ -300,6 +306,7 @@ export function toast(message, { undo = null, action = null, duration = null } =
   toastAbort?.abort();
   const btn = undo ? { label: 'Undo', fn: undo } : action;
   const wait = duration ?? (btn ? 15000 : 6500);
+  toastAt = Date.now();
   setHTML(root, html`<div class="toast">
       <p class="toast-msg">${message}</p>
       ${when(btn, () => html`<button type="button" class="toast-btn">${btn.label}</button>`)}

@@ -137,7 +137,7 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   await page.waitForTimeout(350);
   await shot(page, 'planner-01-plan-ahead-sheet-390');
   await page.click('dialog[open] [data-action="ahead:go"]');
-  await toastMatch(page, /^Planned \d+ dinners? through Sunday, Nov 29: \d+ straight from the pantry\./);
+  await toastMatch(page, /^Planned \d+ dinners? through Sunday, Nov 29\./);
   await page.waitForSelector('#ahead-card #ahead-ba');
   let s = await familyState();
   for (let d = 16; d <= 29; d++) assert.ok(s.plan[`2026-11-${d}`]?.dinner, `Nov ${d} is planned`);

@@ -209,11 +209,11 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
   await page.click('#cook-next');
   await page.waitForSelector('.cook.is-step');
   const n = Number(await page.getAttribute('.cook', 'data-n'));
-  assert.equal(n, 8, 'five burger steps and three for the fries, in one list');
+  assert.equal(n, 7, 'five burger steps and two for the fries, in one list (picking the bag is not a step)');
   assert.equal(await stepKey(page), 'main:0', 'the griddle heats first: the burgers take the longest');
   const size = await page.$eval('.cook-step-text', (el) => parseFloat(getComputedStyle(el).fontSize));
   assert.ok(size >= 23, `step text is large on a phone (${size}px)`);
-  assert.match(await page.textContent('.cook-title'), /Step 1 of 8/);
+  assert.match(await page.textContent('.cook-title'), /Step 1 of 7/);
   assert.match(await page.textContent('.cook-setting'), /Blackstone, medium-high/);
   assert.match(await page.textContent('.cook-ings'), /2 lb lean ground beef/);
   assert.match(await page.textContent('.cook-dish-tag'), /^\s*Blackstone smashburgers\s*$/, 'one step counter: the header’s');
@@ -225,40 +225,36 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
   await waitFor(async () => (await stepKey(page)) === 'main:0');
   await page.keyboard.press('MediaTrackNext');
   await waitFor(async () => (await stepKey(page)) === 'side0:0');
-  // Swipe left for the next step.
+  assert.match(await page.textContent('.cook-setting'), /400°F/);
+  assert.match(await page.textContent('.cook-dish-tag'), /Air-fryer fries/);
+  assert.ok(await noOverflow(page));
+  await shot(page, 'step-390');
+  // Swipe left for the next step: back to the burgers while the fries cook.
   await page.evaluate(() => {
     const el = document.querySelector('.cook-stage');
     const touch = (x) => [new Touch({ identifier: 1, target: el, clientX: x, clientY: 300 })];
     el.dispatchEvent(new TouchEvent('touchstart', { touches: touch(320), changedTouches: touch(320), bubbles: true }));
     el.dispatchEvent(new TouchEvent('touchend', { touches: [], changedTouches: touch(90), bubbles: true }));
   });
-  await waitFor(async () => (await stepKey(page)) === 'side0:1');
-  assert.match(await page.textContent('.cook-setting'), /400°F/);
-  assert.match(await page.textContent('.cook-dish-tag'), /Air-fryer fries/);
-  assert.ok(await noOverflow(page));
-  await shot(page, 'step-390');
-  await next(page);
-  assert.equal(await stepKey(page), 'main:1', 'back to the burgers while the fries cook');
+  await waitFor(async () => (await stepKey(page)) === 'main:1');
   // Every step, in order; tap one to go there.
   await page.click('[data-action="cook:steps"]');
   await page.waitForSelector('dialog[open] .cook-step');
-  assert.equal((await page.$$('dialog[open] .cook-step')).length, 8);
-  assert.equal((await page.$$('dialog[open] .cook-step.is-done')).length, 3);
+  assert.equal((await page.$$('dialog[open] .cook-step')).length, 7);
+  assert.equal((await page.$$('dialog[open] .cook-step.is-done')).length, 2);
   await shot(page, 'steps-sheet-390');
-  await page.click('dialog[open] .cook-step >> nth=2');
-  await waitFor(async () => (await stepKey(page)) === 'side0:1');
+  await page.click('dialog[open] .cook-step >> nth=1');
+  await waitFor(async () => (await stepKey(page)) === 'side0:0');
   assert.equal(errors.length, 0, errors.join('\n'));
 });
 
 test('timers keep running across steps, ring with a banner, and survive a reload', async () => {
-  assert.equal(await stepKey(page), 'side0:1');
+  assert.equal(await stepKey(page), 'side0:0');
   await page.click('.cook-timer-start');
   await page.waitForSelector('.cook-timer.is-running');
   assert.match(await page.textContent('.cook-timer-clock'), /^1[12]:\d\d$/, 'a 12 minute timer (the low end of 12–18)');
   await shot(page, 'timer-390');
   // Back to the griddle step: the fries' timer rides along at the bottom.
-  await page.keyboard.press('ArrowLeft');
-  await waitFor(async () => (await stepKey(page)) === 'side0:0');
   await page.keyboard.press('ArrowLeft');
   await waitFor(async () => (await stepKey(page)) === 'main:0');
   await page.waitForSelector('.cook-dock .cook-pill.is-running');
@@ -292,7 +288,7 @@ test('timers keep running across steps, ring with a banner, and survive a reload
   assert.match(await page.textContent('#cook-alert'), /Air-fryer fries: 12–18 min per batch/);
   await page.waitForSelector('.cook-dock .cook-pill.is-done');
   await page.click('.cook-dock .cook-pill');
-  await waitFor(async () => (await stepKey(page)) === 'side0:1');
+  await waitFor(async () => (await stepKey(page)) === 'side0:0');
   await page.click('.cook-step-card [data-action="cook:timer-ack"]');
   await waitFor(async () => !(await page.$('#cook-alert')));
   await page.waitForSelector('.cook-timer-start'); // the next batch can start a fresh one
@@ -320,7 +316,7 @@ test('cook mode on a laptop and on the TV: big type, the step beside what it nee
     await p.keyboard.press('ArrowRight');
     await waitFor(async () => (await stepKey(p)) === 'side0:0');
     await p.keyboard.press('ArrowRight');
-    await waitFor(async () => (await stepKey(p)) === 'side0:1');
+    await waitFor(async () => ['side0:0', 'main:1'].includes(await stepKey(p)));
     const size = await p.$eval('.cook-step-text', (el) => parseFloat(getComputedStyle(el).fontSize));
     assert.ok(size >= min, `step text at ${name} is ${size}px`);
     assert.equal(await p.evaluate(() => document.activeElement?.id), 'cook-next', 'focus stays on Next from step to step');
@@ -368,8 +364,6 @@ test('the TV (the 960 × 540 canvas a Fire TV reports, and a 1080p panel): cook 
     // Left and right are the steps; focus stays on Next.
     await p.keyboard.press('ArrowRight');
     await waitFor(async () => (await stepKey(p)) === 'side0:0');
-    await p.keyboard.press('ArrowRight');
-    await waitFor(async () => (await stepKey(p)) === 'side0:1');
     assert.equal(await p.evaluate(() => document.activeElement?.id), 'cook-next');
     const size = await p.$eval('.cook-step-text', (el) => parseFloat(getComputedStyle(el).fontSize) * parseFloat(getComputedStyle(document.documentElement).zoom));
     assert.ok(size >= 26 * Number(zoom), `${name}: step text is ${size}px on the glass`);
@@ -435,12 +429,14 @@ test('leftovers wait on Tonight: eat one, or make it a leftover night', async ()
   await hideToast(page);
   assert.match(await page.textContent('.left-fridge .lo-row'), /Blackstone smashburgers.*Leftovers: 4 servings, good through Thursday/s);
   assert.equal(await page.locator('.lo-card').count(), 0, 'the question was already answered');
-  await page.click('[data-action="leftovers:ate"]');
-  await waitFor(async () => (await familyState(page)).leftovers[TODAY].servings === 3);
-  await hideToast(page);
+  // One "Use them…" button; every way to use them is in its sheet (docs/spec/29).
   await page.evaluate(() => document.querySelector('.left-fridge')?.scrollIntoView({ block: 'start' }));
   await shot(page, 'tonight-leftovers-390');
-  await page.click('[data-action="leftovers:night"]');
+  await page.click('.left-fridge [data-action="leftovers:more"]');
+  await page.click('dialog[open] [data-action="leftovers:ate"]');
+  await waitFor(async () => (await familyState(page)).leftovers[TODAY].servings === 3);
+  await hideToast(page);
+  await page.click('dialog[open] [data-action="leftovers:night"]');
   await page.waitForSelector('dialog[open] [data-action="leftovers:night-set"]');
   assert.match(await page.textContent('dialog[open]'), /Instead of Chicken tikka masala/);
   await page.click(`dialog[open] [data-action="leftovers:night-set"][data-night="${TOMORROW}"]`);

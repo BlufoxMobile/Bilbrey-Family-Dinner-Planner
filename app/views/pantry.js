@@ -3,7 +3,7 @@
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, switchToggle, confirmSheet } from '../ui.js';
 import { resizeImage, LIMITS } from '../images.js';
 import { STORAGE, AISLES } from '../config.js';
-import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween, weekdayName, chicagoDay, monthOnly } from '../util.js';
+import { fmtQty, round2, money, rangeLabel, shortWeekday, shortDate, addDays, listJoin, datesBetween, weekdayName, chicagoDay, monthOnly, parseQty } from '../util.js';
 import { setPantryOps, customItemOps, undoFor } from '../actions.js';
 import { set } from '../state.js';
 import { kindOf } from '../planner.js';
@@ -73,7 +73,6 @@ function pantryRow(app, id, p) {
     <button type="button" class="pan-thumb ${ph ? 'has-photo' : ''}" data-action="pan:photo" data-id="${id}" aria-label="${ph ? `Picture of ${m.name}` : `Add a picture of ${m.name}`}">${ph ? html`<img data-photo="${ph}" alt="" loading="lazy" decoding="async">` : ic('camera', { size: 20 })}</button>
     <span class="pan-name"><b>${m.name}</b>
       ${when(soon, () => html`<small class="pan-soon ${soon.daysLeft <= 0 ? 'is-now' : ''}">${useByText(app, soon)}</small>`)}
-      ${when(!soon && noDate?.has(id), () => html`<small class="pan-soon is-ask">No date yet, so no use-by</small>`)}
       ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
       <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `${fmtQty(count)} ${plural(pk.word, count)} (about ${unitText(p.qty, m.unit)})` : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}</small></span>
     <span class="pan-ctrl">
@@ -81,17 +80,17 @@ function pantryRow(app, id, p) {
         ? html`<span class="have-it"><span class="have-label" aria-hidden="true">Have it</span>${switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `Have ${m.name}` })}</span>`
         : byPack ? html`<span class="qty-edit qty-pack">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${pk.per}" aria-label="One less ${pk.word} of ${m.name}">${ic('minus', { size: 18 })}</button>
-            <input class="qty-input" type="number" inputmode="decimal" min="0" step="any" value="${typeof p.qty === 'number' ? count : ''}" data-change="pan:qty" data-id="${id}" data-per="${pk.per}" aria-label="How many ${plural(pk.word, 2)} of ${m.name}">
+            <input class="qty-input" type="text" inputmode="decimal" value="${typeof p.qty === 'number' ? fmtQty(count) : ''}" data-change="pan:qty" data-id="${id}" data-per="${pk.per}" aria-label="How many ${plural(pk.word, 2)} of ${m.name}">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${pk.per}" aria-label="One more ${pk.word} of ${m.name}">${ic('plus', { size: 18 })}</button>
             <span class="qty-unit">${plural(pk.word, 2)}</span>
           </span>`
         : html`<span class="qty-edit">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${pk?.counted ? 1 : stepFor(m.unit)}" aria-label="Less ${m.name}">${ic('minus', { size: 18 })}</button>
-            <input class="qty-input" type="number" inputmode="decimal" min="0" step="any" value="${typeof p.qty === 'number' ? round2(p.qty) : ''}" data-change="pan:qty" data-id="${id}" aria-label="${m.name} amount in ${m.unit}">
+            <input class="qty-input" type="text" inputmode="decimal" value="${typeof p.qty === 'number' ? fmtQty(round2(p.qty)) : ''}" data-change="pan:qty" data-id="${id}" aria-label="${m.name} amount in ${m.unit}">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${pk?.counted ? 1 : stepFor(m.unit)}" aria-label="More ${m.name}">${ic('plus', { size: 18 })}</button>
             ${when(pk?.counted, () => html`<span class="qty-unit">${m.unit}</span>`)}
           </span>`}
-      <button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Low? Add to list'}</button>
+      <button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Add to list'}</button>
       <button type="button" class="icon-btn" data-action="pan:remove" data-id="${id}" aria-label="Remove ${m.name}">${ic('trash', { size: 20 })}</button>
     </span>
   </li>`;
@@ -215,7 +214,7 @@ export function render(app) {
     <header class="page-head"><h1 class="page-title">Pantry</h1></header>
     <section class="pan-add" aria-labelledby="add-h">
       <h2 id="add-h" class="sr-only">Add to the pantry</h2>
-      <label class="search">${ic('search', { size: 20 })}<input type="search" id="pantry-search" placeholder="Add: chicken, rice, green beans…" value="${app.ui.pantryQuery}" data-input="pan:search" aria-label="Search ingredients to add" autocomplete="off"></label>
+      <label class="search">${ic('search', { size: 20 })}<input type="search" id="pantry-search" placeholder="Find or add: chicken, rice…" value="${app.ui.pantryQuery}" data-input="pan:search" aria-label="Find something in the pantry, or add it" autocomplete="off"></label>
       <div id="pan-results">${results(app)}</div>
       <div class="scan-pick pan-scan" role="group" aria-label="Add from photos of the shelves">
         <label class="btn btn-secondary file-btn">${ic('image', { size: 20 })}Photo library<input type="file" accept="image/*" multiple class="file-over" data-change="pan:scan" aria-label="Add from shelf photos in the photo library"></label>
@@ -229,10 +228,11 @@ export function render(app) {
     ${when(low.length, () => html`<section class="pan-group"><h2 class="section-title">Running low</h2><ul class="pan-list">${low.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)}
     ${entries.length ? html`
       <nav class="pan-jump" aria-label="Pantry sections">${places.map((pl) => html`<button type="button" class="chip" data-action="pan:jump" data-target="place-${pl.id}">${pl.label.replace(/^(In|On) the /, '').replace(/^./, (c) => c.toUpperCase())} <span class="chip-count">${pl.count}</span></button>`)}</nav>
-      ${when(photos < entries.length, () => html`<p class="muted small pan-photo-hint">${ic('camera', { size: 16 })}Tap a square to add a picture.</p>`)}
       ${places.map((pl) => html`<section class="pan-place" id="place-${pl.id}" aria-labelledby="ph-${pl.id}">
         <h2 id="ph-${pl.id}" class="section-title">${pl.label}<span class="count">${pl.count}</span></h2>
-        ${pl.kinds.map((k) => html`<h3 class="pan-kind">${k.label}<span class="count">${k.rows.length}</span></h3><ul class="pan-list">${k.rows.map(([id, p]) => pantryRow(app, id, p))}</ul>`)}
+        ${pl.count > 6
+    ? pl.kinds.map((k) => html`<h3 class="pan-kind">${k.label}<span class="count">${k.rows.length}</span></h3><ul class="pan-list">${k.rows.map(([id, p]) => pantryRow(app, id, p))}</ul>`)
+    : html`<ul class="pan-list">${pl.kinds.flatMap((k) => k.rows).map(([id, p]) => pantryRow(app, id, p))}</ul>`}
       </section>`)}
       ${when(empty.length, () => html`<section class="pan-place pan-empty" id="place-empty" aria-labelledby="ph-empty">
         <h2 id="ph-empty" class="section-title">Used up<span class="count">${empty.length}</span></h2>
@@ -291,12 +291,18 @@ function photoSheet(app, itemId) {
 function results(app) {
   const q = app.ui.pantryQuery.trim();
   if (!q) return '';
-  const rows = searchCatalog(app, q);
   const pantry = app.state.pantry || {};
+  // What we already have comes first (gauntlet r2: "do we have chicken?"), then things to add.
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const have = Object.entries(pantry).filter(([id, p]) => p && meta(app, id) && words.every((w) => meta(app, id).name.toLowerCase().includes(w))).slice(0, 6);
+  const haveIds = new Set(have.map(([id]) => id));
+  const rows = searchCatalog(app, q).filter((r) => !haveIds.has(r.id));
   return html`<ul class="pick-list">
+    ${have.map(([id, p]) => html`<li><button type="button" class="pick-row is-have" data-action="pan:jump" data-target="pan-${id}">
+      <span class="pick-main"><b>${meta(app, id).name}</b><small>In the pantry${typeof p.qty === 'number' ? `: ${unitText(p.qty, meta(app, id).unit)}` : p.stocked ? ': have it' : ''}${p.low ? ', running low' : ''}</small></span>${ic('right', { size: 20 })}</button></li>`)}
     ${rows.map((r) => html`<li><button type="button" class="pick-row" data-action="pan:add" data-id="${r.id}">
-      <span class="pick-main"><b>${r.name}</b><small>${pantry[r.id] ? 'Already in the pantry' : kindOf(app.db, app.state, r.id) === 'staple' ? 'Staple: stocked until low' : `Measured in ${r.unit}`}</small></span>${ic('plus', { size: 20 })}</button></li>`)}
-    <li><button type="button" class="pick-row" data-action="pan:new" data-name="${q}"><span class="pick-main"><b>Add “${q}” as a shelf item</b><small>Not in the recipe box. Usable as a substitute side.</small></span>${ic('plus', { size: 20 })}</button></li>
+      <span class="pick-main"><b>Add ${r.name}</b></span>${ic('plus', { size: 20 })}</button></li>`)}
+    ${when(!rows.some((r) => r.name.toLowerCase() === q.toLowerCase()) && !have.some(([id]) => meta(app, id).name.toLowerCase() === q.toLowerCase()), () => html`<li><button type="button" class="pick-row" data-action="pan:new" data-name="${q}"><span class="pick-main"><b>Add “${q}” to the pantry</b></span>${ic('plus', { size: 20 })}</button></li>`)}
   </ul>`;
 }
 
@@ -555,7 +561,7 @@ export const actions = {
     app.commit(setPantryOps(app.db, app.state, { id, qty: Math.max(0, round2(cur + Number(el.dataset.delta))), who: app.who() }), { quiet: true });
   },
   'pan:qty': (app, el) => {
-    const v = el.value === '' ? 0 : Number(el.value);
+    const v = el.value.trim() === '' ? 0 : parseQty(el.value);
     if (!Number.isFinite(v) || v < 0) return;
     const per = Number(el.dataset.per) > 0 ? Number(el.dataset.per) : 1; // a count of packages
     app.commit(setPantryOps(app.db, app.state, { id: el.dataset.id, qty: round2(v * per), who: app.who() }), { quiet: true });

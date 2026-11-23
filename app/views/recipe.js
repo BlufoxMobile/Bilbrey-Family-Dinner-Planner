@@ -216,7 +216,7 @@ export function render(app) {
       <div class="recipe-method">
         ${when(tl.tracks.length > 1, () => html`<section class="recipe-timing" aria-labelledby="timing-h">
           <h2 id="timing-h" class="section-title">Timing the whole plate</h2>
-          ${timelineChart(tl)}
+          ${when(tl.tracks.every((t) => t.minutes / tl.total >= 0.08), () => timelineChart(tl))}
           <ul class="cook-cues">${tl.cues.map((c) => html`<li><b>${c.title}.</b> ${c.text}</li>`)}</ul>
         </section>`)}
 
@@ -240,7 +240,7 @@ export function render(app) {
                 <small class="side-kcal">${[s.info?.minutes ? fmtMinutes(s.info.minutes) : '', ...sGear.map((g) => `${equipLabel(g.id)}${g.settings.length ? ` (${g.settings.join(', ')})` : ''}`), showNutrition(app) ? (sn ? `${fmtKcal(sn.kcal)} cal a plate` : 'no calorie data') : ''].filter(Boolean).join(' · ')}</small></span></summary>
               ${when(cue, () => html`<p class="side-cue">${ic('clock', { size: 16 })}<span>${cue.text}</span></p>`)}
               <ol class="steps steps-small steps-side">${sSteps.map((st) => html`<li>${st.text}${st.timers.length ? html` <span class="step-chip">${cic('timer', { size: 14 })}${st.timers.map((t) => t.label).join(', ')}</span>` : ''}</li>`)}</ol>
-            </details>${when(s.parsed.type === 'side' && app.db.sides[s.parsed.id], () => thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', compact: true, labels: true }))}</div>`;
+            </details>${when(s.parsed.type === 'side' && app.db.sides[s.parsed.id], () => html`<div class="side-rate">${thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', compact: true, labels: true })}</div>`)}</div>`;
           }) : html`<p class="muted">No sides with this one.</p>`}
         </section>
 
@@ -277,8 +277,10 @@ export function mount(app, main) {
   const top = main.querySelector('.recipe-actions');
   if (!bar) return;
   if (!top || typeof IntersectionObserver === 'undefined') { bar.classList.remove('is-hidden'); return; }
+  // Only once the page's own button has scrolled up out of sight (gauntlet r2: both showed at once).
   new IntersectionObserver((entries) => {
-    if (bar.isConnected) bar.classList.toggle('is-hidden', entries[entries.length - 1].isIntersecting);
+    const e = entries[entries.length - 1];
+    if (bar.isConnected) bar.classList.toggle('is-hidden', e.isIntersecting || e.boundingClientRect.top > 0);
   }).observe(top);
 }
 

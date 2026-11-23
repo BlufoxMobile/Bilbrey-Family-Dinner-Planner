@@ -138,7 +138,7 @@ export function render(app) {
   return html`<div class="page page-products">
     <a class="back" href="#/list">${ic('left', { size: 20 })}Shopping list</a>
     <header class="page-head"><h1 class="page-title">My products</h1></header>
-    <p class="muted small">The exact product you buy for each thing, at each store. Scanned receipts fill this in; tap Change to pick a different one. The list, its prices and “Copy & open” use these.</p>
+    <p class="muted small">The exact product you buy at each store. Receipts fill this in.</p>
     ${segmented('productsStore', [{ id: 'sams', label: "Sam's Club" }, { id: 'jewel', label: 'Jewel-Osco' }], store, { label: 'Store', action: 'prod:store' })}
     <label class="search">${ic('search', { size: 20 })}<input type="search" id="products-search" placeholder="Search chicken, cheese, tortillas…" value="${app.ui.productsQuery || ''}" data-input="prod:search" aria-label="Search products" autocomplete="off"></label>
     <p class="muted small">${chosen ? `${chosen} chosen at ${NAMES[store]}.` : `None chosen at ${NAMES[store]} yet: these are the products the list prices.`}</p>

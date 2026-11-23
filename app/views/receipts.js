@@ -126,7 +126,7 @@ function review(app, raw, storeHint) {
       const sugg = suggestMatches(app.db, app.state, l, 4);
       const known = l.matchId && (app.db.ingredients[l.matchId] || app.state.custom?.[l.matchId]) ? l.matchId : null;
       const matchId = known || (sugg[0]?.score >= 1.4 ? sugg[0].id : null);
-      return { ...l, matchId, include: !l.skip && !(l.confidence != null && l.confidence < 0.2 && !matchId), cands: sugg, sizeHow: null };
+      return { ...l, matchId, include: !l.skip && !(l.confidence != null && l.confidence < 0.2 && !matchId), cands: sugg, sizeHow: null, sure: !!known && !l.skip };
     }),
   };
   for (const l of st.lines) setPack(app, st, l);
@@ -191,6 +191,18 @@ function reviewBody(app, st) {
 
 function lineRow(app, st, l, k) {
   const paid = linePaid(l);
+  // A line the scanner matched for sure, with its size, is one read-only row; a tap opens it to fix
+  // (gauntlet r2: every line was a four-field form). Unsure and unmatched lines stay open.
+  if (l.sure && !l.open && l.include && l.matchId && Number(l.packSize) > 0 && l.sizeHow !== 'default') {
+    const u = itemMeta(app.db, app.state, l.matchId).unit;
+    return html`<li class="rcpt-line is-sure" data-k="${k}">
+      <label class="review-inc"><input type="checkbox" checked data-change="rcpt:line" data-k="${k}" data-f="include"><span class="sr-only">Include ${l.product}</span></label>
+      <button type="button" class="rcpt-sure" data-action="rcpt:open" data-k="${k}" aria-label="${nameOf(app, l.matchId)}: ${l.product}. Tap to fix">
+        <span><b>${nameOf(app, l.matchId)}</b><small>${[l.text || l.product, `${fmtQty(Number(l.packSize))} ${u}`].filter(Boolean).join(' · ')}</small></span>
+        <span class="rcpt-sure-paid">${paid != null ? money(paid) : ''}${ic('check', { size: 16 })}</span>
+      </button>
+    </li>`;
+  }
   const unit = l.matchId ? itemMeta(app.db, app.state, l.matchId).unit : '';
   const cands = [...new Map([...(l.matchId ? [{ id: l.matchId, name: nameOf(app, l.matchId) }] : []), ...l.cands].map((c) => [c.id, c])).values()];
   return html`<li class="rcpt-line ${l.include ? '' : 'is-skipped'}" data-k="${k}">
@@ -298,6 +310,7 @@ export const actions = {
     if (el.tagName === 'SELECT' || el.type === 'date') renderSheet();
     else updateCheck(app);
   },
+  'rcpt:open': (app, el) => { const l = review.state?.lines?.[Number(el.dataset.k)]; if (l) { l.open = true; renderSheet(); } },
   'rcpt:line': (app, el) => {
     const st = review.state;
     const l = st?.lines[Number(el.dataset.k)];

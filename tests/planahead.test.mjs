@@ -66,7 +66,7 @@ test('pantry first: the first open night eats the oldest freezer meat, then the 
     assert.ok(rice <= 1, `at most one rice night the week of ${wk}`);
   }
   assert.equal(new Set(dates.map((d) => s.plan[d].dinner)).size, dates.length, 'no dinner twice in a week');
-  assert.match(r.message, /^Planned 7 dinners through Monday, Nov 23: \d+ straight from the pantry\./);
+  assert.match(r.message, /^Planned 7 dinners through Monday, Nov 23\.$/);
   // Undo takes it all back.
   const back = applyOps(s, r.undo);
   assert.deepEqual(back.plan || {}, {});
@@ -156,7 +156,7 @@ test('packed lunches use what’s on hand first; picks and skips set by hand sta
   const total = Object.values(eaten).reduce((t, n) => t + n, 0);
   assert.equal(total, Math.min(4, free.length), 'the open days eat the bowls on hand before a sandwich needs the store');
   for (const d of free) assert.match(mainOf(s, d).id, /^bonduelle-/);
-  assert.match(r.message, /packed lunch(es)? uses? what’s on hand/);
+  assert.ok(r.lunchPicks.length > 0, 'packed lunches use what’s on hand (the toast stays one line, docs/spec/29)');
   // Drinks: only one in the rotation, nothing to swap to.
   assert.ok(!picks.some((o) => o.path[5] === 'drink'));
 });

@@ -91,6 +91,15 @@ export function cookProgress(dinnerId) {
   return { step: s.i + 1, of: s.n };
 }
 
+// ---------------------------------------------------------------- text size: three steps
+const SIZES = [1, 1.3, 1.6];
+const SIZE_NAMES = ['Text', 'Large', 'Largest'];
+function sizeStep() {
+  let best = 0;
+  SIZES.forEach((v, k) => { if (Math.abs(v - prefs.size) < Math.abs(SIZES[best] - prefs.size)) best = k; });
+  return best;
+}
+
 // ---------------------------------------------------------------- timers
 
 let timers = (Array.isArray(read(LS.timers, [])) ? read(LS.timers, []) : [])
@@ -326,7 +335,6 @@ function readyScreen(app, t, p, s) {
     ${when(!p.n, () => html`<p class="hint">${ic('info', { size: 18 })}<span>This recipe has no steps written down. Cook it your way, then tap Finish to mark it cooked.</span></p>`)}
     ${when(p.tl.tracks.length > 1, () => html`<section class="cook-plan" aria-labelledby="cook-plan-h">
       <h2 id="cook-plan-h" class="cook-sec-h">Timing the whole plate</h2>
-      ${timelineChart(p.tl)}
       <ul class="cook-cues">${p.tl.cues.map((c) => html`<li><b>${c.title}.</b> ${c.text}</li>`)}</ul>
     </section>`)}
     <section class="cook-need" aria-labelledby="cook-need-h">
@@ -451,13 +459,9 @@ export function render(app) {
       <a class="icon-btn" href="${exit}" aria-label="Close cook mode. Your place is kept.">${ic('close')}</a>
       <p class="cook-title">${head}<small>${where}: ${t.d.title}</small></p>
       <span class="cook-tools">
-        ${when(p.n, () => html`<button type="button" class="icon-btn" data-action="cook:steps" aria-label="All steps">${cic('steps')}</button>`)}
-        <button type="button" class="icon-btn ${prefs.sound ? 'is-on' : ''}" data-action="cook:sound" aria-pressed="${tf(prefs.sound)}" aria-label="Timer sound">${cic('bell')}</button>
-        <span class="cook-size" role="group" aria-label="Text size">
-          <button type="button" class="icon-btn" data-action="cook:size" data-delta="-0.15" aria-label="Smaller text" ${prefs.size <= 0.85 ? 'disabled' : ''}>${ic('minus')}</button>
-          <span aria-hidden="true">${ic('textSize')}</span>
-          <button type="button" class="icon-btn" data-action="cook:size" data-delta="0.15" aria-label="Larger text" ${prefs.size >= 1.6 ? 'disabled' : ''}>${ic('plus')}</button>
-        </span>
+        ${when(p.n, () => html`<button type="button" class="cook-tool" data-action="cook:steps" aria-label="All steps">${cic('steps')}<span aria-hidden="true">Steps</span></button>`)}
+        <button type="button" class="cook-tool ${prefs.sound ? 'is-on' : ''}" data-action="cook:sound" aria-pressed="${tf(prefs.sound)}" aria-label="Timer sound">${cic('bell')}<span aria-hidden="true">${prefs.sound ? 'Sound' : 'Muted'}</span></button>
+        <button type="button" class="cook-tool" data-action="cook:size" data-cycle="1" aria-label="Text size: ${SIZE_NAMES[sizeStep()]}. Tap for ${SIZE_NAMES[(sizeStep() + 1) % SIZES.length]}">${ic('textSize')}<span aria-hidden="true">${SIZE_NAMES[sizeStep()]}</span></button>
       </span>
     </header>
     <div class="cook-progress" role="progressbar" aria-label="${head}" aria-valuemin="0" aria-valuemax="${p.n}" aria-valuenow="${Math.max(0, Math.min(p.n, s.i + 1))}"><span style="width:${pct}%"></span></div>
@@ -606,7 +610,9 @@ export const actions = {
     });
   },
   'cook:size': (app, el) => {
-    prefs.size = Math.max(0.85, Math.min(1.6, Math.round((prefs.size + Number(el.dataset.delta)) * 100) / 100));
+    // One button that steps through three sizes (gauntlet r2: −, Aa and + were three unlabeled icons).
+    if (el.dataset.cycle) prefs.size = SIZES[(sizeStep() + 1) % SIZES.length];
+    else prefs.size = Math.max(0.85, Math.min(1.6, Math.round((prefs.size + Number(el.dataset.delta)) * 100) / 100));
     write(LS.prefs, prefs);
     app.render();
   },

@@ -6170,9 +6170,8 @@
         "salt": 0.5
       },
       "steps": [
-        "Use one 26 oz bag of frozen fries (fast-food style, shoestring or curly all work), picking a bag with air-fryer directions on the package.",
-        {
-          "text": "Heat the air fryer to the package temperature (usually 400°F). Cook the fries from frozen in single layers, shaking the basket halfway, until crisp and golden, about 12–18 minutes per batch.",
+                {
+          "text": "Heat the air fryer to the package temperature (usually 400°F). Cook one 26 oz bag of frozen fries (any cut) from frozen in single layers, shaking the basket halfway, until crisp and golden, about 12–18 minutes per batch.",
           "minutes": 12,
           "setting": "Air fryer, 400°F"
         },

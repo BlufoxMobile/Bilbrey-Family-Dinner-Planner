@@ -5,7 +5,7 @@ import { Store, settingsOf } from './state.js';
 import { todayISO, SHARED_PROFILE } from './util.js';
 import { followRenames } from './planner.js';
 import {
-  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, sheetOpen,
+  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, sheetOpen, hideStaleToast,
 } from './ui.js';
 import * as tonight from './views/tonight.js';
 import * as planView from './views/plan.js';
@@ -200,6 +200,7 @@ export function render() {
   app.route = parseRoute();
   const v = VIEWS[app.route.view];
   const changedView = lastView !== `${app.route.view}/${app.route.params.join('/')}`;
+  if (changedView && lastView) hideStaleToast();
   const y = window.scrollY;
   // What has focus, and where every row and number sits, so both survive the redraw.
   const focus = tv.captureFocus(root);

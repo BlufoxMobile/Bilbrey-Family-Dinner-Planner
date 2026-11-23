@@ -14,7 +14,9 @@ import {
 import { dayNutrition, lighterSide, fmtKcal, lunchNutrition } from '../nutrition.js';
 import { lunchPeople, lunchFor } from '../lunch.js';
 import { useSoon } from '../freshness.js';
-import { whyThisDinner, weekSummary, leftoversOnHand, servingsText, useByText, plainName } from '../cooking.js';
+import { whyThisDinner, weekSummary, leftoversOnHand, servingsText, useByText, plainName, plateRecipes, pantryCheck } from '../cooking.js';
+import { easyTonight } from '../easy.js';
+import { unitText } from '../shopping.js';
 import { openPick, openAway, openNight } from './sheets.js';
 import { defaultAnchor, catchUpCard } from './plan.js';
 import { cookProgress } from './cook.js';
@@ -87,11 +89,12 @@ function hero(app, today) {
     <div class="index-card">
       <p class="hero-kicker"><span class="dot" aria-hidden="true"></span>Tonight${cooked ? html`<span class="kicker-done">${ic('check', { size: 16 })}Cooked</span>` : ''}</p>
       <h1 class="hero-title">${d.title}</h1>
-      ${when(sides.length, () => html`<p class="hero-sides">with ${sides.map((s, i) => html`${i ? (i === sides.length - 1 ? ' and ' : ', ') : ''}<button type="button" class="link-side" data-action="side:sub" data-date="${today}" data-dinner="${d.id}" data-slot="${s.slot}" aria-label="${s.info?.title}. Change this side">${s.info?.title}</button>`)}</p>`)}
+      ${when(sides.length, () => html`<p class="hero-sides">with ${listJoin(sides.map((s) => s.info?.title || ''))}</p>`)}
       ${sides.filter((x) => x.replaced).map((x) => html`<p class="hero-replaced">${x.info?.title}: ${replacedText(app, x).replace(/^In/, 'in')}.</p>`)}
       <div class="hero-meta">${equipment(d)}${favoriteBadge(app, d)}</div>
       ${when(showNutrition(app), () => html`<p class="hero-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate' })}</p>`)}
       ${when(!cooked, () => thawLine(app, today))}
+      ${when(!cooked, () => haveLine(app, d, e))}
       <div class="hero-actions">
         ${cooked
           ? html`<p class="status-note status-cooked hero-done">${ic('checkCircle', { size: 18 })}<span>Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.${left ? (left.saved ? ` ${servingsText(left.saved)} of leftovers saved.` : ' No leftovers.') : ''}</span></p>
@@ -99,16 +102,33 @@ function hero(app, today) {
           : html`<a class="btn btn-primary btn-lg" id="tonight-cook" href="#/cook/${today}">${ic('flame', { size: 20 })}${going ? `Keep cooking: step ${going.step} of ${going.of}` : 'Start cooking'}</a>
             <a class="btn btn-secondary" href="#/recipe/${d.id}">${ic('recipes', { size: 20 })}See the whole recipe</a>`}
       </div>
-      <div class="quick" role="group" aria-label="Tonight’s options">
-        <button type="button" class="quick-btn" data-action="night:pick" data-date="${today}" ${cooked ? 'disabled' : ''}>${ic('swap')}<span>Change dinner</span></button>
-        <button type="button" class="quick-btn" data-action="night:away" data-date="${today}" ${cooked ? 'disabled' : ''}>${ic('away')}<span>Not eating at home</span></button>
-        ${cooked
-          ? html`<button type="button" class="quick-btn" data-action="night:uncook" data-date="${today}">${ic('undo')}<span>Not cooked</span></button>`
-          : html`<button type="button" class="quick-btn" data-action="tonight:cooked" data-date="${today}">${ic('checkCircle')}<span>Mark cooked</span></button>`}
+      ${cooked
+        ? html`<p class="hero-undo"><button type="button" class="btn btn-quiet btn-small" data-action="night:uncook" data-date="${today}">${ic('undo', { size: 18 })}Not cooked after all</button></p>`
+        : html`<div class="quick" role="group" aria-label="Tonight’s options">
+        <button type="button" class="quick-btn" data-action="night:pick" data-date="${today}">${ic('swap')}<span>Change dinner</span></button>
+        <button type="button" class="quick-btn" data-action="night:away" data-date="${today}">${ic('away')}<span>Not eating at home</span></button>
+        <button type="button" class="quick-btn" data-action="tonight:cooked" data-date="${today}">${ic('checkCircle')}<span>Mark cooked</span></button>
       </div>
-      ${when(!cooked, () => html`<p class="easy-ask"><button type="button" class="link-btn" id="easy-open" data-action="easy:open" data-date="${today}">Low on energy tonight? See the easiest dinners in the house</button></p>`)}
+      ${when(easyReady(app, today), () => html`<p class="easy-ask"><button type="button" class="link-btn" id="easy-open" data-action="easy:open" data-date="${today}">Low on energy? Easier dinners in the house</button></p>`)}`}
     </div>
   </article>`;
+}
+
+/**
+ * Can tonight happen from what's in the house? (gauntlet r2: the counter is the wrong place to find
+ * out.) "Everything's in the house", or what's missing, shortfalls included.
+ */
+function haveLine(app, d, e) {
+  const miss = plateRecipes(app.db, app.state, d.id, e).flatMap((r) => pantryCheck(app.db, app.state, r.recipe.items).missing).filter((m) => !m.staple);
+  const seen = new Set();
+  const words = miss.filter((m) => !seen.has(m.id) && seen.add(m.id)).map((m) => (m.status === 'short' && m.short ? `${unitText(m.short, m.unit)} more ${plainName(m.name).toLowerCase()}` : plainName(m.name).toLowerCase()));
+  if (!words.length) return html`<p class="hero-have is-ok">${ic('checkCircle', { size: 18 })}<span>Everything’s in the house.</span></p>`;
+  return html`<p class="hero-have is-short">${ic('cart', { size: 18 })}<span><b>Not in the house:</b> ${listJoin(words.slice(0, 4))}${words.length > 4 ? ` and ${words.length - 4} more` : ''}.</span></p>`;
+}
+
+/** Easy tonight is offered only when it has something real to show: a dinner that needs no store. */
+function easyReady(app, today) {
+  try { return easyTonight(app.db, app.state, today, { hour: hourIn(new Date()), limit: 12 }).picks.some((p) => p.ready); } catch { return false; }
 }
 
 /** "Still frozen? Thaw the 2 lb lean ground beef in cold water now, about 1 hr." Right above Start cooking. */
@@ -160,7 +180,7 @@ function howWas(app, today) {
     <div class="howwas-head">
       ${dinnerPhoto(app, d, { size: 'thumb' })}
       <div><h2 id="hw-h" class="section-title">How was dinner?</h2>
-        <p class="muted small">${d.title}, ${date === today ? 'tonight' : `last night (${weekdayName(date)})`}. Thumbs up for loved; thumbs down for not for us, and it’s off the menu.</p></div>
+        <p class="muted small">${d.title}, ${date === today ? 'tonight' : `last night (${weekdayName(date)})`}.</p></div>
     </div>
     ${rateList(app, d, sides)}
     <div class="howwas-actions"><button type="button" class="btn btn-secondary btn-small" data-action="lighter:dismiss" data-key="howwas:${date}">Done</button></div>
@@ -176,12 +196,11 @@ export function render(app) {
       <div class="tonight-main">
         ${hero(app, today)}
         ${catchUpCard(app, { compact: true })}
-        ${leftoversAskCard(app)}
-        ${when(howWasDate(app), () => howWas(app, today))}
+        ${(() => { const ask = leftoversAskCard(app); return ask || (howWasDate(app) ? howWas(app, today) : ''); })()}
         ${when(left, () => html`<section class="tcard left-fridge" aria-labelledby="left-h"><h2 id="left-h" class="section-title">${ic('bowl', { size: 22 })}<span>Leftovers in the fridge</span></h2>${left}</section>`)}
       </div>
       <div class="tonight-side">
-        ${prepCard(app, { days: 2, title: 'Thaw & prep', empty: false, skip: ['use'], skipTonightThaw: true })}
+        ${prepCard(app, { days: 1, title: 'Thaw & prep', empty: false, skip: ['use'], skipTonightThaw: true })}
         ${checkinCard(app)}
         ${todayLine(app, today)}
       </div>

@@ -59,7 +59,6 @@ function weekBars(history, share) {
       <line class="ck-target" x1="${left}" x2="${W - right}" y1="${ty.toFixed(1)}" y2="${ty.toFixed(1)}"></line>
       <text class="ck-target-label" x="${left + 2}" y="${(ty - 5).toFixed(1)}">${money(share, { whole: true })} a week</text>
     </svg>
-    <figcaption class="muted small">Each bar is a week, labeled by its first day. The dashed line is a week’s share of the monthly target.</figcaption>
   </figure>`;
 }
 
@@ -102,22 +101,23 @@ function moneyCard(app, m, week) {
         <tbody>${m.record.map((h) => html`<tr><th scope="row">${shortDate(h.start)} to ${shortDate(h.end)}${h.checked ? html` <span class="ck-checked" title="Checked in">${ic('check', { size: 14 })}<span class="sr-only">checked in</span></span>` : ''}</th><td>${h.trips}</td><td>${money(h.total)}</td><td>${h.total ? `${h.diff > 0 ? '+' : '−'}${money(Math.abs(h.diff), { whole: true })}` : '—'}</td></tr>`)}</tbody></table>
       ${when(m.average != null, () => html`<p class="muted small">Since the first receipt in this record, the average is ${money(m.average)} a week.</p>`)}
     </details>
-    <h3 class="ck-sub">The month so far</h3>
+    <p class="budget-verdict ${tone}" id="ck-verdict">${m.verdict}</p>
+    <details class="cover-more ck-month"><summary>The month so far</summary>
     <ul class="legend">
       <li><span class="key key-spent"></span>Spent so far<b>${money(mo.spent)}</b></li>
       <li><span class="key key-plan"></span>Still to buy for what’s planned<b>${money(mo.stillToBuy)}</b></li>
       ${when(mo.unplanned, () => html`<li><span class="key key-maybe"></span>${mo.unplanned} ${mo.unplanned === 1 ? 'night' : 'nights'} not planned yet, at the usual cost<b>+${money(mo.ifPlanned - mo.projected)}</b></li>`)}
       <li><span class="key key-spent"></span><strong>Heading for</strong><b>${money(mo.ifPlanned)} of ${money(mo.target, { whole: true })}</b></li>
     </ul>
-    <p class="budget-verdict ${tone}" id="ck-verdict">${m.verdict}</p>
     ${when(mo.perWeekLeft > 0, () => html`<p class="small">That leaves about <b>${money(mo.perWeekLeft, { whole: true })} ${mo.daysLeft > 7 ? 'a week' : ''}</b> for the ${mo.daysLeft} ${mo.daysLeft === 1 ? 'day' : 'days'} left${mo.tripsLeft ? `, in ${mo.tripsLeft} more store ${mo.tripsLeft === 1 ? 'trip' : 'trips'}` : ''}.</p>`)}
-    <ul class="ck-tips">${m.tips.map((t) => html`<li class="hint ${m.status === 'on' ? '' : 'hint-warn'}">${ic('leaf', { size: 18 })}<span>${t.text}${t.href ? html` <a class="text-link" href="${t.href}">${t.label}</a>` : ''}</span></li>`)}</ul>
     <p class="muted small">At this rate the year comes to about ${money(m.year.year, { whole: true })}; the target is ${money(m.year.yearTarget, { whole: true })}. ${m.year.overYear > 0 ? `That’s ${money(m.year.overYear / 12, { whole: true })} a month to find.` : `That’s ${money(-m.year.overYear, { whole: true })} under.`}</p>
+    </details>
+    <ul class="ck-tips">${m.tips.slice(0, 1).map((t) => html`<li class="hint ${m.status === 'on' ? '' : 'hint-warn'}">${ic('leaf', { size: 18 })}<span>${t.text}${t.href ? html` <a class="text-link" href="${t.href}">${t.label}</a>` : ''}</span></li>`)}</ul>
     <div class="ck-actions">
       ${m.checked
     ? html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}<span>Checked${m.checked.at ? ` on ${shortDate(String(m.checked.at).slice(0, 10))}` : ''}.</span></p>
           <button type="button" class="btn btn-quiet btn-small" data-action="checkin:undone" data-start="${week.start}" data-end="${week.end}">Reopen</button>`
-    : html`<button type="button" class="btn btn-primary" id="ck-done" data-action="checkin:done" data-start="${week.start}" data-end="${week.end}">${ic('checkCircle', { size: 20 })}Looks right: mark this week checked</button>
+    : html`<button type="button" class="btn btn-primary" id="ck-done" data-action="checkin:done" data-start="${week.start}" data-end="${week.end}">${ic('checkCircle', { size: 20 })}Looks right</button>
           <a class="btn btn-secondary" href="#/budget">${ic('receipt', { size: 20 })}A receipt is missing</a>`}
     </div>
   </section>`;
@@ -238,8 +238,7 @@ function weighSection(app, today) {
     ${me ? myWeighCard(app, me, today)
     : html`<section class="ck-card ck-weigh" id="ck-weigh" aria-labelledby="ckw-h">
         <h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}A weekly weigh-in, if you want one</h2>
-        <p class="small">Optional, and done together. One number a week and a plain trend: no goal weight, no calorie count, no score.</p>
-        <p class="muted small">A scale doesn’t help everyone. If weighing in adds stress, leave this off: the dinners work the same without it. And weight that’s dropping without trying is one for your doctor, not for an app.</p>
+        <p class="small">Optional: one number a week, no goals or scores. Skip it if it adds stress; weight dropping without trying is one for a doctor.</p>
         ${app.ui.weighSetup ? setupForm(app, shared) : html`<button type="button" class="btn btn-secondary" data-action="weigh:open-setup">Set up my weigh-in</button>`}
       </section>`}
     ${shared.map((s) => sharedCard(app, s, today, !me))}`;
@@ -258,12 +257,11 @@ export function render(app) {
     <div class="ck-grid">
       <div class="ck-col">${moneyCard(app, m, week)}${dinnersCard(app, week)}</div>
       <div class="ck-col">${weighSection(app, today)}
-        <section class="ck-card ck-day" aria-labelledby="ckday-h">
-          <h2 id="ckday-h" class="section-title">Check-in day</h2>
+        <details class="ck-card ck-day ck-settings" ${app.ui.ckSettingsOpen ? 'open' : ''}><summary><span id="ckday-h">Check-in day and the TV</span></summary>
           <div class="chip-grid" role="radiogroup" aria-label="Check-in day">${DAYS.map((d, i) => html`<button type="button" role="radio" aria-checked="${i === day ? 'true' : 'false'}" class="chip ${i === day ? 'is-on' : ''}" data-action="checkin:day" data-value="${i}" aria-label="${DAY_NAMES[i]}">${d}</button>`)}</div>
           <p class="muted small">The week ends on ${DAY_NAMES[day]}, and Tonight offers the check-in that day.</p>
           <div class="set-row ck-tv-row"><span class="set-label">Show weigh-ins on the TV<small>Off hides them on the TV only; phones still show them.</small></span>${switchToggle({ on: weighOnTv(app), action: 'checkin:tv', label: 'Show weigh-ins on the TV' })}</div>
-        </section>
+        </details>
       </div>
     </div>
   </div>`;
@@ -284,19 +282,21 @@ export function checkinCard(app) {
   const key = `checkin:${(due || cur).start}`;
   if (isDismissed(app, key)) return '';
   const s = due ? weekSpend(app.state, due) : null;
-  return html`<section class="tcard checkin-card" id="checkin-card" aria-labelledby="ckc-h">
-    <div class="section-head"><h2 id="ckc-h" class="section-title">${ic('chart', { size: 22 })}Weekly check-in</h2></div>
-    <p class="small">${s ? html`${weekLabel(due)}: <b>${money(s.total)}</b> on groceries${s.trips ? ` in ${s.trips} ${s.trips === 1 ? 'trip' : 'trips'}` : ''}. Two minutes to see where the month stands.` : ''}${weighDue ? ' Your weigh-in is ready too.' : ''}</p>
-    <div class="ck-card-actions">
-      <a class="btn btn-secondary btn-small" href="#/checkin">Open the check-in</a>
-      <button type="button" class="btn btn-quiet btn-small" data-action="lighter:dismiss" data-key="${key}">Not now</button>
-    </div>
+  // One quiet line, not a card (gauntlet r2): the week's total and a way in.
+  return html`<section class="checkin-card checkin-line" id="checkin-card" aria-label="Weekly check-in">
+    <a class="checkin-link" href="#/checkin">${ic('chart', { size: 20 })}<span><b>Weekly check-in</b>${s ? html` · ${weekLabel(due)}: ${money(s.total)} on groceries` : ''}${weighDue ? '. Your weigh-in is ready too.' : ''}</span>${ic('right', { size: 18 })}</a>
+    <button type="button" class="icon-btn" data-action="lighter:dismiss" data-key="${key}" aria-label="Not now">${ic('close', { size: 18 })}</button>
   </section>`;
 }
 
 // ---------------------------------------------------------------- actions
 
 const saveMine = (app, weigh) => app.store.setDevice({ weigh });
+
+/** The settings fold stays as it was left while the page redraws. */
+export function mount(app, main) {
+  main.querySelector('.ck-settings')?.addEventListener('toggle', (ev) => { app.ui.ckSettingsOpen = ev.target.open; });
+}
 
 export const actions = {
   'checkin:done': (app, el) => {

@@ -288,9 +288,7 @@ export function leftoverRows(app) {
     return html`<li class="lo-row ${l.daysLeft < 0 ? 'is-late' : l.daysLeft <= 0 ? 'is-due' : ''}">
       <span class="lo-main"><b>${l.title}</b><small>Leftovers: ${servingsText(l.servings)}, ${useByText(l, today)}${l.night ? `. Set for ${l.night === today ? 'tonight' : weekdayName(l.night)}’s leftover night` : ''}.</small></span>
       <span class="lo-acts">
-        ${when(l.daysLeft >= 0, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="leftovers:ate" data-date="${l.date}" aria-label="Someone ate one serving of the ${l.title} leftovers">Ate one</button>`)}
-        ${when(l.daysLeft >= 0 && l.servings >= 3 && nights.length, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="leftovers:night" data-date="${l.date}" aria-haspopup="dialog">Leftover night…</button>`)}
-        ${when(l.daysLeft >= 0, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="leftovers:more" data-date="${l.date}" aria-haspopup="dialog" aria-label="Take the ${l.title} leftovers for a lunch, or freeze them">Lunch or freezer…</button>`)}
+        ${when(l.daysLeft >= 0, () => html`<button type="button" class="btn btn-small btn-secondary" data-action="leftovers:more" data-date="${l.date}" aria-haspopup="dialog" aria-label="Use the ${l.title} leftovers: a serving, a leftover night, a lunch or the freezer">Use them…</button>`)}
         ${l.daysLeft < 0
           ? html`<button type="button" class="btn btn-small btn-quiet" data-action="leftovers:gone" data-date="${l.date}" data-tossed="1" aria-label="The ${l.title} leftovers were thrown out">Tossed</button>`
           : html`<button type="button" class="btn btn-small btn-quiet" data-action="leftovers:gone" data-date="${l.date}" aria-label="The ${l.title} leftovers are all gone">All gone</button>`}

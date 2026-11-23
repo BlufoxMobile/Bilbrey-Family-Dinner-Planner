@@ -122,31 +122,30 @@ export function render(app) {
     <header class="page-head"><h1 class="page-title">Budget</h1><a class="text-link" href="#/checkin">Weekly check-in</a></header>
     <section class="budget-card" aria-labelledby="bud-h">
       <h2 id="bud-h" class="budget-month">${month} groceries</h2>
-      <p class="budget-big"><span class="budget-num">${money(heading)}</span><span class="budget-of">where ${month} is heading · target ${money(b.target, { whole: true })}</span></p>
+      <!-- The answer first (gauntlet r2), then the number it comes from. -->
+      <p class="budget-answer ${over ? 'is-over' : 'is-under'}">${over ? `About ${money(heading - b.target, { whole: true })} over` : `About ${money(b.target - heading, { whole: true })} under`}<small>the ${money(b.target, { whole: true })} target</small></p>
+      <p class="budget-big"><span class="budget-of">Heading for</span> <span class="budget-num">${money(heading)}</span></p>
       <div class="meter" role="img" aria-label="${money(b.spent)} spent, ${money(b.stillToBuy)} still to buy, target ${money(b.target)}">
         <span class="meter-spent" style="width:${pct(b.spent)}"></span>
         <span class="meter-plan" style="left:${pct(b.spent)};width:${pct(b.stillToBuy)}"></span>
         ${when(b.unplanned && b.ifPlanned > b.projected, () => html`<span class="meter-maybe" style="left:${pct(b.projected)};width:${pct(b.ifPlanned - b.projected)}"></span>`)}
         <span class="meter-target" style="left:${pct(b.target)}"><span>Target</span></span>
       </div>
+      <details class="budget-break"><summary>What that’s made of</summary>
       <ul class="legend">
         <li><span class="key key-spent"></span>Spent so far<b>${money(b.spent)}</b></li>
         <li><span class="key key-plan"></span>Dinners: still to buy for ${b.plannedRemaining} planned ${b.plannedRemaining === 1 ? 'dinner' : 'dinners'}<b>${money(b.dinnersToBuy)}</b></li>
         ${when(b.lunchesRemaining || b.lunchesToBuy, () => html`<li><span class="key key-plan"></span>Lunches: still to buy for ${b.lunchesRemaining} packed ${b.lunchesRemaining === 1 ? 'lunch' : 'lunches'}<b>${money(b.lunchesToBuy)}</b></li>`)}
         ${when(b.extras, () => html`<li><span class="key key-plan"></span>Extras: everyday items for the rest of the month<b>${money(b.extras)}</b></li>`)}
         ${when(b.unplanned, () => html`<li><span class="key key-maybe"></span>${b.unplanned} ${b.unplanned === 1 ? 'night' : 'nights'} not planned yet, at ${money(b.average)} a dinner (your rotation’s average)<b>+${money(round2(b.ifPlanned - b.projected))}</b></li>`)}
-      </ul>
-      <p class="budget-verdict ${over ? 'is-over' : 'is-under'}">${over
-        ? `About ${money(heading - b.target, { whole: true })} over.`
-        : `About ${money(b.target - heading, { whole: true })} under.`}${over ? html` <span class="budget-tip">Planning a few dinners from the pantry helps most.</span>` : ''}</p>
+      </ul></details>
     </section>
 
     ${tripAdviceCard(app)}
 
     <details class="budget-more" ${app.ui.budgetMoreOpen ? 'open' : ''}>
-      <summary><span>How it’s worked out: trips, waste, the year</span></summary>
+      <summary><span>Trips, waste and the year</span></summary>
       <p class="muted small">${money(b.spent)} on receipts so far + ${money(b.stillToBuy)} still on the list for the rest of ${month}${b.unplanned ? ` + ${b.unplanned} open ${b.unplanned === 1 ? 'night' : 'nights'} at the usual ${money(b.average)}` : ''}. Prices ${app.db.pricesUpdated ? `estimated as of ${mediumDate(app.db.pricesUpdated)}` : 'are estimates'}.</p>
-      ${when(b.savings > 0, () => html`<p class="budget-save">${ic('leaf', { size: 20 })}<span>About ${money(b.savings)} less than the old ${money(b.baseline, { whole: true })} month.</span></p>`)}
     ${tripsCard(app, b)}
     ${yearCard(app, b)}
     ${wasteCard(app, b)}
@@ -164,13 +163,12 @@ export function render(app) {
     </section>
 
     </details>
-    <section class="target" aria-labelledby="t-h">
-      <h2 id="t-h" class="section-title">Monthly target</h2>
+    <details class="target log-by-hand"><summary>Change the monthly target (${money(b.target, { whole: true })})</summary>
       <form class="form form-row" data-submit="bud:target">
         <label class="field field-money"><span class="sr-only">Monthly target in dollars</span><span class="prefix" aria-hidden="true">$</span><input class="input" name="target" type="number" inputmode="decimal" min="50" step="10" value="${b.target}"></label>
         <button type="submit" class="btn btn-secondary">Save target</button>
       </form>
-    </section>
+    </details>
 
     <section class="receipts" aria-labelledby="r-h">
       <h2 id="r-h" class="section-title">Receipts this month</h2>

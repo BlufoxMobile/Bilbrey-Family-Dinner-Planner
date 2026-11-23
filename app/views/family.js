@@ -193,7 +193,6 @@ function shopping(app) {
   return html`<section class="set-sec" aria-labelledby="shop-h">
     <h2 id="shop-h" class="section-title">Shopping and budget</h2>
     <div class="set-row"><span class="set-label">Monthly grocery target</span><a class="btn btn-small btn-quiet" href="#/budget" aria-label="Monthly grocery target, $${s.monthlyTarget}. Change it on the Budget page">$${s.monthlyTarget}</a></div>
-    <div class="set-row set-col"><span class="set-label">Plan from</span>${segmented('planStore', [{ id: 'both', label: 'Both stores' }, { id: 'sams', label: "Sam's only" }, { id: 'jewel', label: 'Jewel only' }], s.planStore, { label: 'Plan from', action: 'plan:setting', small: true })}</div>
     <div class="set-row"><span class="set-label">Organic fruits and vegetables<small>When the store has one.</small></span>${switchToggle({ on: s.organic, action: 'fam:organic', label: 'Buy organic fruits and vegetables' })}</div>
     <div class="set-row set-col"><span class="set-label">Meat per dinner<small>Lighter uses 15% less meat.</small></span>${segmented('meatScale', MEAT_OPTS, String(s.meatScale), { label: 'Meat per dinner', action: 'fam:meat', small: true })}</div>
   </section>`;

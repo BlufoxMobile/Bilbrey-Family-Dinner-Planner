@@ -253,11 +253,8 @@ export function planAheadOps(db, state, { start, end, who, today, at, pantryFirs
     message = open ? 'Couldn’t find dinners that fit those rules. Try planning from both stores.'
       : `Every night through ${dayText(last)} is already planned${replan && pantryFirst && own.length ? ', and the plan already makes the most of the pantry' : ''}.`;
   } else {
-    message = n ? `Planned ${n} ${n === 1 ? 'dinner' : 'dinners'} through ${dayText(last)}${pantryFirst ? (p ? `: ${p} straight from the pantry` : ', none fully from the pantry yet') : ''}.` : `Dinners through ${dayText(last)} were already planned.`;
-    const r = replanned.length;
-    if (r) message += r === n ? ` ${n === 1 ? 'It replaces' : n === 2 ? 'Both replace' : `All ${n} replace`} the planner’s earlier ${n === 1 ? 'pick' : 'picks'}.` : ` ${r} of them ${r === 1 ? 'replaces' : 'replace'} the planner’s earlier ${r === 1 ? 'pick' : 'picks'}.`;
-    if (did && before.groceries - after.groceries >= 1) message += ` Groceries drop from about ${money(before.groceries)} to ${money(after.groceries)}.`;
-    if (l) message += ` ${l} packed ${l === 1 ? 'lunch uses' : 'lunches use'} what’s on hand.`;
+    // One line (gauntlet r2: the toast was five lines of numbers); the result card has the rest.
+    message = n ? `Planned ${n} ${n === 1 ? 'dinner' : 'dinners'} through ${dayText(last)}.` : `Dinners through ${dayText(last)} were already planned.`;
     if (open) message += ` ${open} ${open === 1 ? 'night is' : 'nights are'} still open.`;
   }
   // The result card reads this, so it's there after a reload and on the family's other screens.

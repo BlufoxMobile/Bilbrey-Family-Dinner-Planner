@@ -59,15 +59,13 @@ const TRIP_STORES = [{ id: 'jewel', label: 'Jewel-Osco' }, { id: 'sams', label: 
 const SKIP_WHY = { stretch: 'Making do with what we have', check: 'Check at home first', have: 'We have it' };
 
 function tripBar(app, trip, range, list) {
-  const nights = list.nights.length;
-  const lunches = list.lunches.length;
+  // One slim line (gauntlet r2): which store, through when, Change, End.
   return html`<div class="trip-bar">
-    <span class="trip-ic">${ic('cart', { size: 22 })}</span>
-    <p class="trip-what"><b>This trip: ${trip.store === 'both' ? 'Sam’s Club and Jewel-Osco' : NAMES[trip.store]}</b>
-      <small>For ${rangeLabel(range.start, range.end)}${nights || lunches ? `: ${listJoin([nights ? `${nights} ${nights === 1 ? 'dinner' : 'dinners'}` : '', lunches ? `${lunches} packed ${lunches === 1 ? 'lunch' : 'lunches'}` : ''].filter(Boolean))}` : ''}</small></p>
+    <span class="trip-ic">${ic('cart', { size: 20 })}</span>
+    <p class="trip-what"><b>This trip: ${trip.store === 'both' ? 'Sam’s Club and Jewel-Osco' : NAMES[trip.store]}</b> <small>through ${dayAndDate(range.end, app.today())}</small></p>
     <span class="trip-acts">
       <button type="button" class="btn btn-small btn-quiet" data-action="trip:new">Change</button>
-      <button type="button" class="btn btn-small btn-quiet" data-action="trip:end">Back to the ${app.settings.period === 'month' ? 'month' : 'week'}</button>
+      <button type="button" class="btn btn-small btn-quiet" data-action="trip:end">End</button>
     </span>
   </div>`;
 }
@@ -306,6 +304,7 @@ let listHasPhotos = false;
 function itemThumb(app, i, mode = null) {
   if (!listHasPhotos && !mode) return '';
   const ph = i.freeText ? null : itemPhoto(app.state, i.id);
+  // The picture is the biggest thing on the row, so it ticks too (gauntlet r2).
   return html`<span class="item-thumb ${ph ? 'has-photo' : ''}" aria-hidden="true">${ph ? photoImg(ph) : ''}</span>`;
 }
 
@@ -320,23 +319,24 @@ if (typeof document !== 'undefined') document.addEventListener('toggle', (ev) =>
  */
 function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
   const chosen = i.product?.chosen;
-  const label = !i.freeText && i.product?.label ? i.product.label : i.name;
-  const many = i.freeText ? (i.qty > 1 ? `× ${fmtQty(i.qty)}` : '') : i.pack ? (i.packs > 1 ? `× ${i.packs}` : '') : unitText(i.shortfall || i.qty || 0, i.unit);
+  // What it is first, in the family's words; the store's product name small under it (gauntlet r2:
+  // "Member's Mark Wildflower Pure…" hid that it's honey).
+  const label = i.name;
+  const product = !i.freeText && i.product?.label && i.product.label.toLowerCase() !== i.name.toLowerCase() ? i.product.label : '';
+  const many = i.freeText ? (i.qty > 1 ? `${fmtQty(i.qty)} of them` : '') : i.pack ? (i.packs > 1 ? `${i.packs} packs` : '') : unitText(i.shortfall || i.qty || 0, i.unit);
   const inCart = mode === 'online' ? 'added to the cart' : 'in the cart';
   const tags = [
-    guess ? html`<span class="tag tag-guess">aisle?</span>` : '',
-    i.reasons?.includes('lunches') ? html`<span class="tag tag-lunch">Lunch</span>` : '',
     i.pack?.sale ? html`<span class="tag tag-sale">Sale</span>` : '',
     i.coupon ? html`<span class="tag tag-coupon">Clip coupon</span>` : '',
   ].filter(Boolean);
-  return html`<li class="item ${i.checked ? 'is-checked' : ''} has-thumb ${mode ? `is-${mode}` : ''}" data-name="${i.name}">
+  return html`<li class="item ${i.checked ? 'is-checked' : ''} has-thumb ${mode ? `is-${mode}` : ''}" data-name="${i.name}" ${i.reasons?.includes('lunches') ? 'data-lunch' : ''} ${guess ? 'data-guess' : ''}>
     <button type="button" class="check" role="checkbox" aria-checked="${i.checked ? 'true' : 'false'}" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-label="${label}${i.checked ? `, ${inCart}` : ''}"><span class="check-box">${ic('check', { size: 18 })}</span></button>
-    ${itemThumb(app, i, mode || 'store')}
+    <span class="item-thumb-hit" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-hidden="true">${itemThumb(app, i, mode || 'store')}</span>
     <button type="button" class="item-main" data-action="list:check" data-key="${i.key}" data-list="${listKey}" tabindex="-1" aria-hidden="true">
-      <span class="item-name">${label}</span>
-      <span class="item-qty">${i.cost == null ? '' : html`<b class="item-price">${money(i.cost)}</b>`}${many ? html`<span>${many}</span>` : ''}${tags}</span>
+      <span class="item-name">${label}</span>${product ? html`<span class="item-product">${product}</span>` : ''}
+      <span class="item-qty">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? 'total ' : ''}${money(i.cost)}</span>`}${tags}</span>
     </button>
-    ${when(mode === 'online' && !i.freeText, () => html`<a class="btn btn-small ${i.checked ? 'btn-quiet' : 'btn-secondary'} order-it" href="${orderUrl(app, i)}" target="_blank" rel="noopener" data-findit="${i.id}" data-order="${storeProductUrl(app.db, i.store, i.id) ? 'product' : 'search'}" aria-label="Open ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">${ic('cart', { size: 18 })}${i.checked ? 'Open again' : `Open on ${SHORT[i.store]}`}</a>`)}
+    ${when(mode === 'online' && !i.freeText, () => html`<a class="btn btn-small ${i.checked ? 'btn-quiet' : 'btn-secondary'} order-it" href="${orderUrl(app, i)}" target="_blank" rel="noopener" data-findit="${i.id}" data-order="${storeProductUrl(app.db, i.store, i.id) ? 'product' : 'search'}" aria-label="Open ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">${ic('cart', { size: 18 })}${i.checked ? 'Again' : 'Open'}</a>`)}
     <button type="button" class="item-more" data-action="list:item" data-key="${i.key}" aria-label="More about ${label}">${ic('right', { size: 20 })}</button>
   </li>`;
 }
@@ -390,7 +390,7 @@ function storeSection(app, list, store, listKey) {
         : html`<p class="store-total"><b>${money(share)}</b><small>for ${f}: ${visible} of ${s.items.length} ${s.items.length === 1 ? 'item' : 'items'}</small></p>`}
     </header>
     ${when(store === 'jewel' && list.coupons.some((c) => c.store === 'jewel' && !c.clipped), () => { const n = list.coupons.filter((c) => c.store === 'jewel' && !c.clipped).length; return html`<button type="button" class="btn btn-small btn-quiet clip-link" data-action="list:clip">${ic('receipt', { size: 18 })}${n} ${n === 1 ? 'coupon' : 'coupons'} to clip first</button>`; })}
-    ${when(mode === 'online', () => html`<button type="button" class="btn btn-secondary btn-block store-handoff" data-action="list:handoff" data-store="${store}">${ic('copy', { size: 20 })}${store === 'jewel' ? 'Copy for Jewel-Osco AI & open' : 'Copy the whole list'}</button>`)}
+    ${when(mode === 'online' && store === 'jewel', () => html`<button type="button" class="btn btn-secondary btn-block store-handoff" data-action="list:handoff" data-store="${store}">${ic('copy', { size: 20 })}Copy for Jewel-Osco AI & open</button>`)}
     ${aisles.map((a) => html`<div class="aisle ${a.stop ? 'is-stop' : ''}"><h3 class="aisle-h">${a.aisle}${a.also ? html` <small>${a.also}</small>` : ''}</h3><ul class="items">${a.items.map((i) => itemRow(app, i, listKey, mode, { guess: !!a.guess?.has(i.key) }))}</ul></div>`)}
   </section>`;
 }
@@ -455,26 +455,12 @@ function extrasSection(app) {
   const have = new Set(extras.map(([, x]) => x.item).filter(Boolean));
   const quick = Object.values(app.db.ingredients).filter((i) => i.extra && !have.has(i.id)).slice(0, 8);
   return html`<section class="extras" aria-labelledby="ex-h">
-    <h2 id="ex-h" class="section-title">Everyday extras</h2>
-    <p class="muted small">Milk, bread, eggs and anything else, so one list covers the trip. They count in the budget.</p>
+    <h2 id="ex-h" class="sub-title">On every list</h2>
     ${when(extras.length, () => html`<ul class="extra-list">${extras.map(([id, x]) => html`<li class="extra-row">
       <span><b>${x.name}</b><small>${x.item ? `${x.qty} ${x.qty === 1 ? 'pack' : 'packs'}` : unitText(x.qty || 1, x.unit || 'each')} every ${x.every === 'week' ? 'week' : 'trip'}, ${x.store === 'sams' ? "Sam's" : 'Jewel'}${x.price != null ? `, ${money(x.price)} each` : ''}</small></span>
       <button type="button" class="icon-btn" data-action="list:extra-remove" data-id="${id}" aria-label="Remove ${x.name}">${ic('trash', { size: 20 })}</button>
     </li>`)}</ul>`)}
     ${when(quick.length, () => html`<div class="chip-grid">${quick.map((i) => html`<button type="button" class="chip" data-action="list:extra-quick" data-item="${i.id}">${ic('plus', { size: 16 })}${i.name}</button>`)}</div>`)}
-    <form class="form form-inline-card" data-submit="list:extra-add">
-      <p class="field-label">Something else</p>
-      <input class="input" name="name" placeholder="Paper towels" required maxlength="60" aria-label="Item">
-      <div class="field-row">
-        <input class="input" name="qty" type="number" inputmode="decimal" min="1" step="1" value="1" aria-label="How many">
-        <input class="input" name="price" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Price each" aria-label="Price each, optional">
-      </div>
-      <div class="field-row">
-        <select class="input" name="store" aria-label="Store"><option value="jewel">Jewel-Osco</option><option value="sams">Sam's Club</option></select>
-        <select class="input" name="every" aria-label="How often"><option value="trip">Every trip</option><option value="week">Every week</option></select>
-      </div>
-      <button type="submit" class="btn btn-secondary btn-block">Add to extras</button>
-    </form>
   </section>`;
 }
 
@@ -497,7 +483,8 @@ function modeSwitch(app, list, trip) {
 function quickAdd(app, list, trip) {
   const store = trip && trip.store !== 'both' ? trip.store : 'jewel';
   return html`<form class="quick-add" data-submit="list:quick-add" aria-label="Add something to this list">
-    <input class="input" name="name" placeholder="Add something: paper towels…" maxlength="60" autocomplete="off" aria-label="Add something to this list" required>
+    <input class="input" name="name" placeholder="Add an item" maxlength="60" autocomplete="off" aria-label="Add an item to this list" required list="extra-ideas">
+    <datalist id="extra-ideas">${Object.values(app.db.ingredients).filter((x) => x.extra).slice(0, 12).map((x) => html`<option value="${x.name}"></option>`)}</datalist>
     ${trip && trip.store !== 'both' ? html`<input type="hidden" name="store" value="${store}">` : html`<select class="input quick-store" name="store" aria-label="Which store"><option value="jewel">Jewel</option><option value="sams">Sam's</option></select>`}
     <button type="submit" class="btn btn-secondary">${ic('plus', { size: 20 })}<span class="sr-only">Add</span></button>
   </form>`;
@@ -525,14 +512,15 @@ export function render(app) {
         <div class="empty-actions"><a class="btn btn-primary" href="#/plan">Go to the planner</a></div>
       </div>` : html`
       ${when(list.items.length, () => modeSwitch(app, list, trip))}
-      ${when(list.lunches.length, () => html`<div class="list-filter">${segmented('listFilter', FILTERS, activeFilter(app, list), { label: 'Show', action: 'list:filter', small: true })}</div>`)}
+      ${when(activeFilter(app, list) !== 'all', () => html`<p class="filter-on">${ic('info', { size: 18 })}<span>Showing ${activeFilter(app, list)} only.</span><button type="button" class="link-btn" data-action="list:filter" data-value="all">Show everything</button></p>`)}
+      ${quickAdd(app, list, trip)}
       ${storeSection(app, list, 'sams', listKey)}
       ${storeSection(app, list, 'jewel', listKey)}
-      ${quickAdd(app, list, trip)}
       ${onDaySection(app, list)}
       ${skippedSection(app, list, listKey)}
       <details class="list-more" ${app.ui.listMoreOpen ? 'open' : ''}>
-        <summary data-action="list:more"><span class="section-title">${ic('receipt', { size: 22 })}Cost, coupons & receipts</span><small>${money(list.total)}</small></summary>
+        <summary data-action="list:more"><span class="section-title">${ic('receipt', { size: 22 })}Cost, coupons & more</span><small>${money(list.total)}</small></summary>
+        ${when(list.lunches.length, () => html`<div class="list-filter"><p class="field-label">Show</p>${segmented('listFilter', FILTERS, activeFilter(app, list), { label: 'Show', action: 'list:filter', small: true })}</div>`)}
         <section class="totals" aria-label="Estimated cost">
           <p class="total-big"><span class="total-num">${money(list.total)}</span><span class="total-label">estimated for ${listJoin([
             list.nights.length ? `${list.nights.length} ${list.nights.length === 1 ? 'dinner' : 'dinners'}` : '',
@@ -555,6 +543,7 @@ export function render(app) {
           <a class="btn btn-quiet" href="#/products">${ic('cart', { size: 20 })}My products</a>
         </nav>
         ${freezerPanel(app, list)}
+        ${extrasSection(app)}
       </details>
       ${when(list.leftovers.length, () => {
         const top = list.leftovers.filter((l) => l.storage === 'freezer' || l.storage === 'fridge').slice(0, 6);
@@ -565,10 +554,9 @@ export function render(app) {
       })}
       ${when(list.covered.length, () => html`<details class="covered"><summary>Already in the pantry (${list.covered.length})</summary>
         <ul>${list.covered.map((c) => html`<li>${c.name}<small>${c.stocked ? 'stocked' : `${fmtQty(c.have)} on hand, ${fmtQty(c.need)} needed`}</small></li>`)}</ul></details>`)}
-      <div class="done-shopping ${checked ? 'is-ready' : ''}">
-        <button type="button" class="btn btn-primary btn-block" data-action="list:done" ${checked ? '' : 'disabled'}>${ic('pantry', { size: 20 })}${checked ? `Done shopping: put the ${checked} in the cart away` : 'Done shopping'}</button>
-      </div>`}
-    ${extrasSection(app)}
+      ${when(checked, () => html`<div class="done-shopping ${checked * 2 >= list.items.length ? 'is-ready' : ''}">
+        <button type="button" class="btn btn-primary btn-block" data-action="list:done">${ic('pantry', { size: 20 })}Done: move ${checked} to the pantry</button>
+      </div>`)}`}
   </div>`;
 }
 
@@ -594,7 +582,8 @@ function itemSheet(app, key) {
     id: `item:${key}`,
     live: false,
     size: 'tall',
-    get title() { return 'Item'; },
+    // The sheet is named for what it is ("Honey"), not "Item" (gauntlet r2).
+    get title() { return current(app).list.items.find((x) => x.key === key)?.name || 'On the list'; },
     render: () => {
       const { list } = current(app);
       const i = list.items.find((x) => x.key === key);
@@ -614,13 +603,13 @@ function itemSheet(app, key) {
       if (ph) hydrateSheetSoon(app);
       return html`
         ${ph ? photoImg(ph, 'item-sheet-photo', i.product?.label || i.name) : ''}
-        <h3 class="item-sheet-name">${i.product?.label || i.name}</h3>
+        ${when(i.product?.label && i.product.label !== i.name, () => html`<h3 class="item-sheet-name">${i.product.label}</h3>`)}
         <p class="sheet-text">${formatPackQty(i)}${i.cost == null ? '' : `, ${money(i.cost)}`}. ${detail(app, i) || ''}</p>
         ${when(i.uses.length, () => html`<ul class="uses">${i.uses.map((u) => html`<li><span>${dayAndDate(u.date, app.today())}</span><span>${dinnerById(app.db, app.state, u.dinner)?.title}</span><span>${unitText(u.qty, i.unit)}</span></li>`)}</ul>`)}
         ${when(i.coupon, () => html`<p class="hint">${ic('receipt', { size: 18 })}<span><b>Clip the coupon first:</b> ${i.coupon.text}${i.coupon.expires ? `, ends ${shortDate(i.coupon.expires)}` : ''}.</span></p>`)}
         <div class="action-list">
           <button type="button" class="action-row" data-action="item:have" data-id="${i.id}">${ic('pantry')}<span><b>We have it</b><small>Off the list, into the pantry.</small></span></button>
-          <button type="button" class="action-row" data-action="list:skip" data-reason="stretch" data-key="${i.id}">${ic('check')}<span><b>Not this trip</b><small>We’ll make do. Only this list changes.</small></span></button>
+          <button type="button" class="action-row" data-action="list:skip" data-reason="stretch" data-key="${i.id}">${ic('right')}<span><b>Not this trip</b><small>Only this list changes.</small></span></button>
           ${both
             ? html`<button type="button" class="action-row" data-action="item:store" data-value="${OTHER[i.store]}">${ic('store')}<span><b>Get it at ${NAMES[OTHER[i.store]]} instead</b></span></button>`
             : html`<button type="button" class="action-row" data-action="item:notat" data-id="${i.id}" data-store="${i.store}">${ic('store')}<span><b>${NAMES[i.store]} doesn’t carry this</b></span></button>`}
@@ -641,9 +630,6 @@ function itemSheet(app, key) {
             <p><span>Price</span><b>${i.cost == null ? '—' : `${money(i.cost)}${i.packs > 1 ? ` (${money(i.pack.price)} each)` : ''}`}</b></p>
             <p><span>Source</span><b>${src}${i.pack?.url ? html`, <a href="${i.pack.url}" target="_blank" rel="noopener">see it</a>` : ''}</b></p>
           </div>
-          <h3 class="sheet-h">Store</h3>
-          ${both ? segmented('store', [{ id: 'sams', label: "Sam's Club" }, { id: 'jewel', label: 'Jewel-Osco' }], i.store, { label: 'Store for this item', action: 'item:store' })
-            : html`<p class="muted small">This list is from ${NAMES[app.settings.planStore]} only.</p>`}
           <h3 class="sheet-h">Fix the price</h3>
           <form class="form" data-submit="item:price" data-store="${i.store}" data-id="${i.id}">
             <div class="field-row">
@@ -653,9 +639,6 @@ function itemSheet(app, key) {
             <button type="submit" class="btn btn-secondary btn-block">Save price for the family</button>
             ${when(fam, () => html`<button type="button" class="btn btn-quiet btn-block" data-action="item:price-clear" data-store="${i.store}" data-id="${i.id}">Use the estimate again</button>`)}
           </form>
-          <div class="action-list">
-            <button type="button" class="action-row" data-action="list:skip" data-reason="check" data-key="${i.id}">${ic('info')}<span><b>Check at home first</b><small>Moves it to “Not buying this trip” until you put it back.</small></span></button>
-          </div>
         </details>`;
     },
   });
@@ -714,35 +697,31 @@ function handoff(app, store) {
       id: `handoff:${store}`,
       title: ok ? `${info.name} list copied` : `Copy the ${info.name} list`,
       subtitle: `${list.stores[store].items.filter((i) => !i.checked).length || list.stores[store].items.length} items, about ${money(list.stores[store].subtotal)}`,
+      // One job (gauntlet r2): it's copied, here's where to paste it, open the app. The rest is folded.
       render: () => html`
-        ${store === 'jewel'
-          ? html`<p class="hint">${ic('receipt', { size: 18 })}<span>${coupons.length && !left ? `All ${coupons.length} coupons on this list are clipped. ` : left ? `${left} ${left === 1 ? 'coupon' : 'coupons'} on this list to clip first (see “Clip these coupons first”). ` : ''}<a href="${info.coupons.url}" target="_blank" rel="noopener">Jewel coupons</a></span></p>`
-          : html`<p class="hint">${ic('receipt', { size: 18 })}<span>Sam’s Instant Savings come off automatically at checkout for members. <a href="${info.coupons.url}" target="_blank" rel="noopener">See Instant Savings</a></span></p>`}
-        ${when(ai.length, () => html`<section class="handoff-ai">
-          <h3 class="sheet-h">Paste it into Jewel-Osco AI</h3>
-          <ol class="steps-small">
-            <li>${ok ? 'The list is copied' : 'Copy the list below'}${ai.length > 1 ? ` (part 1 of ${ai.length}; it only takes 2,000 letters at a time)` : ''}.</li>
-            <li>Open the Jewel-Osco app (or the website) and tap <b>Jewel-Osco AI</b>.</li>
-            <li>Tap <b>Shop my grocery list</b>, paste, and send. It matches each line to a product; check them, then add to your cart.</li>
-          </ol>
-          ${ai.map((t, k) => html`<button type="button" class="btn btn-secondary btn-block" data-action="list:copy-ai" data-store="${store}" data-part="${k}">${ic('copy', { size: 20 })}${ai.length > 1 ? `Copy part ${k + 1} of ${ai.length}` : 'Copy for Jewel-Osco AI'}</button>`)}
-          <a class="btn btn-quiet btn-block" href="${info.assistantUrl || 'https://www.jewelosco.com/assistant/chat'}" target="_blank" rel="noopener">Open Jewel-Osco AI on the website</a>
-        </section>`)}
+        ${when(ai.length, () => html`<ol class="steps-small">
+            <li>${ok ? 'The list is copied' : 'Copy the list (More, below)'}${ai.length > 1 ? `: part 1 of ${ai.length}` : ''}.</li>
+            <li>In the Jewel-Osco app, tap <b>Jewel-Osco AI</b>, then <b>Shop my grocery list</b>.</li>
+            <li>Paste and send, then check what it picked.</li>
+          </ol>`)}
         ${when(!ai.length, () => html`<ol class="steps-small">${info.handoff.filter((s, k) => !(k === 0 && /^tap copy/i.test(s))).map((s) => html`<li>${s}</li>`)}</ol>`)}
-        ${when(info.handoffMethod, () => html`<p class="muted small">${info.handoffMethod}</p>`)}
         ${openAppSection(app, store, info)}
-        ${when(info.appUrl, () => html`<a class="btn btn-quiet btn-block" href="${info.appUrl}" target="_blank" rel="noopener">Get the ${info.name} app</a>`)}
-        ${when(info.searchTemplate, () => {
-          const items = list.stores[store].items.filter((i) => !i.checked);
-          return items.length ? html`<details class="more"><summary>Find each item on ${info.name}</summary><ul class="handoff-items">${items.map((i) => html`<li><span>${productName(i)}</span><a class="btn btn-small btn-quiet" href="${i.freeText ? info.searchTemplate.replace(/\{q\}|\{query\}/, searchWords(i.name, store)) : findItUrl(app.db, store, i.product?.chosen ? i.product : null, i.product?.chosen ? i.product.name : productName(i))}" target="_blank" rel="noopener">Find it</a></li>`)}</ul></details>` : '';
-        })}
-        ${ai.length
-          ? html`<details class="more"><summary>${ok ? 'What was copied' : 'Select and copy this'}</summary>
-            <textarea class="input copy-box" readonly rows="8">${text}</textarea>
-            <button type="button" class="btn btn-quiet btn-block" data-action="list:copy-again" data-store="${store}">${ic('copy', { size: 20 })}Copy the full list (with pack sizes)</button>
-          </details>`
-          : html`<label class="field"><span class="field-label">${ok ? 'What was copied' : 'Select and copy this'}</span><textarea class="input copy-box" readonly rows="8">${text}</textarea></label>
-            <button type="button" class="btn btn-quiet btn-block" data-action="list:copy-again" data-store="${store}">${ic('copy', { size: 20 })}Copy again</button>`}
+        ${when(ai.length > 1, () => ai.slice(1).map((t, k) => html`<button type="button" class="btn btn-secondary btn-block" data-action="list:copy-ai" data-store="${store}" data-part="${k + 1}">${ic('copy', { size: 20 })}Copy part ${k + 2} of ${ai.length}</button>`))}
+        <details class="more"><summary>More: copy again, coupons, each item</summary>
+          ${store === 'jewel'
+            ? html`<p class="hint">${ic('receipt', { size: 18 })}<span>${coupons.length && !left ? `All ${coupons.length} coupons on this list are clipped. ` : left ? `${left} ${left === 1 ? 'coupon' : 'coupons'} on this list to clip first. ` : ''}<a href="${info.coupons.url}" target="_blank" rel="noopener">Jewel coupons</a></span></p>`
+            : html`<p class="hint">${ic('receipt', { size: 18 })}<span>Sam’s Instant Savings come off automatically for members. <a href="${info.coupons.url}" target="_blank" rel="noopener">See Instant Savings</a></span></p>`}
+          ${when(ai.length, () => html`${ai.map((t, k) => html`<button type="button" class="btn btn-quiet btn-block" data-action="list:copy-ai" data-store="${store}" data-part="${k}">${ic('copy', { size: 20 })}${ai.length > 1 ? `Copy part ${k + 1} of ${ai.length}` : 'Copy for Jewel-Osco AI again'}</button>`)}
+            <a class="btn btn-quiet btn-block" href="${info.assistantUrl || 'https://www.jewelosco.com/assistant/chat'}" target="_blank" rel="noopener">Open Jewel-Osco AI on the website</a>`)}
+          ${when(info.handoffMethod, () => html`<p class="muted small">${info.handoffMethod}</p>`)}
+          ${when(info.appUrl, () => html`<a class="btn btn-quiet btn-block" href="${info.appUrl}" target="_blank" rel="noopener">Get the ${info.name} app</a>`)}
+          ${when(info.searchTemplate, () => {
+            const items = list.stores[store].items.filter((i) => !i.checked);
+            return items.length ? html`<h3 class="sheet-h">Find each item on ${info.name}</h3><ul class="handoff-items">${items.map((i) => html`<li><span>${productName(i)}</span><a class="btn btn-small btn-quiet" href="${i.freeText ? info.searchTemplate.replace(/\{q\}|\{query\}/, searchWords(i.name, store)) : findItUrl(app.db, store, i.product?.chosen ? i.product : null, i.product?.chosen ? i.product.name : productName(i))}" target="_blank" rel="noopener">Find it</a></li>`)}</ul>` : '';
+          })}
+          <label class="field"><span class="field-label">${ok ? 'What was copied' : 'Select and copy this'}</span><textarea class="input copy-box" readonly rows="8">${text}</textarea></label>
+          <button type="button" class="btn btn-quiet btn-block" data-action="list:copy-again" data-store="${store}">${ic('copy', { size: 20 })}${ai.length ? 'Copy the full list (with pack sizes)' : 'Copy again'}</button>
+        </details>
         ${when(info.address || info.phone, () => html`<p class="muted small">${[info.address, info.phone, info.hours].filter(Boolean).join('. ')}</p>`)}`,
     });
   });

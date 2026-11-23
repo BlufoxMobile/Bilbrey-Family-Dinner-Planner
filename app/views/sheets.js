@@ -3,7 +3,7 @@
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, confirmSheet, stepper, sheetId, tf } from '../ui.js';
 import { AWAY_REASONS } from '../config.js';
 import {
-  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate, byLabel,
+  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate, byLabel, listJoin,
 } from '../util.js';
 import {
   dinnerById, rotationList, findInPlan, openNights, parseSideRef, shelfRef, sideInfo, isFavorite, kindOf,
@@ -30,15 +30,15 @@ const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
 // ---------------------------------------------------------------- "not for us" asks first
 
 /** "Take X off the menu for everyone?" Reopens the night sheet it came from, either way. */
-async function confirmOff(app, { title, promoted = null, nights = 0, side = false }) {
+async function confirmOff(app, { title, promoted = null, nights = 0, dates = [], side = false }) {
   const from = sheetId();
   const night = /^night:(\d{4}-\d{2}-\d{2})$/.exec(from || '')?.[1];
   const name = title || (side ? 'This side' : 'This dinner');
   const what = side ? 'Dinners that have it get a similar side.'
-    : promoted ? `${promoted} joins the menu${nights ? ` and takes its ${nights === 1 ? 'planned night' : `${nights} planned nights`} after tonight` : ''}. Tonight stays as it is.` : 'Tonight stays as it is.';
+    : promoted && nights ? `${promoted} goes on ${dates.length ? listJoin(dates.slice(0, 3).map((x) => weekdayName(x))) : nights === 1 ? 'its night' : `its ${nights} nights`} instead. Tonight stays.` : 'Tonight stays.';
   const ok = await confirmSheet({
     title: `Take ${name} off the menu for everyone?`,
-    body: `It won’t be planned again. ${what} You can bring it back from Recipes, Not for us.`,
+    body: `It won’t be planned again. ${what}`,
     confirm: 'Take it off the menu',
     cancel: 'Keep it',
   });
@@ -109,7 +109,7 @@ function nightBody(app, date) {
         ${equipment(d, { compact: true })}
         ${favoriteBadge(app, d)}
         ${when(showNutrition(app), () => html`<p class="night-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate', compact: true })}</p>`)}
-        ${costNote(costOf(app, d.id, e), { house: true, cls: 'night-cost' })}
+        ${costNote(costOf(app, d.id, e), { cls: 'night-cost' })}
       </div>
     </div>
     <div class="night-rate"><span class="night-rate-q">What does the family think?</span>${thumbs(app, { kind: 'dinner', id: d.id, label: d.title, labels: true })}</div>
@@ -127,15 +127,6 @@ function nightBody(app, date) {
         </span>
       </li>`)}
     </ul>
- ${when(!cooked, () => {
-      const idea = lighterSide(app.db, app.state, d.id, e);
-      return idea ? lighterChip(app, {
-        key: `side:${d.id}:${idea.slot}:${idea.to.id}`,
-        text: `${idea.to.title} instead of ${idea.from.title}.`,
-        why: showNutrition(app) ? `About ${fmtKcal(idea.saves)} fewer calories a plate.` : '',
-        action: 'lighter:side', data: { dinner: d.id, slot: idea.slot, ref: idea.to.id }, label: 'Swap it',
-      }) : '';
-    })}
     ${when(!cooked && slots === 1 && sides.length < 2, () => html`<button type="button" class="btn btn-quiet btn-small add-side" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="1">${ic('plus', { size: 18 })}Add a side</button>`)}
     <div class="action-list">
       ${when(!cooked, () => html`<a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>Step by step, with timers.</small></span></a>`)}
@@ -252,12 +243,16 @@ export function openMove(app, fromDate) {
   const d = dinnerById(app.db, app.state, e?.dinner);
   if (!d) return;
   const start = today;
-  const nights = datesBetween(start, addDays(start, 27)).filter((x) => x !== fromDate);
+  // A night already gone by can only move forward into an empty night: trading would push another
+  // dinner into the past (gauntlet r2). And a night never offers a trade with the same dinner.
+  const pastFrom = fromDate < today;
+  const nights = datesBetween(start, addDays(start, 27)).filter((x) => x !== fromDate && app.state.plan?.[x]?.dinner !== d.id
+    && (!pastFrom || !(app.state.plan?.[x]?.dinner && app.state.plan[x].status !== 'away')));
   openSheet({
     id: `move:${fromDate}`,
     size: 'tall',
     title: `Move ${d.title}`,
-    subtitle: 'If that night has a dinner, they trade places.',
+    subtitle: pastFrom ? 'Pick a night with nothing planned.' : 'If that night has a dinner, they trade places.',
     render: () => html`<ul class="move-list">${nights.map((x) => {
       const t = app.state.plan?.[x];
       const td = t?.dinner ? dinnerById(app.db, app.state, t.dinner) : null;
@@ -392,7 +387,7 @@ function subBody(app, d, slot, st, date) {
     </div>`)}
     <div class="seg" role="tablist" aria-label="Where the side comes from">
       <button type="button" role="tab" aria-selected="${tf(st.tab === 'box')}" class="seg-opt ${st.tab === 'box' ? 'is-on' : ''}" data-sub-tab="box">Recipe box</button>
-      <button type="button" role="tab" aria-selected="${tf(st.tab === 'shelf')}" class="seg-opt ${st.tab === 'shelf' ? 'is-on' : ''}" data-sub-tab="shelf">On the shelf</button>
+      <button type="button" role="tab" aria-selected="${tf(st.tab === 'shelf')}" class="seg-opt ${st.tab === 'shelf' ? 'is-on' : ''}" data-sub-tab="shelf">From the pantry</button>
     </div>
     ${st.tab === 'box'
       ? html`<ul class="pick-list">${sides.map((s) => html`<li><button type="button" class="pick-row" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-ref="${s.id}">
@@ -457,7 +452,7 @@ export function openLeftoverMore(app, from) {
   openSheet({
     id: `leftover-more:${from}`,
     live: true,
-    title: 'Lunch or freezer',
+    title: 'Use the leftovers',
     get subtitle() { const l = leftoversOnHand(app.state, app.today()).find((x) => x.date === from); return l ? `${servingsText(l.servings)} of ${l.title}, ${useByText(l, app.today())}.` : ''; },
     render: () => {
       const today = app.today();
@@ -465,9 +460,14 @@ export function openLeftoverMore(app, from) {
       if (!l) return html`<p class="sheet-text">Those leftovers are gone.</p><div class="sheet-actions"><button type="button" class="btn btn-primary btn-block" data-action="sheet:close">OK</button></div>`;
       const lunches = leftoverLunchChoices(app.db, app.state, { from, today });
       const plates = Math.max(1, Math.min(l.servings, st.plates ?? l.servings));
+      const nights = l.night ? [] : leftoverNightChoices(app.state, l, today);
       return html`
+        <div class="action-list">
+          <button type="button" class="action-row" data-action="leftovers:ate" data-date="${from}">${ic('bowl')}<span><b>Someone ate a serving</b><small>${servingsText(Math.max(0, l.servings - 1))} left after that.</small></span></button>
+          ${when(l.servings >= 3 && nights.length, () => html`<button type="button" class="action-row" data-action="leftovers:night" data-date="${from}">${ic('tonight')}<span><b>Make them dinner one night</b><small>Instead of cooking; that dinner moves.</small></span></button>`)}
+        </div>
         <h3 class="sheet-h">For a lunch</h3>
-        ${lunches.length ? html`<div class="action-list left-choices">${lunches.map((c) => html`<button type="button" class="action-row" data-action="leftovers:lunch" data-from="${from}" data-name="${c.name}" data-to="${c.date}">${ic('lunch')}<span><b>${c.name}’s lunch ${dayName(c.date, today)}</b><small>One serving goes in the lunch box. That packed lunch comes off the plan and the list.</small></span></button>`)}</div>`
+        ${lunches.length ? html`<div class="action-list left-choices">${lunches.map((c) => html`<button type="button" class="action-row" data-action="leftovers:lunch" data-from="${from}" data-name="${c.name}" data-to="${c.date}">${ic('lunch')}<span><b>${c.name}’s lunch ${dayName(c.date, today)}</b><small>One serving, instead of the packed lunch.</small></span></button>`)}</div>`
           : html`<p class="muted small">Nobody packs a lunch before these are past their best.</p>`}
         <h3 class="sheet-h">Or freeze them</h3>
         <div class="left-plates"><span class="set-label">How many plates?</span>
@@ -475,7 +475,7 @@ export function openLeftoverMore(app, from) {
             <b class="left-n" aria-live="polite">${plates}</b>
             <button type="button" class="stepper-btn" data-action="leftovers:plates" data-delta="1" aria-label="One plate more" ${plates >= l.servings ? 'disabled' : ''}>${ic('plus', { size: 18 })}</button></span></div>
         <div class="action-list">
-          <button type="button" class="action-row" data-action="leftovers:freeze" data-from="${from}" data-n="${plates}">${ic('snow')}<span><b>Put ${plates === l.servings ? (plates === 1 ? 'it' : 'them all') : plates} in the freezer</b><small>Dated today, good for about 3 months, and listed in the pantry with the quick backups.</small></span></button>
+          <button type="button" class="action-row" data-action="leftovers:freeze" data-from="${from}" data-n="${plates}">${ic('snow')}<span><b>Put ${plates === l.servings ? (plates === 1 ? 'it' : 'them all') : plates} in the freezer</b><small>Good for about 3 months.</small></span></button>
         </div>`;
     },
   });
@@ -652,7 +652,8 @@ export const actions = {
   // just happen, with Undo.
   'vote:dinner': async (app, el) => {
     const r = voteOps(app.db, app.state, { dinnerId: el.dataset.id, value: Number(el.dataset.value), today: app.today() });
-    if (r.retired && !(await confirmOff(app, { title: dinnerById(app.db, app.state, el.dataset.id)?.title, promoted: r.promoted ? dinnerById(app.db, app.state, r.promoted)?.title : null, nights: r.replacedNights || 0 }))) return;
+    const later = Object.entries(app.state.plan || {}).filter(([dt, x]) => dt > app.today() && x?.dinner === el.dataset.id && x.status === 'planned').map(([dt]) => dt).sort();
+    if (r.retired && !(await confirmOff(app, { title: dinnerById(app.db, app.state, el.dataset.id)?.title, promoted: r.promoted ? dinnerById(app.db, app.state, r.promoted)?.title : null, nights: r.replacedNights || 0, dates: later }))) return;
     app.commit(r);
     renderSheet();
   },
