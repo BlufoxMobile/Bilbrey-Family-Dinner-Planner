@@ -349,8 +349,8 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
   .trip-bar p.trip-short { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 @media (max-width: 340px) { .trip-bar { grid-template-columns: auto minmax(0, 1fr); } .trip-acts { grid-column: 1 / -1; justify-content: flex-end; } }
-/* Round 5: the price rides on the amount's last word ("2 × 3.1 lb · $38.26"), so a wrap never starts with "·". */
-.item .item-qty { display: block; }
+/* Round 5: the dot rides on the amount's last word ("2 × 3.1 lb ·"), so a wrapped price never starts with "·". */
+.item .item-qty { display: block; overflow-wrap: anywhere; }
 .item .item-qty .item-price { display: inline; }
 .item .item-qty .tag { display: inline-flex; margin: 2px 0 0 8px; vertical-align: middle; }
 /* Round 5: Plan ahead with nothing left to plan says so; Plan it waits. */

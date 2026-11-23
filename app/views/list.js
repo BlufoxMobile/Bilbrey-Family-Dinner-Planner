@@ -348,8 +348,8 @@ function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
   const label = (!i.freeText && app.db.ingredients[i.id]?.short) || i.name;
   const product = !i.freeText && i.product?.label && i.product.label.toLowerCase() !== i.name.toLowerCase() ? i.product.label : '';
   // The size rides on the amount line ("2 × 3.1 lb"), so a cut-off product name never hides it (gauntlet r4).
-  // "(40 pouches)" never splits across lines; the wrap, when needed, comes before it.
-  const many = i.freeText ? (i.qty > 1 ? `${fmtQty(i.qty)} of them` : '') : shelfQty(i).replace(/\(([^)]*)\)/, (m) => m.replace(/ /g, '\u00a0'));
+  // "40 pouches" stays together; anything else may wrap, so a narrow row never pushes the page sideways.
+  const many = i.freeText ? (i.qty > 1 ? `${fmtQty(i.qty)} of them` : '') : shelfQty(i).replace(/\((\d[\d.,]*) /g, '($1\u00a0');
   const inCart = mode === 'online' ? 'added to the cart' : 'in the cart';
   const tags = [
     i.pack?.sale ? html`<span class="tag tag-sale">Sale</span>` : '',
@@ -362,7 +362,7 @@ function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
     <span class="item-thumb-hit" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-hidden="true">${itemThumb(app, i, mode || 'store')}</span>
     <button type="button" class="item-main" data-action="list:check" data-key="${i.key}" data-list="${listKey}" tabindex="-1" aria-hidden="true">
       <span class="item-name">${label}</span>${product ? html`<span class="item-product" id="${rid}-p">${product}</span>` : ''}
-      <span class="item-qty" id="${rid}-q">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? '\u00a0·\u00a0' : ''}${money(i.cost)}</span>`}${tags}</span>
+      <span class="item-qty" id="${rid}-q">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? '\u00a0· ' : ''}${money(i.cost)}</span>`}${tags}</span>
     </button>
     ${when(mode === 'online' && !i.freeText, () => html`<a class="btn btn-small ${i.checked ? 'btn-quiet' : 'btn-secondary'} order-it" href="${orderUrl(app, i)}" target="_blank" rel="noopener" data-findit="${i.id}" data-order="${storeProductUrl(app.db, i.store, i.id) ? 'product' : 'search'}" aria-label="Open ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">${ic('cart', { size: 18 })}${i.checked ? 'Again' : 'Open'}</a>`)}
     <button type="button" class="item-more" data-action="list:item" data-key="${i.key}" aria-label="More about ${label}">${ic('right', { size: 20 })}</button>
