@@ -34,11 +34,12 @@ const nameOf = (db, state, id) => plainName(db.ingredients?.[id]?.short || itemM
 
 /**
  * Which nights Claude plans, which it must leave as they are, and why.
- *   change: Claude may change dinners the planner picked (never tonight's, never one the family chose,
- *   never a cooked or away night).
+ *   change: Claude may change dinners the planner picked.
+ *   family: Claude may also rethink dinners the family chose (it keeps them when they still fit).
+ *   Never tonight's dinner, never a cooked or away night.
  * → [{ date, day, plan: 'open'|'change'|'keep', current: id|null, busy, note }]
  */
-export function smartNights(db, state, { start, end, today, change = true }) {
+export function smartNights(db, state, { start, end, today, change = true, family = false }) {
   const plan = state?.plan || {};
   const busy = busyNightsOf(state);
   return datesBetween(start, end).map((date) => {
@@ -49,9 +50,10 @@ export function smartNights(db, state, { start, end, today, change = true }) {
     if (isFillable(e, 'fill')) return { ...night, plan: 'open', current: null };
     // Tonight's dinner may already be thawing or started.
     if (date === today) return { ...night, plan: 'keep', note: 'tonight' };
-    // Like the quick way: only dinners the planner (or Claude) picked, never one the family chose.
-    if (!change || !isFillable(e, 'replan')) return { ...night, plan: 'keep', note: e?.manual ? 'the family picked it' : 'already planned' };
-    return { ...night, plan: 'change', note: 'planned before' };
+    // Like the quick way: dinners the planner (or Claude) picked; the family's own only when asked.
+    if (change && isFillable(e, 'replan')) return { ...night, plan: 'change', note: 'planned before' };
+    if (family && e?.status === 'planned' && e?.dinner && e.manual) return { ...night, plan: 'change', note: 'the family picked it' };
+    return { ...night, plan: 'keep', note: e?.manual ? 'the family picked it' : 'already planned' };
   });
 }
 
@@ -59,10 +61,10 @@ export function smartNights(db, state, { start, end, today, change = true }) {
  * The POST /api/plan body.
  * → { today, start, end, family, pantryFirst, lean, budget, nights, dinners, useSoon, freezer, recent }
  */
-export function smartPlanRequest(db, state, { start, end, today, change = true, pantryFirst = true }) {
+export function smartPlanRequest(db, state, { start, end, today, change = true, family = false, pantryFirst = true }) {
   const day0 = start < today ? today : start;
   const last = clampAheadEnd(today, end);
-  const nights = smartNights(db, state, { start: day0, end: last, today, change });
+  const nights = smartNights(db, state, { start: day0, end: last, today, change, family });
   const rem = onHand(db, state);
   const soon = useSoon(db, state, today, { soon: 4, freezerSoon: 21 });
   const soonIds = new Set(soon.map((s) => s.id));
@@ -123,10 +125,10 @@ export function smartPlanRequest(db, state, { start, end, today, change = true, 
  * skipped and the packed lunches are then planned the usual way. One Undo for all of it.
  * → { ops, undo, message, count, kept, filled, lunches, start, end, nights: [{ date, dinner, why, changed }], before, after, summary }
  */
-export function smartPlanOps(db, state, reply, { start, end, today, who = 'Claude', fillWho = '', at = null, change = true, pantryFirst = true, model = '' }) {
+export function smartPlanOps(db, state, reply, { start, end, today, who = 'Claude', fillWho = '', at = null, change = true, family = false, pantryFirst = true, model = '' }) {
   const day0 = start < today ? today : start;
   const last = clampAheadEnd(today, end);
-  const allowed = new Map(smartNights(db, state, { start: day0, end: last, today, change }).filter((n) => n.plan !== 'keep').map((n) => [n.date, n]));
+  const allowed = new Map(smartNights(db, state, { start: day0, end: last, today, change, family }).filter((n) => n.plan !== 'keep').map((n) => [n.date, n]));
   const rotation = new Set(rotationList(db, state).map((d) => d.id));
   const plan = state?.plan || {};
   const stamp = at || new Date().toISOString();
@@ -181,7 +183,7 @@ export function smartPlanOps(db, state, reply, { start, end, today, who = 'Claud
   if (out.length && filled) message += ` ${filled === 1 ? 'One more night was' : `${filled} more nights were`} planned the quick way.`;
   if (out.length) {
     ops.push(set(['planAhead'], {
-      start: day0, end: last, pantryFirst: !!pantryFirst, replan: !!change, before, changed: changedN + filled, by: who, at: stamp,
+      start: day0, end: last, pantryFirst: !!pantryFirst, replan: !!change, family: !!family, before, changed: changedN + filled, by: who, at: stamp,
       claude: { summary, model: String(model || '').slice(0, 40), filled, nights: out.map((x) => ({ date: x.date, dinner: x.dinner, why: x.why, changed: x.changed })) },
     }));
   }
@@ -196,8 +198,8 @@ export function cleanWhy(s, max = WHY_MAX) {
 }
 
 /** Is there anything Claude may plan in this stretch? */
-export function smartPlanHasWork(db, state, { start, end, today, change = true }) {
+export function smartPlanHasWork(db, state, { start, end, today, change = true, family = false }) {
   const day0 = start < today ? today : start;
-  return smartNights(db, state, { start: day0, end: clampAheadEnd(today, end), today, change }).some((n) => n.plan !== 'keep');
+  return smartNights(db, state, { start: day0, end: clampAheadEnd(today, end), today, change, family }).some((n) => n.plan !== 'keep');
 }
 

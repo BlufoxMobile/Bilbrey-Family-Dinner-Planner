@@ -261,6 +261,7 @@ export const actions = {
     renderSheet();
   },
   'ahead:replan': (app) => { const st = openPlanAhead.state; if (st) { st.replan = !st.replan; st.replanSet = true; } renderSheet(); },
+  'ahead:family': () => { const st = openPlanAhead.state; if (st) st.family = !st.family; renderSheet(); },
   'ahead:go': (app) => {
     const st = openPlanAhead.state;
     if (!st) return;
@@ -379,7 +380,7 @@ async function planWithClaude(app) {
   };
   if (navigator.onLine === false) { fail(claudeErrorText({ status: 0 })); return; }
   const today = app.today();
-  const opts = { start: today, end: clampAheadEnd(today, st.end), today, change: st.replan, pantryFirst: st.pantryFirst };
+  const opts = { start: today, end: clampAheadEnd(today, st.end), today, change: st.replan, family: !!st.family, pantryFirst: st.pantryFirst };
   const req = smartPlanRequest(app.db, app.state, opts);
   st.busy = true;
   st.phase = 'busy';
@@ -423,6 +424,8 @@ function openPlanAhead(app, { pantryFirst: force } = {}) {
     pantryFirst,
     // Re-plan the planner's own picks: on whenever the pantry goes first, unless switched by hand.
     replan: pantryFirst, replanSet: false,
+    // Claude may rethink the family's own picks too, only when asked (it keeps the ones that still fit).
+    family: false,
     phase: 'pick',
   });
   // Whether Claude can plan (key set, month not spent): known within a moment if it wasn't already.
@@ -462,7 +465,10 @@ function openPlanAhead(app, { pantryFirst: force } = {}) {
       }
       // Claude rethinks the app's own picks too, so it can have work when the quick way doesn't.
       const withClaude = claudeReady(app);
-      const claudeWork = withClaude && smartPlanHasWork(app.db, app.state, { start: today, end: clampAheadEnd(today, st.end), today, change: st.replan });
+      const span = { start: today, end: clampAheadEnd(today, st.end), today, change: st.replan };
+      const claudeWork = withClaude && smartPlanHasWork(app.db, app.state, { ...span, family: st.family });
+      // The family's own picks in the stretch (never tonight's): Claude can rethink them when asked.
+      const chosen = withClaude ? dates.filter((d) => d > today && app.state.plan?.[d]?.dinner && app.state.plan[d].status === 'planned' && app.state.plan[d].manual).length : 0;
       return html`
         <h3 class="sheet-h" id="ahead-through-h">Plan through</h3>
         <div class="ahead-quick" role="group" aria-labelledby="ahead-through-h">
@@ -483,8 +489,9 @@ function openPlanAhead(app, { pantryFirst: force } = {}) {
         <details class="ahead-opts" ${aheadOptsOpen ? 'open' : ''}><summary>Options</summary>
         <div class="set-row ahead-switch"><span class="set-label">Use what we have first</span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
         <div class="set-row ahead-switch"><span class="set-label">Let it replace dinners the app picked<small>${own ? 'Never tonight, and never one you chose.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Let it replace dinners the app picked' })}</div>
+        ${when(chosen, () => html`<div class="set-row ahead-switch"><span class="set-label">Let Claude rethink dinners you chose<small>${chosen === 1 ? 'One night this stretch.' : `${chosen} nights this stretch.`} It keeps the ones that still fit; never tonight.</small></span>${switchToggle({ on: st.family, action: 'ahead:family', label: 'Let Claude rethink dinners you chose' })}</div>`)}
         </details>
-        ${idle ? html`<p class="ahead-idle" id="ahead-idle">Every night through ${weekdayName(st.end)}, ${shortDate(st.end)} is planned${own && !claudeWork ? ', and nothing better turned up' : ''}.${claudeWork ? ' Claude can still rethink the dinners the app picked.' : ' Pick a longer stretch to plan more.'}</p>` : ''}
+        ${idle ? html`<p class="ahead-idle" id="ahead-idle">Every night through ${weekdayName(st.end)}, ${shortDate(st.end)} is planned${own && !claudeWork ? ', and nothing better turned up' : ''}.${claudeWork ? ` Claude can still rethink the dinners ${st.family ? 'on it' : 'the app picked'}.` : chosen ? ' Claude can rethink the dinners you chose: turn that on under Options.' : ' Pick a longer stretch to plan more.'}</p>` : ''}
         ${withClaude
           ? html`<button type="button" class="btn btn-primary btn-block" data-action="ahead:claude" aria-describedby="ahead-claude-note" ${claudeWork ? '' : 'disabled'}>${ic('sparkle', { size: 20 })}Plan it with Claude</button>
             <p class="ahead-claude-note muted small" id="ahead-claude-note">Claude picks each night from what’s in the house, the cost and lighter plates, and says why. Uses a few cents of the month’s Claude budget.</p>

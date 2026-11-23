@@ -25,6 +25,10 @@ The stretch (1 week, 2 weeks, longer or a date) and the two options apply to bot
 - *Use what we have first*: when off, Claude weighs cost, health and variety ahead of the pantry.
 - *Let it replace dinners the app picked*: Claude may change the planner's (or its own) earlier
   picks. Never tonight's dinner, never one the family chose, never a cooked or away night.
+- *Let Claude rethink dinners you chose* (only with Claude, only when the stretch has some; off by
+  default): the family's own picks become Claude's to reconsider too. Claude is told the family
+  picked them and keeps the ones that still fit. Never tonight's. When everything else is planned,
+  the sheet points to this switch instead of saying there's nothing to do.
 
 While Claude works (about half a minute) the sheet says so; it can be closed, and the plan is still
 saved when the answer comes, with a toast. On failure the sheet says what happened in plain words
@@ -36,7 +40,7 @@ and offers **Try again**, **Plan it the quick way** and **Back**.
 
 | Field | What it holds |
 |---|---|
-| `nights` | Each date: `open` (empty), `change` (the app's pick), or `keep` (tonight, cooked, away, the family's pick) with the current dinner, busy nights marked |
+| `nights` | Each date: `open` (empty), `change` (the app's pick, or the family's when asked), or `keep` (tonight, cooked, away, the family's pick) with the current dinner and a note, busy nights marked |
 | `dinners` | Every dinner in the rotation: minutes, protein, cost a serving, what the next trip costs for it, kcal / protein / lean / heavy, and what the pantry says: `all`, `thaw` (with minutes), `side` (a side is missing) or `short` (what's missing); food that spoils soon it uses; when it was last eaten; favorites |
 | `useSoon` | What spoils first and where it is |
 | `freezer` | The meat and ready-made mains on hand, with the date each came home |
