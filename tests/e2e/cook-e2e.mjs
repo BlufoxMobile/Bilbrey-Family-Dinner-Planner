@@ -317,7 +317,9 @@ test('cook mode on a laptop and on the TV: big type, the step beside what it nee
     await p.keyboard.press('ArrowRight');
     await waitFor(async () => (await stepKey(p)) === 'side0:0');
     await p.keyboard.press('ArrowRight');
-    await waitFor(async () => ['side0:0', 'main:1'].includes(await stepKey(p)));
+    await waitFor(async () => (await stepKey(p)) === 'main:1');
+    await p.keyboard.press('ArrowRight'); // the first patties: a step with a timer
+    await waitFor(async () => (await stepKey(p)) === 'main:2');
     const size = await p.$eval('.cook-step-text', (el) => parseFloat(getComputedStyle(el).fontSize));
     assert.ok(size >= min, `step text at ${name} is ${size}px`);
     assert.equal(await p.evaluate(() => document.activeElement?.id), 'cook-next', 'focus stays on Next from step to step');
