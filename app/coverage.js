@@ -5,7 +5,9 @@
 // Pure: no DOM, no clock.
 
 import { plannedNights, itemMeta } from './shopping.js';
-import { itemsForNight, kindOf, rotationList, dinnerById } from './planner.js';
+import { itemsForNight, kindOf, rotationList, dinnerById, scaleItems, isMeat } from './planner.js';
+import { placeOf } from './freshness.js';
+import { isSlowCooked } from './health.js';
 import { round2 } from './util.js';
 
 /** Within 5% counts as enough: a can's worth of rounding shouldn't call a dinner short. */
@@ -89,3 +91,43 @@ export function pantryCoverage(db, state, { dates }) {
   const assumed = BASICS.filter((id) => !state?.pantry?.[id]).map((id) => itemMeta(db, state, id).name);
   return { rows, ready: rows.filter((r) => r.ready).length, total: rows.length, shortIds: [...short], extra, backups: backups(db, state), assumed };
 }
+
+/** A staple the family switched off ("we're out") or marked running low. Never recorded = in the house. */
+export function stapleShort(state, id) {
+  const p = state?.pantry?.[id];
+  return !!p && (!!p.low || !p.stocked);
+}
+
+const plainName = (name) => String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/,.*$/, '').trim();
+
+/**
+ * Can this dinner be made from what's in the house right now? (gauntlet r5: tonight's picker listed
+ * 40 dinners with nothing to say which ones could actually happen.)
+ * → { ready (the main is in), missing: [names], sideOut: [names], thaw: [{ name, minutes }] }
+ * rem: onHand(db, state), passed in when rating many dinners at once.
+ */
+export function readiness(db, state, dinnerId, rem = onHand(db, state)) {
+  const d = db.dinners?.[dinnerId] || state?.customDinners?.[dinnerId];
+  const items = itemsForNight(db, state, dinnerId, null);
+  const main = scaleItems(db, state, d?.items || {});
+  const cooker = d ? isSlowCooked(d) : false;
+  const missing = [];
+  const sideOut = [];
+  const thaw = [];
+  // The short shelf name ("Chicken thighs"), as on the list.
+  const nameOf = (id) => db.ingredients?.[id]?.short || plainName(itemMeta(db, state, id).name);
+  for (const id of Object.keys(items)) {
+    // A staple (soy sauce, paprika, oil) is in the house unless someone switched it off or marked it
+    // low: Tonight's rule, so the two never disagree (gauntlet r7: every dinner "needed soy sauce").
+    if (kindOf(db, state, id) === 'staple') { if (stapleShort(state, id)) missing.push(nameOf(id)); continue; }
+    const have = rem[id] ?? 0;
+    if (!(have === Infinity || have + 1e-9 >= items[id] * ENOUGH)) (id in main ? missing : sideOut).push(nameOf(id));
+    else if (isMeat(db, id) && have !== Infinity && placeOf(db, state, id) === 'freezer' && !cooker) {
+      // A cold-water thaw: about 30 minutes a pound, never less than half an hour.
+      const lb = itemMeta(db, state, id).unit === 'lb' ? items[id] : 1;
+      thaw.push({ name: nameOf(id), minutes: Math.max(30, Math.round(lb * 2) * 15) });
+    }
+  }
+  return { ready: !missing.length, missing, sideOut, thaw };
+}
+

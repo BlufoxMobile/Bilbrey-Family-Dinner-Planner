@@ -392,7 +392,6 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .span-note { margin: 0 0 var(--s3); font-size: var(--t-sm); color: var(--ink-2); text-align: center; }
 .span-note .link-btn { min-height: 44px; }
 /* Round 6: tonight's picker in groups, three lines a row. */
-.pick-list .pick-head { padding: 16px 6px 6px; font-size: var(--t-sm); font-weight: 700; color: var(--ink-2); border-bottom: 1px solid var(--line); }
 .pick-row .pick-main small.pick-meta { color: var(--ink-2); }
 /* Round 6: Change side's "every time" sits under the list and stays in reach while it scrolls. */
 .sub-scope { position: sticky; bottom: -24px; z-index: 2; margin: var(--s3) -22px -24px; padding: 10px 22px calc(10px + 24px); background: var(--card); border-top: 1px solid var(--line); }
@@ -436,3 +435,20 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .have-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 var(--s3); }
 .have-acts .btn { flex: 1 1 200px; }
 .pan-have { margin: 0 0 var(--s4); }
+/* Round 7: Check-in's two buttons never squeeze a label onto two lines; below 420px they stack. */
+@media (max-width: 419px) { .ck-money .ck-actions { flex-wrap: wrap; } .ck-money .ck-actions .btn { flex: 1 1 100%; } }
+.ck-day .chip.chip { min-height: 44px; }
+/* Round 7: below 375px, online, Open sits under the amount instead of on top of it, and words never split. */
+.item .item-qty { overflow-wrap: break-word; }
+@media (max-width: 374px) {
+  .item.is-online .item-main .item-qty { padding-right: 0; }
+  .item.is-online .order-it { grid-column: 3; grid-row: 2; justify-self: start; align-self: start; margin: 0 0 10px; }
+}
+/* Round 7: the pickers' group headings are real headings; the star marks a favorite; one meta line. */
+.pick-list .pick-head { padding: 16px 6px 6px; border-bottom: 1px solid var(--line); }
+.pick-list .pick-head h3 { margin: 0; font-size: var(--t-sm); font-weight: 700; color: var(--ink-2); font-family: inherit; letter-spacing: 0; }
+.pick-fav { display: inline-flex; vertical-align: -1px; margin-left: 6px; }
+.pick-fav .ic { color: var(--butter); fill: var(--butter); }
+.pick-meta-part { white-space: nowrap; }
+.have-none { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 var(--s3); padding: 10px 12px; border-radius: var(--r-ctl); background: var(--paper-2); color: var(--ink); font-size: var(--t-sm); }
+.have-acts { margin: var(--s4) 0 0; }

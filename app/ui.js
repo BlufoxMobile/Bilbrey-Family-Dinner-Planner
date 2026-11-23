@@ -178,8 +178,11 @@ export function openSheet(opts) {
   }
   document.documentElement.classList.add('has-sheet'); // also when reusing a sheet that was on its way out
   if (!wasOpen) motion.sheetOpened(d);
-  const first = d.querySelector('[autofocus]') || d.querySelector('.sheet-body button, .sheet-body input, .sheet-body select, .sheet-body a, .sheet-body textarea') || d.querySelector('.sheet-close');
+  // data-autofocus, not the autofocus attribute: showModal() scrolls to a native autofocus target and
+  // shoved the sheet off the top of the screen (gauntlet r7).
+  const first = d.querySelector('[data-autofocus]') || d.querySelector('.sheet-body button, .sheet-body input, .sheet-body select, .sheet-body a, .sheet-body textarea') || d.querySelector('.sheet-close');
   first?.focus({ preventScroll: true });
+  d.scrollTop = 0;
 }
 
 /**
@@ -223,8 +226,11 @@ export function refreshLiveSheet() {
   if (current?.live) renderSheet();
 }
 
-/** Closes the sheet. `instant` skips the exit (the route is changing, or it was dragged away). */
-export function closeSheet({ instant = false } = {}) {
+/**
+ * Closes the sheet. `instant` skips the exit (the route is changing, or it was dragged away).
+ * `focusTo`: an element id to focus once the sheet is gone, instead of the button that opened it.
+ */
+export function closeSheet({ instant = false, focusTo = null } = {}) {
   const d = document.getElementById('sheet');
   const c = current;
   current = null;
@@ -241,7 +247,9 @@ export function closeSheet({ instant = false } = {}) {
     if (d?.open) { try { d.close(); } catch { d.removeAttribute('open'); } }
     pendingFocus = null;
     const page = document.getElementById('app') || document.body;
-    if (back && document.contains(back) && back !== document.body) back.focus?.({ preventScroll: true });
+    const to = focusTo && document.getElementById(focusTo);
+    if (to) to.focus({ preventScroll: true });
+    else if (back && document.contains(back) && back !== document.body) back.focus?.({ preventScroll: true });
     else if (!restoreFocus(page, snap) && tvOn()) focusFirst(document.getElementById('view') || document.body);
   };
   if (!d?.open) { finish(); return; }
@@ -286,6 +294,21 @@ export function hideStaleToast(ms = 600) { // only a toast from the tap that cha
   if (Date.now() - toastAt < ms) return;
   document.getElementById('toast')?.classList.remove('is-on');
 }
+/** Says something to a screen reader without showing it (a change with no toast; WCAG 4.1.3). */
+export function announce(text) {
+  let el = document.getElementById('sr-announce');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sr-announce';
+    el.className = 'sr-only';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    document.body.appendChild(el);
+  }
+  el.textContent = '';
+  setTimeout(() => { el.textContent = text; }, 60);
+}
+
 // A toast with a button stays at least 15 seconds and waits while a finger, the mouse or keyboard focus
 // is on it (gauntlet r1: 6.5 s was too short to read and reach Undo). A plain note stays 6.5 s.
 export function toast(message, { undo = null, action = null, duration = null } = {}) {

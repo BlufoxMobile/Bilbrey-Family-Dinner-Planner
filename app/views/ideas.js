@@ -48,7 +48,7 @@ function show(app) {
     id: 'ideas',
     size: 'tall',
     live: done,
-    title: done ? (st.ideas.length === 1 ? 'One idea for dinner' : `${st.ideas.length || 'No'} ideas for dinner`) : 'What can I make?',
+    title: done ? (st.ideas.length === 1 ? 'One idea for dinner' : `${st.ideas.length || 'No'} ideas for dinner`) : 'New ideas from Claude',
     subtitle: done ? '' : 'Snap the food you want to use up. You’ll get dinners that use it.',
     render: () => body(app),
   });

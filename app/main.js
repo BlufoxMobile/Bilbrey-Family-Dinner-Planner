@@ -75,9 +75,14 @@ export const app = {
       if (res.message && !quiet) toast(res.message);
       return false;
     }
+    // Undo puts focus back on the control the change came from (gauntlet r7: it fell to the page top).
+    const origin = tv.signatureOf(document.activeElement);
     this.store.commit(res.ops);
     if (!quiet && res.message) {
-      toast(res.message, undoable && res.undo?.length ? { undo: () => { this.store.commit(res.undo); onUndo?.(); renderSheet(); toast('Undone.'); } } : {});
+      toast(res.message, undoable && res.undo?.length ? { undo: () => {
+        this.store.commit(res.undo); onUndo?.(); renderSheet(); toast('Undone.');
+        requestAnimationFrame(() => setTimeout(() => { if (!tv.focusBySignature(document, origin)) document.querySelector('#view h1, #view .page-title')?.focus?.(); }, 60));
+      } } : {});
     }
     return true;
   },

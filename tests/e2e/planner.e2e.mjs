@@ -248,7 +248,7 @@ test('lean by default and busy nights are family settings under More on the Plan
   // Cook from what you have (Jeff, r6): one tap from the pantry, what the house can make first.
   await page.click('.pan-have');
   await page.waitForSelector('dialog[open] .have-acts [data-action="ahead:open"][data-pantry="1"]');
-  assert.match(await page.textContent('dialog[open] .sheet-title'), /Cook from what you have/);
+  assert.match(await page.textContent('dialog[open] .sheet-title'), /Cook from what we have/);
   assert.ok(await page.locator('dialog[open] .pick-row .pick-ready').count() > 5, 'every dinner says whether it can happen tonight');
   await page.click('dialog[open] [data-action="ahead:open"][data-pantry="1"]');
   await page.waitForSelector('dialog[open] [data-action="ahead:go"]');

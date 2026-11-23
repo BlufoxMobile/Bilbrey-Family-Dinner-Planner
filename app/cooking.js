@@ -6,7 +6,7 @@
 import * as N from './nutrition.js';
 import { dinnerById, effectiveSides, sideInfo, itemsForNight, scaleItems, isFavorite } from './planner.js';
 import { itemMeta, unitText, readableId, singular } from './shopping.js';
-import { onHand, ENOUGH } from './coverage.js';
+import { onHand, ENOUGH, readiness } from './coverage.js';
 import { useSoon, sinceOf, placeOf } from './freshness.js';
 import { activeDeal } from './deals.js';
 import { isVegSide, VEG_ON_PLATE } from './health.js';
@@ -613,17 +613,18 @@ export const ringing = (timers, now) => (timers || []).filter((t) => !t.acked &&
 // ---------------------------------------------------------------- the recipe box: what matters to this family
 
 export const TIME_FILTERS = [{ id: '20', label: '20 min or less' }, { id: '30', label: '30 min or less' }, { id: '45', label: '45 min or less' }];
-export const RECIPE_SORTS = [{ id: 'az', label: 'A to Z' }, { id: 'quick', label: 'Quickest' }, { id: 'protein', label: 'Most protein' }, { id: 'light', label: 'Lightest' }, { id: 'cheap', label: 'Cheapest first' }, { id: 'ready', label: 'What we have first' }];
+export const RECIPE_SORTS = [{ id: 'az', label: 'A to Z' }, { id: 'quick', label: 'Quickest' }, { id: 'protein', label: 'Most protein' }, { id: 'light', label: 'Lightest' }, { id: 'cheap', label: 'Cheapest first' }];
 
 /** What the recipe box needs to know about one dinner. `rem` = coverage.onHand(db, state), computed once. */
 export function recipeFacts(db, state, d, rem) {
   const items = itemsForNight(db, state, d.id, null);
-  const check = pantryCheck(db, state, items, rem);
+  // The same count as tonight's picker and Cook from what we have (gauntlet r7: one said 1 thing, the other 5).
+  const r = readiness(db, state, d.id, rem);
   const f = plateFacts(db, state, d.id, null);
   return {
     minutes: recipeTimes(d).total || 0,
     kcal: f?.kcal ?? null, protein: f?.protein ?? null, lean: !!f?.lean, why: f?.why || '', veg: f ? f.vegServings >= VEG_ON_PLATE : false,
-    missing: check.missing.length, total: check.total, makeable: check.total > 0 && !check.missing.length,
+    missing: r.missing.length + r.sideOut.length, total: Object.keys(items).length, makeable: Object.keys(items).length > 0 && r.ready && !r.sideOut.length, ready: r,
     words: [d.title, d.subtitle, d.category, d.protein, ...d.tags, ...d.equipment.map(equipmentLabel), ...Object.keys(d.items).map((id) => itemMeta(db, state, id).name)].join(' ').toLowerCase(),
   };
 }

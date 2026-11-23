@@ -31,7 +31,9 @@ const SHEETS = [['ahead', '#/plan', '.page-plan', '[data-action="ahead:open"]'],
   ['lunch-add', '#/lunch', '.page-lunch', '[data-action="lunch:add"]'], ['trip', '#/list', '.page-list', '[data-action="trip:new"]'], ['receipt', '#/budget', '.page-budget', '[data-action="rcpt:scan"]'],
   // Not sheets, but opened the same way: the recipe's cost list, the dinner picker, and the card plan-ahead leaves on the Plan.
   ['cost', '#/recipe/cooker-beef-tips-gravy', '.page-recipe', '#recipe-cost > summary', '#recipe-cost[open]'], ['pick', '#/plan', '.page-plan', '[data-action="plan:tap"][data-date="2026-11-18"]', '.pick-list', '[data-action="night:pick"]'],
-  ['ahead-result', '#/plan', '.page-plan', '[data-action="ahead:open"]', '.ahead-card', '[data-action="ahead:go"]']];
+  ['ahead-result', '#/plan', '.page-plan', '[data-action="ahead:open"]', '.ahead-card', '[data-action="ahead:go"]'],
+  // Cook from what we have (Jeff, r6) and tonight's picker.
+  ['have', '#/pantry', '.page-pantry', '.pan-have'], ['tonight-pick', '#/tonight', '.page-tonight', '.quick [data-action="night:pick"]']];
 
 const staticSrv = await startStatic({ port: 0, quiet: true });
 const api = await startMockApi({ port: 0, quiet: true });

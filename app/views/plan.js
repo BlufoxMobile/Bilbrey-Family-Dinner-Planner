@@ -3,7 +3,7 @@
 // nights, re-planning, the plan-from store and "Planning for". Drag-and-drop on desktop.
 // Smarter planning (SPEC §21): plan ahead re-plans the planner's own picks with a before/after,
 // lean by default and busy nights, the freezer watch, leftovers and pantry catch-up.
-import { html, ic, when, segmented, toast, openSheet, closeSheet, renderSheet, switchToggle, tf } from '../ui.js';
+import { html, ic, when, segmented, toast, openSheet, closeSheet, renderSheet, switchToggle, tf, announce } from '../ui.js';
 import { addDays, diffDays, money, rangeLabel, shortDate, startOfWeek, monthName, weekday, monthOnly, datesBetween, weekdayName, midSentence } from '../util.js';
 import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage, isRetired, itemsForNight, defaultAnchor as defaultAnchorFor } from '../planner.js';
 import { listJoin, byLabel } from '../util.js';
@@ -123,7 +123,7 @@ export function render(app) {
     </header>
     ${periodNav(app, range)}
     <div class="plan-actions">
-      <button type="button" class="btn ${open ? 'btn-primary' : 'btn-secondary'} plan-ahead-btn" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}${open ? `Plan ahead (${open} empty)` : 'Plan ahead'}</button>
+      <button type="button" class="btn ${open ? 'btn-primary' : 'btn-secondary'} plan-ahead-btn" id="plan-ahead-btn" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}${open ? `Plan ahead (${open} empty)` : 'Plan ahead'}</button>
       ${app.ui.swapMode
         ? html`<button type="button" class="btn btn-primary" data-action="plan:swapmode" aria-pressed="true">${ic('swap', { size: 20 })}Done swapping</button>`
         : html`<button type="button" class="btn btn-secondary plan-more-btn" data-action="plan:more" aria-haspopup="dialog">${ic('more', { size: 20 })}More</button>`}
@@ -181,7 +181,7 @@ function openMore(app) {
       const cov = s.planStore !== 'both' ? storeCoverage(app.db, app.state, s.planStore) : null;
       return html`
         <div class="action-list">
-          <button type="button" class="action-row" data-action="ideas:open">${ic('camera')}<span><b>What can I make?</b><small>Snap the fridge and get dinner ideas.</small></span></button>
+          <button type="button" class="action-row" data-action="ideas:open">${ic('camera')}<span><b>New ideas from Claude</b><small>Snap the fridge or use the pantry; Claude suggests dinners.</small></span></button>
           ${when(open, () => html`<button type="button" class="action-row" data-action="plan:fill">${ic('plus')}<span><b>Fill the ${open} empty ${open === 1 ? 'night' : 'nights'}</b><small>Quick picks, no questions.</small></span></button>`)}
           <button type="button" class="action-row" data-action="plan:swapmode">${ic('swap')}<span><b>Swap two nights</b><small>Tap one night, then the other.</small></span></button>
           ${when(auto, () => html`<button type="button" class="action-row" data-action="plan:replan">${ic('refresh')}<span><b>Pick new dinners for this week</b><small>Keeps cooked nights and anything set by hand. Undo brings the old ones back.</small></span></button>`)}
@@ -261,22 +261,24 @@ export const actions = {
     const today = app.today();
     const end = clampAheadEnd(today, st.end);
     const res = planAheadOps(app.db, app.state, { start: today, end, who: app.who(), today, pantryFirst: st.pantryFirst, replan: st.replan });
-    closeSheet();
     app.ui.aheadLast = { end, pantryFirst: st.pantryFirst, replan: st.replan };
     // The result card is part of what's saved (state.planAhead), so Undo takes it back with the plan,
     // and it's still there after a reload. The card is the answer, with its own Undo; no toast repeats
     // its title (gauntlet r6). A press that changed nothing is still one line.
     const rec = res.ops.find((o) => o.path?.[0] === 'planAhead');
-    if (!rec) { app.commit(res); app.render(); return; }
+    if (!rec) { closeSheet(); app.commit(res); app.render(); return; }
     app.ui.aheadUndo = { at: rec.value.at, undo: res.undo };
-    app.ui.focusNext = 'ahead-h';
     app.commit(res, { quiet: true });
+    // Focus the card's heading once the sheet has gone, and say what happened (WCAG 2.4.3, 4.1.3; gauntlet r7).
+    closeSheet({ focusTo: 'ahead-h' });
+    announce(res.message);
     setTimeout(() => document.getElementById('ahead-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
   },
   'ahead:undo': (app) => {
     const u = app.ui.aheadUndo;
     if (!u) return;
     app.ui.aheadUndo = null;
+    app.ui.focusNext = 'plan-ahead-btn';
     app.commit({ ops: u.undo, undo: [], message: 'Undone: the plan is back the way it was.' });
   },
   'ahead:list': (app) => {
@@ -353,8 +355,9 @@ function openPlanAhead(app, { pantryFirst: force } = {}) {
   });
   openSheet({
     id: 'plan-ahead',
-    title: 'Plan ahead',
-    subtitle: 'Dinners and lunches from tonight on.',
+    // From Cook from what we have it says what it's doing (gauntlet r7).
+    title: force ? 'Plan from the pantry' : 'Plan ahead',
+    subtitle: force ? 'Dinners from tonight on, using what’s in the house first.' : 'Dinners and lunches from tonight on.',
     render: () => {
       const dates = datesBetween(today, st.end);
       const own = dates.filter((d) => d > today && app.state.plan?.[d]?.dinner && isFillable(app.state.plan[d], 'replan')).length; // never tonight's
@@ -422,12 +425,12 @@ function aheadCard(app) {
   return html`<section class="ahead-card" id="ahead-card" aria-labelledby="ahead-h">
     <div class="ahead-head">
       <h2 id="ahead-h" class="section-title" tabindex="-1">${ic('checkCircle', { size: 22 })}<span>Planned through ${dayText(a.end, today)}</span></h2>
-      ${when(app.ui.aheadUndo?.at === a.at, () => html`<button type="button" class="btn btn-small btn-quiet ahead-undo" data-action="ahead:undo">${ic('undo', { size: 18 })}Undo</button>`)}
       <button type="button" class="icon-btn" data-action="ahead:close" aria-label="Close this summary">${ic('close', { size: 20 })}</button>
     </div>
     ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html`<span class="ahead-save">, ${money(saved, { whole: true })} less than before</span>` : ''}</p>`)}
     ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
     <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}See the shopping list</button>
+    ${when(app.ui.aheadUndo?.at === a.at, () => html`<button type="button" class="btn btn-quiet btn-block ahead-undo" data-action="ahead:undo">${ic('undo', { size: 18 })}Undo this plan</button>`)}
     <details class="ahead-details"><summary>The pantry, each night and the cost</summary>
     <p class="ahead-covers"><b>${s.dinnersCovered || s.lunchesCovered ? `Your pantry covers ${listJoin(covers)}.` : 'No dinner is all in the pantry yet.'}</b></p>
     <p class="ahead-through">${s.coveredThrough

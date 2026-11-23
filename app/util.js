@@ -242,14 +242,16 @@ export function plural(n, one, many = one + 's') {
  * their capitals ("Idahoan Au Gratin…", "Trader Joe's…", "Old Bay fries", "BBQ beans").
  */
 /** Brand names that start a title and keep their capital mid-sentence. */
-const BRAND_START = /^(Ritz|Oreo|Doritos|Capri|Cheetos|Tillamook|Jewel|Kerrygold|Rao's|Trader|Boar's|Bonduelle|Taylor|Idahoan|Cracker|Del|Mission|Stonefire|Lucerne|Chobani|Perdue|Artesano|Hidden|Signature|Member's|Philly|Progresso|National|Knorr|Kikkoman|Buona|French's|Crystal|Badia|McCormick|Cholula|Stubb's|Whataburger|Sabra|Nabisco|Yoo-hoo|Jojo's|Old)$/;
+const BRAND_START = /^(Ritz|Oreo|Doritos|Capri|Cheetos|Tillamook|Jewel|Kerrygold|Rao's|Trader|Boar's|Bonduelle|Taylor|Idahoan|Cracker|Del|Mission|Stonefire|Lucerne|Chobani|Perdue|Artesano|Hidden|Signature|Member's|Philly|Progresso|National|Knorr|Kikkoman|Buona|French's|Crystal|Badia|McCormick|Cholula|Stubb's|Whataburger|Sabra|Nabisco|Yoo-hoo|Jojo's|Old|Italian|Greek|Cajun|Mexican|French|Asian|Hatch|Thai|Buffalo|Swiss|American|Hawaiian|Korean|Dijon|Parmesan|Caesar|Salsalito)$/;
+// A plain describing word stays lowercase even before a proper name ("plain Greek yogurt").
+const COMMON_START = /^(Plain|Fresh|Frozen|Sliced|Shredded|Lean|Mini|Boneless|Ground|Diced|Whole|Light|Sweet|Mild|Hot|Dried|Canned|Baby|Large|Small|Sharp|Grated|Cooked|Smoked|Seasoned|Breaded|Organic|Mild)$/;
 
 export function midSentence(title) {
   const t = String(title || '');
   const words = t.split(/\s+/);
   const first = words[0] || '';
   if (!/^[A-Z][a-z]/.test(first) || BRAND_START.test(first)) return t; // "BBQ", "7-layer", already lowercase
-  if (words.length > 1 && !/^[a-z&(]/.test(words[1])) return t; // a brand or proper name
+  if (words.length > 1 && !/^[a-z&(]/.test(words[1]) && !COMMON_START.test(first)) return t; // a brand or proper name
   return first[0].toLowerCase() + t.slice(1);
 }
 

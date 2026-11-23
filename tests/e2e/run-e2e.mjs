@@ -723,7 +723,13 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   await page.waitForTimeout(500);
   await shot(page, 'e2e-28-receipt-review');
   await page.click('dialog[open] [data-action="rcpt:save"]');
-  await toastMatch(page, /^Saved \$[\d.,]+ from Sam's Club, Nov 15\. Learned \d+ prices/);
+  // One line when the groceries go in the pantry, then Cook from what we have opens with them (gauntlet r7).
+  await toastMatch(page, /^Saved \$[\d.,]+ · \d+ items? in the pantry$/);
+  await page.waitForSelector('dialog[open] .have-acts');
+  assert.match(await page.textContent('dialog[open] .sheet-title'), /Cook from what we have/);
+  assert.match(await page.textContent('dialog[open] .pick-list'), /Uses what you just bought|Ready now/);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog[open]'));
   const s = (await familyState(page)).state;
   const rid = Object.keys(s.receiptLog)[0];
   assert.match(rid, /^sams-2026-11-15-\d+$/);

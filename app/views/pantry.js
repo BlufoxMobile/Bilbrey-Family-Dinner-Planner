@@ -248,7 +248,7 @@ export function render(app) {
       <p class="muted small pan-add-how">${canScan ? 'Photos of the shelves: the app suggests what it sees, you confirm.' : app.store.device.localOnly ? 'Photo scanning needs the family server; this device is set to “this device only.”' : !app.store.device.key ? 'Photo scanning needs the family passcode (Family & settings).' : 'Photo scanning isn’t available right now.'} Just shopped? <button type="button" class="link-btn" data-action="rcpt:scan">Scan the receipt</button>.</p>
     </section>
     ${useFirstCard(app, soon, ask)}
-    ${when(entries.length, () => html`<button type="button" class="btn btn-secondary btn-block pan-have" data-action="have:open">${ic('flame', { size: 20 })}What can we make with what we have?</button>`)}
+    ${when(entries.length, () => html`<button type="button" class="btn btn-secondary btn-block pan-have" data-action="have:open">${ic('flame', { size: 20 })}Cook from what we have</button>`)}
     ${syncCard(app)}
     ${when(low.length, () => html`<section class="pan-group"><h2 class="section-title">Running low</h2><ul class="pan-list">${low.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)}
     ${entries.length ? html`

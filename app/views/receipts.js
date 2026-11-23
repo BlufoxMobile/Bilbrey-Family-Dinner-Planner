@@ -255,12 +255,15 @@ async function save(app) {
     ops.push(...pops);
   }
   const learned = ops.learned ? ` Learned ${ops.learned === 1 ? 'one price' : `${ops.learned} prices`} for next time.` : '';
-  const message = `Saved ${money(ops.total)} from ${where}, ${shortDate(ops.date)}.${ops.counted ? '' : ' It was already in the Budget, so it’s not counted twice.'}${learned}${stocked ? ` ${stocked} ${stocked === 1 ? 'item is' : 'items are'} in the pantry now.` : ''}`;
+  // With groceries in the pantry the toast is one line; Cook from what we have opens right after (gauntlet r7).
+  const message = stocked
+    ? `Saved ${money(ops.total)} · ${stocked} ${stocked === 1 ? 'item' : 'items'} in the pantry`
+    : `Saved ${money(ops.total)} from ${where}, ${shortDate(ops.date)}.${ops.counted ? '' : ' It was already in the Budget, so it’s not counted twice.'}${learned}`;
   app.commit({ ops: [...ops], undo: undoFor(app.state, ops), message });
   closeSheet();
-  // The groceries are in: show what the house can make now (gauntlet r6).
   const here = location.hash;
-  if (stocked) setTimeout(() => { if (location.hash === here) openHave(app); }, 350);
+  const bought = new Set(receipt.lines.filter((l) => l.matchId).map((l) => l.matchId));
+  if (stocked) setTimeout(() => { if (location.hash === here) openHave(app, { bought }); }, 350);
 }
 
 // ---------------------------------------------------------------- 3. history

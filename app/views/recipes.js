@@ -85,8 +85,7 @@ function card(app, { d, facts }) {
       <span class="r-meta">${timeLabel(d)}${facts.minutes ? ', ' : ''}${d.category}${when(isFavorite(app.state, d), () => html`<span class="r-fav">${ic('star', { size: 14 })}<span class="sr-only">Family favorite</span></span>`)}</span>
       ${when(nutri, () => html`<span class="r-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein${leanMark(facts, { compact: true })}</span>`)}
       ${costNote(facts.cost, { short: true, tag: 'span', cls: 'r-cost' })}
-      ${facts.makeable ? html`<span class="r-pantry is-ready">${ic('check', { size: 14 })}All in the house</span>`
-        : app.ui.recipeSort === 'ready' && facts.missing ? html`<span class="r-pantry">Needs ${facts.missing} ${facts.missing === 1 ? 'thing' : 'things'}</span>` : ''}
+      ${when(facts.makeable, () => html`<span class="r-pantry is-ready">${ic('check', { size: 14 })}All in the house</span>`)}
     </span>
   </a></li>`;
 }
@@ -99,7 +98,7 @@ function emptyGrid(app) {
     return html`<p class="empty-body pad">${app.ui.recipeTab === 'bench' ? 'Every bench dinner has joined the rotation.' : 'No dinners here yet.'}</p>`;
   }
   const why = f.makeable ? 'Nothing here can be made from the pantry alone right now.'
-    : f.equipment ? `No ${equipLabel(f.equipment)} dinners ${q || activeFilters(app).length > 1 ? 'match these filters' : `are in this tab yet${f.equipment === 'possible cooker' ? '. Ask Claude for PossibleCooker ideas from “What can I make?” on the Plan' : ''}`}.`
+    : f.equipment ? `No ${equipLabel(f.equipment)} dinners ${q || activeFilters(app).length > 1 ? 'match these filters' : `are in this tab yet${f.equipment === 'possible cooker' ? '. Ask Claude for PossibleCooker ideas from “New ideas from Claude” on the Plan' : ''}`}.`
       : q ? `No dinners match “${q}”${activeFilters(app).length ? ' with these filters' : ''}.` : 'No dinners match these filters.';
   return html`<div class="empty r-empty">
     <span class="empty-ic">${ic('search', { size: 28 })}</span>

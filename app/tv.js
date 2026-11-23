@@ -90,6 +90,15 @@ function signature(el) {
   return parts.join('|');
 }
 
+/** Focus the control that matches a signature taken earlier (Undo puts focus back where the change came from). */
+export function signatureOf(el) { return el && el !== doc?.body ? signature(el) : null; }
+export function focusBySignature(scope, sig) {
+  if (!sig) return null;
+  const el = sig.startsWith('#') ? scope.querySelector(`#${CSS.escape(sig.slice(1))}`) : focusables(scope).find((e) => signature(e) === sig);
+  if (el) el.focus({ preventScroll: false });
+  return el || null;
+}
+
 const visible = (el) => {
   if (el.disabled || el.getAttribute('aria-hidden') === 'true' || el.closest('[inert]')) return false;
   if (!el.getClientRects().length && !isHiddenInput(el)) return false;

@@ -135,7 +135,8 @@ function cartWord(item) {
   let w;
   if (/\bpiece\b/i.test(label) && weight) w = 'piece';
   // Several packages sold as one ("16 oz × 6", "12 pk", "2 × 16 oz"): you pick up one pack.
-  else if (/\b\d+\s*(pk|ct|count)\b|×\s*\d|\d\s*×|\b\d+[\s-]*pack\b/i.test(label)) w = 'pack';
+  // Counted things that come in a known package keep its word ("1 bag (8 buns)"), as the pantry says (gauntlet r7).
+  else if (/\b\d+\s*(pk|ct|count)\b|×\s*\d|\d\s*×|\b\d+[\s-]*pack\b/i.test(label)) w = COUNT_UNITS.has(unit) && !/×/.test(label) && defaultWord(name, unit) !== 'pack' ? defaultWord(name, unit) : 'pack';
   else if (/\bcereal\b/i.test(both)) w = 'box';
   else if (/\b(yogurt|cream cheese|sour cream|cottage cheese|hummus)\b/i.test(name) && !COUNT_UNITS.has(unit)) w = 'tub';
   else if (/\b(juice|creamer)\b/i.test(name) && !COUNT_UNITS.has(unit)) w = 'carton';
