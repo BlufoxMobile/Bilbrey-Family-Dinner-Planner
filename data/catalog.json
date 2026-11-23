@@ -5484,7 +5484,9 @@
     "grilled chicken",
     "cooked chicken breast",
     "chicken strips",
-    "fire grilled chicken"
+    "fire grilled chicken",
+    "italian herb grilled chicken",
+    "italian herb grilled chicken breasts"
    ],
    "packs": {
     "sams": {
@@ -5512,7 +5514,9 @@
      }
     }
    },
-   "lunch": true
+   "lunch": true,
+   "meat": true,
+   "cooked": true
   },
   "lightRanch": {
    "name": "Light ranch dressing",
@@ -8087,6 +8091,183 @@
       "size": 1,
       "price": 1.59,
       "label": "Del Monte Whole New Potatoes, 15 oz (est.)"
+     }
+    }
+   }
+  },
+  "hatchEnchiladasDeli": {
+   "name": "Hatch chile chicken enchiladas (Member's Mark deli)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "aliases": [
+    "hatch chile chicken enchiladas",
+    "hatch enchiladas",
+    "chicken enchiladas",
+    "green chile enchiladas",
+    "enchilada tray"
+   ],
+   "brand": "Member's Mark",
+   "usual": {
+    "store": "sams",
+    "tier": "generic"
+   },
+   "meat": true,
+   "cooked": true,
+   "prepared": true,
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 2.7,
+      "price": 12.8,
+      "label": "Member's Mark Hatch Chile and Chicken Enchiladas, deli tray, ~2.7 lb ($4.74/lb)"
+     },
+     "name": {
+      "size": 2.7,
+      "price": 12.8,
+      "label": "Member's Mark Hatch Chile and Chicken Enchiladas, deli tray, ~2.7 lb ($4.74/lb) (no national brand)"
+     }
+    }
+   }
+  },
+  "pankoChicken": {
+   "name": "Breaded chicken breasts, fully cooked (Member's Mark deli)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "aliases": [
+    "panko breaded chicken breast",
+    "panko chicken",
+    "breaded chicken breast",
+    "breaded chicken breasts"
+   ],
+   "brand": "Member's Mark",
+   "usual": {
+    "store": "sams",
+    "tier": "generic"
+   },
+   "meat": true,
+   "cooked": true,
+   "prepared": true,
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 1.6,
+      "price": 9.98,
+      "label": "Member's Mark Panko Breaded Chicken Breast, deli case, ~1.6 lb ($6.24/lb)"
+     },
+     "name": {
+      "size": 1.6,
+      "price": 9.98,
+      "label": "Member's Mark Panko Breaded Chicken Breast, deli case, ~1.6 lb ($6.24/lb) (no national brand)"
+     }
+    }
+   }
+  },
+  "macCheeseDeli": {
+   "name": "Mac & cheese (Member's Mark deli)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "aliases": [
+    "macaroni and cheese",
+    "mac and cheese",
+    "mac n cheese",
+    "deli mac and cheese"
+   ],
+   "brand": "Member's Mark",
+   "usual": {
+    "store": "sams",
+    "tier": "generic"
+   },
+   "prepared": true,
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 2.4,
+      "price": 7.78,
+      "label": "Member's Mark Macaroni and Cheese, deli tray, ~2.4 lb ($3.24/lb)"
+     },
+     "name": {
+      "size": 2.4,
+      "price": 7.78,
+      "label": "Member's Mark Macaroni and Cheese, deli tray, ~2.4 lb ($3.24/lb) (no national brand)"
+     }
+    }
+   }
+  },
+  "ranaLasagna": {
+   "name": "Chicken Alfredo & mushroom lasagna (Giovanni Rana, family size)",
+   "unit": "lb",
+   "aisle": "Meat",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "aliases": [
+    "chicken alfredo lasagna",
+    "rana lasagna",
+    "giovanni rana lasagna",
+    "chicken and mushroom lasagna"
+   ],
+   "brand": "Giovanni Rana",
+   "usual": {
+    "store": "sams",
+    "tier": "generic"
+   },
+   "meat": true,
+   "cooked": true,
+   "prepared": true,
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 2.5,
+      "price": 13.82,
+      "label": "Giovanni Rana Chicken Alfredo & Mushroom Lasagna, 40 oz"
+     },
+     "name": {
+      "size": 2.5,
+      "price": 13.82,
+      "label": "Giovanni Rana Chicken Alfredo & Mushroom Lasagna, 40 oz (no national brand)"
+     }
+    }
+   }
+  },
+  "resersPotatoes": {
+   "name": "Roasted potatoes, ready to heat (Reser's Main St. Bistro)",
+   "unit": "oz",
+   "aisle": "Meat",
+   "storage": "fridge",
+   "kind": "measured",
+   "defaultStore": "sams",
+   "aliases": [
+    "roasted potatoes",
+    "reser's roasted potatoes",
+    "main st bistro potatoes",
+    "bistro potatoes"
+   ],
+   "brand": "Reser's",
+   "usual": {
+    "store": "sams",
+    "tier": "generic"
+   },
+   "prepared": true,
+   "packs": {
+    "sams": {
+     "generic": {
+      "size": 34,
+      "price": 7.96,
+      "label": "Reser's Main St. Bistro Roasted Potatoes, 2 × 17 oz"
+     },
+     "name": {
+      "size": 34,
+      "price": 7.96,
+      "label": "Reser's Main St. Bistro Roasted Potatoes, 2 × 17 oz (no national brand)"
      }
     }
    }

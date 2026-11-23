@@ -2039,6 +2039,57 @@
       "unit": "cans",
       "basis": "per 15 oz can, drained (about 9 oz potatoes)",
       "source": "Package label (typical): Del Monte Whole New Potatoes, about 60 kcal & 1 g protein per ⅔ cup"
+    },
+    "hatchEnchiladasDeli": {
+      "kcal": 955,
+      "protein": 62,
+      "carbs": 60,
+      "fat": 52,
+      "fiber": 4,
+      "veg": 0.6,
+      "unit": "lb",
+      "basis": "1 lb heat-and-serve deli Hatch chile chicken enchiladas",
+      "source": "Sam's Club product page label: 430 kcal & 28 g protein a serving, 6 servings a ~2.7 lb tray"
+    },
+    "pankoChicken": {
+      "kcal": 1000,
+      "protein": 82,
+      "carbs": 60,
+      "fat": 47,
+      "fiber": 2,
+      "unit": "lb",
+      "basis": "1 lb fully cooked breaded chicken breast",
+      "source": "estimate: typical breaded cooked chicken breast labels, ~220 kcal & 18 g protein per 100 g"
+    },
+    "macCheeseDeli": {
+      "kcal": 790,
+      "protein": 38,
+      "carbs": 80,
+      "fat": 36,
+      "fiber": 3,
+      "unit": "lb",
+      "basis": "1 lb deli macaroni and cheese",
+      "source": "Sam's Club product page label: 330 kcal & 16 g protein a serving, about 6 servings a ~2.5 lb tray"
+    },
+    "ranaLasagna": {
+      "kcal": 800,
+      "protein": 40,
+      "carbs": 72,
+      "fat": 38,
+      "fiber": 3,
+      "unit": "lb",
+      "basis": "1 lb refrigerated chicken Alfredo & mushroom lasagna",
+      "source": "Giovanni Rana label: about 5 servings a 40 oz tray, 20 g protein a serving; calories estimated from similar chicken Alfredo lasagnas"
+    },
+    "resersPotatoes": {
+      "kcal": 28,
+      "protein": 0.6,
+      "carbs": 4.5,
+      "fat": 1,
+      "fiber": 0.4,
+      "unit": "oz",
+      "basis": "1 oz ready-to-heat roasted potatoes",
+      "source": "estimate: typical seasoned roasted potato labels, ~100 kcal per 100 g"
     }
   }
 }

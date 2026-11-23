@@ -104,7 +104,11 @@
     "chicken-and-dumplings": "img/dinners/chicken-and-dumplings.webp",
     "garlic-parmesan-chicken": "img/dinners/garlic-parmesan-chicken.webp",
     "cheesy-chicken-broccoli-rice": "img/dinners/cheesy-chicken-broccoli-rice.webp",
-    "seapak-shrimp-night": "img/dinners/seapak-shrimp-night.webp"
+    "seapak-shrimp-night": "img/dinners/seapak-shrimp-night.webp",
+    "hatch-chicken-enchiladas": "img/dinners/hatch-chicken-enchiladas.webp",
+    "panko-chicken-mac": "img/dinners/panko-chicken-mac.webp",
+    "italian-herb-chicken-potatoes": "img/dinners/italian-herb-chicken-potatoes.webp",
+    "rana-chicken-alfredo-lasagna": "img/dinners/rana-chicken-alfredo-lasagna.webp"
   },
   "sides": {
     "jewel-fries": "img/sides/jewel-fries.webp",
@@ -148,7 +152,10 @@
     "cooker-mashed-potatoes": "img/sides/cooker-mashed-potatoes.webp",
     "steamed-normandy-vegetables": "img/sides/steamed-normandy-vegetables.webp",
     "mexicorn": "img/sides/mexicorn.webp",
-    "new-potatoes": "img/sides/new-potatoes.webp"
+    "new-potatoes": "img/sides/new-potatoes.webp",
+    "garden-salad": "img/sides/garden-salad.webp",
+    "deli-mac": "img/sides/deli-mac.webp",
+    "bistro-roasted-potatoes": "img/sides/bistro-roasted-potatoes.webp"
   },
   "generated": "2026-11-22",
   "model": "Higgsfield gpt_image_2_6 (GPT Image 2.6). First set: quality medium, 1k. v3 set of 66 pictures and the 13 for docs/spec/24 (2026-11-15, see dev/photo-jobs.json): quality high, 2k. Dinners 3:2 -> 1200x800 + 640x427 webp, sides and lunch 1:1 -> 640x640 webp 2026-11-22: 26 more for the dinners and canned sides that replaced the ones the family marked No (quality high, 2k).",

@@ -6154,6 +6154,180 @@
       ],
       "sideSlots": 2,
       "photo": "A plate piled with golden, crispy breaded butterfly shrimp with lemon wedges and a small cup of red cocktail sauce, beside a heap of golden fries and buttered corn."
+    },
+    {
+      "id": "hatch-chicken-enchiladas",
+      "title": "Hatch chile chicken enchiladas",
+      "subtitle": "The Member’s Mark deli enchiladas, warmed in the microwave, with seasoned black beans and a garden salad.",
+      "category": "Tex-Mex",
+      "protein": "chicken",
+      "minutes": 15,
+      "prepMinutes": 3,
+      "cookMinutes": 12,
+      "equipment": [
+        "microwave"
+      ],
+      "tags": [
+        "family usual"
+      ],
+      "rotation": "bench",
+      "items": {
+        "hatchEnchiladasDeli": 2.7
+      },
+      "steps": [
+        "Take the lid off the tray. The deli tray isn’t microwave-safe, so move the enchiladas, sauce and all, onto two or three microwave-safe plates.",
+        {
+          "text": "Cover each plate with a microwave-safe lid or a damp paper towel and microwave on high, one plate at a time, until bubbling at the edges and a thermometer in the middle of an enchilada reads 165°F, about 3–4 minutes a plate.",
+          "minutes": 4,
+          "setting": "Microwave, high"
+        },
+        "Let them stand 1 minute, then divide among five plates and spoon the sauce from the plate over the top."
+      ],
+      "tips": [
+        "Heat a plate at a time: a full tray in the microwave stays cold in the middle.",
+        "Keep the cover on so the tortillas steam soft instead of drying out."
+      ],
+      "leftovers": "Keeps 3 days in the fridge, covered. Reheat one portion at a time in the microwave until it reads 165°F.",
+      "sides": [
+        "black-beans",
+        "garden-salad"
+      ],
+      "sideSlots": 2,
+      "photo": "Two creamy green chile chicken enchiladas on a plate, covered in a pale green Hatch chile cream sauce with melted pepper jack cheese, next to seasoned black beans with a lime wedge and a small garden salad of lettuce, shredded carrot and red cabbage."
+    },
+    {
+      "id": "panko-chicken-mac",
+      "title": "Crispy panko chicken with mac & cheese",
+      "subtitle": "The deli’s breaded chicken breasts crisped in the air fryer, with deli mac & cheese and green beans with crispy onions.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 20,
+      "prepMinutes": 2,
+      "cookMinutes": 18,
+      "equipment": [
+        "air fryer"
+      ],
+      "tags": [
+        "family usual"
+      ],
+      "rotation": "bench",
+      "items": {
+        "pankoChicken": 1.6
+      },
+      "steps": [
+        {
+          "text": "Heat the air fryer to 375°F for 3 minutes. The Member’s Mark breaded chicken breasts come fully cooked from the deli, so this only crisps the panko and heats them through.",
+          "minutes": 3,
+          "setting": "Air fryer, 375°F"
+        },
+        {
+          "text": "Lay the chicken breasts in the basket in one layer, not touching (two batches if they crowd), and air-fry until the breading is deep golden and crisp and a thermometer in the thickest part reads 165°F, 8–10 minutes, turning them once halfway.",
+          "minutes": 9,
+          "setting": "Air fryer, 375°F"
+        },
+        "Move them to a cutting board and let them rest 2 minutes so the breading stays crunchy, then slice each breast across into strips so everyone gets an even share of the 1½ lb.",
+        "Plate the chicken with a scoop of the warm mac & cheese and the green beans, and scatter the crispy onions over the beans at the table so they stay crunchy."
+      ],
+      "tips": [
+        "Don’t stack them: the breading only crisps where the air reaches it.",
+        "Start the mac & cheese on the stove first; it takes the longest."
+      ],
+      "leftovers": "Keeps 3 days in the fridge. Re-crisp in the air fryer at 375°F for 4–5 minutes; the microwave makes the breading soft.",
+      "sides": [
+        "deli-mac",
+        "crispy-onion-green-beans"
+      ],
+      "sideSlots": 2,
+      "photo": "Golden panko-crusted chicken breast cutlets sliced on a plate beside a scoop of creamy macaroni and cheese and buttered green beans topped with crispy fried onions."
+    },
+    {
+      "id": "italian-herb-chicken-potatoes",
+      "title": "Italian herb chicken with crispy potatoes",
+      "subtitle": "The Member’s Mark Italian herb grilled chicken breasts, warmed and sliced, with warm naan, crispy roasted potatoes and steamed broccoli.",
+      "category": "Comfort",
+      "protein": "chicken",
+      "minutes": 17,
+      "prepMinutes": 3,
+      "cookMinutes": 14,
+      "equipment": [
+        "microwave",
+        "stovetop"
+      ],
+      "tags": [
+        "family usual",
+        "healthier"
+      ],
+      "rotation": "bench",
+      "items": {
+        "grilledChicken": 21,
+        "naan": 3
+      },
+      "steps": [
+        "The grilled chicken comes fully cooked; this only warms it. Slice the 5 breasts about ½ inch thick.",
+        {
+          "text": "Spread the slices on a microwave-safe plate, cover and microwave on high until hot and a thermometer in the middle reads 165°F, 2–3 minutes, stirring the slices once halfway.",
+          "minutes": 3,
+          "setting": "Microwave, high"
+        },
+        {
+          "text": "While the chicken stands, warm the 3 naan in a dry skillet over medium heat, 30–60 seconds a side, and cut each into 5 wedges: three wedges a plate.",
+          "minutes": 2,
+          "setting": "Stovetop, medium"
+        },
+        "Divide among five plates and spoon any juices from the plate over the top."
+      ],
+      "tips": [
+        "Slicing first heats it evenly and keeps the edges from drying out.",
+        "Start the potatoes in the air fryer first; the chicken takes 3 minutes at the end."
+      ],
+      "leftovers": "Keeps 3 days in the fridge. Cold sliced chicken is good in a packed lunch or on a salad.",
+      "sides": [
+        "bistro-roasted-potatoes",
+        "steamed-broccoli"
+      ],
+      "sideSlots": 2,
+      "photo": "Sliced Italian-herb grilled chicken breast with grill marks fanned on a plate beside crispy golden roasted potatoes and bright steamed broccoli with butter."
+    },
+    {
+      "id": "rana-chicken-alfredo-lasagna",
+      "title": "Chicken Alfredo & mushroom lasagna",
+      "subtitle": "Giovanni Rana’s family-size lasagna, microwaved in its own tray, with steamed broccoli and a garden salad.",
+      "category": "Pasta",
+      "protein": "chicken",
+      "minutes": 15,
+      "prepMinutes": 2,
+      "cookMinutes": 13,
+      "equipment": [
+        "microwave"
+      ],
+      "tags": [
+        "family usual"
+      ],
+      "rotation": "bench",
+      "items": {
+        "ranaLasagna": 2.5
+      },
+      "steps": [
+        "Take the carton off and peel away the plastic film. The Giovanni Rana tray is made for the microwave, so the lasagna stays in it; set it on a large plate to catch any drips.",
+        {
+          "text": "Microwave on high for 9 minutes (that’s for a 1200-watt microwave; add 1–2 minutes for a smaller one), until the sauce bubbles at the edges and a thermometer pushed into the center reads 160°F.",
+          "minutes": 9,
+          "setting": "Microwave, high"
+        },
+        "If the center isn’t at 160°F yet, give it another minute and check again; the middle is always the last part to heat.",
+        "Let it stand 2 minutes so the layers set and don’t slide apart, then cut it into five equal pieces with a sharp knife and lift them out with a spatula."
+      ],
+      "tips": [
+        "Use pot holders: the tray gets hot.",
+        "Steam the broccoli on the stove while the lasagna microwaves."
+      ],
+      "leftovers": "Keeps 3 days in the fridge, covered. Reheat a piece in the microwave until hot.",
+      "sides": [
+        "steamed-broccoli",
+        "garden-salad"
+      ],
+      "sideSlots": 2,
+      "photo": "A square slice of creamy chicken Alfredo and mushroom lasagna with layers of pasta and white sauce on a plate, beside bright steamed broccoli with butter and a small garden salad."
     }
   ],
   "sides": [
@@ -6170,7 +6344,7 @@
         "salt": 0.5
       },
       "steps": [
-                {
+        {
           "text": "Heat the air fryer to the package temperature (usually 400°F). Cook one 26 oz bag of frozen fries (any cut) from frozen in single layers, shaking the basket halfway, until crisp and golden, about 12–18 minutes per batch.",
           "minutes": 12,
           "setting": "Air fryer, 400°F"
@@ -7108,6 +7282,68 @@
         "Sprinkle with the garlic powder, Italian seasoning, salt and black pepper, toss and serve."
       ],
       "photo": "A bowl of small golden whole new potatoes glossy with butter and flecked with herbs and cracked black pepper."
+    },
+    {
+      "id": "garden-salad",
+      "title": "Garden salad with ranch",
+      "kind": "salad",
+      "minutes": 5,
+      "equipment": [],
+      "items": {
+        "gardenSalad": 16,
+        "ranch": 3
+      },
+      "steps": [
+        "Tip half the 2 lb bag of garden salad (16 oz) into a large bowl; it’s already washed.",
+        "Fluff it with your hands and pick out anything wilted.",
+        "Serve the ranch on the side so the greens stay crisp and everyone dresses their own."
+      ],
+      "photo": "A large wooden bowl of crisp bagged garden salad, iceberg and green leaf lettuce with shredded carrot and red cabbage, a small dish of ranch dressing beside it."
+    },
+    {
+      "id": "deli-mac",
+      "title": "Deli mac & cheese",
+      "kind": "starch",
+      "minutes": 12,
+      "equipment": [
+        "stovetop"
+      ],
+      "items": {
+        "macCheeseDeli": 2.4,
+        "milk": 0.25
+      },
+      "steps": [
+        "Spoon the Member’s Mark mac & cheese from its deli tray into a large saucepan and add the milk.",
+        {
+          "text": "Cover and warm over medium-low heat, stirring from the bottom every couple of minutes, until hot all the way through and a thermometer in the middle reads 165°F, 10–12 minutes.",
+          "minutes": 10,
+          "setting": "Stovetop, medium-low, lid on"
+        },
+        "Add another splash of milk if it tightens, then serve."
+      ],
+      "photo": "A bowl of creamy baked-style macaroni and cheese with a golden cheddar sauce and a few browned edges."
+    },
+    {
+      "id": "bistro-roasted-potatoes",
+      "title": "Crispy roasted potatoes",
+      "kind": "starch",
+      "minutes": 15,
+      "equipment": [
+        "air fryer"
+      ],
+      "items": {
+        "resersPotatoes": 34
+      },
+      "steps": [
+        "Heat the air fryer to 400°F. The Reser’s potatoes are already cooked and seasoned, so this only heats and crisps them.",
+        {
+          "text": "Tip both 17 oz trays of potatoes into the basket in a single layer (two batches if they crowd) and air-fry, shaking twice, until hot, browned and crisp at the edges, 10–12 minutes a batch.",
+          "minutes": 10,
+          "setting": "Air fryer, 400°F"
+        },
+        "Serve right away; they soften as they sit."
+      ],
+      "photo": "Golden, crisp-edged roasted potato chunks with herbs and sea salt in a serving bowl."
     }
   ],
   "renamed": {

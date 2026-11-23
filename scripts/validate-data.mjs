@@ -79,7 +79,7 @@ const REMOVED_SIDES = new Set(['tomato-cucumber', 'cucumber-spears', 'sesame-cuc
 
 // Which catalog meat ids satisfy each "protein" value.
 const PROTEIN_IDS = {
-  chicken: ['chicken', 'chickenThighs', 'groundChicken', 'fajitaChicken', 'pulledChicken', 'chickenAlfredoDeli', 'frozenTenders'],
+  chicken: ['chicken', 'chickenThighs', 'groundChicken', 'fajitaChicken', 'pulledChicken', 'chickenAlfredoDeli', 'frozenTenders', 'grilledChicken', 'hatchEnchiladasDeli', 'pankoChicken', 'ranaLasagna'],
   beef: ['beef', 'beefPatties', 'roastBeef', 'eyeRoundSteak', 'stewMeat', 'sirloinTip', 'chuckRoast'],
   pork: ['pork', 'porkLoin', 'groundPork', 'pulledPork'],
   sausage: ['italianSausage', 'smokedSausage', 'chorizo', 'chickenSausage'],

@@ -4515,6 +4515,61 @@
      "note": "Price the family actually paid (purchase history, Aug–Nov 2026)"
     }
    }
+  },
+  "hatchEnchiladasDeli": {
+   "sams": {
+    "generic": {
+     "size": 2.7,
+     "price": 12.8,
+     "label": "Member's Mark Hatch Chile and Chicken Enchiladas, deli tray, ~2.7 lb ($4.74/lb)",
+     "confidence": "listed",
+     "note": "Sam's Club price, Nov 2026"
+    }
+   }
+  },
+  "pankoChicken": {
+   "sams": {
+    "generic": {
+     "size": 1.6,
+     "price": 9.98,
+     "label": "Member's Mark Panko Breaded Chicken Breast, deli case, ~1.6 lb ($6.24/lb)",
+     "confidence": "listed",
+     "note": "Sam's Club price, Nov 2026"
+    }
+   }
+  },
+  "macCheeseDeli": {
+   "sams": {
+    "generic": {
+     "size": 2.4,
+     "price": 7.78,
+     "label": "Member's Mark Macaroni and Cheese, deli tray, ~2.4 lb ($3.24/lb)",
+     "confidence": "listed",
+     "note": "Sam's Club price, Nov 2026"
+    }
+   }
+  },
+  "ranaLasagna": {
+   "sams": {
+    "generic": {
+     "size": 2.5,
+     "price": 13.82,
+     "label": "Giovanni Rana Chicken Alfredo & Mushroom Lasagna, 40 oz",
+     "confidence": "listed",
+     "note": "Sam's Club price, Nov 2026"
+    }
+   }
+  },
+  "resersPotatoes": {
+   "sams": {
+    "generic": {
+     "size": 34,
+     "price": 7.96,
+     "label": "Reser's Main St. Bistro Roasted Potatoes, 2 × 17 oz",
+     "confidence": "listed",
+     "note": "Sam's Club price, Nov 2026"
+    }
+   }
   }
  }
 }
