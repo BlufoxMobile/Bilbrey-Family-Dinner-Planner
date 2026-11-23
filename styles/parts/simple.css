@@ -276,3 +276,4 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .cook-cue-line { display: grid; gap: 2px; margin-top: 4px; font-size: var(--t-sm); color: var(--ink-2); font-weight: 400; }
 .cook-safe { margin-top: var(--s4); }
 .cook-ready > .cook-safe { grid-column: 1 / -1; }
+.list-filter .seg-opt { flex: 1 1 0; min-width: 0; padding: 0 8px; }

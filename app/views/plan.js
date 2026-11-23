@@ -123,7 +123,7 @@ export function render(app) {
     </header>
     ${periodNav(app, range)}
     <div class="plan-actions">
-      <button type="button" class="btn ${open ? 'btn-primary' : 'btn-secondary'} plan-ahead-btn" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}${open ? `Plan ahead (${open} open)` : 'Plan ahead'}</button>
+      <button type="button" class="btn ${open ? 'btn-primary' : 'btn-secondary'} plan-ahead-btn" data-action="ahead:open" aria-haspopup="dialog">${ic('sparkle', { size: 20 })}${open ? `Plan ahead (${open} empty)` : 'Plan ahead'}</button>
       ${app.ui.swapMode
         ? html`<button type="button" class="btn btn-primary" data-action="plan:swapmode" aria-pressed="true">${ic('swap', { size: 20 })}Done swapping</button>`
         : html`<button type="button" class="btn btn-secondary plan-more-btn" data-action="plan:more" aria-haspopup="dialog">${ic('more', { size: 20 })}More</button>`}

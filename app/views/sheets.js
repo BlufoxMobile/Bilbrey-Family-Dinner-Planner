@@ -443,7 +443,7 @@ export function openLeftoverNight(app, from) {
           const t = app.state.plan?.[x];
           const td = t?.dinner ? dinnerById(app.db, app.state, t.dinner) : null;
           return html`<li><button type="button" class="move-row ${td ? '' : 'is-open'}" data-action="leftovers:night-set" data-from="${from}" data-night="${x}">
-            <span class="move-day"><b>${dayWord(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${td ? `Instead of ${td.title}` : 'Open'}</span>${ic('right', { size: 18 })}
+            <span class="move-day"><b>${dayWord(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${td ? `Instead of ${td.title}` : 'Nothing planned'}</span>${ic('right', { size: 18 })}
           </button></li>`;
         })}</ul>`;
     },
