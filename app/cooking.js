@@ -6,7 +6,7 @@
 import * as N from './nutrition.js';
 import { dinnerById, effectiveSides, sideInfo, itemsForNight, scaleItems, isFavorite } from './planner.js';
 import { itemMeta, unitText, readableId, singular } from './shopping.js';
-import { onHand, ENOUGH, readiness } from './coverage.js';
+import { onHand, ENOUGH, readiness, stapleShort } from './coverage.js';
 import { useSoon, sinceOf, placeOf } from './freshness.js';
 import { activeDeal } from './deals.js';
 import { isVegSide, VEG_ON_PLATE } from './health.js';
@@ -406,7 +406,9 @@ export function stepIngredients(db, state, items, steps) {
 export function pantryCheck(db, state, items, rem = onHand(db, state)) {
   const rows = Object.entries(scaleItems(db, state, items || {})).map(([id, need]) => {
     const meta = itemMeta(db, state, id);
-    const have = rem[id] ?? 0;
+    // A staple follows readiness()'s rule: in the house unless switched off or marked low, so the
+    // recipe page, Can make now and Cook from what we have give one answer (gauntlet r8).
+    const have = meta.kind === 'staple' ? (stapleShort(state, id) ? 0 : Infinity) : rem[id] ?? 0;
     const ok = have === Infinity || have + 1e-9 >= need * ENOUGH;
     return {
       id, name: meta.name, unit: meta.unit, need: round2(need), have: have === Infinity ? Infinity : round2(have),

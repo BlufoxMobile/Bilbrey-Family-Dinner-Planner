@@ -21,3 +21,10 @@ test('freezer notes on Tonight read as plain English', () => {
     'Chicken breast: one 10 lb pack plus the 2 lb in the freezer cover all 4 dinners, with 3 lb left over.',
   );
 });
+
+test('clockText: dinner time rounded up to the quarter hour, no a.m./p.m. (gauntlet r8)', async () => {
+  const { clockText } = await import('../app/util.js');
+  assert.equal(clockText(17 * 60 + 30 + 90 + 30), '7:30');
+  assert.equal(clockText(18 * 60 + 1), '6:15');
+  assert.equal(clockText(12 * 60), '12:00');
+});

@@ -122,10 +122,28 @@ export function placeDinnerOps(db, state, { dinnerId, date, who, at, today, from
   const entry = { dinner: dinnerId, sides: [...d.sides], status: 'planned', manual: true, ...s };
   const displaced = target?.dinner && target.status === 'planned' ? { dinner: target.dinner, sides: target.sides ? [...target.sides] : undefined } : null;
   const ops = [set(['plan', date], entry)];
-  const message = displaced
-    ? `${d.title} is on for ${nightName(date, today)}, replacing ${titleOf(db, state, displaced.dinner)}.`
-    : `${d.title} is on for ${nightName(date, today)}.`;
-  return result(state, ops, message, { kind: 'replace', displaced });
+  if (displaced) {
+    // The bumped dinner moves to the first open night after this one, so one tap is one decision
+    // (gauntlet r8: a second "What about …?" sheet, and closing it dropped the dinner). It comes off
+    // the plan only when six weeks have no open night. Undo puts everything back.
+    const to = nextOpenNight(state, date, today);
+    const other = titleOf(db, state, displaced.dinner);
+    if (to) {
+      ops.push(set(['plan', to], { dinner: displaced.dinner, sides: displaced.sides || [...(dinnerById(db, state, displaced.dinner)?.sides || [])], status: 'planned', manual: true, ...s }));
+      return result(state, ops, `${d.title} is on for ${nightName(date, today)}. ${other} moved to ${nightName(to, today)}.`, { kind: 'replace', displaced, movedTo: to });
+    }
+    return result(state, ops, `${d.title} is on for ${nightName(date, today)}. ${other} came off the plan: no open night in the next six weeks.`, { kind: 'replace', displaced, movedTo: null });
+  }
+  return result(state, ops, `${d.title} is on for ${nightName(date, today)}.`, { kind: 'replace', displaced: null });
+}
+
+/** The first open night after `date` (never tonight), within six weeks; else the first one from tomorrow. */
+export function nextOpenNight(state, date, today) {
+  const open = (x) => { const e = state?.plan?.[x]; return !e || (e.status === 'planned' && !e.dinner); };
+  const from = today && date < today ? today : date;
+  for (let i = 1; i <= 42; i++) { const x = addDays(from, i); if (open(x)) return x; }
+  if (today) for (let i = 1; i <= 42; i++) { const x = addDays(today, i); if (x !== date && open(x)) return x; }
+  return null;
 }
 
 /** Put a displaced dinner on an open night. */

@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { tinyDb, realDb } from './helpers.mjs';
 import { applyOps } from '../app/state.js';
+import { addDays } from '../app/util.js';
 import {
   placeDinnerOps, swapNightsOps, markAwayOps, bringBackOps, substituteOps, nightSideOps, resetSideOps, voteOps, markCookedOps,
   unmarkCookedOps, moveDisplacedOps, retireOps, restoreOps, generateOps,
@@ -33,16 +34,26 @@ test('"Make this tonight" with a dinner already in the plan swaps the two nights
   assert.deepEqual(applyOps(n, r.undo).plan, s.plan, 'undo restores both nights exactly');
 });
 
-test('placing a dinner not in the plan replaces the night and offers the displaced dinner', () => {
+test('placing a dinner not in the plan replaces the night and moves the bumped dinner to the next open night', () => {
   const s = week();
   const r = placeDinnerOps(db, s, { dinnerId: 'burger', date: '2026-11-17', ...ctx });
   assert.equal(r.kind, 'replace');
   assert.equal(r.displaced.dinner, 'chix-grill');
-  let n = run(s, r);
+  assert.equal(r.movedTo, '2026-11-19', 'the first open night after Tuesday (Wednesday has a dinner)');
+  const n = run(s, r);
   assert.equal(n.plan['2026-11-17'].dinner, 'burger');
-  const m = moveDisplacedOps(db, n, { ...r.displaced, toDate: '2026-11-19', ...ctx });
-  n = run(n, m);
   assert.equal(n.plan['2026-11-19'].dinner, 'chix-grill');
+  assert.deepEqual(n.plan['2026-11-19'].sides, ['broc', 'beans'], 'its sides go with it');
+  assert.match(r.message, /^Burger is on for tomorrow\. .* moved to Thursday\.$/i);
+  assert.deepEqual(applyOps(n, r.undo).plan, s.plan, 'one Undo puts both nights back');
+  // Tonight's dinner never lands on tonight, and a full six weeks drops it with a plain message.
+  const full = { plan: Object.fromEntries(Array.from({ length: 50 }, (_, i) => [addDays(TODAY, i), { dinner: 'beef-bowl', status: 'planned' }])) };
+  full.plan[TODAY] = { dinner: 'chix-pasta', status: 'planned' };
+  const f = placeDinnerOps(db, full, { dinnerId: 'burger', date: TODAY, ...ctx });
+  assert.equal(f.movedTo, null);
+  assert.match(f.message, /came off the plan/);
+  // The old move-it-yourself op still works for the connector and older screens.
+  const m = moveDisplacedOps(db, run(s, { ops: [r.ops[0]] }), { ...r.displaced, toDate: '2026-11-20', ...ctx });
   assert.match(m.message, /moved to/);
 });
 

@@ -459,3 +459,19 @@ test('recipe box: makeable from the pantry, lean, appliance, time, protein, favo
   const protein = [...rows].sort(recipeCompare('protein'));
   assert.ok(protein[0].facts.protein >= protein[protein.length - 1].facts.protein);
 });
+
+test('readiness: what the dinner is made of counts as far, a side keeps it off "ready", staples follow one rule (gauntlet r8)', async () => {
+  const db = realDb();
+  const { readiness } = await import('../app/coverage.js');
+  // Pulled pork is the dinner: missing it is the "main" missing, however few other things are.
+  const pork = readiness(db, { pantry: {} }, 'jd-pulled-pork-sandwiches');
+  assert.ok(pork.missing.length >= 1);
+  assert.ok(pork.keyMissing >= 1, 'the pulled pork itself');
+  // The chicken is in: only garlic (not what it's made of) can be missing.
+  const pepper = readiness(db, { pantry: { chickenThighs: { qty: 6 } } }, 'pepper-chicken-potatoes');
+  assert.equal(pepper.keyMissing, 0);
+  assert.equal(pepper.makeable, pepper.ready && !pepper.sideOut.length, 'makeable means the sides too');
+  // An unrecorded staple is in the house for the recipe page as for readiness; switched off, it isn't.
+  assert.equal(pantryCheck(db, {}, { honey: 1 }).rows[0].status, 'have');
+  assert.equal(pantryCheck(db, { pantry: { honey: { qty: null, stocked: false } } }, { honey: 1 }).rows[0].status, 'none');
+});

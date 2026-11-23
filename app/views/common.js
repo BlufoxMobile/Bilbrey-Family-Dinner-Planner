@@ -254,7 +254,7 @@ export function timelineChart(tl) {
 /** After dinner: how many servings went in the fridge? (`then`: where cook mode goes once it's answered.) */
 export function leftoversQuestion(app, date, { then = '', heading = 'Any leftovers?', dish = '' } = {}) {
   return html`<div class="lo-ask" role="group" aria-labelledby="lo-ask-h-${date}">
-    <h2 id="lo-ask-h-${date}" class="section-title">${heading}</h2>
+    <h2 id="lo-ask-h-${date}" class="section-title" tabindex="-1">${heading}</h2>
     <p class="muted small">${dish ? html`<b>${dish}.</b> ` : ''}How many servings went in the fridge?</p>
     <div class="lo-nums">${[0, 1, 2, 3, 4, 5, 6].map((n) => html`<button type="button" class="chip chip-lg lo-num" data-action="leftovers:save" data-date="${date}" data-n="${n}" ${then ? html`data-then="${then}"` : ''} aria-label="${n === 0 ? 'No leftovers' : n === 6 ? 'Six or more servings' : `${n} ${n === 1 ? 'serving' : 'servings'}`}">${n === 0 ? 'None' : n === 6 ? '6+' : n}</button>`)}</div>
   </div>`;

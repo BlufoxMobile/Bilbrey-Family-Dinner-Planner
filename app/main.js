@@ -254,6 +254,8 @@ function focusNext() {
   const el = document.getElementById(id);
   if (!el) return;
   el.focus({ preventScroll: true }); // the text is left as typed, not selected: one slipped letter shouldn't cost the whole passcode
+  // A heading that takes focus after an action (Mark cooked → "Any leftovers tonight?") comes into view too.
+  if (/^H\d$/.test(el.tagName)) el.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
 }
 
 // How deep a screen sits, so a transition knows whether it is going in, coming back, or moving sideways.

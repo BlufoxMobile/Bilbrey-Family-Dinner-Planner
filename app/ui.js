@@ -262,7 +262,12 @@ export const sheetOpen = () => !!current;
 export const sheetId = () => current?.id || null;
 
 /** In-app confirmation (never window.confirm). Resolves true/false. */
-export function confirmSheet({ title, body = '', confirm = 'Confirm', cancel = 'Cancel', danger = false }) {
+/**
+ * A yes/no sheet → Promise<boolean>. `safe`: an "anyway?" question starts on Cancel, so Enter doesn't
+ * commit something short (gauntlet r8). `onCancel`: Cancel goes back to where the question came from
+ * (it opens that sheet) instead of closing everything; ✕ and Escape still close.
+ */
+export function confirmSheet({ title, body = '', confirm = 'Confirm', cancel = 'Cancel', danger = false, safe = false, onCancel = null }) {
   return new Promise((resolve) => {
     let done = false;
     const finish = (v) => { if (done) return; done = true; resolve(v); };
@@ -273,11 +278,11 @@ export function confirmSheet({ title, body = '', confirm = 'Confirm', cancel = '
         ${when(body, () => html`<p class="sheet-text">${body}</p>`)}
         <div class="sheet-actions">
           <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'} btn-block" data-confirm="yes">${confirm}</button>
-          <button type="button" class="btn btn-quiet btn-block" data-confirm="no">${cancel}</button>
+          <button type="button" class="btn btn-quiet btn-block" data-confirm="no" ${safe ? html`data-autofocus` : ''}>${cancel}</button>
         </div>`,
       onMount: (el) => {
         el.querySelector('[data-confirm="yes"]').addEventListener('click', () => { finish(true); closeSheet(); });
-        el.querySelector('[data-confirm="no"]').addEventListener('click', () => { finish(false); closeSheet(); });
+        el.querySelector('[data-confirm="no"]').addEventListener('click', () => { finish(false); if (onCancel) onCancel(); else closeSheet(); });
       },
       onClose: () => finish(false),
     });

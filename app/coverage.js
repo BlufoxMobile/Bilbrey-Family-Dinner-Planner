@@ -103,7 +103,8 @@ const plainName = (name) => String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').re
 /**
  * Can this dinner be made from what's in the house right now? (gauntlet r5: tonight's picker listed
  * 40 dinners with nothing to say which ones could actually happen.)
- * → { ready (the main is in), missing: [names], sideOut: [names], thaw: [{ name, minutes }] }
+ * → { ready (the main is in), makeable (the sides too), missing: [names], sideOut: [names],
+ *     thaw: [{ name, minutes }], keyMissing (how many of the missing are what the dinner is made of) }
  * rem: onHand(db, state), passed in when rating many dinners at once.
  */
 export function readiness(db, state, dinnerId, rem = onHand(db, state)) {
@@ -114,6 +115,10 @@ export function readiness(db, state, dinnerId, rem = onHand(db, state)) {
   const missing = [];
   const sideOut = [];
   const thaw = [];
+  // What the dinner is made of: its first item (pulled pork, the deli Alfredo, the chicken tenders)
+  // and any meat. Missing one of those isn't "close" (gauntlet r8: "Needs pulled pork" led Closest first).
+  const first = Object.keys(d?.items || {})[0];
+  let keyMissing = 0;
   // The short shelf name ("Chicken thighs"), as on the list.
   const nameOf = (id) => db.ingredients?.[id]?.short || plainName(itemMeta(db, state, id).name);
   for (const id of Object.keys(items)) {
@@ -121,13 +126,15 @@ export function readiness(db, state, dinnerId, rem = onHand(db, state)) {
     // low: Tonight's rule, so the two never disagree (gauntlet r7: every dinner "needed soy sauce").
     if (kindOf(db, state, id) === 'staple') { if (stapleShort(state, id)) missing.push(nameOf(id)); continue; }
     const have = rem[id] ?? 0;
-    if (!(have === Infinity || have + 1e-9 >= items[id] * ENOUGH)) (id in main ? missing : sideOut).push(nameOf(id));
+    if (!(have === Infinity || have + 1e-9 >= items[id] * ENOUGH)) {
+      if (id in main) { missing.push(nameOf(id)); if (id === first || isMeat(db, id)) keyMissing++; } else sideOut.push(nameOf(id));
+    }
     else if (isMeat(db, id) && have !== Infinity && placeOf(db, state, id) === 'freezer' && !cooker) {
       // A cold-water thaw: about 30 minutes a pound, never less than half an hour.
       const lb = itemMeta(db, state, id).unit === 'lb' ? items[id] : 1;
       thaw.push({ name: nameOf(id), minutes: Math.max(30, Math.round(lb * 2) * 15) });
     }
   }
-  return { ready: !missing.length, missing, sideOut, thaw };
+  return { ready: !missing.length, missing, sideOut, thaw, keyMissing, makeable: !missing.length && !sideOut.length };
 }
 

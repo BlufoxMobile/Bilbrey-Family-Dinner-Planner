@@ -269,6 +269,16 @@ export const actions = {
     if (!rec) { closeSheet(); app.commit(res); app.render(); return; }
     app.ui.aheadUndo = { at: rec.value.at, undo: res.undo };
     app.commit(res, { quiet: true });
+    // Opened from the Pantry or after a receipt: go to Plan, where the result card is (gauntlet r8: it
+    // planned two weeks while you stayed on the Pantry with nothing to say so).
+    if (!/^#\/plan(\/|$)/.test(location.hash)) {
+      closeSheet({ instant: true });
+      app.ui.focusNext = 'ahead-h';
+      app.navigate('#/plan');
+      announce(res.message);
+      setTimeout(() => document.getElementById('ahead-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+      return;
+    }
     // Focus the card's heading once the sheet has gone, and say what happened (WCAG 2.4.3, 4.1.3; gauntlet r7).
     closeSheet({ focusTo: 'ahead-h' });
     announce(res.message);

@@ -444,7 +444,7 @@ const TOOL_DEFS = [
       "dinners built on Sam's Club bulk packs (chicken thighs or breasts, ground chicken, lean ground beef, beef tips, sirloin tip, chuck roast) are welcome. Recipe items should use recipe-box ingredient ids (from list_recipes with id) where " +
       "they exist; names are matched too, and anything else becomes a shelf item so it lands on the shopping list. A new recipe is a " +
       "one-off (kept out of the automatic rotation) unless saveToRecipeBox is true. As in the app, a dinner already planned on another " +
-      "night moves to this one (trading places with this night's dinner, if any), a dinner already on the night is replaced, and a night " +
+      "night moves to this one (trading places with this night's dinner, if any), a dinner already on the night moves to the next open night (replacedMovedTo), and a night " +
       "marked cooked can't change. Confirm the night and the dinner with the user first.",
     inputSchema: {
       type: "object",
@@ -1451,7 +1451,7 @@ function planDinner(args, ctx) {
     dinner: { id: d.id, title: d.title, minutes: d.minutes, equipment: d.equipment, ...(n ? { perPlate: n } : {}) },
     sides: served.map((s) => s.title),
     ...(placed.kind === "swap" || placed.kind === "move" ? { alsoChanged: placed.other } : {}),
-    ...(placed.displaced ? { replaced: dinnerById(db, state, placed.displaced.dinner)?.title } : {}),
+    ...(placed.displaced ? { replaced: dinnerById(db, state, placed.displaced.dinner)?.title, replacedMovedTo: placed.movedTo || null } : {}),
     ...(createdRecipe ? { recipe: createdRecipe } : {}),
     ...(notes.length ? { notes } : {}),
     ...(revision ? { revision } : {}),

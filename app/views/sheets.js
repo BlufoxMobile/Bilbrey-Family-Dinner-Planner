@@ -3,14 +3,14 @@
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, confirmSheet, stepper, sheetId, tf, switchToggle } from '../ui.js';
 import { AWAY_REASONS } from '../config.js';
 import {
-  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate, byLabel, listJoin, hourIn, midSentence, money,
+  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate, byLabel, listJoin, hourIn, midSentence, money, minutesIn, clockText,
 } from '../util.js';
 import {
   dinnerById, rotationList, findInPlan, openNights, parseSideRef, shelfRef, sideInfo, isFavorite, kindOf, itemsForNight,
   dinnerFeasibleAt, sideSlotsFor, isRetired, isSideDropped,
 } from '../planner.js';
 import {
-  placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps, nightSideOps, prepDoneOps,
+  placeDinnerOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps, nightSideOps, prepDoneOps,
   resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName, awayBlock, bringBackTripOps,
   voteOps, sideVoteOps, lunchVoteOps, saveLeftoversOps, useLeftoverOps, clearLeftoversOps, leftoverNightOps,
   leftoverLunchChoices, leftoverLunchOps, freezeLeftoversOps, tossLeftoversOps,
@@ -26,6 +26,7 @@ import { waitText } from '../state.js';
 import { fmtMinutes } from '../data.js';
 import { readiness } from '../easy.js';
 import { onHand } from '../coverage.js';
+import { itemMeta } from '../shopping.js';
 
 const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
 
@@ -155,29 +156,49 @@ function nightActions(app, { date, d, today, past, cooked }) {
 
 // ---------------------------------------------------------------- pick a dinner
 
-/** "All in the house", "Needs chicken thighs and 6 more", "Chicken thighs are frozen (about 1 hr to thaw)". */
-export function readyText(r) {
+/**
+ * "All in the house", "Needs chicken thighs and 6 more", "All in but a side: green beans", or
+ * "Chicken thighs are frozen (about 1 hr to thaw)", which in the evening says when dinner would be:
+ * "Chicken thighs are frozen: dinner about 7:30" (gauntlet r8: don't make the family add it up).
+ */
+export function readyText(r, { eatAt = '' } = {}) {
   // midSentence keeps a proper name's capitals ("Greek yogurt", "Italian seasoning"; gauntlet r7).
   const few = (xs) => { const l = xs.map((x) => midSentence(x)); return l.length <= 2 ? listJoin(l) : `${l[0]} and ${l.length - 1} more`; };
   if (!r.ready) return `Needs ${few(r.missing)}`;
-  if (r.thaw.length) { const t = r.thaw[0]; const m = Math.max(...r.thaw.map((x) => x.minutes)); return `${t.name} ${/s$/.test(t.name) ? 'are' : 'is'} frozen (about ${m >= 60 ? `${fmtQty(Math.round(m / 30) / 2)} hr` : `${m} min`} to thaw)`; }
   if (r.sideOut.length) return `All in but a side: ${few(r.sideOut)}`;
+  if (r.thaw.length) {
+    const t = r.thaw[0];
+    const m = Math.max(...r.thaw.map((x) => x.minutes));
+    const are = /s$/.test(t.name) ? 'are' : 'is';
+    return eatAt ? `${t.name} ${are} frozen: dinner about ${eatAt}` : `${t.name} ${are} frozen (about ${m >= 60 ? `${fmtQty(Math.round(m / 30) / 2)} hr` : `${m} min`} to thaw)`;
+  }
   return 'All in the house';
 }
 
 const FAMILY_SIZE = 5;
+const HAVE_SHOW = 8; // Closest first shows this many until "Show all", so the two buttons stay in reach (gauntlet r8)
 
 /**
- * "Cook from what we have" (Jeff, r6: smart recipes from the food we actually have): every dinner,
- * fewest things missing first, what a fresh receipt brought home in its own group, and planning the
- * week from the pantry or asking Claude for new ideas under the list. Opens after a receipt fills the
- * pantry (bought: the receipt's item ids) and from the Pantry page.
+ * "Cook from what we have" (Jeff, r6: smart recipes from the food we actually have): what the house
+ * can make, what a fresh receipt brought home, then the closest dinners, with planning the week from
+ * the pantry and asking Claude for new ideas under them. Opens after a receipt fills the pantry
+ * (bought: the receipt's item ids) and from the Pantry page.
  */
 export function openHave(app, { bought = null } = {}) {
   openPick(app, app.today(), 'Cook from what we have', { have: true, bought });
 }
 
-function pickBody(app, { date, query, have = false, bought = null }) {
+// What a dinner's own ingredients take from a fresh receipt: not a side, not a staple (gauntlet r8:
+// "Chicken tender night" sat under "Uses what you just bought" for a side's cheese).
+function boughtIn(app, d, bought) {
+  if (!bought?.size) return [];
+  return Object.keys(d.items || {}).filter((id) => bought.has(id) && kindOf(app.db, app.state, id) !== 'staple');
+}
+
+const shortName = (app, id) => midSentence(app.db.ingredients?.[id]?.short || itemMeta(app.db, app.state, id).name.replace(/\s*\(.*?\)\s*/g, ' ').replace(/,.*$/, '').trim());
+
+function pickBody(app, st) {
+  const { date, query, have = false, bought = null } = st;
   const today = app.today();
   const q = (query || '').trim().toLowerCase();
   const planStore = app.settings.planStore;
@@ -186,54 +207,100 @@ function pickBody(app, { date, query, have = false, bought = null }) {
   const ready = new Map();
   const readyOf = (d) => { if (!ready.has(d.id)) ready.set(d.id, readiness(app.db, app.state, d.id, rem)); return ready.get(d.id); };
   const plannedSoon = (d) => findInPlan(app.state, d.id, { exclude: date, from: today }).some((w) => w <= addDays(today, 6));
-  const usesBought = (d) => !!bought?.size && Object.keys(itemsForNight(app.db, app.state, d.id, null)).some((id) => bought.has(id));
-  // Tonight's picker: ready now, this week's dinners (a trade), then the rest. Cook from what we have:
-  // ready now, what the receipt just brought home, then the rest — fewest things missing first, with no
-  // trade group (gauntlet r7: the closest dinners sat at the bottom).
-  const group = (d) => (!tonight ? 0 : readyOf(d).ready ? 0 : have ? (usesBought(d) ? 1 : 2) : plannedSoon(d) ? 1 : 2);
-  const need = (d) => (tonight ? readyOf(d).missing.length + (readyOf(d).thaw.length ? 0.5 : 0) + readyOf(d).sideOut.length * 0.1 : 0);
+  const fresh = new Map();
+  const freshOf = (d) => { if (!fresh.has(d.id)) fresh.set(d.id, boughtIn(app, d, bought)); return fresh.get(d.id); };
+  const current = app.state.plan?.[date]?.status === 'planned' ? app.state.plan[date].dinner : null;
+  // In the evening a thaw says when dinner would be on the table.
+  const now = tonight ? minutesIn() : 0;
+  const eatAt = (d, r) => (tonight && now >= 15 * 60 && r.thaw.length ? clockText(now + Math.max(...r.thaw.map((x) => x.minutes)) + (Number(d.minutes) || 30)) : '');
+  // Tonight's picker: ready now, ready after a thaw, this week's dinners (a trade), then the rest.
+  // Cook from what we have: ready now, after a thaw, what the receipt just brought home, then the
+  // closest. "Ready" means the sides too, as in the recipe box's Can make now (gauntlet r8: one answer).
+  const group = (d) => {
+    if (!tonight) return 'rest';
+    const r = readyOf(d);
+    if (r.makeable) return r.thaw.length ? 'thaw' : 'ready';
+    if (have) return freshOf(d).length ? 'bought' : 'rest';
+    return plannedSoon(d) ? 'week' : 'rest';
+  };
+  const ORDER = have ? ['ready', 'thaw', 'bought', 'rest'] : ['ready', 'thaw', 'week', 'rest'];
+  // Closest means closest: a missing main (the pulled pork, the deli Alfredo) is far; a missing side
+  // or a clove of garlic is near (gauntlet r8).
+  const need = (d) => {
+    if (!tonight) return 0;
+    const r = readyOf(d);
+    return (r.missing.length - r.keyMissing) + r.keyMissing * 4 + r.sideOut.length * 0.3 + (r.thaw.length ? Math.max(...r.thaw.map((x) => x.minutes)) / 600 : 0);
+  };
+  const rank = (d) => ORDER.indexOf(group(d));
+  // The dinner already on this night isn't a choice for it (gauntlet r8), except in Cook from what we
+  // have, where tonight's dinner is one of the answers.
   const list = rotationList(app.db, app.state)
+    .filter((d) => have || d.id !== current)
     .filter((d) => !q || d.title.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || d.protein.includes(q))
-    .sort((a, b) => (group(a) - group(b)) || (need(a) - need(b)) || (isFavorite(app.state, b) - isFavorite(app.state, a)) || a.title.localeCompare(b.title));
-  const current = app.state.plan?.[date]?.dinner;
+    .sort((a, b) => (rank(a) - rank(b)) || (freshOf(b).length - freshOf(a).length) || (need(a) - need(b)) || (isFavorite(app.state, b) - isFavorite(app.state, a)) || a.title.localeCompare(b.title));
   const lefts = tonight && !q ? leftoversOnHand(app.state, today).filter((l) => !l.night && l.daysLeft >= 0 && l.servings >= 3 && l.date !== today) : [];
-  const HEADS = have ? ['Ready now', 'Uses what you just bought', bought?.size ? 'Everything else, closest first' : 'Closest first'] : ['Ready now', 'This week’s dinners (they trade places)', 'Everything else'];
+  const leftsFull = lefts.filter((l) => l.servings >= FAMILY_SIZE);
+  const leftsShort = lefts.filter((l) => l.servings < FAMILY_SIZE);
+  // The heading names what came home: "Uses the chicken breasts and shredded cheddar you just bought".
+  const boughtUsed = [...new Set(list.filter((d) => group(d) === 'bought').flatMap((d) => freshOf(d)))];
+  const boughtNames = boughtUsed.length > 3 ? `${listJoin(boughtUsed.slice(0, 2).map((id) => shortName(app, id)))} and more` : listJoin(boughtUsed.map((id) => shortName(app, id)));
+  const HEADS = {
+    ready: 'Ready now',
+    thaw: 'Ready after thawing',
+    bought: `Uses the ${boughtNames} you just bought`,
+    week: 'This week’s dinners (they trade places)',
+    rest: have ? (bought?.size ? 'Everything else, closest first' : 'Closest first') : 'Everything else',
+  };
   let first = true;
-  const row = (d) => {
+  const autof = () => { const a = first ? html`data-autofocus` : ''; first = false; return a; };
+  const row = (d, extra = '') => {
     const r = tonight ? readyOf(d) : null;
-    const where = findInPlan(app.state, d.id, { exclude: date, from: today, near: date })[0];
+    const where = d.id === current ? date : findInPlan(app.state, d.id, { exclude: date, from: today, near: date })[0];
     const off = planStore !== 'both' && !dinnerFeasibleAt(app.db, app.state, d.id, planStore);
     const facts = !tonight && showNutrition(app) ? plate(app, d.id, null) : null;
     const c = costOf(app, d.id, null);
     // One meta line at 390px: the star sits by the name, and "≈ $2.67 a serving" (gauntlet r7).
     const cost = c?.perServing > 0 ? `≈ ${money(c.perServing)} a serving` : '';
-    const whereText = where ? `on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)}${tonight ? '' : ' (they’ll trade)'}` : '';
-    const meta = [timeLabel(d), whereText, off ? `needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : '', cost].filter(Boolean);
+    const whereText = where ? (d.id === current ? 'on for tonight' : `on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)}${tonight ? '' : ' (they’ll trade)'}`) : '';
+    const time = timeLabel(d);
+    const meta = [time, whereText, off ? `needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : '', cost].filter(Boolean);
     const fav = isFavorite(app.state, d);
-    const auto = first ? html`data-autofocus` : '';
-    first = false;
-    return html`<li><button type="button" class="pick-row ${d.id === current ? 'is-current' : ''}" data-action="${have ? 'have:choose' : 'pick:choose'}" data-date="${date}" data-dinner="${d.id}" ${d.id === current ? html`aria-current="true"` : ''} ${auto}>
+    // The star stays with the last word, so a long name doesn't leave it on a line of its own (gauntlet r8).
+    const words = d.title.split(' ');
+    const last = words.pop();
+    const name = fav ? html`${words.length ? `${words.join(' ')} ` : ''}<span class="pick-last">${last}<span class="pick-fav">${ic('star', { size: 14 })}<span class="sr-only">, family favorite</span></span></span>` : d.title;
+    const tone = !r ? '' : r.makeable && !r.thaw.length ? 'is-ready' : r.makeable ? 'is-thaw' : 'is-need';
+    return html`<li><button type="button" class="pick-row" data-action="${have ? 'have:choose' : 'pick:choose'}" data-date="${date}" data-dinner="${d.id}" ${extra} ${autof()}>
       ${dinnerPhoto(app, d, { size: 'thumb' })}
-      <span class="pick-main"><b>${d.title}${fav ? html`<span class="pick-fav">${ic('star', { size: 14 })}<span class="sr-only">, family favorite</span></span>` : ''}</b>
-        ${when(r, () => html`<small class="pick-ready ${r.ready && !r.thaw.length ? 'is-ready' : r.ready ? 'is-thaw' : 'is-need'}">${r.ready && !r.thaw.length ? ic('checkCircle', { size: 14 }) : r.ready ? ic('snow', { size: 14 }) : ''}${readyText(r)}</small>`)}
-        <small class="pick-meta">${meta.map((m, k) => html`${k ? ' · ' : ''}<span class="pick-meta-part">${m}</span>`)}</small>
+      <span class="pick-main"><b>${name}</b>
+        ${when(r, () => html`<small class="pick-ready ${tone}">${tone === 'is-ready' ? ic('checkCircle', { size: 14 }) : tone === 'is-thaw' ? ic('snow', { size: 14 }) : ''}${readyText(r, { eatAt: eatAt(d, r) })}</small>`)}
+        <small class="pick-meta">${meta.map((m, k) => html`${k ? ' · ' : ''}<span class="pick-meta-part ${m === time && /,/.test(m) ? 'is-wrap' : ''}">${m}</span>`)}</small>
         ${when(facts, () => html`<small class="pick-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein a plate${leanMark(facts, { compact: true })}</small>`)}</span>
     </button></li>`;
   };
-  const groups = tonight && !q ? [0, 1, 2].map((g) => ({ g, items: list.filter((d) => group(d) === g) })).filter((x) => x.items.length) : [{ g: -1, items: list }];
-  const noneReady = have && !q && !list.some((d) => group(d) === 0);
   // Real headings, so a screen reader can jump between the groups (WCAG 1.3.1, gauntlet r7).
   const head = (text) => html`<li class="pick-head"><h3>${text}</h3></li>`;
+  // Leftovers that feed all five come first; a few servings go after the ready dinners (gauntlet r8).
+  const leftRows = (ls) => (ls.length ? html`${head('Leftovers')}${ls.map((l) => { const enough = l.servings >= FAMILY_SIZE; return html`<li><button type="button" class="pick-row pick-left" data-action="leftovers:night-set" data-from="${l.date}" data-night="${date}" ${autof()}>
+          <span class="pick-ic" aria-hidden="true">${ic('bowl', { size: 22 })}</span>
+          <span class="pick-main"><b><span class="sr-only">Leftovers: </span>${l.title}</b><small class="pick-ready ${enough ? 'is-ready' : 'is-need'}">${servingsText(l.servings)} in the fridge${enough ? '. Nothing to cook' : `, not enough for all ${FAMILY_SIZE} on its own`}.</small></span></button></li>`; })}` : '');
+  const groups = tonight && !q ? ORDER.map((g) => ({ g, items: list.filter((d) => group(d) === g) })).filter((x) => x.items.length) : [{ g: null, items: list }];
+  const noneReady = have && !q && !list.some((d) => readyOf(d).makeable);
+  const capped = have && !q && !st.all;
+  const groupHtml = (x) => {
+    const cut = capped && x.g === 'rest' && x.items.length > HAVE_SHOW + 2;
+    const shown = cut ? x.items.slice(0, HAVE_SHOW) : x.items;
+    return html`${when(x.g, () => head(HEADS[x.g]))}${shown.map((d, k) => row(d, st.all && x.g === 'rest' && k === HAVE_SHOW ? html`id="pick-more-first"` : ''))}${when(cut, () => html`<li class="pick-more-li"><button type="button" class="btn btn-quiet btn-block pick-more" data-action="pick:all">Show ${x.items.length - HAVE_SHOW} more dinners</button></li>`)}`;
+  };
+  const shortAt = groups.findIndex((x) => x.g !== 'ready' && x.g !== 'thaw');
   return html`
     ${when(noneReady, () => html`<p class="have-none">${ic('info', { size: 18 })}<span>Nothing is all in the house yet. These need the fewest things.</span></p>`)}
     <label class="search">${ic('search', { size: 20 })}<input type="search" placeholder="Search dinners" value="${query || ''}" data-input="pick:query" data-date="${date}" aria-label="Search dinners" autocomplete="off"></label>
     <ul class="pick-list">
-      ${when(lefts.length, () => head('Leftovers'))}
-      ${lefts.map((l) => { const auto = first ? html`data-autofocus` : ''; first = false; const enough = l.servings >= FAMILY_SIZE; return html`<li><button type="button" class="pick-row pick-left" data-action="leftovers:night-set" data-from="${l.date}" data-night="${date}" ${auto}>
-          <span class="pick-ic" aria-hidden="true">${ic('bowl', { size: 22 })}</span>
-          <span class="pick-main"><b>Leftovers: ${l.title}</b><small class="pick-ready ${enough ? 'is-ready' : 'is-need'}">${servingsText(l.servings)} in the fridge${enough ? '. Nothing to cook' : `, not enough for all ${FAMILY_SIZE} on its own`}.</small></span></button></li>`; })}
-      ${list.length ? groups.map((x) => html`${when(x.g >= 0, () => head(HEADS[x.g]))}${x.items.map(row)}`)
+      ${leftRows(leftsFull)}
+      ${list.length ? groups.map((x, k) => html`${when(k === (shortAt < 0 ? groups.length : shortAt), () => leftRows(leftsShort))}${groupHtml(x)}`)
         : html`<li class="muted pad">${q ? `No dinners match “${query}”. Try another word, or browse the recipe box.` : 'Nothing is on the menu. Bring some back from Recipes, Not for us.'}</li>`}
+      ${when(list.length && shortAt < 0, () => leftRows(leftsShort))}
     </ul>
     ${when(have, () => html`<div class="have-acts">
       <button type="button" class="btn btn-secondary" data-action="ahead:open" data-pantry="1">${ic('sparkle', { size: 20 })}Plan the week from the pantry</button>
@@ -241,8 +308,9 @@ function pickBody(app, { date, query, have = false, bought = null }) {
     </div>`)}`;
 }
 
-export function openPick(app, date, title, { have = false, bought = null } = {}) {
-  const st = { date, query: '', have, bought };
+export function openPick(app, date, title, { have = false, bought = null, st: keep = null, focusDinner = null } = {}) {
+  const st = keep || { date, query: '', have, bought, all: false, title };
+  openPick.state = st;
   openSheet({
     id: `pick:${date}${have ? ':have' : ''}`,
     size: 'tall',
@@ -257,6 +325,8 @@ export function openPick(app, date, title, { have = false, bought = null } = {})
         tmp.innerHTML = pickBody(app, st).s;
         ul.replaceWith(tmp.querySelector('.pick-list'));
       });
+      // Back from "Make it tonight anyway?": the row you tapped, not the top of a long list (gauntlet r8).
+      if (focusDinner) requestAnimationFrame(() => el.querySelector(`.pick-row[data-dinner="${CSS.escape(focusDinner)}"]`)?.focus());
     },
   });
 }
@@ -271,39 +341,27 @@ export async function place(app, { dinnerId, date, fromDate }) {
       body: `Cook ${dinnerById(app.db, app.state, dinnerId)?.title || 'this dinner'} at home that night instead?`,
       confirm: 'Yes, we’re home',
     });
-    if (!ok) return;
+    if (!ok) return false;
   }
+  // A dinner it bumps moves to the next open night in the same change, so it's one decision with one
+  // Undo (gauntlet r8: a second "What about …?" sheet, where closing it dropped the dinner).
   const res = placeDinnerOps(app.db, app.state, { dinnerId, date, fromDate, who: app.who(), today });
-  // Undo puts the bumped dinner back, so "What about …?" no longer applies.
-  if (!app.commit(res, { onUndo: () => { if (sheetId() === 'displaced') closeSheet(); } })) return;
-  if (res.displaced) openDisplaced(app, res.displaced, date);
-  else closeSheet();
+  if (!app.commit(res)) return false;
+  closeSheet();
+  return true;
 }
 
-function openDisplaced(app, displaced, fromDate) {
+/** What happens to the dinner already on `date`, in one sentence, before the family says yes. */
+function bumpText(app, dinnerId, date) {
   const today = app.today();
-  const d = dinnerById(app.db, app.state, displaced.dinner);
-  const open = openNights(app.state, today, { limit: 6, exclude: [fromDate] });
-  openSheet({
-    id: 'displaced',
-    title: `What about ${d?.title || 'the other dinner'}?`,
-    subtitle: `It was on the plan for ${nightName(fromDate, today)}.`,
-    render: () => html`
-      <h3 class="sheet-h">Move it to an open night</h3>
-      ${open.length ? html`<div class="chip-grid">${open.map((x) => html`<button type="button" class="chip chip-lg" data-action="displaced:move" data-to="${x}" data-dinner="${displaced.dinner}">${dayWord(x, today)}<small>${shortDate(x)}</small></button>`)}</div>`
-        : html`<p class="sheet-text">No open nights in the next six weeks.</p>`}
-      <div class="sheet-actions">
-        <button type="button" class="btn btn-quiet btn-block" data-action="sheet:close">Drop it from the plan</button>
-      </div>`,
-    onMount: (el) => {
-      el.querySelectorAll('[data-action="displaced:move"]').forEach((b) => b.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        const res = moveDisplacedOps(app.db, app.state, { dinner: displaced.dinner, sides: displaced.sides, toDate: b.dataset.to, who: app.who(), today });
-        app.commit(res);
-        closeSheet();
-      }));
-    },
-  });
+  const res = placeDinnerOps(app.db, app.state, { dinnerId, date, who: app.who(), today });
+  if (res.error || !res.ops.length) return '';
+  const cur = app.state.plan?.[date]?.dinner;
+  const t = dinnerById(app.db, app.state, cur)?.title;
+  if (!t) return '';
+  if (res.kind === 'swap') return `${t} moves to ${nightName(res.other, today)}.`;
+  if (res.kind === 'replace') return res.movedTo ? `${t} moves to ${nightName(res.movedTo, today)}.` : `${t} comes off the plan.`;
+  return '';
 }
 
 // ---------------------------------------------------------------- move to another night
@@ -454,7 +512,7 @@ function subBody(app, d, slot, st, date) {
   // What can be made from the house comes first, and every side says so (gauntlet r6: a missing side
   // sent you hunting through 30 names).
   const canMake = new Map();
-  const missingFor = (s) => { if (!canMake.has(s.id)) canMake.set(s.id, pantryCheck(app.db, app.state, s.items || {}).missing.filter((m) => !m.staple)); return canMake.get(s.id); };
+  const missingFor = (s) => { if (!canMake.has(s.id)) canMake.set(s.id, pantryCheck(app.db, app.state, s.items || {}).missing); return canMake.get(s.id); };
   const sides = app.db.sideList.filter((s) => s.id !== current?.ref && !other.includes(s.id) && !isSideDropped(app.state, s.id))
     .sort((a, b) => (Math.min(missingFor(a).length, 3) - Math.min(missingFor(b).length, 3)) || a.title.localeCompare(b.title));
   const shelf = shelfItems(app);
@@ -664,8 +722,9 @@ export const actions = {
   },
   'leftovers:night': (app, el) => openLeftoverNight(app, el.dataset.date),
   'leftovers:night-set': (app, el) => {
-    app.commit(leftoverNightOps(app.db, app.state, { from: el.dataset.from, night: el.dataset.night, who: app.who(), today: app.today() }));
-    closeSheet();
+    const fromHave = /:have$/.test(sheetId() || '');
+    if (!app.commit(leftoverNightOps(app.db, app.state, { from: el.dataset.from, night: el.dataset.night, who: app.who(), today: app.today() }))) return;
+    if (fromHave) { closeSheet({ instant: true }); app.navigate('#/tonight'); } else closeSheet();
   },
   'night:uncook': (app, el) => { app.commit(unmarkCookedOps(app.db, app.state, { date: el.dataset.date })); closeSheet(); },
   'night:clear': (app, el) => { app.commit(clearNightOps(app.db, app.state, { date: el.dataset.date, today: app.today() })); closeSheet(); },
@@ -707,18 +766,34 @@ export const actions = {
   'have:choose': async (app, el) => {
     const today = app.today();
     const dinnerId = el.dataset.dinner;
+    const st = openPick.state;
+    const toTonight = () => { closeSheet({ instant: true }); app.navigate('#/tonight'); };
+    const cur = app.state.plan?.[today];
+    if (cur?.dinner === dinnerId && cur.status === 'planned') { toTonight(); return; }
     const r = readiness(app.db, app.state, dinnerId);
     if (!r.ready) {
+      // One question that says everything: what's missing and where tonight's dinner goes. Focus starts
+      // on Cancel, and Cancel goes back to the row you tapped (gauntlet r8).
       const d = dinnerById(app.db, app.state, dinnerId);
+      const bump = bumpText(app, dinnerId, today);
       const ok = await confirmSheet({
         title: `${d?.title || 'This dinner'} needs ${r.missing.length === 1 ? 'one thing' : `${r.missing.length} things`}`,
-        body: `Not in the house: ${listJoin(r.missing.map((x) => midSentence(x)))}. Make it tonight anyway?`,
+        body: `Not in the house: ${listJoin(r.missing.map((x) => midSentence(x)))}.${bump ? ` ${bump}` : ''} Make it tonight anyway?`,
         confirm: 'Make it tonight',
+        safe: true,
+        onCancel: st ? () => openPick(app, today, st.title, { have: true, st, focusDinner: dinnerId }) : null,
       });
       if (!ok) return;
     }
-    await place(app, { dinnerId, date: today });
-    if (sheetId() !== 'displaced') { closeSheet({ instant: true }); app.navigate('#/tonight'); }
+    // Either way the family lands on Tonight to see it, with one toast and one Undo (gauntlet r7, r8).
+    if (await place(app, { dinnerId, date: today })) toTonight();
+  },
+  'pick:all': () => {
+    const st = openPick.state;
+    if (!st) return;
+    st.all = true;
+    renderSheet();
+    requestAnimationFrame(() => document.getElementById('pick-more-first')?.focus());
   },
   'side:scope': () => { const st = openSubstitute.state; if (st?.canNight) { st.scope = st.scope === 'always' ? 'night' : 'always'; renderSheet(); } },
   'side:use': (app, el) => {

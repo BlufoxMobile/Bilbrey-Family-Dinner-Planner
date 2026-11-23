@@ -435,6 +435,7 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .have-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 var(--s3); }
 .have-acts .btn { flex: 1 1 200px; }
 .pan-have { margin: 0 0 var(--s4); }
+.use-first .pan-have { margin: 14px 0 0; }
 /* Round 7: Check-in's two buttons never squeeze a label onto two lines; below 420px they stack. */
 @media (max-width: 419px) { .ck-money .ck-actions { flex-wrap: wrap; } .ck-money .ck-actions .btn { flex: 1 1 100%; } }
 .ck-day .chip.chip { min-height: 44px; }
@@ -450,5 +451,11 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .pick-fav { display: inline-flex; vertical-align: -1px; margin-left: 6px; }
 .pick-fav .ic { color: var(--butter); fill: var(--butter); }
 .pick-meta-part { white-space: nowrap; }
+/* gauntlet r8: a long slow-cooker time wraps inside itself, so 320px with Large text never scrolls
+   sideways; the star stays with the name's last word; Closest first stops at eight, then "Show more". */
+.pick-meta-part.is-wrap { white-space: normal; }
+.pick-last { white-space: nowrap; }
+.pick-list .pick-more-li { padding: 8px 0 4px; list-style: none; }
+.pick-list .pick-more { min-height: 48px; }
 .have-none { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 var(--s3); padding: 10px 12px; border-radius: var(--r-ctl); background: var(--paper-2); color: var(--ink); font-size: var(--t-sm); }
 .have-acts { margin: var(--s4) 0 0; }

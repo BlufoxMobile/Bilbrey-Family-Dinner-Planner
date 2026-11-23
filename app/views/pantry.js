@@ -166,7 +166,10 @@ function syncCard(app) {
 const bare = (name) => String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').trim();
 const agoText = (days) => (days >= 60 ? `about ${Math.round(days / 30)} months` : `${days} days`);
 
-function useFirstCard(app, soon, ask = []) {
+const cookBtn = () => html`<button type="button" class="btn btn-secondary btn-block pan-have" data-action="have:open">${ic('flame', { size: 20 })}Cook from what we have</button>`;
+
+/** Use first, ending with "Cook from what we have": what to use up, then what to make with it (gauntlet r8). */
+function useFirstCard(app, soon, ask = [], { cook = false } = {}) {
   // Old freezer food belongs here too (SPEC §21.3): 60 days in, past its keep time, or meat nobody dated.
   const seen = new Set(soon.map((s) => s.id));
   const old = freezerWatch(app.db, app.state, app.today()).filter((w) => !seen.has(w.id));
@@ -195,6 +198,7 @@ function useFirstCard(app, soon, ask = []) {
     <h2 id="use-h" class="section-title">${ic('clock', { size: 22 })}Use first</h2>
     <ul class="use-list">${rows.slice(0, SHOW)}</ul>
     ${when(rows.length > SHOW, () => html`<details class="use-more" ${useMoreOpen ? 'open' : ''}><summary>${rows.length - SHOW} more</summary><ul class="use-list">${rows.slice(SHOW)}</ul></details>`)}
+    ${when(cook, cookBtn)}
   </section>`;
 }
 
@@ -247,8 +251,7 @@ export function render(app) {
       </div>
       <p class="muted small pan-add-how">${canScan ? 'Photos of the shelves: the app suggests what it sees, you confirm.' : app.store.device.localOnly ? 'Photo scanning needs the family server; this device is set to “this device only.”' : !app.store.device.key ? 'Photo scanning needs the family passcode (Family & settings).' : 'Photo scanning isn’t available right now.'} Just shopped? <button type="button" class="link-btn" data-action="rcpt:scan">Scan the receipt</button>.</p>
     </section>
-    ${useFirstCard(app, soon, ask)}
-    ${when(entries.length, () => html`<button type="button" class="btn btn-secondary btn-block pan-have" data-action="have:open">${ic('flame', { size: 20 })}Cook from what we have</button>`)}
+    ${(() => { const card = useFirstCard(app, soon, ask, { cook: entries.length > 0 }); return card || when(entries.length, cookBtn); })()}
     ${syncCard(app)}
     ${when(low.length, () => html`<section class="pan-group"><h2 class="section-title">Running low</h2><ul class="pan-list">${low.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)}
     ${entries.length ? html`

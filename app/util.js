@@ -42,6 +42,19 @@ export function hourIn(now = new Date(), tz = TZ) {
   return Number(h) || 0;
 }
 
+/** Minutes since midnight in America/Chicago. */
+export function minutesIn(now = new Date(), tz = TZ) {
+  const [h, m] = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).format(now).split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+/** "7:30" for minutes since midnight, rounded up to the quarter hour (no a.m./p.m.: it's dinner). */
+export function clockText(min) {
+  const q = Math.ceil(min / 15) * 15;
+  const h = Math.floor(q / 60) % 24;
+  return `${h % 12 || 12}:${String(q % 60).padStart(2, '0')}`;
+}
+
 export function isISODate(s) {
   return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s + 'T00:00:00Z'));
 }

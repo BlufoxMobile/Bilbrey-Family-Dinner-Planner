@@ -122,7 +122,7 @@ function hero(app, today) {
  */
 function haveLine(app, d, e) {
   const recs = plateRecipes(app.db, app.state, d.id, e);
-  const checks = recs.map((r) => ({ r, missing: pantryCheck(app.db, app.state, r.recipe.items).missing.filter((m) => !m.staple) }));
+  const checks = recs.map((r) => ({ r, missing: pantryCheck(app.db, app.state, r.recipe.items).missing }));
   const miss = checks.flatMap((c) => c.missing);
   // A side that can't be made gets its fix right here, not three screens away (gauntlet r6).
   const sideShort = checks.find((c) => c.r.kind === 'side' && c.missing.length);
@@ -238,7 +238,12 @@ export const actions = {
     const dates = dateRange(today, 7);
     app.commit(generateOps(app.db, app.state, { dates, who: app.who(), today, seedKey: periodRange(today, 'week', app.settings.weekStartsOn).start }));
   },
-  'tonight:cooked': (app, el) => app.commit(markCookedOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() })),
+  // Mark cooked turns into "Not cooked after all", so focus goes to the question that just appeared
+  // ("Any leftovers tonight?") rather than falling to the top of the page (WCAG 2.4.3, gauntlet r8).
+  'tonight:cooked': (app, el) => {
+    app.ui.focusNext = `lo-ask-h-${el.dataset.date}`;
+    if (!app.commit(markCookedOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() }))) app.ui.focusNext = null;
+  },
 };
 
 export { openPick, openAway, openNight, relativeDay };

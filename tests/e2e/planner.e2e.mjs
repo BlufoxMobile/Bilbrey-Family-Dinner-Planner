@@ -250,6 +250,22 @@ test('lean by default and busy nights are family settings under More on the Plan
   await page.waitForSelector('dialog[open] .have-acts [data-action="ahead:open"][data-pantry="1"]');
   assert.match(await page.textContent('dialog[open] .sheet-title'), /Cook from what we have/);
   assert.ok(await page.locator('dialog[open] .pick-row .pick-ready').count() > 5, 'every dinner says whether it can happen tonight');
+  // Closest first stops at eight, so the two buttons are in reach; "Show more" lands on the next row (gauntlet r8).
+  const shown = await page.locator('dialog[open] .pick-row').count();
+  assert.ok(shown < 25, `a short list first (${shown} rows)`);
+  await page.click('dialog[open] .pick-more');
+  await page.waitForFunction((n) => document.querySelectorAll('dialog[open] .pick-row').length > n, shown);
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'pick-more-first');
+  // A dinner that's short asks once, starting on Cancel, and Cancel comes back to the row.
+  const shortRow = page.locator('dialog[open] .pick-row', { has: page.locator('.pick-ready', { hasText: /^Needs/ }) }).first();
+  const sid = await shortRow.getAttribute('data-dinner');
+  await shortRow.click();
+  await page.waitForSelector('dialog[open] [data-confirm="no"]');
+  assert.match(await page.textContent('dialog[open] .sheet-text'), /^Not in the house: .+ Make it tonight anyway\?$/);
+  assert.equal(await page.evaluate(() => document.activeElement?.dataset?.confirm), 'no', 'Enter would not commit it');
+  await page.click('dialog[open] [data-confirm="no"]');
+  await page.waitForSelector('dialog[open] .have-acts');
+  await page.waitForFunction((id) => document.activeElement?.dataset?.dinner === id, sid);
   await page.click('dialog[open] [data-action="ahead:open"][data-pantry="1"]');
   await page.waitForSelector('dialog[open] [data-action="ahead:go"]');
   assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:pantry"]', 'aria-checked'), 'true', 'planned from the pantry');
