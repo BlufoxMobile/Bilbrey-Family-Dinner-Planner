@@ -629,8 +629,9 @@ test('a side’s “Not for us” asks first, then swaps in a similar side every
   const sidesBefore = await page.textContent('.hero-sides');
   const subsBefore = JSON.stringify((await familyState(page)).state.substitutions || {});
   await go(page, `#/recipe/${dinner}`, '.page-recipe');
-  const side = await page.getAttribute('.recipe-sides [data-action="vote:side"][data-value="-1"]', 'data-id');
-  await page.locator(`.recipe-sides [data-action="vote:side"][data-id="${side}"][data-value="-1"]`).click();
+  // The sides are rated in the dinner's one rating card (gauntlet r6).
+  const side = await page.getAttribute('.votes [data-action="vote:side"][data-value="-1"]', 'data-id');
+  await page.locator(`.votes [data-action="vote:side"][data-id="${side}"][data-value="-1"]`).click();
   await page.click('dialog[open] [data-confirm="yes"]');
   await toastMatch(page, /is marked “not for us”, so it’s off the menu/);
   let s = (await familyState(page)).state;

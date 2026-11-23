@@ -428,3 +428,7 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .recipe-fold-row .section-title { margin: 0; }
 .recipe-fold-row small { color: var(--ink-2); font-size: var(--t-sm); }
 .recipe-fold-row::after { content: ''; width: 9px; height: 9px; border-right: 2px solid var(--ink-3); border-top: 2px solid var(--ink-3); transform: rotate(45deg); margin-left: auto; align-self: center; }
+/* Round 6: the sides are rated inside the dinner's one rating card. */
+.vote-sides { display: grid; gap: 0; margin: var(--s3) 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.vote-sides li { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.vote-sides li > span { font-weight: 600; min-width: 0; }

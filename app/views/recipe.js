@@ -66,18 +66,19 @@ export function ingredients(app, items, { check = true } = {}) {
   })}</ul>`;
 }
 
-function votes(app, d) {
+function votes(app, d, sides = []) {
   // One shared profile (docs/spec/20): one signal for the whole family — loved, fine (neither), or not for us.
+  // One card on the page for the dinner and its sides (gauntlet r6: thumbs showed three times).
   const mine = isRetired(app.state, d.id) ? -1 : isFavorite(app.state, d) ? 1 : 0;
+  const rateable = sides.filter((s) => s.parsed.type === 'side' && app.db.sides[s.parsed.id]);
   return html`<section class="votes" aria-labelledby="votes-h">
     <h2 id="votes-h" class="section-title">What the family thinks</h2>
     <div class="vote-mine" role="group" aria-label="What the family thinks of ${d.title}">
       <button type="button" class="btn vote-btn ${mine === 1 ? 'is-on' : ''}" aria-pressed="${tf(mine === 1)}" data-action="vote:dinner" data-id="${d.id}" data-value="1">${ic('up_vote', { size: 20 })}Loved</button>
       <button type="button" class="btn vote-btn vote-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="vote:dinner" data-id="${d.id}" data-value="-1">${ic('down_vote', { size: 20 })}Not for us</button>
     </div>
-    <p class="muted small">${mine === 1 ? 'A family favorite: it gets planned more often. Tap Loved again to go back to fine.'
-      : mine === -1 ? 'Off the menu; another dinner took its place. Tap “Not for us” again to bring it back.'
-        : 'Loved: planned more often. Not for us: off the menu; it waits in Recipes under “Not for us” if you change your minds.'}</p>
+    <p class="muted small">${mine === 1 ? 'Planned more often. Tap Loved again for just fine.' : mine === -1 ? 'Off the menu. Tap Not for us again to bring it back.' : 'Loved is planned more often; Not for us comes off the menu.'}</p>
+    ${when(rateable.length, () => html`<ul class="vote-sides">${rateable.map((s) => html`<li><span>${s.info?.title}</span>${thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', compact: true, labels: true })}</li>`)}</ul>`)}
   </section>`;
 }
 
@@ -264,7 +265,7 @@ export function render(app) {
 
     ${nutritionSection(app, d, entry, sides, facts)}
     ${when(showNutrition(app), () => html`<button type="button" class="recipe-fold-row" data-action="rec:plate-guide"><span class="section-title">One dinner, two plates</span><small>A lighter plate and a fuller one</small></button>`)}
-    ${votes(app, d)}
+    ${votes(app, d, sides)}
     ${when(retired || bench, () => html`<section class="parent-tools">
       <h2 class="section-title">${retired ? 'Not for us' : 'Maybe later'}</h2>
       ${retired ? html`<button type="button" class="btn btn-secondary" data-action="rec:restore" data-dinner="${d.id}">${ic('undo', { size: 20 })}Put it back on the menu</button>`
