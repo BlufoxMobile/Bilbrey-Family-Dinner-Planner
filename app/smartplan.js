@@ -11,7 +11,7 @@
 // Pure: no DOM, no clock (today and `at` are passed in).
 
 import { set, applyOps } from './state.js';
-import { rotationList, dinnerById, isFavorite, isFillable, itemsForNight } from './planner.js';
+import { rotationList, allDinners, isRetired, dinnerById, isFavorite, isFillable, itemsForNight } from './planner.js';
 import { readiness, onHand } from './coverage.js';
 import { dinnerCost } from './cost.js';
 import { plateLean, leanOn, busyNightsOf, budgetPace } from './health.js';
@@ -58,6 +58,27 @@ export function smartNights(db, state, { start, end, today, change = true, famil
 }
 
 /**
+ * The dinners Claude may choose from: the rotation; the family's usual dinners kept off it (the
+ * bench: a deli tray or kit they only have when they've bought it) while its main is in the house;
+ * and every dinner already on a night in the stretch, so Claude can keep it. (Nov 23: a Rana
+ * lasagna best by tomorrow wasn't on the list, so Claude couldn't plan it or keep it.)
+ * → [{ d, bought }]
+ */
+export function choiceList(db, state, { start, end, today, rem = onHand(db, state) }) {
+  const out = new Map(rotationList(db, state).map((d) => [d.id, { d, bought: false }]));
+  for (const d of allDinners(db, state)) {
+    if (out.has(d.id) || isRetired(state, d.id)) continue;
+    const r = readiness(db, state, d.id, rem, today);
+    if (r.makeable || r.ready) out.set(d.id, { d, bought: true });
+  }
+  for (const date of datesBetween(start, end)) {
+    const d = state?.plan?.[date]?.dinner ? dinnerById(db, state, state.plan[date].dinner) : null;
+    if (d && !out.has(d.id)) out.set(d.id, { d, bought: d.rotation === 'bench' });
+  }
+  return [...out.values()];
+}
+
+/**
  * The POST /api/plan body.
  * → { today, start, end, family, pantryFirst, lean, budget, nights, dinners, useSoon, freezer, recent }
  */
@@ -76,7 +97,7 @@ export function smartPlanRequest(db, state, { start, end, today, change = true, 
     if (e.status !== 'cooked' && !(e.status === 'planned' && d < today)) continue;
     if (!lastAte.has(e.dinner) || lastAte.get(e.dinner) < d) lastAte.set(e.dinner, d);
   }
-  const dinners = rotationList(db, state).map((d) => {
+  const dinners = choiceList(db, state, { start: day0, end: last, today, rem }).map(({ d, bought }) => {
     const r = readiness(db, state, d.id, rem, today);
     const cost = dinnerCost(db, state, d.id, null, { today });
     const h = plateLean(db, state, d.id, null);
@@ -89,6 +110,7 @@ export function smartPlanRequest(db, state, { start, end, today, change = true, 
       kcal: h?.kcal || null, proteinG: h?.proteinG ? Math.round(h.proteinG) : null, lean: !!h?.lean, heavy: !!h?.heavy,
       ready, fav: isFavorite(state, d) || undefined,
     };
+    if (bought) o.bought = true;
     if (ready === 'short') o.needs = [...r.missing, ...r.sideOut].slice(0, 4);
     if (ready === 'side') o.needs = r.sideOut.slice(0, 3);
     if (r.keyMissing) o.missingMain = true;
@@ -129,7 +151,7 @@ export function smartPlanOps(db, state, reply, { start, end, today, who = 'Claud
   const day0 = start < today ? today : start;
   const last = clampAheadEnd(today, end);
   const allowed = new Map(smartNights(db, state, { start: day0, end: last, today, change, family }).filter((n) => n.plan !== 'keep').map((n) => [n.date, n]));
-  const rotation = new Set(rotationList(db, state).map((d) => d.id));
+  const rotation = new Set(choiceList(db, state, { start: day0, end: last, today }).map((x) => x.d.id));
   const plan = state?.plan || {};
   const stamp = at || new Date().toISOString();
   // A dinner already on a night Claude can't touch counts as used.
@@ -175,7 +197,7 @@ export function smartPlanOps(db, state, reply, { start, end, today, who = 'Claud
     ops.push(...rest.ops);
   }
   const after = aheadStats(db, applyOps(state, ops), span);
-  const summary = cleanWhy(reply?.summary, 240);
+  const summary = cleanWhy(reply?.summary, 300);
   const through = `${weekdayName(last)}, ${shortDate(last)}`;
   let message;
   if (!out.length) message = 'Claude didn’t find anything to change. The plan stays as it is.';

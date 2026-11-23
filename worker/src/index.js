@@ -3093,6 +3093,7 @@ function cleanPlanRequest(body) {
     cost: num(d.cost), toBuy: num(d.toBuy), kcal: num(d.kcal), proteinG: num(d.proteinG), lean: d.lean === true, heavy: d.heavy === true,
     ready: ["all", "thaw", "side", "short"].includes(d.ready) ? d.ready : "short",
     ...(d.fav === true ? { fav: true } : {}),
+    ...(d.bought === true ? { bought: true } : {}),
     ...(Array.isArray(d.needs) ? { needs: list(d.needs, 4).map((x) => str(x, 50)).filter(Boolean) } : {}),
     ...(d.missingMain === true ? { missingMain: true } : {}),
     ...(num(d.thawMin) ? { thawMin: num(d.thawMin) } : {}),

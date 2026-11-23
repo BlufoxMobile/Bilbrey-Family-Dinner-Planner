@@ -4,8 +4,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { realDb } from './helpers.mjs';
 import { applyOps } from '../app/state.js';
-import { generatePlan, rotationList, dinnerById } from '../app/planner.js';
-import { smartNights, smartPlanRequest, smartPlanOps, smartPlanHasWork, cleanWhy, RECENT_DAYS, WHY_MAX } from '../app/smartplan.js';
+import { generatePlan, rotationList, dinnerById, allDinners } from '../app/planner.js';
+import { smartNights, smartPlanRequest, smartPlanOps, smartPlanHasWork, cleanWhy, choiceList, RECENT_DAYS, WHY_MAX } from '../app/smartplan.js';
 import { datesBetween, addDays } from '../app/util.js';
 
 const db = realDb();
@@ -85,7 +85,9 @@ test('smartPlanRequest: the nights, every dinner in the box with what the pantry
   assert.equal(req.lean, true);
   assert.equal(req.pantryFirst, true);
   assert.equal(req.nights.length, 7);
-  assert.equal(req.dinners.length, rotationList(db, state).length, 'the whole recipe box');
+  const sent = new Set(req.dinners.map((d) => d.id));
+  assert.ok(rotationList(db, state).every((d) => sent.has(d.id)), 'the whole rotation');
+  assert.equal(sent.size, req.dinners.length, 'each dinner once');
   const READY = new Set(['all', 'thaw', 'side', 'short']);
   for (const d of req.dinners) {
     assert.ok(d.id && d.title, d.id);
@@ -224,4 +226,37 @@ test('smartPlanHasWork and cleanWhy', () => {
   assert.equal(cleanWhy(42), '');
   const long = cleanWhy('word '.repeat(60));
   assert.ok(long.length <= WHY_MAX && long.endsWith('…'), long);
+});
+
+test('the deli-tray dinners kept off the rotation are Claude’s to choose while their main is in the house, and always when already planned', () => {
+  // Nov 23: a Rana lasagna best by tomorrow and Hatch enchiladas best by Friday were on the plan but
+  // not in the list Claude chose from, so it couldn't keep them and suggested them as lunches.
+  const LASAGNA = 'rana-chicken-alfredo-lasagna';
+  const tray = Object.keys(dinnerById(db, {}, LASAGNA).items)[0];
+  assert.equal(dinnerById(db, {}, LASAGNA).rotation, 'bench');
+  assert.ok(!rotationList(db, {}).some((d) => d.id === LASAGNA));
+  const base = week();
+  const withTray = { ...base, pantry: { ...base.pantry, [tray]: { qty: 3, stocked: false, since: '2026-11-22' } } };
+  const without = { ...base, pantry: { ...base.pantry, [tray]: { qty: 0, stocked: false } } };
+  const got = smartPlanRequest(db, withTray, opts).dinners.find((d) => d.id === LASAGNA);
+  assert.ok(got, 'in the house: Claude may plan it');
+  assert.equal(got.bought, true);
+  assert.ok(got.ready === 'all' || got.ready === 'side', got.ready);
+  assert.equal(smartPlanRequest(db, without, opts).dinners.find((d) => d.id === LASAGNA), undefined, 'not bought: not offered');
+  assert.ok(!smartPlanRequest(db, withTray, opts).dinners.some((d) => !d.bought && d.id === LASAGNA));
+  // Already on the plan: always listed, so Claude can keep it, even with the tray used up.
+  const onPlan = { ...without, plan: { ...without.plan, [SAT]: { dinner: LASAGNA, sides: [], status: 'planned', manual: true, by: 'Candi' } } };
+  assert.ok(smartPlanRequest(db, onPlan, { ...opts, family: true }).dinners.some((d) => d.id === LASAGNA));
+  const kept = smartPlanOps(db, onPlan, { nights: [{ date: SAT, dinner: LASAGNA, why: 'Best by Saturday.' }] }, { ...opts, family: true, at: AT });
+  assert.equal(applyOps(onPlan, kept.ops).plan[SAT].why, 'Best by Saturday.', 'kept, with the reason');
+  // Claude's choice of a bought dinner is saved like any other.
+  const r = smartPlanOps(db, withTray, { nights: [{ date: FRI, dinner: LASAGNA, why: 'Best by Friday.' }] }, { ...opts, at: AT });
+  assert.equal(applyOps(withTray, r.ops).plan[FRI].dinner, LASAGNA);
+  // …but not when it isn't in the house and isn't on the plan.
+  const no = smartPlanOps(db, without, { nights: [{ date: FRI, dinner: LASAGNA, why: 'x' }] }, { ...opts, at: AT });
+  assert.notEqual(applyOps(without, no.ops).plan[FRI]?.dinner, LASAGNA);
+  // Retired dinners never come back this way.
+  const retired = { ...withTray, retired: { [LASAGNA]: { at: 'x' } } };
+  assert.ok(!choiceList(db, retired, opts).some((x) => x.d.id === LASAGNA));
+  assert.ok(allDinners(db, {}).length > rotationList(db, {}).length);
 });

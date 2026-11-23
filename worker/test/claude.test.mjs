@@ -34,7 +34,7 @@ const PLAN_REQ = {
     { id: "tacos", title: "Chicken tacos", min: 25, protein: "chicken", cost: 2.1, toBuy: 0, kcal: 560, proteinG: 42, lean: true, heavy: false, ready: "all" },
     { id: "chili", title: "Beef chili", min: 45, protein: "beef", cost: 2.6, toBuy: 4.5, kcal: 640, proteinG: 38, lean: false, heavy: false, ready: "side", needs: ["Cornbread mix"] },
     { id: "stirfry", title: "Chicken stir-fry", min: 25, protein: "chicken", cost: 1.9, toBuy: 0, kcal: 520, proteinG: 45, lean: true, heavy: false, ready: "thaw", thawMin: 60, usesSoon: ["Broccoli"] },
-    { id: "alfredo", title: "Deli chicken alfredo", min: 15, protein: "chicken", cost: 2.4, toBuy: 0, kcal: 720, proteinG: 36, lean: false, heavy: true, ready: "all", usesSoon: ["Chicken alfredo"], fav: true },
+    { id: "alfredo", title: "Deli chicken alfredo", min: 15, protein: "chicken", cost: 2.4, toBuy: 0, kcal: 720, proteinG: 36, lean: false, heavy: true, ready: "all", usesSoon: ["Chicken alfredo"], fav: true, bought: true },
   ],
   useSoon: [{ name: "Broccoli", daysLeft: 2, where: "fridge" }],
   freezer: [{ name: "Chicken breast", qty: 6.2, unit: "lb", where: "freezer", since: "2026-11-22" }],
@@ -284,7 +284,8 @@ describe("claude.js", () => {
 
   test("PLAN_SYSTEM_PROMPT: the order to choose in, the house rules for health talk, JSON only", () => {
     for (const re of [/Bilbrey family of five/, /\$650 a month/, /What's in the house/, /2\. Cost/, /3\. Healthy eating/, /4\. Variety/, /5\. Effort/, /busy gets a dinner of 30 minutes or less/,
-      /beef no more than two or three times a week/, /at most two heavy/, /"keep" night stays as it is/, /JSON only/, /never set calorie targets/, /never mention dieting/]) assert.match(PLAN_SYSTEM_PROMPT, re);
+      /beef no more than two or three times a week/, /at most two heavy/, /"keep" night stays as it is/, /JSON only/, /never set calorie targets/, /never mention dieting/,
+      /ready-made main in the house .* gets a dinner night on or before its last good day/, /never count on lunches to use it up/, /bought: a ready-made or deli dinner/]) assert.match(PLAN_SYSTEM_PROMPT, re);
     const u = planUserPrompt(PLAN_REQ);
     assert.match(u, /^Plan these nights\. The family's data:\n\{/);
     assert.deepEqual(JSON.parse(u.slice(u.indexOf("{"))), PLAN_REQ);
