@@ -140,13 +140,13 @@ details.leftovers > summary { cursor: pointer; min-height: 44px; display: flex; 
 .side-acts { grid-column: auto; margin-top: 0; }
 
 /* ---------------------------------------------------------------- every small fold says it opens */
-.item-fix > summary, .ahead-date > summary, .away-more > summary, .filters-more > summary, .gate-more > summary { list-style: none; gap: 8px; }
-.item-fix > summary::-webkit-details-marker, .ahead-date > summary::-webkit-details-marker, .away-more > summary::-webkit-details-marker, .filters-more > summary::-webkit-details-marker, .gate-more > summary::-webkit-details-marker { display: none; }
-.item-fix > summary::after, .ahead-date > summary::after, .away-more > summary::after, .filters-more > summary::after, .gate-more > summary::after { content: ''; flex: none; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin: -3px 2px 0 6px; opacity: .7; transition: transform var(--dur-fast) var(--ease); }
-.item-fix[open] > summary::after, .ahead-date[open] > summary::after, .away-more[open] > summary::after, .filters-more[open] > summary::after, .gate-more[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
+.item-fix > summary, .ahead-date > summary, .ahead-opts > summary, .away-more > summary, .filters-more > summary, .gate-more > summary { list-style: none; gap: 8px; }
+.item-fix > summary::-webkit-details-marker, .ahead-date > summary::-webkit-details-marker, .ahead-opts > summary::-webkit-details-marker, .away-more > summary::-webkit-details-marker, .filters-more > summary::-webkit-details-marker, .gate-more > summary::-webkit-details-marker { display: none; }
+.item-fix > summary::after, .ahead-date > summary::after, .ahead-opts > summary::after, .away-more > summary::after, .filters-more > summary::after, .gate-more > summary::after { content: ''; flex: none; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin: -3px 2px 0 6px; opacity: .7; transition: transform var(--dur-fast) var(--ease); }
+.item-fix[open] > summary::after, .ahead-date[open] > summary::after, .ahead-opts[open] > summary::after, .away-more[open] > summary::after, .filters-more[open] > summary::after, .gate-more[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
 .away-more > summary { justify-content: space-between; }
-.item-fix > summary, .ahead-date > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--pine); }
-.item-fix[open] > summary, .ahead-date[open] > summary { margin-bottom: var(--s2); }
+.item-fix > summary, .ahead-date > summary, .ahead-opts > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--pine); }
+.item-fix[open] > summary, .ahead-date[open] > summary, .ahead-opts[open] > summary { margin-bottom: var(--s2); }
 /* In the More sheet the plan settings sit flat, like the rest of the sheet. */
 dialog .plan-prefs { border: 0; background: transparent; }
 dialog .plan-prefs > .sheet-h { margin-top: var(--s4); }
@@ -277,3 +277,7 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .cook-safe { margin-top: var(--s4); }
 .cook-ready > .cook-safe { grid-column: 1 / -1; }
 .list-filter .seg-opt { flex: 1 1 0; min-width: 0; padding: 0 8px; }
+
+.ahead-opts { margin: 0 0 var(--s3); }
+.cook-facts li { align-items: flex-start; }
+.cook-facts li > .ic { margin-top: 3px; }

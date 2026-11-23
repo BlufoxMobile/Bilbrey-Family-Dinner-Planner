@@ -100,7 +100,7 @@ function hero(app, today) {
           ? html`<p class="status-note status-cooked hero-done">${ic('checkCircle', { size: 18 })}<span>Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.${left ? (left.saved ? ` ${servingsText(left.saved)} of leftovers saved.` : ' No leftovers.') : ''}</span></p>
             <a class="btn btn-secondary" href="#/recipe/${d.id}">${ic('recipes', { size: 20 })}Open the recipe</a>`
           : html`<a class="btn btn-primary btn-lg" id="tonight-cook" href="#/cook/${today}">${ic('flame', { size: 20 })}${going ? `Keep cooking: step ${going.step} of ${going.of}` : 'Start cooking'}</a>
-            ${when(haveLine(app, d, e).short, () => html`<button type="button" class="btn btn-secondary" data-action="night:pick" data-date="${today}">${ic('swap', { size: 20 })}Short on something? Change dinner</button>`)}`}
+`}
       </div>
       ${cooked
         ? html`<p class="hero-undo"><button type="button" class="btn btn-quiet btn-small" data-action="night:uncook" data-date="${today}">${ic('undo', { size: 18 })}Not cooked after all</button></p>`

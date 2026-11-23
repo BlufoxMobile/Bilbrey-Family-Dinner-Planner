@@ -102,8 +102,8 @@ explained everything twice.
 
 ## 29.4 Round 3 (all five reviewers at 8)
 
-- **Tonight**: "Short on something? Change dinner" replaces "See the whole recipe" when the house is short;
-  an after-dinner question comes before the catch-up card, one card at a time. The weekly snack-bag job reads
+- **Tonight**: only Start cooking sits under the dinner ("See the whole recipe" is gone; Change dinner is in the
+  quick row); an after-dinner question comes before the catch-up card, one card at a time. The weekly snack-bag job reads
   "Bag the Doritos into 5 snack bags, about 1½ oz each, for Knox's lunches."
 - **Night sheet** follows the night: tonight leads with Start cooking; a night ahead leads with Change dinner,
   Move, Not eating at home, Make this tonight (no Start cooking or Mark cooked); a night gone by leads with
