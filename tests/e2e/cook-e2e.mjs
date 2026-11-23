@@ -215,7 +215,7 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
   assert.ok(size >= 23, `step text is large on a phone (${size}px)`);
   assert.match(await page.textContent('.cook-title'), /Step 1 of 8/);
   assert.match(await page.textContent('.cook-setting'), /Blackstone, medium-high/);
-  assert.match(await page.textContent('.cook-ings'), /2 lb lean ground beef/);
+  assert.equal(await page.locator('.cook-ings').count(), 0, 'heating the griddle uses no ingredients');
   assert.match(await page.textContent('.cook-dish-tag'), /^\s*Blackstone smashburgers\s*$/, 'one step counter: the header’s');
   // Arrow keys (and a TV remote's left / right).
   await page.keyboard.press('ArrowRight');
@@ -237,6 +237,7 @@ test('cook mode: get ready, one step at a time by tap, keys, swipe and the step 
     el.dispatchEvent(new TouchEvent('touchend', { touches: [], changedTouches: touch(90), bubbles: true }));
   });
   await waitFor(async () => (await stepKey(page)) === 'main:1');
+  assert.match(await page.textContent('.cook-ings'), /2 lb lean ground beef/, 'rolling the balls: the amounts it uses');
   // Every step, in order; tap one to go there.
   await page.click('[data-action="cook:steps"]');
   await page.waitForSelector('dialog[open] .cook-step');
