@@ -197,7 +197,7 @@ export function smartPlanOps(db, state, reply, { start, end, today, who = 'Claud
     ops.push(...rest.ops);
   }
   const after = aheadStats(db, applyOps(state, ops), span);
-  const summary = cleanWhy(reply?.summary, 300);
+  const summary = cleanWhy(reply?.summary, 400);
   const through = `${weekdayName(last)}, ${shortDate(last)}`;
   let message;
   if (!out.length) message = 'Claude didn’t find anything to change. The plan stays as it is.';

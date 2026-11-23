@@ -276,6 +276,10 @@ describe("claude.js", () => {
     assert.equal(r.nights[1].why, "Uses the broccoli before it turns. Cheap too.");
     assert.ok(r.nights[0].why.length <= 160);
     assert.equal(r.summary, "Uses the chicken and the deli tray first.");
+    // A long summary ends at a word with an ellipsis, never mid-word.
+    const long = validatePlan({ nights: [], summary: "This week clears the lasagna and enchiladas on time. ".repeat(12) }, PLAN_REQ).summary;
+    assert.ok(long.length <= 400 && long.endsWith("…") && !/\s…$/.test(long), long);
+    assert.match(PLAN_SYSTEM_PROMPT, /under 250 characters about the week/);
     // A bare list and { id, reason } are read too; junk is empty.
     assert.deepEqual(validatePlan([{ date: "2026-11-25T00:00", id: "chili", reason: "Keep it." }], PLAN_REQ).nights, [{ date: "2026-11-25", dinner: "chili", why: "Keep it." }]);
     assert.deepEqual(validatePlan("nope", PLAN_REQ), { nights: [], summary: "", dropped: 0 });

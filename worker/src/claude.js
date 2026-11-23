@@ -665,7 +665,7 @@ export const PLAN_SYSTEM_PROMPT = [
   "",
   "Plan only the nights whose plan is \"open\" or \"change\". A \"keep\" night stays as it is (its dinner still counts toward variety). On a \"change\" night, keep the current dinner when it is still the best fit, especially one the family picked or a fresh deli tray that must be eaten soon, and change it only for a clear reason.",
   "",
-  'Answer with JSON only, no prose and no markdown: {"nights":[{"date":"YYYY-MM-DD","dinner":"<an id from dinners>","why":"<one plain sentence under 120 characters: the main reason, such as what it uses up, its cost, or how it balances the week>"}],"summary":"<one or two plain sentences about the week: what it uses up, roughly what is left to buy, how it eats>"}',
+  'Answer with JSON only, no prose and no markdown: {"nights":[{"date":"YYYY-MM-DD","dinner":"<an id from dinners>","why":"<one plain sentence under 120 characters: the main reason, such as what it uses up, its cost, or how it balances the week>"}],"summary":"<one or two plain sentences under 250 characters about the week: what it uses up, roughly what is left to buy, how it eats>"}',
   "One entry for every open or change night, in date order. Use only ids from `dinners`. Plain, warm words; never call a food good or bad, never set calorie targets, never mention dieting or weight.",
 ].join("\n");
 
@@ -697,5 +697,11 @@ export function validatePlan(parsed, req) {
     nights.push({ date, dinner, why: clean(n?.why ?? n?.reason, 160) });
   }
   nights.sort((a, b) => a.date.localeCompare(b.date));
-  return { nights, summary: clean(parsed?.summary, 300), dropped };
+  return { nights, summary: cleanLine(parsed?.summary, 400), dropped };
+}
+
+/** One plain line, cut at a word with "…" when it runs long (Nov 23: a summary ended "…to k"). */
+function cleanLine(v, max) {
+  const t = clean(v, 4000);
+  return t.length > max ? `${t.slice(0, max - 1).replace(/\s+\S*$/, "")}…` : t;
 }
