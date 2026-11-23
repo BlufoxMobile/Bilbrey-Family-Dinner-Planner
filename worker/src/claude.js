@@ -638,3 +638,64 @@ export function ideasUserPrompt({ note = "", pantry = [], count = 3, imageCount 
     "Answer with one JSON object in the format given above, using ids from SIDES and CATALOG.",
   ].filter((l, i, a) => l !== "" || (i > 0 && a[i - 1] !== "")).join("\n").trim();
 }
+
+// ── Plan with Claude (POST /api/plan, docs/spec/30) ───────────────────────────────────────────
+/**
+ * Claude picks each night's dinner from the family's own recipe box: what's in the house first,
+ * then cost, then healthy eating and variety. The request carries everything it needs (the app
+ * builds it from the family's data in app/smartplan.js), so this prompt is the same every time and
+ * is cached.
+ */
+export const PLAN_SYSTEM_PROMPT = [
+  "You plan the dinners for the Bilbrey family of five in Glen Ellyn, Illinois: Jeff, Candi, Knox, Jordan and Jackson, all adult portions.",
+  "They shop at Sam's Club and Jewel-Osco two or three times a month on about $650 a month for groceries. They want to use what's in the house, waste less food (oldest and soonest-to-spoil first), spend less, and eat lighter and healthier without anyone feeling it's a diet.",
+  "",
+  "You choose from their recipe box only: every dinner is in `dinners`, with its id, how long it takes (min), its main protein, its cost per serving (cost) and what the next trip would cost for it (toBuy), its plate (kcal, proteinG, lean, heavy), and what the pantry says about it today:",
+  '- ready "all": everything is in the house. "thaw": everything is in, but the meat is frozen (thawMin minutes in cold water, or a day in the fridge). "side": the main is in, a side is missing (sides can be swapped, so this is nearly ready). "short": something for the main is missing (needs lists it); missingMain means the main itself has to be bought.',
+  "- usesSoon: food in the house that spoils within a few days and this dinner uses. lastAte: when they last had it. fav: a family favorite.",
+  "`freezer` is the meat and the ready-made mains on hand (with the date they came home), so you don't count on one pack for two nights: a dinner for five uses about 2 to 2.5 pounds of meat. `useSoon` is what spoils first. `budget` is the month's target, what they've spent, and the days left.",
+  "",
+  "HOW TO CHOOSE, most important first:",
+  "1. What's in the house: favor ready \"all\", \"thaw\" and \"side\" dinners. Put dinners that use usesSoon food and fresh or deli packs first in the stretch, and the oldest freezer meat before newer packs.",
+  "2. Cost: lower cost per serving and less to buy; if the month is near its target, lean harder on what's in the house.",
+  "3. Healthy eating: when `lean` is true, mostly lean plates, and at most two heavy or fried dinners in a week (burger and pizza nights count). Mix the proteins: not the same main protein three nights running, and beef no more than two or three times a week.",
+  "4. Variety: never the same dinner twice in the stretch; skip anything eaten in the last ten days unless it uses food that would otherwise spoil. Bring a favorite in now and then.",
+  "5. Effort: a night marked busy gets a dinner of 30 minutes or less. Tonight (the date equal to `today`) needs something ready now or quick: no long thaw.",
+  "When `pantryFirst` is false, the family wants variety and cost more than using up the pantry this time: weigh 2 to 4 ahead of 1.",
+  "",
+  "Plan only the nights whose plan is \"open\" or \"change\". A \"keep\" night stays as it is (its dinner still counts toward variety). On a \"change\" night, keep the current dinner when it is still the best fit, especially one the family picked or a fresh deli tray that must be eaten soon, and change it only for a clear reason.",
+  "",
+  'Answer with JSON only, no prose and no markdown: {"nights":[{"date":"YYYY-MM-DD","dinner":"<an id from dinners>","why":"<one plain sentence under 120 characters: the main reason, such as what it uses up, its cost, or how it balances the week>"}],"summary":"<one or two plain sentences about the week: what it uses up, roughly what is left to buy, how it eats>"}',
+  "One entry for every open or change night, in date order. Use only ids from `dinners`. Plain, warm words; never call a food good or bad, never set calorie targets, never mention dieting or weight.",
+].join("\n");
+
+/** The user message: the family's request, as compact JSON. */
+export function planUserPrompt(req) {
+  return `Plan these nights. The family's data:\n${JSON.stringify(req)}`;
+}
+
+/**
+ * Cleans Claude's plan against the request: only open or change nights, only dinner ids that were
+ * sent, one dinner per night, no dinner twice, reasons clamped to one short line.
+ * → { nights: [{ date, dinner, why }], summary, dropped }
+ */
+export function validatePlan(parsed, req) {
+  const list = Array.isArray(parsed) ? parsed : parsed && Array.isArray(parsed.nights) ? parsed.nights : [];
+  const allowed = new Set((req?.nights || []).filter((n) => n && n.plan !== "keep").map((n) => n.date));
+  const ids = new Set((req?.dinners || []).map((d) => d && d.id).filter(Boolean));
+  const keptIds = new Set((req?.nights || []).filter((n) => n && n.plan === "keep" && n.current).map((n) => n.current));
+  const seenDates = new Set();
+  const seenIds = new Set(keptIds);
+  const nights = [];
+  let dropped = 0;
+  for (const n of list) {
+    const date = typeof n?.date === "string" ? n.date.slice(0, 10) : "";
+    const dinner = typeof n?.dinner === "string" ? n.dinner.trim() : typeof n?.id === "string" ? n.id.trim() : "";
+    if (!allowed.has(date) || seenDates.has(date) || !ids.has(dinner) || seenIds.has(dinner)) { dropped++; continue; }
+    seenDates.add(date);
+    seenIds.add(dinner);
+    nights.push({ date, dinner, why: clean(n?.why ?? n?.reason, 160) });
+  }
+  nights.sort((a, b) => a.date.localeCompare(b.date));
+  return { nights, summary: clean(parsed?.summary, 300), dropped };
+}

@@ -3,7 +3,9 @@
 // nights, re-planning, the plan-from store and "Planning for". Drag-and-drop on desktop.
 // Smarter planning (SPEC §21): plan ahead re-plans the planner's own picks with a before/after,
 // lean by default and busy nights, the freezer watch, leftovers and pantry catch-up.
-import { html, ic, when, segmented, toast, openSheet, closeSheet, renderSheet, switchToggle, tf, announce } from '../ui.js';
+// Plan with Claude (docs/spec/30): the same sheet asks Claude to choose each night from the pantry,
+// the cost and lighter plates, and the result card says why it picked each dinner.
+import { html, ic, when, segmented, toast, openSheet, closeSheet, renderSheet, switchToggle, tf, announce, sheetId } from '../ui.js';
 import { addDays, diffDays, money, rangeLabel, shortDate, startOfWeek, monthName, weekday, monthOnly, datesBetween, weekdayName, midSentence } from '../util.js';
 import { PERIODS, periodRange, shiftPeriod, dinnerById, isFillable, nightType, storeCoverage, isRetired, itemsForNight, defaultAnchor as defaultAnchorFor } from '../planner.js';
 import { listJoin, byLabel } from '../util.js';
@@ -19,6 +21,9 @@ import { veggieCheck, leanOn, busyNightsOf, leanSummary } from '../health.js';
 import { AHEAD_QUICK, aheadEnd, aheadLimit, clampAheadEnd, planAheadOps, pantryStretch, aheadStats, aheadRecord } from '../planahead.js';
 import { freezerWatch } from '../freshness.js';
 import { catchUp, skippedNightOps, lunchUsedOps } from '../waste.js';
+import { smartPlanRequest, smartPlanOps, smartPlanHasWork } from '../smartplan.js';
+import { claudeErrorText } from '../claude.js';
+import { loadAiInfo, aiInfo } from './family.js';
 
 export const title = () => 'Plan';
 
@@ -142,6 +147,7 @@ export function render(app) {
 }
 
 export function mount(app, root) {
+  loadAiInfo(app); // at most once a minute; Plan ahead offers Claude once it knows the key is set
   if (!matchMedia('(pointer: fine)').matches) return;
   let from = null;
   root.querySelectorAll('.day[draggable="true"]').forEach((el) => {
@@ -265,25 +271,10 @@ export const actions = {
     // The result card is part of what's saved (state.planAhead), so Undo takes it back with the plan,
     // and it's still there after a reload. The card is the answer, with its own Undo; no toast repeats
     // its title (gauntlet r6). A press that changed nothing is still one line.
-    const rec = res.ops.find((o) => o.path?.[0] === 'planAhead');
-    if (!rec) { closeSheet(); app.commit(res); app.render(); return; }
-    app.ui.aheadUndo = { at: rec.value.at, undo: res.undo };
-    app.commit(res, { quiet: true });
-    // Opened from the Pantry or after a receipt: go to Plan, where the result card is (gauntlet r8: it
-    // planned two weeks while you stayed on the Pantry with nothing to say so).
-    if (!/^#\/plan(\/|$)/.test(location.hash)) {
-      closeSheet({ instant: true });
-      app.ui.focusNext = 'ahead-h';
-      app.navigate('#/plan');
-      announce(res.message);
-      setTimeout(() => document.getElementById('ahead-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
-      return;
-    }
-    // Focus the card's heading once the sheet has gone, and say what happened (WCAG 2.4.3, 4.1.3; gauntlet r7).
-    closeSheet({ focusTo: 'ahead-h' });
-    announce(res.message);
-    setTimeout(() => document.getElementById('ahead-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+    showAheadResult(app, res);
   },
+  'ahead:claude': (app) => planWithClaude(app),
+  'ahead:back': () => { const st = openPlanAhead.state; if (st && !st.busy) { st.phase = 'pick'; renderSheet(); } },
   'ahead:undo': (app) => {
     const u = app.ui.aheadUndo;
     if (!u) return;
@@ -345,6 +336,76 @@ const dayText = (iso, today) => (iso === today ? 'tonight' : `${weekdayName(iso)
 const foodName = (name) => midSentence(String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/,.*$/, '').trim());
 const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
+/**
+ * Saves a plan-ahead result and shows its card. The card is part of what's saved (state.planAhead),
+ * so Undo takes it back with the plan, and it's still there after a reload. The card is the answer,
+ * with its own Undo; no toast repeats its title (gauntlet r6). A press that changed nothing is one line.
+ */
+function showAheadResult(app, res, { sheetOpen = true } = {}) {
+  const rec = res.ops.find((o) => o.path?.[0] === 'planAhead');
+  if (!rec) { if (sheetOpen) closeSheet(); app.commit(res); app.render(); return; }
+  app.ui.aheadUndo = { at: rec.value.at, undo: res.undo };
+  app.commit(res, { quiet: true });
+  // Opened from the Pantry or after a receipt: go to Plan, where the result card is (gauntlet r8: it
+  // planned two weeks while you stayed on the Pantry with nothing to say so).
+  if (!/^#\/plan(\/|$)/.test(location.hash)) {
+    if (sheetOpen) closeSheet({ instant: true });
+    app.ui.focusNext = 'ahead-h';
+    app.navigate('#/plan');
+  } else if (sheetOpen) {
+    // Focus the card's heading once the sheet has gone, and say what happened (WCAG 2.4.3, 4.1.3; gauntlet r7).
+    closeSheet({ focusTo: 'ahead-h' });
+  } else {
+    app.render();
+  }
+  announce(res.message);
+  setTimeout(() => document.getElementById('ahead-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+}
+
+/** Claude can plan from this device: connected, the key is set, and the month isn't spent. */
+const claudeReady = (app) => { const i = aiInfo(); return !!(app.store.device.key && !app.store.device.localOnly && i?.keySet && !i.capped); };
+
+/**
+ * Plan with Claude (docs/spec/30): send the nights and the recipe box with what the pantry says about
+ * each dinner, let Claude choose, check its answer, and save it with one Undo. If the sheet was closed
+ * while Claude worked, the plan is still saved and a toast says so.
+ */
+async function planWithClaude(app) {
+  const st = openPlanAhead.state;
+  if (!st || st.busy) return;
+  const fail = (text) => {
+    st.busy = false; st.phase = 'error'; st.error = text;
+    if (sheetId() === 'plan-ahead') { renderSheet(); announce(text); } else toast(text);
+  };
+  if (navigator.onLine === false) { fail(claudeErrorText({ status: 0 })); return; }
+  const today = app.today();
+  const opts = { start: today, end: clampAheadEnd(today, st.end), today, change: st.replan, pantryFirst: st.pantryFirst };
+  const req = smartPlanRequest(app.db, app.state, opts);
+  st.busy = true;
+  st.phase = 'busy';
+  st.planning = req.nights.filter((n) => n.plan !== 'keep').length;
+  renderSheet();
+  announce(`Claude is planning ${count(st.planning, 'night')}.`);
+  let reply;
+  try {
+    reply = await app.store.api('POST', '/api/plan', req, { timeoutMs: 150000 });
+  } catch (e) {
+    if (e?.status === 402 || e?.status === 503) loadAiInfo(app, { force: true });
+    fail(claudeErrorText(e));
+    return;
+  }
+  st.busy = false;
+  // The plan may have changed while Claude thought: check its answer against the family's data as it is now.
+  const now = app.today();
+  const res = smartPlanOps(app.db, app.state, reply, { ...opts, today: now, who: 'Claude', fillWho: app.who(), model: reply?.model });
+  if (!res.nights.length) { fail('Claude’s plan didn’t fit the nights that are open now. Try again.'); return; }
+  st.phase = 'pick';
+  app.ui.aheadLast = { end: opts.end, pantryFirst: st.pantryFirst, replan: st.replan };
+  const open = sheetId() === 'plan-ahead';
+  showAheadResult(app, res, { sheetOpen: open });
+  if (!open) toast(res.message, { action: /^#\/plan(\/|$)/.test(location.hash) ? null : { label: 'See it', fn: () => app.navigate('#/plan') }, duration: 12000 });
+}
+
 /** Choose how far ahead (a quick pick or any day up to a month out) and whether the pantry goes first. */
 function openPlanAhead(app, { pantryFirst: force } = {}) {
   const today = app.today();
@@ -362,13 +423,29 @@ function openPlanAhead(app, { pantryFirst: force } = {}) {
     pantryFirst,
     // Re-plan the planner's own picks: on whenever the pantry goes first, unless switched by hand.
     replan: pantryFirst, replanSet: false,
+    phase: 'pick',
   });
+  // Whether Claude can plan (key set, month not spent): known within a moment if it wasn't already.
+  loadAiInfo(app).then(() => { if (sheetId() === 'plan-ahead' && st.phase === 'pick') renderSheet(); });
   openSheet({
     id: 'plan-ahead',
     // From Cook from what we have it says what it's doing (gauntlet r7).
     title: force ? 'Plan from the pantry' : 'Plan ahead',
     subtitle: force ? 'Dinners from tonight on, using what’s in the house first.' : 'Dinners and lunches from tonight on.',
     render: () => {
+      if (st.phase === 'busy') {
+        return html`<div class="scan-progress ahead-busy" role="status"><span class="spinner" aria-hidden="true"></span>
+          <p>Claude is planning ${count(st.planning || 0, 'night')}…</p>
+          <p class="muted small">It’s weighing what’s in the house, the cost and lighter plates. This takes about half a minute; you can close this and keep going.</p></div>`;
+      }
+      if (st.phase === 'error') {
+        return html`<p class="sheet-text" role="alert">${st.error}</p>
+          <div class="sheet-actions">
+            ${when(claudeReady(app), () => html`<button type="button" class="btn btn-primary btn-block" data-action="ahead:claude">${ic('sparkle', { size: 20 })}Try again</button>`)}
+            <button type="button" class="btn btn-secondary btn-block" data-action="ahead:go">Plan it the quick way</button>
+            <button type="button" class="btn btn-quiet btn-block" data-action="ahead:back">Back</button>
+          </div>`;
+      }
       const dates = datesBetween(today, st.end);
       const own = dates.filter((d) => d > today && app.state.plan?.[d]?.dinner && isFillable(app.state.plan[d], 'replan')).length; // never tonight's
       const empty = dates.filter((d) => isFillable(app.state.plan?.[d], 'fill')).length;
@@ -383,6 +460,9 @@ function openPlanAhead(app, { pantryFirst: force } = {}) {
         }
         idle = st.dryIdle;
       }
+      // Claude rethinks the app's own picks too, so it can have work when the quick way doesn't.
+      const withClaude = claudeReady(app);
+      const claudeWork = withClaude && smartPlanHasWork(app.db, app.state, { start: today, end: clampAheadEnd(today, st.end), today, change: st.replan });
       return html`
         <h3 class="sheet-h" id="ahead-through-h">Plan through</h3>
         <div class="ahead-quick" role="group" aria-labelledby="ahead-through-h">
@@ -402,10 +482,14 @@ function openPlanAhead(app, { pantryFirst: force } = {}) {
         })()}
         <details class="ahead-opts" ${aheadOptsOpen ? 'open' : ''}><summary>Options</summary>
         <div class="set-row ahead-switch"><span class="set-label">Use what we have first</span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
-        <div class="set-row ahead-switch"><span class="set-label">Let it replace dinners it picked before<small>${own ? 'Never tonight, and never one you chose.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Let it replace dinners it picked before' })}</div>
+        <div class="set-row ahead-switch"><span class="set-label">Let it replace dinners the app picked<small>${own ? 'Never tonight, and never one you chose.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Let it replace dinners the app picked' })}</div>
         </details>
-        ${idle ? html`<p class="ahead-idle" id="ahead-idle">Every night through ${weekdayName(st.end)}, ${shortDate(st.end)} is planned${own ? ', and nothing better turned up' : ''}. Pick a longer stretch to plan more.</p>` : ''}
-        <button type="button" class="btn btn-primary btn-block" data-action="ahead:go" ${idle ? 'disabled aria-describedby="ahead-idle"' : ''}>${ic('sparkle', { size: 20 })}Plan it</button>`;
+        ${idle ? html`<p class="ahead-idle" id="ahead-idle">Every night through ${weekdayName(st.end)}, ${shortDate(st.end)} is planned${own && !claudeWork ? ', and nothing better turned up' : ''}.${claudeWork ? ' Claude can still rethink the dinners the app picked.' : ' Pick a longer stretch to plan more.'}</p>` : ''}
+        ${withClaude
+          ? html`<button type="button" class="btn btn-primary btn-block" data-action="ahead:claude" aria-describedby="ahead-claude-note" ${claudeWork ? '' : 'disabled'}>${ic('sparkle', { size: 20 })}Plan it with Claude</button>
+            <p class="ahead-claude-note muted small" id="ahead-claude-note">Claude picks each night from what’s in the house, the cost and lighter plates, and says why. Uses a few cents of the month’s Claude budget.</p>
+            <button type="button" class="btn btn-quiet btn-block ahead-quick-way" data-action="ahead:go" ${idle ? 'disabled aria-describedby="ahead-idle"' : ''}>Plan it the quick way</button>`
+          : html`<button type="button" class="btn btn-primary btn-block" data-action="ahead:go" ${idle ? 'disabled aria-describedby="ahead-idle"' : ''}>${ic('sparkle', { size: 20 })}Plan it</button>`}`;
     },
   });
 }
@@ -432,15 +516,23 @@ function aheadCard(app) {
   const row = (n) => html`<li><span class="cover-day">${n.date === today ? 'Tonight' : `${weekdayShort(n.date)} ${shortDate(n.date)}`}</span><span class="cover-what"><b>${n.title}</b><small>Needs ${listJoin(n.dinnerMissing.slice(0, 4).map((m) => foodName(m.name)))}${n.dinnerMissing.length > 4 ? ` and ${n.dinnerMissing.length - 4} more` : ''}</small></span></li>`;
   // Success first, one number, one next step (gauntlet r2); the pantry math is folded underneath.
   const saved = was ? Math.round((was.groceries - now.groceries) * 100) / 100 : 0;
-  return html`<section class="ahead-card" id="ahead-card" aria-labelledby="ahead-h">
+  const c = a.claude && Array.isArray(a.claude.nights) ? a.claude : null;
+  // Claude's reasons, for the nights still ahead that still have the dinner it chose.
+  const why = c ? c.nights.filter((n) => n.date >= today && n.why && app.state.plan?.[n.date]?.dinner === n.dinner && app.state.plan[n.date].status !== 'away') : [];
+  const fresh = app.ui.aheadUndo?.at === a.at;
+  return html`<section class="ahead-card ${c ? 'is-claude' : ''}" id="ahead-card" aria-labelledby="ahead-h">
     <div class="ahead-head">
-      <h2 id="ahead-h" class="section-title" tabindex="-1">${ic('checkCircle', { size: 22 })}<span>Planned through ${dayText(a.end, today)}</span></h2>
+      <h2 id="ahead-h" class="section-title" tabindex="-1">${ic(c ? 'sparkle' : 'checkCircle', { size: 22 })}<span>${c ? 'Claude planned' : 'Planned'} through ${dayText(a.end, today)}</span></h2>
       <button type="button" class="icon-btn" data-action="ahead:close" aria-label="Close this summary">${ic('close', { size: 20 })}</button>
     </div>
-    ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html`<span class="ahead-save">, ${money(saved, { whole: true })} less than before</span>` : ''}</p>`)}
+    ${when(c?.summary, () => html`<p class="ahead-summary">${c.summary}</p>`)}
+    ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html`<span class="ahead-save">, ${money(saved, { whole: true })} less than ${was?.hadOpen && c ? 'the quick way' : 'before'}</span>` : ''}</p>`)}
     ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
+    ${when(why.length, () => html`<details class="ahead-why" ${fresh ? 'open' : ''}><summary>Why these dinners</summary>
+      <ul class="why-nights">${why.map((n) => html`<li><span class="cover-day">${n.date === today ? 'Tonight' : `${weekdayShort(n.date)} ${shortDate(n.date)}`}</span><span class="cover-what"><b>${dinnerById(app.db, app.state, n.dinner)?.title || ''}</b><small>${n.why}</small></span></li>`)}</ul>
+    </details>`)}
     <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}See the shopping list</button>
-    ${when(app.ui.aheadUndo?.at === a.at, () => html`<button type="button" class="btn btn-quiet btn-block ahead-undo" data-action="ahead:undo">${ic('undo', { size: 18 })}Undo this plan</button>`)}
+    ${when(fresh, () => html`<button type="button" class="btn btn-quiet btn-block ahead-undo" data-action="ahead:undo">${ic('undo', { size: 18 })}Undo this plan</button>`)}
     <details class="ahead-details"><summary>The pantry, each night and the cost</summary>
     <p class="ahead-covers"><b>${s.dinnersCovered || s.lunchesCovered ? `Your pantry covers ${listJoin(covers)}.` : 'No dinner is all in the pantry yet.'}</b></p>
     <p class="ahead-through">${s.coveredThrough

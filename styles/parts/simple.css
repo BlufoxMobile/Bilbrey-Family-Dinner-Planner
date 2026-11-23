@@ -480,3 +480,23 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .have-saved .ic { color: var(--pine); flex: none; }
 .have-saved .link-btn { min-height: 44px; font-weight: 700; }
 .hero-leftover .hero-note .link-btn { color: inherit; text-decoration: underline; }
+
+/* Plan with Claude (docs/spec/30): the one-line reason under a night Claude chose, the summary and
+   "Why these dinners" on the result card, and the second, quieter way to plan in the sheet. */
+.plan-why { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 8px; margin: 8px 0 0; font-size: var(--t-sm); line-height: 1.45; color: var(--ink-2); }
+.plan-why .ic { color: var(--pine); transform: translateY(3px); }
+.night-why { margin: 0 0 var(--s3); }
+html.is-tv .hero-why { display: none; }
+.ahead-summary { margin: 0; color: var(--ink); line-height: 1.5; }
+.ahead-why > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--pine); list-style: none; }
+.ahead-why > summary::-webkit-details-marker { display: none; }
+.ahead-why > summary::after { content: ''; flex: none; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin: -3px 2px 0 6px; opacity: .7; transition: transform var(--dur-fast) var(--ease); }
+.ahead-why[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
+.why-nights { display: grid; margin: 0; padding: 0; list-style: none; }
+.why-nights li { display: grid; grid-template-columns: 7.5em 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.why-nights li:last-child { border-bottom: 0; }
+.why-nights .cover-what small { color: var(--ink-2); font-size: var(--t-sm); line-height: 1.45; }
+@media (max-width: 359px) { .why-nights li { grid-template-columns: 1fr; gap: 2px; } }
+.ahead-claude-note { margin: 6px 0 0; text-align: center; }
+.ahead-quick-way { margin-top: var(--s2); }
+.ahead-busy p { margin: 0; }

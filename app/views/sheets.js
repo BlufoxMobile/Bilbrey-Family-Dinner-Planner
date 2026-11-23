@@ -17,7 +17,7 @@ import {
 } from '../actions.js';
 import {
   sidesFor, dinnerPhoto, sidePhoto, equipment, favoriteBadge, awayReason, nutri, showNutrition, lighterChip, thumbs, replacedNote,
-  plate, leanMark, isLeftoverNight, leftoversQuestion, costOf, costNote,
+  plate, leanMark, isLeftoverNight, leftoversQuestion, costOf, costNote, planWhy,
 } from './common.js';
 import { sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
 import { leftoversOnHand, leftoverNightChoices, servingsText, useByText, timeLabel, pantryCheck } from '../cooking.js';
@@ -115,6 +115,7 @@ function nightBody(app, date) {
         ${costNote(costOf(app, d.id, e), { cls: 'night-cost' })}
       </div>
     </div>
+    ${planWhy(e, { cls: 'night-why' })}
     <div class="night-rate">${thumbs(app, { kind: 'dinner', id: d.id, label: d.title, labels: true })}</div>
     ${when(isRetired(app.state, d.id) && !cooked, () => html`<p class="hint">${ic('down_vote', { size: 18 })}<span>${d.title} is off the menu, so it won’t be planned again. <button type="button" class="link-btn" data-action="night:pick" data-date="${date}">Change dinner</button></span></p>`)}
     ${when(cooked, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.</p>`)}

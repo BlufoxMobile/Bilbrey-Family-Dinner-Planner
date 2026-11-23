@@ -106,6 +106,44 @@ export function mockIdeas(b) {
   ].slice(0, Math.max(1, Math.min(6, Number(b?.count) || 3)));
 }
 
+/**
+ * A deterministic week from a /api/plan body, the way the prompt asks Claude to choose: what's in
+ * the house first (and what spoils soon), then cost, lean plates, no repeats, quick on busy nights.
+ * On a "change" night the current dinner stays when it's still ready.
+ */
+export function mockPlan(b) {
+  const order = { all: 0, side: 1, thaw: 2, short: 3 };
+  const used = new Set((b.nights || []).filter((n) => n.plan === 'keep' && n.current).map((n) => n.current));
+  const dayNo = (iso) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 864e5;
+  const lately = (d, night) => !!d.lastAte && dayNo(night) - dayNo(d.lastAte) < 10;
+  const out = [];
+  let heavy = 0;
+  for (const n of [...(b.nights || [])].sort((x, y) => x.date.localeCompare(y.date))) {
+    if (n.plan === 'keep') continue;
+    const cur = n.plan === 'change' && (b.dinners || []).find((d) => d.id === n.current);
+    if (cur && !used.has(cur.id) && (cur.ready === 'all' || cur.ready === 'side')) {
+      used.add(cur.id);
+      out.push({ date: n.date, dinner: cur.id, why: 'Still the best fit, so it stays.' });
+      continue;
+    }
+    const fits = (b.dinners || []).filter((d) => !used.has(d.id) && !lately(d, n.date)
+      && !(n.busy && d.min > 30) && !(n.date === b.today && d.ready === 'thaw' && (d.thawMin || 0) > 60) && !(d.heavy && heavy >= 2));
+    const score = (d) => order[d.ready] * 10 - (d.usesSoon?.length ? 15 : 0) + (d.cost || 4) + (b.lean && !d.lean ? 3 : 0);
+    const pick = fits.sort((x, y) => score(x) - score(y) || x.id.localeCompare(y.id))[0];
+    if (!pick) continue;
+    used.add(pick.id);
+    if (pick.heavy) heavy++;
+    const why = pick.usesSoon?.length ? `Uses the ${pick.usesSoon[0].toLowerCase()} before it turns.`
+      : pick.ready === 'all' ? `Everything’s in the house, about $${(pick.cost || 0).toFixed(2)} a plate.`
+      : pick.ready === 'thaw' ? 'The meat’s in the freezer; thaw it the night before.'
+      : pick.ready === 'side' ? 'The main is in the house; swap in any side you have.'
+      : 'Needs a few things from the store.';
+    out.push({ date: n.date, dinner: pick.id, why });
+  }
+  const home = out.filter((x) => ['all', 'side', 'thaw'].includes((b.dinners || []).find((d) => d.id === x.dinner)?.ready)).length;
+  return { nights: out, summary: `${home} of ${out.length} dinners come from what’s already in the house, with lighter plates most nights.` };
+}
+
 export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = false, latency = 0 } = {}) {
   const db = { salt: null, hash: null, revision: 0, updatedAt: null, state: {}, fails: 0, lastFail: 0, batches: new Map(), opsRequests: 0 };
   const setKey = (key) => { db.salt = randomBytes(8).toString('hex'); db.hash = createHash('sha256').update(db.salt + key).digest('hex'); };
@@ -115,6 +153,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     db.claude = { keySet: true, spentUsd: 1.2, capUsd: 5, capped: false };
     db.mcpToken = randomBytes(12).toString('hex');
     db.ideasCalls = 0; db.lastIdeas = null;
+    db.planCalls = 0; db.lastPlan = null; db.planReply = null;
     if (pc) setKey(keyFor(pc));
   };
   reset(passcode);
@@ -150,7 +189,7 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
     const url = new URL(req.url, 'http://x');
     if (req.method === 'OPTIONS') { res.writeHead(204, cors(req)); return res.end(); }
     const p = url.pathname;
-    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests, lastOpsBy: db.lastOpsBy || null, receiptCalls: db.receiptCalls || 0, lastReceipt: db.lastReceipt || null, ideasCalls: db.ideasCalls, lastIdeas: db.lastIdeas, mcpToken: db.mcpToken });
+    if (p === '/__mock/state') return send(res, req, 200, { revision: db.revision, state: db.state, hasPasscode: !!db.hash, opsRequests: db.opsRequests, lastOpsBy: db.lastOpsBy || null, receiptCalls: db.receiptCalls || 0, lastReceipt: db.lastReceipt || null, ideasCalls: db.ideasCalls, lastIdeas: db.lastIdeas, planCalls: db.planCalls, lastPlan: db.lastPlan, mcpToken: db.mcpToken });
     if (p === '/__mock/reset' && req.method === 'POST') { const b = await readBody(req); reset(b?.passcode || null); return send(res, req, 200, { ok: true }); }
     if (p === '/api/health') return send(res, req, 200, { ok: true, hasPasscode: !!db.hash, ai, revision: db.revision });
     if (p === '/api/setup' && req.method === 'POST') {
@@ -301,6 +340,20 @@ export function startMockApi({ port = 8788, ai = true, passcode = null, quiet = 
       db.ideasCalls++;
       db.lastIdeas = { detail: b.detail === true, images: imgs.length, note: b.note || '', pantry: b.pantry.length, sides: b.sides.length, catalog: b.catalog.length, count: b.count, pantryIds: b.pantry.map((x) => x.id), useBy: b.pantry.filter((x) => x.useBy).length };
       return send(res, req, 200, { ideas: mockIdeas(b), engine: 'claude', model: claudeModel() });
+    }
+    if (p === '/api/plan' && req.method === 'POST') {
+      const b = await readBody(req);
+      if (!b || !/^\d{4}-\d{2}-\d{2}$/.test(b.today || '') || !Array.isArray(b.nights) || !b.nights.length || !Array.isArray(b.dinners) || !b.dinners.length) return send(res, req, 400, { error: 'Body must be { today, nights, dinners }.' });
+      if (!b.nights.some((n) => n.plan !== 'keep')) return send(res, req, 400, { error: 'There’s no night to plan in that stretch.' });
+      if (!db.claude.keySet) return send(res, req, 503, { error: 'Planning with Claude needs the Claude key, and none is set on this Worker yet.' });
+      if (db.claude.capped) return send(res, req, 402, { error: 'This month’s Claude budget is used up.', capped: true });
+      db.planCalls++;
+      db.lastPlan = b;
+      // Tests can script the answer: db.planReply = { status, body } or a function of the request.
+      const scripted = typeof db.planReply === 'function' ? db.planReply(b) : db.planReply;
+      if (scripted?.status) return send(res, req, scripted.status, scripted.body || { error: 'Claude couldn’t plan the week this time. Try again in a minute.' });
+      const plan = scripted?.nights ? scripted : mockPlan(b);
+      return send(res, req, 200, { ...plan, engine: 'claude', model: claudeModel(), dropped: 0 });
     }
     if (p === '/api/mcp/link' && req.method === 'GET') return send(res, req, 200, { url: `http://${req.headers.host}/mcp/${db.mcpToken}` });
     if (p === '/api/mcp/rotate' && req.method === 'POST') {

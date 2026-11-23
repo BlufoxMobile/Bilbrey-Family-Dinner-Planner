@@ -9,7 +9,7 @@ import { buildList, plannedNights } from '../shopping.js';
 import { generateOps, markCookedOps, awayBlock } from '../actions.js';
 import {
   sidesFor, dinnerPhoto, equipment, favoriteBadge, awayReason, dayStamp, nutri, showNutrition, lighterChip, rateList, isDismissed, replacedText, prepCard,
-  plate, leanMark, whyList, cic, isLeftoverNight, leftoversAskCard, leftoverRows, costOf, costNote,
+  plate, leanMark, whyList, cic, isLeftoverNight, leftoversAskCard, leftoverRows, costOf, costNote, planWhy,
 } from './common.js';
 import { dayNutrition, lighterSide, fmtKcal, lunchNutrition } from '../nutrition.js';
 import { lunchPeople, lunchFor } from '../lunch.js';
@@ -100,6 +100,7 @@ function hero(app, today) {
       ${heroNote(app, today)}
       ${when(sides.length, () => html`<p class="hero-sides">with ${listJoin(sides.map((s) => midSentence(s.info?.title || '')))}</p>`)}
       ${sides.filter((x) => x.replaced).map((x) => html`<p class="hero-replaced">${x.info?.title}: ${replacedText(app, x).replace(/^In/, 'in')}.</p>`)}
+      ${planWhy(e, { cls: 'hero-why' })}
       <div class="hero-meta">${equipment(d)}${favoriteBadge(app, d)}</div>
       ${when(showNutrition(app), () => html`<p class="hero-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate' })}</p>`)}
       ${when(!cooked, () => thawLine(app, today, { skip: [haveLine(app, d, e).meatId], minutes: d.minutes }))}

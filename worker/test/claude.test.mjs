@@ -7,6 +7,7 @@ import { startWorker, familyKey, claudeReply, PNG_DATA_URL, jpegDataUrl } from "
 import {
   MODELS, costUsd, pickModel, chicagoMonth, chicagoDate, extractJsonObject, imageBlock, callClaude, ClaudeError,
   validateIdeas, ideaBreaksRule, monthlyCap, ideasUserPrompt, systemText, cachedSystem, cleanStep, ideasReference, IDEAS_FORMAT_PROMPT, usageOf,
+  PLAN_SYSTEM_PROMPT, planUserPrompt, validatePlan,
 } from "../src/claude.js";
 
 const TEST_KEY = "sk-ant-test-not-a-real-key";
@@ -19,6 +20,26 @@ const KNOWN = [
 // Everything Claude is told in words: the system prompt (now cached blocks) and the user message.
 const claudeText = (body) => [systemText(body.system), ...body.messages[0].content.filter((b) => b.type === "text").map((b) => b.text)].join("\n");
 const claudeImages = (body) => body.messages[0].content.filter((b) => b.type === "image");
+// A plan request like app/smartplan.js builds: tonight kept, two open nights, one Claude may change.
+const PLAN_REQ = {
+  today: "2026-11-23", start: "2026-11-23", end: "2026-11-26", pantryFirst: true, lean: true,
+  budget: { target: 650, spent: 554.6, daysLeft: 7 },
+  nights: [
+    { date: "2026-11-23", day: "Mon", plan: "keep", current: "tacos", note: "tonight" },
+    { date: "2026-11-24", day: "Tue", plan: "open", current: null, busy: true },
+    { date: "2026-11-25", day: "Wed", plan: "change", current: "chili", note: "planned before" },
+    { date: "2026-11-26", day: "Thu", plan: "open", current: null },
+  ],
+  dinners: [
+    { id: "tacos", title: "Chicken tacos", min: 25, protein: "chicken", cost: 2.1, toBuy: 0, kcal: 560, proteinG: 42, lean: true, heavy: false, ready: "all" },
+    { id: "chili", title: "Beef chili", min: 45, protein: "beef", cost: 2.6, toBuy: 4.5, kcal: 640, proteinG: 38, lean: false, heavy: false, ready: "side", needs: ["Cornbread mix"] },
+    { id: "stirfry", title: "Chicken stir-fry", min: 25, protein: "chicken", cost: 1.9, toBuy: 0, kcal: 520, proteinG: 45, lean: true, heavy: false, ready: "thaw", thawMin: 60, usesSoon: ["Broccoli"] },
+    { id: "alfredo", title: "Deli chicken alfredo", min: 15, protein: "chicken", cost: 2.4, toBuy: 0, kcal: 720, proteinG: 36, lean: false, heavy: true, ready: "all", usesSoon: ["Chicken alfredo"], fav: true },
+  ],
+  useSoon: [{ name: "Broccoli", daysLeft: 2, where: "fridge" }],
+  freezer: [{ name: "Chicken breast", qty: 6.2, unit: "lb", where: "freezer", since: "2026-11-22" }],
+  recent: [{ date: "2026-11-20", id: "chili" }],
+};
 const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg || ""} expected ${b}, got ${a}`);
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
@@ -235,6 +256,38 @@ describe("claude.js", () => {
     assert.match(text, /Suggest 2 different dinner ideas/);
     assert.match(text, /Something quick/);
     assert.match(text, /Today is 2026-11-15/);
+  });
+  test("validatePlan: only open or change nights, only sent ids, no repeats (kept nights count), reasons clamped", () => {
+    const r = validatePlan({
+      nights: [
+        { date: "2026-11-26", dinner: "stirfry", why: "Uses the broccoli before it turns.\nCheap too." },
+        { date: "2026-11-23", dinner: "alfredo", why: "Tonight is kept." },
+        { date: "2026-11-24", dinner: "tacos", why: "Tacos are already tonight's." },
+        { date: "2026-11-24", dinner: "alfredo", why: "The deli tray needs eating. " + "x".repeat(300) },
+        { date: "2026-11-25", dinner: "lasagna", why: "Not in the box." },
+        { date: "2026-11-25", dinner: "stirfry", why: "Twice." },
+        { date: "2026-11-29", dinner: "chili", why: "Outside the stretch." },
+        { date: "2026-11-24", dinner: "chili", why: "Second answer for a night." },
+      ],
+      summary: "  Uses the chicken and the deli tray first.  ",
+    }, PLAN_REQ);
+    assert.deepEqual(r.nights.map((n) => [n.date, n.dinner]), [["2026-11-24", "alfredo"], ["2026-11-26", "stirfry"]], "date order");
+    assert.equal(r.dropped, 6);
+    assert.equal(r.nights[1].why, "Uses the broccoli before it turns. Cheap too.");
+    assert.ok(r.nights[0].why.length <= 160);
+    assert.equal(r.summary, "Uses the chicken and the deli tray first.");
+    // A bare list and { id, reason } are read too; junk is empty.
+    assert.deepEqual(validatePlan([{ date: "2026-11-25T00:00", id: "chili", reason: "Keep it." }], PLAN_REQ).nights, [{ date: "2026-11-25", dinner: "chili", why: "Keep it." }]);
+    assert.deepEqual(validatePlan("nope", PLAN_REQ), { nights: [], summary: "", dropped: 0 });
+    assert.deepEqual(validatePlan({ nights: [{ date: "2026-11-24", dinner: "tacos" }] }, { nights: [], dinners: [] }).nights, []);
+  });
+
+  test("PLAN_SYSTEM_PROMPT: the order to choose in, the house rules for health talk, JSON only", () => {
+    for (const re of [/Bilbrey family of five/, /\$650 a month/, /What's in the house/, /2\. Cost/, /3\. Healthy eating/, /4\. Variety/, /5\. Effort/, /busy gets a dinner of 30 minutes or less/,
+      /beef no more than two or three times a week/, /at most two heavy/, /"keep" night stays as it is/, /JSON only/, /never set calorie targets/, /never mention dieting/]) assert.match(PLAN_SYSTEM_PROMPT, re);
+    const u = planUserPrompt(PLAN_REQ);
+    assert.match(u, /^Plan these nights\. The family's data:\n\{/);
+    assert.deepEqual(JSON.parse(u.slice(u.indexOf("{"))), PLAN_REQ);
   });
 });
 
@@ -557,6 +610,83 @@ describe("Worker with ANTHROPIC_API_KEY", () => {
     const wrong = await w.call("/api/ideas", { method: "POST", key: familyKey("nope"), body: {} });
     assert.equal(wrong.status, 401);
   });
+
+  test("POST /api/plan: Claude plans the open and change nights from the box; tonight and kept dinners stay; the prompt is cached", async () => {
+    const reply = {
+      nights: [
+        { date: "2026-11-24", dinner: "alfredo", why: "The deli tray needs eating, and it's ready in 15 minutes." },
+        { date: "2026-11-25", dinner: "chili", why: "Keeps the chili you planned; only cornbread to buy." },
+        { date: "2026-11-26", dinner: "stirfry", why: "Uses the broccoli and the chicken from Saturday." },
+        { date: "2026-11-23", dinner: "stirfry", why: "Tonight is kept." },
+        { date: "2026-11-26", dinner: "ghost", why: "Not in the box." },
+      ],
+      summary: "Uses the deli tray and the broccoli first; about $5 left to buy.",
+    };
+    w.setClaude(() => claudeReply(JSON.stringify(reply), { input: 6000, output: 600 }));
+    const r = await post("/api/plan", { ...PLAN_REQ, extra: "ignored", nights: [...PLAN_REQ.nights, { date: "nope", plan: "open" }] });
+    assert.equal(r.status, 200, r.text);
+    assert.equal(r.json.engine, "claude");
+    assert.equal(r.json.model, "claude-opus-5-5");
+    assert.deepEqual(r.json.nights.map((n) => [n.date, n.dinner]), [["2026-11-24", "alfredo"], ["2026-11-25", "chili"], ["2026-11-26", "stirfry"]]);
+    assert.equal(r.json.dropped, 2);
+    assert.match(r.json.summary, /deli tray/);
+    assert.equal(typeof r.json.usage.usd, "number");
+
+    assert.equal(w.claudeCalls.length, 1);
+    const sent = w.claudeCalls[0].body;
+    assert.equal(systemText(sent.system), PLAN_SYSTEM_PROMPT);
+    assert.deepEqual(sent.system.at(-1).cache_control, { type: "ephemeral" }, "the same prompt every time, cached");
+    assert.equal(sent.max_tokens, 5000);
+    const text = sent.messages[0].content.map((b) => b.text).join("");
+    const data = JSON.parse(text.slice(text.indexOf("{")));
+    assert.equal(data.extra, undefined, "only the fields the prompt uses");
+    assert.equal(data.nights.length, 4, "a night without a date is dropped");
+    assert.equal(data.nights[1].busy, true);
+    assert.deepEqual(data.dinners.find((d) => d.id === "stirfry").usesSoon, ["Broccoli"]);
+    assert.deepEqual(data.freezer, PLAN_REQ.freezer);
+    assert.deepEqual(data.budget, PLAN_REQ.budget);
+
+    const ai = (await w.call("/api/ai", { key: KEY })).json;
+    assert.ok(ai.spentUsd > 0, "planning counts toward the month");
+  });
+
+  test("POST /api/plan: bad requests are refused before Claude is called", async () => {
+    const cases = [
+      [{ ...PLAN_REQ, today: "Monday" }, 400, /today/],
+      [{ ...PLAN_REQ, nights: [] }, 400, /nights/],
+      [{ ...PLAN_REQ, nights: Array.from({ length: 41 }, (_, i) => ({ date: `2026-12-${String((i % 28) + 1).padStart(2, "0")}`, plan: "open" })) }, 400, /at most 40/],
+      [{ ...PLAN_REQ, dinners: [] }, 400, /dinners/],
+      [{ ...PLAN_REQ, nights: PLAN_REQ.nights.map((n) => ({ ...n, plan: "keep" })) }, 400, /no night to plan/],
+      [[1, 2], 400],
+    ];
+    for (const [body, status, re] of cases) {
+      const r = await post("/api/plan", body);
+      assert.equal(r.status, status, `${JSON.stringify(body).slice(0, 80)} → ${r.status} ${r.text}`);
+      assert.equal(typeof r.json.error, "string");
+      if (re) assert.match(r.json.error, re);
+    }
+    assert.equal((await post("/api/plan", "{nope")).status, 400);
+    assert.equal(w.claudeCalls.length, 0, "nothing invalid reaches Claude");
+    const wrong = await w.call("/api/plan", { method: "POST", key: familyKey("nope"), body: PLAN_REQ });
+    assert.equal(wrong.status, 401);
+  });
+
+  test("POST /api/plan: Claude failing, unreadable or off the box is a 502", async () => {
+    w.setClaude(() => new Response(JSON.stringify({ type: "error", error: { type: "overloaded_error", message: "Overloaded" } }), { status: 529 }));
+    const r1 = await post("/api/plan", PLAN_REQ);
+    assert.equal(r1.status, 502);
+    assert.match(r1.json.error, /couldn't plan/);
+    assert.match(r1.json.detail, /529/);
+    w.setClaude(() => claudeReply("Here's a lovely week!"));
+    const r2 = await post("/api/plan", PLAN_REQ);
+    assert.equal(r2.status, 502);
+    assert.match(r2.json.detail, /no usable JSON/);
+    w.setClaude(() => claudeReply({ nights: [{ date: "2026-11-24", dinner: "lasagna", why: "?" }] }));
+    const r3 = await post("/api/plan", PLAN_REQ);
+    assert.equal(r3.status, 502);
+    assert.match(r3.json.error, /didn't fit the recipe box/);
+    assert.equal(w.calls.length, 0, "never Workers AI");
+  });
 });
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
@@ -611,6 +741,9 @@ describe("monthly cap (AI_MONTHLY_CAP_USD)", () => {
     assert.equal(ideas.status, 402);
     assert.equal(ideas.json.capped, true);
     assert.equal(typeof ideas.json.error, "string");
+    const plan = await w.call("/api/plan", { method: "POST", key: KEY, body: PLAN_REQ });
+    assert.equal(plan.status, 402);
+    assert.equal(plan.json.capped, true);
     assert.equal(w.claudeCalls.length, 0, "no Claude call once capped");
     near((await w.call("/api/ai", { key: KEY })).json.spentUsd, 0.048, "nothing more was spent");
   });
@@ -656,7 +789,7 @@ describe("without ANTHROPIC_API_KEY", () => {
     assert.equal(r.json.spentUsd, 0);
   });
 
-  test("scans stay on Workers AI, and POST /api/ideas is a 503", async () => {
+  test("scans stay on Workers AI, and POST /api/ideas and /api/plan are a 503", async () => {
     w.setAI(() => ({ response: '{"items":[]}' }));
     const s = await w.call("/api/scan", { method: "POST", key: KEY, body: { image: PNG_DATA_URL, known: [] } });
     assert.equal(s.status, 200);
@@ -664,6 +797,9 @@ describe("without ANTHROPIC_API_KEY", () => {
     const r = await w.call("/api/ideas", { method: "POST", key: KEY, body: { count: 3 } });
     assert.equal(r.status, 503);
     assert.equal(typeof r.json.error, "string");
+    const p = await w.call("/api/plan", { method: "POST", key: KEY, body: PLAN_REQ });
+    assert.equal(p.status, 503);
+    assert.match(p.json.error, /Claude key/);
     assert.equal(w.claudeCalls.length, 0);
   });
 });

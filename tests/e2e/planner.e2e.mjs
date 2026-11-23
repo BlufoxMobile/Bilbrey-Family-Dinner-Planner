@@ -521,3 +521,98 @@ test('after dinner is cooked the app asks about leftovers once; they can go in a
   assert.ok(await noOverflow(page));
   assert.equal(errors.length, 0, errors.join('\n'));
 });
+
+test('Plan with Claude: Claude picks the open nights and the app’s own picks, says why, keeps Undo; errors offer the quick way', async () => {
+  // Two open nights this week; Thursday is Candi's and stays hers.
+  const thu = { ...((await familyState()).plan?.['2026-11-19']?.dinner ? (await familyState()).plan['2026-11-19'] : { dinner: 'orange-chicken', sides: [], status: 'planned' }), manual: true, by: 'Candi' };
+  await seed([{ op: 'del', path: ['plan', '2026-11-18'] }, { op: 'del', path: ['plan', '2026-11-20'] }, { op: 'del', path: ['planAhead'] }, setOp(['plan', '2026-11-19'], thu)],
+    (st) => !st.plan['2026-11-18'] && !st.plan['2026-11-20'] && !st.planAhead && st.plan['2026-11-19']?.manual);
+  await go(page, '#/plan', '.page-plan');
+  await closeToast(page);
+  const was = (await familyState()).plan;
+  await page.click('.plan-actions [data-action="ahead:open"]');
+  await page.waitForSelector('dialog[open] [data-action="ahead:claude"]');
+  await page.click('dialog[open] [data-action="ahead:quick"][data-end="2026-11-22"]');
+  await textMatch(page, 'dialog[open] #ahead-claude-note', /Claude picks each night from what’s in the house, the cost and lighter plates/);
+  assert.equal(await count(page, 'dialog[open] .ahead-quick-way[data-action="ahead:go"]'), 1, 'the quick way is still one tap away');
+  // Candi's Thursday is hers unless the family asks Claude to rethink its own picks (off by default).
+  await page.click('dialog[open] .ahead-opts > summary');
+  assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:family"]', 'aria-checked'), 'false');
+  await textMatch(page, 'dialog[open] .ahead-opts', /Let Claude rethink dinners you chose\s*(One night|\d+ nights) this stretch\. It keeps the ones that still fit; never tonight\./);
+  await page.click('dialog[open] .ahead-opts > summary');
+  assert.ok(await noOverflow(page));
+  await page.waitForTimeout(300);
+  await shot(page, 'planner-17-claude-sheet-390');
+  const calls = api.db.planCalls;
+  await page.click('dialog[open] [data-action="ahead:claude"]');
+  await page.waitForSelector('#ahead-card.is-claude .ahead-undo');
+  assert.equal(api.db.planCalls, calls + 1);
+  // What Claude was sent: the week's nights, tonight kept, and the whole box with what the pantry says.
+  const req = api.db.lastPlan;
+  assert.equal(req.today, TODAY);
+  assert.deepEqual(req.nights.map((n) => n.date), ['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22']);
+  assert.equal(req.nights[0].plan, 'keep');
+  assert.deepEqual(req.nights.filter((n) => n.plan === 'open').map((n) => n.date), ['2026-11-18', '2026-11-20']);
+  assert.equal(req.nights.find((n) => n.date === '2026-11-19').plan, 'keep', 'Candi’s Thursday is never Claude’s');
+  assert.ok(req.dinners.length > 40 && req.dinners.every((d) => d.id && d.ready));
+  // What was saved: each night Claude chose carries its reason; tonight and Thursday are as they were.
+  const s = await familyState();
+  assert.deepEqual(s.plan[TODAY], was[TODAY]);
+  assert.deepEqual(s.plan['2026-11-19'], was['2026-11-19']);
+  for (const d of ['2026-11-18', '2026-11-20']) {
+    assert.equal(s.plan[d].by, 'Claude', d);
+    assert.ok(s.plan[d].why, `${d} has Claude’s reason`);
+  }
+  assert.equal(s.planAhead.by, 'Claude');
+  assert.ok(s.planAhead.claude.nights.length >= 2);
+  // The card: Claude's summary, and why it picked each dinner.
+  await textMatch(page, '#ahead-h', /^Claude planned through Sunday, Nov 22$/);
+  assert.match(await page.textContent('#ahead-card .ahead-summary'), /dinners come from what’s already in the house/);
+  assert.equal(await page.getAttribute('#ahead-card .ahead-why', 'open'), '', 'the reasons are open right after planning');
+  const why = await page.textContent('#ahead-card .why-nights');
+  assert.match(why, /Wed Nov 18/);
+  assert.ok(why.includes(s.plan['2026-11-18'].why));
+  clean(await page.textContent('#ahead-card'), 'the Claude result card');
+  assert.ok(await noOverflow(page));
+  await shotOf(page, '#ahead-card', 'planner-18-claude-card-390');
+  // The night sheet says why too.
+  await page.click('#day-2026-11-18');
+  await page.waitForSelector('dialog[open] .night-why');
+  assert.ok((await page.textContent('dialog[open] .night-why')).includes(s.plan['2026-11-18'].why));
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog[open]'));
+  // Undo takes Claude's plan back, card and all.
+  await page.click('#ahead-card .ahead-undo');
+  await toastMatch(page, /Undone/);
+  const back = await familyState();
+  assert.deepEqual(back.plan, was);
+  assert.equal(back.planAhead, undefined);
+
+  // Claude fails: the sheet says so and offers to try again or plan the quick way.
+  api.db.planReply = { status: 502, body: { error: 'Claude couldn’t plan the week this time. Try again in a minute.' } };
+  await page.click('.plan-actions [data-action="ahead:open"]');
+  await page.waitForSelector('dialog[open] [data-action="ahead:claude"]:not([disabled])');
+  await page.click('dialog[open] [data-action="ahead:claude"]');
+  await textMatch(page, 'dialog[open] [role="alert"]', /Claude didn’t answer this time/);
+  assert.equal(await count(page, 'dialog[open] [data-action="ahead:claude"]'), 1, 'Try again');
+  api.db.planReply = null;
+  await page.click('dialog[open] [data-action="ahead:go"]');
+  await page.waitForSelector('#ahead-card:not(.is-claude) .ahead-undo');
+  await textMatch(page, '#ahead-h', /^Planned through/);
+  assert.equal(await count(page, '#ahead-card .ahead-why'), 0);
+
+  // No Claude key: the sheet is the plain Plan it, as before.
+  api.db.claude.keySet = false;
+  await page.reload();
+  await page.waitForSelector('.page-plan');
+  await page.click('.plan-actions [data-action="ahead:open"]');
+  await page.waitForSelector('dialog[open] [data-action="ahead:go"]');
+  await page.waitForTimeout(600);
+  assert.equal(await count(page, 'dialog[open] [data-action="ahead:claude"]'), 0);
+  assert.equal(await count(page, 'dialog[open] .ahead-quick-way'), 0);
+  api.db.claude.keySet = true;
+  await page.keyboard.press('Escape');
+  // The browser logs the 502 this test asked the mock for; that one is expected.
+  for (let i = errors.length - 1; i >= 0; i--) if (/status of 502/.test(errors[i])) errors.splice(i, 1);
+  assert.equal(errors.length, 0, errors.join('\n'));
+});

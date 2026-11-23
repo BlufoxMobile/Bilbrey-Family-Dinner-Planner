@@ -13,6 +13,7 @@
  *   POST /api/receipt {images[≤4],store?,known}  → { store, date, total, subtotal, tax, savings, lines:[…], model, engine }
  *   GET  /api/ai                                  → { keySet, engine, model, models, month, spentUsd, capUsd, capped }
  *   POST /api/ideas  {images?,note?,pantry,sides,catalog,count?} → { ideas:[…], engine:"claude", model }
+ *   POST /api/plan   {today,start,end,nights,dinners,useSoon,freezer,recent,budget,lean} → { nights:[{date,dinner,why}], summary, model }
  *   GET  /api/mcp/link · POST /api/mcp/rotate    → { url }  the Claude chat connector link (SPEC §15)
  *   POST /mcp/<token>                            MCP (JSON-RPC) for the Claude chat connector, in ./mcp.js
  *   POST /api/photo (raw image) · GET /api/photo?id= · POST /api/photo/delete {id}     the family's pictures
@@ -22,7 +23,7 @@
  *
  * State lives in ONE SQLite-backed Durable Object (`Kitchen`, idFromName("bilbrey")), so every
  * read and write is strongly consistent and ops batches apply atomically, in arrival order.
- * The only AI calls are POST /api/scan, /api/receipt and /api/ideas. Scans and receipts use Claude
+ * The only AI calls are POST /api/scan, /api/receipt, /api/ideas and /api/plan. Scans and receipts use Claude
  * (src/claude.js, SPEC §14) when the ANTHROPIC_API_KEY secret is set and this month's Claude spend is
  * under AI_MONTHLY_CAP_USD, and Workers AI otherwise (or if Claude fails). Nothing runs on a schedule.
  */
@@ -30,7 +31,7 @@ import { DurableObject } from "cloudflare:workers";
 import {
   MODELS, callClaude, chicagoDate, chicagoMonth, costUsd, hasClaudeKey, imageBlock, monthlyCap, pickModel, textBlock,
   tokenCount, extractJsonObject, validateIdeas, ideasUserPrompt, IDEAS_SYSTEM_PROMPT, ClaudeError,
-  IDEAS_FORMAT_PROMPT, ideasReference, cachedSystem, usageOf,
+  IDEAS_FORMAT_PROMPT, ideasReference, cachedSystem, usageOf, PLAN_SYSTEM_PROMPT, planUserPrompt, validatePlan,
 } from "./claude.js";
 import { handleMcpRequest, mcpTokenMatches, newMcpToken } from "./mcp.js";
 // The allowlist of store image hosts is shared with the app (one source of truth, pure code).
@@ -166,6 +167,7 @@ const ROUTES = {
   // Claude (SPEC §14)
   "/api/ai": { GET: handleAiStatus },
   "/api/ideas": { POST: handleIdeas },
+  "/api/plan": { POST: handlePlan },
   // Claude chat connector (SPEC §15)
   "/api/mcp/link": { GET: handleMcpLink },
   "/api/mcp/rotate": { POST: handleMcpRotate },
@@ -2833,7 +2835,9 @@ function mergeReceiptPages(pages, storeHint) {
 // The API call itself, prices, prompts for ideas and the ideas validator live in src/claude.js.
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 // Generous, but they leave room for the Workers AI fallback inside the app's own request timeouts.
-const CLAUDE_TIMEOUTS_MS = { scan: 50_000, receipt: 80_000, ideas: 100_000 };
+const CLAUDE_TIMEOUTS_MS = { scan: 50_000, receipt: 80_000, ideas: 100_000, plan: 110_000 };
+/** Plan with Claude (docs/spec/30): the request the app builds, and how long the answer may be. */
+const PLAN = { maxBody: 200_000, maxNights: 40, maxDinners: 400, maxList: 60, maxTokens: 5000 };
 const IDEAS = {
   maxImages: 4,
   maxImagesChars: LIMITS.maxReceiptImagesChars, // all photo data URLs together (4.5 MB); 1.5 MB each
@@ -3029,6 +3033,83 @@ async function handleIdeas(request, env, url, origin) {
   const { ideas, dropped } = validateIdeas(parsed, req);
   if (dropped.length) console.log(`Ideas: dropped ${dropped.length} for house rules (${dropped.map((d) => d.rule).join(", ")})`);
   return json(200, { ideas, engine: "claude", model: ai.model, dropped: dropped.length, usage: usageSummary(ai, [r.usage]) }, origin);
+}
+
+/**
+ * POST /api/plan (docs/spec/30): Claude picks each night's dinner from the family's recipe box,
+ * using what's in the house, cost and healthy eating. The app sends the nights and every dinner with
+ * what the pantry says about it (app/smartplan.js); this checks the shape, asks Claude, and keeps
+ * only answers that name a night Claude may plan and a dinner that was sent.
+ * → { nights: [{ date, dinner, why }], summary, engine: "claude", model, dropped, usage }
+ */
+async function handlePlan(request, env, url, origin) {
+  const ai = await aiContext(env, request, { spend: true });
+  if (ai.denied) return fromResult(ai.denied, origin);
+  if (!ai.keySet) throw new HttpError(503, "Planning with Claude needs the Claude key, and none is set on this Worker yet.");
+  if (ai.capped) throw cappedError(ai);
+  const req = cleanPlanRequest(parseJson(await readBodyText(request, PLAN.maxBody)));
+  if (!req.nights.some((n) => n.plan !== "keep")) throw new HttpError(400, "There's no night to plan in that stretch.");
+  let r;
+  try {
+    r = await claudeCall(env, ai, {
+      system: cachedSystem([PLAN_SYSTEM_PROMPT]),
+      content: [textBlock(planUserPrompt(req))],
+      maxTokens: PLAN.maxTokens,
+      timeoutMs: CLAUDE_TIMEOUTS_MS.plan,
+      kind: "plan",
+    });
+  } catch (err) {
+    const detail = claudeProblem(ai, err);
+    console.error("Plan: Claude failed:", detail);
+    throw new HttpError(502, "Claude couldn't plan the week this time. Try again in a minute.", { detail });
+  }
+  const parsed = extractJsonObject(r.text);
+  if (parsed === undefined) {
+    throw new HttpError(502, "Claude's plan came back unreadable. Try again.", { detail: `${ai.model}: no usable JSON in the reply` });
+  }
+  const { nights, summary, dropped } = validatePlan(parsed, req);
+  if (!nights.length) throw new HttpError(502, "Claude's plan didn't fit the recipe box. Try again.", { detail: `${ai.model}: ${dropped} nights dropped` });
+  return json(200, { nights, summary, engine: "claude", model: ai.model, dropped, usage: usageSummary(ai, [r.usage]) }, origin);
+}
+
+/** The plan request, cleaned: only the fields the prompt uses, every string and list clamped. */
+function cleanPlanRequest(body) {
+  if (!isPlainObject(body)) throw new HttpError(400, "Body must be a JSON object like { today, nights, dinners }.");
+  const date = (v) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+  const num = (v) => (typeof v === "number" && Number.isFinite(v) ? Math.round(v * 100) / 100 : null);
+  const str = (v, n = 80) => (typeof v === "string" ? cleanText(v, n) || null : null);
+  const list = (v, n) => (Array.isArray(v) ? v.slice(0, n) : []);
+  const today = date(body.today);
+  if (!today) throw new HttpError(400, "today must be a date like 2026-11-23.");
+  if (!Array.isArray(body.nights) || !body.nights.length) throw new HttpError(400, "nights must list the nights to plan.");
+  if (body.nights.length > PLAN.maxNights) throw new HttpError(400, `Plan at most ${PLAN.maxNights} nights at a time.`);
+  if (!Array.isArray(body.dinners) || !body.dinners.length) throw new HttpError(400, "dinners must list the recipe box.");
+  const nights = body.nights.map((n) => isPlainObject(n) && date(n.date) ? {
+    date: n.date, day: str(n.day, 4), plan: ["open", "change", "keep"].includes(n.plan) ? n.plan : "keep",
+    current: str(n.current, 80), busy: n.busy === true || undefined, note: str(n.note, 40),
+  } : null).filter(Boolean);
+  const dinners = list(body.dinners, PLAN.maxDinners).map((d) => isPlainObject(d) && str(d.id, 80) ? {
+    id: str(d.id, 80), title: str(d.title, 100), min: num(d.min), protein: str(d.protein, 20), kind: str(d.kind, 30),
+    cost: num(d.cost), toBuy: num(d.toBuy), kcal: num(d.kcal), proteinG: num(d.proteinG), lean: d.lean === true, heavy: d.heavy === true,
+    ready: ["all", "thaw", "side", "short"].includes(d.ready) ? d.ready : "short",
+    ...(d.fav === true ? { fav: true } : {}),
+    ...(Array.isArray(d.needs) ? { needs: list(d.needs, 4).map((x) => str(x, 50)).filter(Boolean) } : {}),
+    ...(d.missingMain === true ? { missingMain: true } : {}),
+    ...(num(d.thawMin) ? { thawMin: num(d.thawMin) } : {}),
+    ...(Array.isArray(d.usesSoon) ? { usesSoon: list(d.usesSoon, 4).map((x) => str(x, 50)).filter(Boolean) } : {}),
+    ...(date(d.lastAte) ? { lastAte: d.lastAte } : {}),
+  } : null).filter(Boolean);
+  const named = (v, keys) => list(v, PLAN.maxList).map((x) => (isPlainObject(x) ? Object.fromEntries(keys.map(([k, f]) => [k, f(x[k])]).filter(([, val]) => val !== null && val !== undefined)) : null)).filter(Boolean);
+  const b = isPlainObject(body.budget) ? body.budget : {};
+  return {
+    today, start: date(body.start) || today, end: date(body.end) || today, family: 5,
+    pantryFirst: body.pantryFirst !== false, lean: body.lean !== false,
+    budget: { target: num(b.target), spent: num(b.spent), daysLeft: num(b.daysLeft) },
+    nights, dinners,
+    useSoon: named(body.useSoon, [["name", (v) => str(v, 50)], ["daysLeft", num], ["where", (v) => str(v, 12)]]),
+    freezer: named(body.freezer, [["name", (v) => str(v, 50)], ["qty", num], ["unit", (v) => str(v, 12)], ["where", (v) => str(v, 12)], ["since", date]]),
+    recent: named(body.recent, [["date", date], ["id", (v) => str(v, 80)]]),
+  };
 }
 
 function cleanIdeasRequest(body) {

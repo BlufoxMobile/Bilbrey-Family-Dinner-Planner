@@ -231,6 +231,12 @@ export { raw };
 
 const WHY_ICON = { use: 'box', pantry: 'pantry', lean: 'leaf', sale: 'budget', fav: 'star', quick: 'clock', plan: 'sparkle' };
 
+/** Claude's one-line reason for a night it planned (docs/spec/30), or nothing. */
+export function planWhy(e, { cls = '' } = {}) {
+  if (!e?.why || typeof e.why !== 'string' || e.status === 'cooked' || e.status === 'away') return '';
+  return html`<p class="plan-why ${cls}">${cic('sparkle', { size: 16 })}<span><span class="sr-only">Why Claude picked it: </span>${e.why}</span></p>`;
+}
+
 /** Why this dinner earns its night: up to three short reasons (cooking.whyThisDinner). */
 export function whyList(reasons, { label = 'Why tonight' } = {}) {
   if (!reasons?.length) return '';
