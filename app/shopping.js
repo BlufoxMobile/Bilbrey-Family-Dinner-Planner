@@ -89,7 +89,10 @@ export function unitText(n, unit) {
   return `${fmtQty(n)} ${n > 0 && n < 1 + 1e-9 ? singular(unit) : unit}`.trim();
 }
 
-function containerWord({ aisle, name = '' }) {
+function containerWord({ aisle, name = '', product, pack }) {
+  // A multipack on the shelf ("Chicken Broth, 32 oz., 6 pk.") is picked up as one pack.
+  if (/\b\d+\s*(pk|pack|ct)\b/i.test(`${product?.label || ''} ${pack?.label || ''}`)) return 'pack';
+  if (/\bmilk\b/i.test(name) && pack?.size >= 12) return 'jug';
   if (/\b(oil|vinegar|sauce|dressing|ketchup|mustard|honey|syrup)\b/i.test(name)) return 'bottle';
   if (/\b(broth|stock|milk|cream|creamer|juice)\b/i.test(name)) return 'carton';
   if (/\b(flour|sugar|rice|oats)\b/i.test(name)) return 'bag';
@@ -115,6 +118,21 @@ export function formatPackQty(item) {
     return `${n} × ${fmtQty(size)}-count pack`;
   }
   return `${n} × ${containerWord(item)} (about ${fmtQty(size)} ${unit})`;
+}
+
+/**
+ * The amount line on a list row: the size for weights and counts ("18.37 oz", "2 × 3.1 lb",
+ * "40 packs"), but the container for spoon and cup amounts ("1 bottle", not "190 tbsp"; gauntlet r5).
+ */
+export function shelfQty(item) {
+  if (!item.pack) return unitText(item.shortfall || item.qty || 0, item.unit);
+  const n = item.packs || 1;
+  if (!WEIGHT_UNITS.has(item.unit) && !COUNT_UNITS.has(item.unit)) {
+    const w = containerWord(item);
+    return `${n} ${n > 1 ? (w === 'box' ? 'boxes' : `${w}s`) : w}`;
+  }
+  const size = item.pack.size > 0 ? unitText(Math.round(item.pack.size * 100) / 100, item.unit) : '';
+  return n > 1 ? `${n} × ${size || 'packs'}` : size;
 }
 
 const aisleIndex = (a) => { const i = AISLES.indexOf(a); return i < 0 ? AISLES.length : i; };

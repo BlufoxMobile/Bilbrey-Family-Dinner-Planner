@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { tinyDb } from './helpers.mjs';
-import { buildList, formatPackQty, formatStoreList, monthBudget, needsFor } from '../app/shopping.js';
+import { buildList, formatPackQty, formatStoreList, monthBudget, needsFor, shelfQty } from '../app/shopping.js';
 import { doneShoppingOps, setPriceOps, notAtStoreOps, toggleCheckOps, addExtraOps, addReceiptOps } from '../app/actions.js';
 import { applyOps } from '../app/state.js';
 import { buildDb } from '../app/data.js';
@@ -129,6 +129,12 @@ test('store list text is clean and in packs', () => {
   assert.equal(vol('Light brown sugar', 'Spices & Baking'), '1 × bag (about 48 tbsp)');
   assert.equal(vol('Smoked paprika', 'Spices & Baking', 'tsp'), '1 × jar (about 48 tsp)');
   assert.equal(vol('Creamy peanut butter', 'Canned & Jarred'), '1 × jar (about 48 tbsp)');
+  // The row's amount line names the container for spoon and cup amounts (gauntlet r5: not "190 tbsp").
+  assert.equal(shelfQty({ name: 'Ketchup', aisle: 'Condiments & Sauces', unit: 'tbsp', pack: { size: 190 }, packs: 1 }), '1 bottle');
+  assert.equal(shelfQty({ name: 'Chicken broth', aisle: 'Canned & Jarred', unit: 'cups', product: { label: "Member's Mark Chicken Broth, 32 oz., 6 pk." }, pack: { size: 24 }, packs: 1 }), '1 pack');
+  assert.equal(shelfQty({ name: 'Whole milk', aisle: 'Dairy & Eggs', unit: 'cups', pack: { size: 16 }, packs: 2 }), '2 jugs');
+  assert.equal(shelfQty({ name: 'Lean ground beef', unit: 'lb', pack: { size: 3.1 }, packs: 2 }), '2 × 3.1 lb');
+  assert.equal(shelfQty({ name: 'Doritos', unit: 'oz', pack: { size: 18.37 }, packs: 1 }), '18.37 oz');
 });
 
 test('budget: receipts + still to buy, savings vs $1,000', () => {

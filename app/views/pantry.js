@@ -88,7 +88,7 @@ function pantryRow(app, id, p) {
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${pk.per}" aria-label="One less ${pk.word} of ${m.name}">${ic('minus', { size: 18 })}</button>
             <input class="qty-input" type="text" inputmode="decimal" value="${typeof p.qty === 'number' ? String(wholePacks(count)) : ''}" data-change="pan:qty" data-id="${id}" data-per="${pk.per}" aria-label="How many ${plural(pk.word, 2)} of ${m.name} (an opened one counts)">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${pk.per}" aria-label="One more ${pk.word} of ${m.name}">${ic('plus', { size: 18 })}</button>
-            <span class="qty-unit">${plural(pk.word, 2)}</span>
+            <span class="qty-unit">${plural(pk.word, typeof p.qty === 'number' && wholePacks(count) === 1 ? 1 : 2)}</span>
           </span>`
         : html`<span class="qty-edit">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${pk?.counted ? 1 : stepFor(m.unit)}" aria-label="Less ${m.name}">${ic('minus', { size: 18 })}</button>

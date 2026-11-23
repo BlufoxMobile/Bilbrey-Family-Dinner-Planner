@@ -3,7 +3,7 @@
 import { html, ic, when, openSheet, closeSheet, toast, copyText, confirmSheet, segmented, renderSheet } from '../ui.js';
 import { fmtQty, mediumDate, money, rangeLabel, relativeDay, shortWeekday, listJoin, shortDate, dayAndDate, round2, datesBetween, addDays, weekday, isISODate, weekdayName, byLabel } from '../util.js';
 import { listKeyFor, dinnerById } from '../planner.js';
-import { buildList, formatPackQty, formatStoreList, formatAssistantList, formatFullList, unitText, OTHER, productName } from '../shopping.js';
+import { buildList, formatPackQty, formatStoreList, formatAssistantList, formatFullList, unitText, OTHER, productName, shelfQty } from '../shopping.js';
 import {
   toggleCheckOps, doneShoppingOps, setPriceOps, clearPriceOps, notAtStoreOps, addExtraOps, removeExtraOps, setPantryOps, undoFor,
 } from '../actions.js';
@@ -336,8 +336,7 @@ function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
   const label = (!i.freeText && app.db.ingredients[i.id]?.short) || i.name;
   const product = !i.freeText && i.product?.label && i.product.label.toLowerCase() !== i.name.toLowerCase() ? i.product.label : '';
   // The size rides on the amount line ("2 × 3.1 lb"), so a cut-off product name never hides it (gauntlet r4).
-  const size = i.pack?.size > 0 ? unitText(Math.round(i.pack.size * 100) / 100, i.unit) : '';
-  const many = i.freeText ? (i.qty > 1 ? `${fmtQty(i.qty)} of them` : '') : i.pack ? (i.packs > 1 ? `${i.packs} × ${size || 'packs'}` : size) : unitText(i.shortfall || i.qty || 0, i.unit);
+  const many = i.freeText ? (i.qty > 1 ? `${fmtQty(i.qty)} of them` : '') : shelfQty(i);
   const inCart = mode === 'online' ? 'added to the cart' : 'in the cart';
   const tags = [
     i.pack?.sale ? html`<span class="tag tag-sale">Sale</span>` : '',
