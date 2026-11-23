@@ -432,3 +432,7 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .vote-sides { display: grid; gap: 0; margin: var(--s3) 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .vote-sides li { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .vote-sides li > span { font-weight: 600; min-width: 0; }
+/* Cook from what you have (Jeff, r6): the week from the pantry and Claude's ideas above the ready-now list. */
+.have-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 var(--s3); }
+.have-acts .btn { flex: 1 1 200px; }
+.pan-have { margin: 0 0 var(--s4); }

@@ -85,7 +85,8 @@ function card(app, { d, facts }) {
       <span class="r-meta">${timeLabel(d)}${facts.minutes ? ', ' : ''}${d.category}${when(isFavorite(app.state, d), () => html`<span class="r-fav">${ic('star', { size: 14 })}<span class="sr-only">Family favorite</span></span>`)}</span>
       ${when(nutri, () => html`<span class="r-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein${leanMark(facts, { compact: true })}</span>`)}
       ${costNote(facts.cost, { short: true, tag: 'span', cls: 'r-cost' })}
-      ${when(facts.makeable, () => html`<span class="r-pantry is-ready">${ic('check', { size: 14 })}All in the house</span>`)}
+      ${facts.makeable ? html`<span class="r-pantry is-ready">${ic('check', { size: 14 })}All in the house</span>`
+        : app.ui.recipeSort === 'ready' && facts.missing ? html`<span class="r-pantry">Needs ${facts.missing} ${facts.missing === 1 ? 'thing' : 'things'}</span>` : ''}
     </span>
   </a></li>`;
 }

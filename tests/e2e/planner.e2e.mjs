@@ -245,6 +245,16 @@ test('lean by default and busy nights are family settings under More on the Plan
   clean(fz, 'use first');
   assert.ok(await noOverflow(page));
   await shotOf(page, '.use-first', 'planner-05-use-first-390');
+  // Cook from what you have (Jeff, r6): one tap from the pantry, what the house can make first.
+  await page.click('.pan-have');
+  await page.waitForSelector('dialog[open] .have-acts [data-action="ahead:open"][data-pantry="1"]');
+  assert.match(await page.textContent('dialog[open] .sheet-title'), /Cook from what you have/);
+  assert.ok(await page.locator('dialog[open] .pick-row .pick-ready').count() > 5, 'every dinner says whether it can happen tonight');
+  await page.click('dialog[open] [data-action="ahead:open"][data-pantry="1"]');
+  await page.waitForSelector('dialog[open] [data-action="ahead:go"]');
+  assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:pantry"]', 'aria-checked'), 'true', 'planned from the pantry');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog[open]'));
   assert.equal(errors.length, 0, errors.join('\n'));
 });
 

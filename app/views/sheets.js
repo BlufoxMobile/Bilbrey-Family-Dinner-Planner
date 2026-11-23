@@ -167,7 +167,16 @@ function readyText(r) {
 
 const FAMILY_SIZE = 5;
 
-function pickBody(app, { date, query }) {
+/**
+ * "Cook from what you have" (gauntlet r6, Jeff: smart recipes from the food we actually have): tonight's
+ * picker, ready-now first, with the week planned from the pantry and Claude's new ideas one tap away.
+ * Opens after a receipt fills the pantry, and from the Pantry page.
+ */
+export function openHave(app) {
+  openPick(app, app.today(), 'Cook from what you have', { have: true });
+}
+
+function pickBody(app, { date, query, have = false }) {
   const today = app.today();
   const q = (query || '').trim().toLowerCase();
   const planStore = app.settings.planStore;
@@ -208,6 +217,10 @@ function pickBody(app, { date, query }) {
   };
   const groups = tonight && !q ? [0, 1, 2].map((g) => ({ g, items: list.filter((d) => group(d) === g) })).filter((x) => x.items.length) : [{ g: -1, items: list }];
   return html`
+    ${when(have, () => html`<div class="have-acts">
+      <button type="button" class="btn btn-secondary" data-action="ahead:open" data-pantry="1">${ic('sparkle', { size: 20 })}Plan the week from the pantry</button>
+      <button type="button" class="btn btn-quiet" data-action="ideas:open">${ic('camera', { size: 20 })}New ideas from Claude</button>
+    </div>`)}
     <label class="search">${ic('search', { size: 20 })}<input type="search" placeholder="Search dinners" value="${query || ''}" data-input="pick:query" data-date="${date}" aria-label="Search dinners" autocomplete="off"></label>
     <ul class="pick-list">
       ${when(lefts.length, () => html`<li class="pick-head" role="presentation">Leftovers</li>`)}
@@ -219,12 +232,13 @@ function pickBody(app, { date, query }) {
     </ul>`;
 }
 
-export function openPick(app, date, title) {
-  const st = { date, query: '' };
+export function openPick(app, date, title, { have = false } = {}) {
+  const st = { date, query: '', have };
   openSheet({
-    id: `pick:${date}`,
+    id: `pick:${date}${have ? ':have' : ''}`,
     size: 'tall',
     title: title || `Choose a dinner for ${relativeDay(date, app.today()).toLowerCase() === 'tonight' ? 'tonight' : weekdayName(date)}`,
+    subtitle: have ? 'What the house can make comes first. Tap one to make it tonight.' : undefined,
     render: () => pickBody(app, st),
     onMount: (el) => {
       const input = el.querySelector('input[type=search]');
@@ -679,6 +693,7 @@ export const actions = {
     closeSheet();
   },
   'side:sub': (app, el) => openSubstitute(app, { date: el.dataset.date, dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot) }),
+  'have:open': (app) => openHave(app),
   'side:scope': () => { const st = openSubstitute.state; if (st?.canNight) { st.scope = st.scope === 'always' ? 'night' : 'always'; renderSheet(); } },
   'side:use': (app, el) => {
     const st = openSubstitute.state;

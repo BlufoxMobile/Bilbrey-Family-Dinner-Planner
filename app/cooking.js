@@ -613,7 +613,7 @@ export const ringing = (timers, now) => (timers || []).filter((t) => !t.acked &&
 // ---------------------------------------------------------------- the recipe box: what matters to this family
 
 export const TIME_FILTERS = [{ id: '20', label: '20 min or less' }, { id: '30', label: '30 min or less' }, { id: '45', label: '45 min or less' }];
-export const RECIPE_SORTS = [{ id: 'az', label: 'A to Z' }, { id: 'quick', label: 'Quickest' }, { id: 'protein', label: 'Most protein' }, { id: 'light', label: 'Lightest' }, { id: 'cheap', label: 'Cheapest first' }, { id: 'ready', label: 'Closest to ready' }];
+export const RECIPE_SORTS = [{ id: 'az', label: 'A to Z' }, { id: 'quick', label: 'Quickest' }, { id: 'protein', label: 'Most protein' }, { id: 'light', label: 'Lightest' }, { id: 'cheap', label: 'Cheapest first' }, { id: 'ready', label: 'What we have first' }];
 
 /** What the recipe box needs to know about one dinner. `rem` = coverage.onHand(db, state), computed once. */
 export function recipeFacts(db, state, d, rem) {

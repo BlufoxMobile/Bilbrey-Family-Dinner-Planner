@@ -12,6 +12,7 @@ import { applyOps } from '../state.js';
 import { undoFor } from '../actions.js';
 import { itemMeta } from '../shopping.js';
 import { readByText } from '../claude.js';
+import { openHave } from './sheets.js';
 
 export const title = () => 'Receipts';
 export const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco', other: 'Other store' };
@@ -257,6 +258,9 @@ async function save(app) {
   const message = `Saved ${money(ops.total)} from ${where}, ${shortDate(ops.date)}.${ops.counted ? '' : ' It was already in the Budget, so it’s not counted twice.'}${learned}${stocked ? ` ${stocked} ${stocked === 1 ? 'item is' : 'items are'} in the pantry now.` : ''}`;
   app.commit({ ops: [...ops], undo: undoFor(app.state, ops), message });
   closeSheet();
+  // The groceries are in: show what the house can make now (gauntlet r6).
+  const here = location.hash;
+  if (stocked) setTimeout(() => { if (location.hash === here) openHave(app); }, 350);
 }
 
 // ---------------------------------------------------------------- 3. history

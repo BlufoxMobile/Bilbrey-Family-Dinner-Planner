@@ -194,6 +194,38 @@ v3.6.0 shipped what round 4 named as not done:
   receipt". Tick boxes use the 3:1 control line. Large text on a 320px phone keeps Plan cards inside the
   screen. The four heat-and-serve Sam's dinners joined the recipe box.
 
+### Round 6 (all five at 9 again)
+
+- **Tonight's dinner picker** opens with nothing focused but the first row (no keyboard), groups rows
+  under "Leftovers", "Ready now", "This week's dinners (they trade places)" and "Everything else", fewest
+  things missing first, and keeps each row to three lines: the name; "All in the house", "Chicken thighs
+  are frozen (about 1 hr to thaw)" or "Needs chicken thighs and 3 more"; then time · night · cost.
+  Leftovers short of five servings say so.
+- **A side that can't be made** gets "Change the air-fryer fries" right on Tonight. The side picker lists
+  what the house can make first, each labeled, with "Use it every time" as one switch under the list.
+- **Cart words** never take a package from a brand ("Boar's Head" read "1 head"): deli meat by weight is
+  "1 lb, sliced", multipacks "1 pack (6 cans)", and tub, canister, carton, piece and tray where they
+  belong, checked over every catalog pack. Online, Open is its own narrow column beside the ›. A store
+  picked by hand in Add an item holds until a tick at the other store. The item sheet's title is the
+  row's short name. Lunch day cards use short names, with the day's calories once.
+- **Recipe page**: one rating card for the dinner and its sides; "One dinner, two plates" is a row;
+  "Beef roast: done when it pulls apart with a fork (well past 145°F)".
+- **Plan ahead**: its card carries Undo (no toast repeats it), a dry run disables Plan it when nothing
+  would change, and the card says "$28 less than before".
+- **Accessibility**: Tonight fits 320px with Large text; focus stays on "All done for today." through
+  later redraws (redraws restore a tabindex −1 line by its id); switch names start with their words;
+  switches and day chips have 44px targets.
+
+### Cook from what you have (Jeff, after round 6)
+
+Jeff asked for receipts to fill the pantry and for dinners from the food actually in the house. A saved
+receipt that stocks the pantry opens "Cook from what you have": tonight's picker (ready now first), with
+"Plan the week from the pantry" (Plan ahead with the pantry first) and "New ideas from Claude" above it.
+The Pantry page opens the same sheet ("What can we make with what we have?"), and the recipe box's
+"What we have first" sort says what each dinner still needs. In Claude chats, the connector's
+`add_receipt`, `list_recipes` (makeableNow) and `plan_dinner` already do the same from a receipt photo,
+screenshot or PDF.
+
 ## 29.7 Tests
 
 `tests/e2e/*.mjs` follow the new layout (rows tick, the › opens the item sheet, Plan's extra actions

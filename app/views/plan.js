@@ -240,7 +240,7 @@ export const actions = {
     if (!app.commit(res)) app.render();
   },
   // ---------------------------------------------------------------- plan ahead (SPEC §16)
-  'ahead:open': (app) => openPlanAhead(app),
+  'ahead:open': (app, el) => openPlanAhead(app, { pantryFirst: el?.dataset?.pantry === '1' ? true : undefined }),
   'ahead:quick': (app, el) => { if (openPlanAhead.state) openPlanAhead.state.end = clampAheadEnd(app.today(), el.dataset.end); renderSheet(); },
   'ahead:end': (app, el) => {
     if (!openPlanAhead.state || !el.value) return;
@@ -334,10 +334,11 @@ const foodName = (name) => midSentence(String(name || '').replace(/\s*\(.*?\)\s*
 const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /** Choose how far ahead (a quick pick or any day up to a month out) and whether the pantry goes first. */
-function openPlanAhead(app) {
+function openPlanAhead(app, { pantryFirst: force } = {}) {
   const today = app.today();
   const last = app.ui.aheadLast || aheadRecord(app.state, today);
-  const pantryFirst = last ? last.pantryFirst !== false : true;
+  // "Plan the week from the pantry" (Cook from what you have) always puts the pantry first.
+  const pantryFirst = force ?? (last ? last.pantryFirst !== false : true);
   // Unless it was used before, it plans what the Plan page is showing (gauntlet r4: "1 week" on screen,
   // "2 weeks" in the sheet planned 12 dinners nobody asked for)…
   const preferred = last && last.end >= today ? last.end : (() => { const r = currentRange(app); return r.end >= today && r.end <= aheadLimit(today) ? r.end : aheadEnd(today, 'week'); })();
