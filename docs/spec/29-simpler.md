@@ -272,6 +272,24 @@ screenshot or PDF.
   - Plan from the pantry opened elsewhere goes to Plan with the card focused.
   - Cook from what we have ends the Use first card.
 
+### Round 9 (all five at 9)
+
+- **Rows say what Tonight will say.**
+  - `readyText` counts the sides in "Needs …" and adds a frozen main to any line ("· chicken breast frozen, dinner about 7:15").
+  - The "anyway?" question lists the main's items and the sides', the thaw and its time, and where tonight's dinner goes.
+  - Tonight's thaw line gives "start cooking about 6:45, dinner about 7:15" in the evening (`minutesIn`, `clockText`) and keeps capitals.
+- **One sort.** Both pickers show ready, ready after thawing, then closest first. A trade shows on the row, and a dinner whose leftovers are offered isn't offered again.
+- **After a receipt**, "Uses what you just bought: …" holds at most five dinners a side or two things away. The new catalog `short` names keep that heading short.
+- **Nothing vanishes.**
+  - `leftoverNightOps` moves the planned dinner to `nextOpenNight`.
+  - A few servings for five asks first, from a picker.
+  - Tonight says to add a side.
+- **Toasts and focus.**
+  - `toast({ top })` keeps the message clear of Start cooking and the leftovers buttons on a phone.
+  - Focus moves through the after-dinner questions (`focusNext` takes a fallback list).
+  - Landing on Tonight focuses the hero title, and Undo falls back to a focusable page title.
+- **List**: "Sam's" and "Jewel" in the sticky heading below 360px.
+
 ## 29.7 Tests
 
 `tests/e2e/*.mjs` follow the new layout (rows tick, the › opens the item sheet, Plan's extra actions
