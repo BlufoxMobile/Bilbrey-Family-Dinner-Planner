@@ -611,11 +611,14 @@ test('leftovers are one batch (state.leftovers) with a plan: eat one, a lunch, a
   // A leftover night: the same record cook mode uses; nothing to buy, and plan ahead leaves it alone.
   const night = leftoverNightOps(db, state, { from: TUE, night: WED, today: TUE, ...ctx });
   const n = applyOps(state, night.ops);
-  assert.deepEqual([n.plan[WED].status, n.plan[WED].dinner, n.plan[WED].manual, n.plan[WED].away.reason, n.plan[WED].away.from], ['away', other.id, true, 'Leftovers', TUE]);
+  // The dinner planned that night moves to the next open night, as every pick does (gauntlet r9).
+  assert.deepEqual([n.plan[WED].status, n.plan[WED].dinner, n.plan[WED].manual, n.plan[WED].away.reason, n.plan[WED].away.from], ['away', null, true, 'Leftovers', TUE]);
+  assert.ok(night.movedTo > WED, night.message);
+  assert.equal(n.plan[night.movedTo].dinner, other.id);
   assert.equal(n.leftovers[TUE].night, WED);
   assert.equal(buildList(db, n, { dates: [WED] }).nights.length, 0, 'nothing to buy for it');
   assert.deepEqual(planOps(planAheadOps(db, n, { start: TUE, end: WED, today: TUE, ...ctx })), [], 'plan ahead never re-plans it');
-  assert.equal(applyOps(n, bringBackOps(db, n, { date: WED, today: TUE, ...ctx }).ops).plan[WED].dinner, other.id, 'cooking after all brings the dinner back');
+  assert.equal(applyOps(n, bringBackOps(db, n, { date: WED, today: TUE, ...ctx }).ops).plan[WED], undefined, 'cooking after all opens the night; the dinner kept its new night');
   assert.deepEqual(applyOps(n, night.undo), state);
 
   // The freezer: plates leave the fridge count and become a dated shelf item that shows as a backup.

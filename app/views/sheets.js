@@ -156,23 +156,36 @@ function nightActions(app, { date, d, today, past, cooked }) {
 
 // ---------------------------------------------------------------- pick a dinner
 
+/** "about 1½ hr" / "about 45 min": a cold-water thaw, said the same way everywhere. */
+export const thawFor = (m) => (m >= 60 ? `about ${fmtQty(Math.round(m / 30) / 2)} hr` : `about ${m} min`);
+
 /**
- * "All in the house", "Needs chicken thighs and 6 more", "All in but a side: green beans", or
- * "Chicken thighs are frozen (about 1 hr to thaw)", which in the evening says when dinner would be:
- * "Chicken thighs are frozen: dinner about 7:30" (gauntlet r8: don't make the family add it up).
+ * One line that says what Tonight will say (gauntlet r9): "All in the house", "Needs plain Greek
+ * yogurt and 2 more" (the sides count too), "All in but a side: green beans", "Chicken thighs are
+ * frozen: dinner about 7:15", and a frozen meat added to any of them: "Needs grated Parmesan ·
+ * chicken breast frozen, dinner about 7:15". eatAt: the clock time, in the evening.
  */
 export function readyText(r, { eatAt = '' } = {}) {
   // midSentence keeps a proper name's capitals ("Greek yogurt", "Italian seasoning"; gauntlet r7).
   const few = (xs) => { const l = xs.map((x) => midSentence(x)); return l.length <= 2 ? listJoin(l) : `${l[0]} and ${l.length - 1} more`; };
-  if (!r.ready) return `Needs ${few(r.missing)}`;
-  if (r.sideOut.length) return `All in but a side: ${few(r.sideOut)}`;
-  if (r.thaw.length) {
-    const t = r.thaw[0];
-    const m = Math.max(...r.thaw.map((x) => x.minutes));
+  const t = r.thaw[0];
+  const m = r.thaw.length ? Math.max(...r.thaw.map((x) => x.minutes)) : 0;
+  if (!r.makeable) {
+    const base = !r.ready ? `Needs ${few([...r.missing, ...r.sideOut])}` : `All in but a side: ${few(r.sideOut)}`;
+    if (!t) return base;
+    return `${base} · ${midSentence(t.name)} frozen${eatAt ? `, dinner about ${eatAt}` : ` (${thawFor(m)} to thaw)`}`;
+  }
+  if (t) {
     const are = /s$/.test(t.name) ? 'are' : 'is';
-    return eatAt ? `${t.name} ${are} frozen: dinner about ${eatAt}` : `${t.name} ${are} frozen (about ${m >= 60 ? `${fmtQty(Math.round(m / 30) / 2)} hr` : `${m} min`} to thaw)`;
+    return eatAt ? `${t.name} ${are} frozen: dinner about ${eatAt}` : `${t.name} ${are} frozen (${thawFor(m)} to thaw)`;
   }
   return 'All in the house';
+}
+
+/** When dinner would be on the table after a thaw, in the evening only ("7:15"); '' otherwise. */
+export function eatAtFor(r, minutes, now = minutesIn()) {
+  if (!r?.thaw?.length || now < 15 * 60) return '';
+  return clockText(now + Math.max(...r.thaw.map((x) => x.minutes)) + (Number(minutes) || 30));
 }
 
 const FAMILY_SIZE = 5;
@@ -206,50 +219,54 @@ function pickBody(app, st) {
   const rem = tonight ? onHand(app.db, app.state) : null;
   const ready = new Map();
   const readyOf = (d) => { if (!ready.has(d.id)) ready.set(d.id, readiness(app.db, app.state, d.id, rem)); return ready.get(d.id); };
-  const plannedSoon = (d) => findInPlan(app.state, d.id, { exclude: date, from: today }).some((w) => w <= addDays(today, 6));
   const fresh = new Map();
   const freshOf = (d) => { if (!fresh.has(d.id)) fresh.set(d.id, boughtIn(app, d, bought)); return fresh.get(d.id); };
   const current = app.state.plan?.[date]?.status === 'planned' ? app.state.plan[date].dinner : null;
   // In the evening a thaw says when dinner would be on the table.
   const now = tonight ? minutesIn() : 0;
-  const eatAt = (d, r) => (tonight && now >= 15 * 60 && r.thaw.length ? clockText(now + Math.max(...r.thaw.map((x) => x.minutes)) + (Number(d.minutes) || 30)) : '');
-  // Tonight's picker: ready now, ready after a thaw, this week's dinners (a trade), then the rest.
-  // Cook from what we have: ready now, after a thaw, what the receipt just brought home, then the
-  // closest. "Ready" means the sides too, as in the recipe box's Can make now (gauntlet r8: one answer).
+  const eatAt = (d, r) => (tonight ? eatAtFor(r, d.minutes, now) : '');
+  // Both pickers sort the same way (gauntlet r9): ready now, ready after a thaw, then the closest.
+  // After a receipt, Cook from what we have adds up to five dinners that use what came home and are
+  // a side or two things away. "Ready" means the sides too, as in the recipe box's Can make now.
+  const ORDER = ['ready', 'thaw', 'bought', 'rest'];
+  // Closest means closest: a missing main (the pulled pork, the deli Alfredo) is far; a missing side
+  // or a clove of garlic is near; a frozen main costs its thaw (gauntlet r8, r9).
+  const need = (d) => {
+    if (!tonight) return 0;
+    const r = readyOf(d);
+    return (r.missing.length - r.keyMissing) + r.keyMissing * 4 + r.sideOut.length * 0.3 + (r.thaw.length ? Math.max(...r.thaw.map((x) => x.minutes)) / 120 : 0);
+  };
+  const lefts = tonight && !q ? leftoversOnHand(app.state, today).filter((l) => !l.night && l.daysLeft >= 0 && l.servings >= 3 && l.date !== today) : [];
+  // A dinner whose leftovers are offered isn't offered again to cook (gauntlet r9: the same name twice).
+  const leftDinners = new Set(lefts.map((l) => l.dinner).filter(Boolean));
+  // The dinner already on this night isn't a choice for it (gauntlet r8), except in Cook from what we
+  // have, where tonight's dinner is one of the answers.
+  const base = rotationList(app.db, app.state)
+    .filter((d) => (have || d.id !== current) && !leftDinners.has(d.id))
+    .filter((d) => !q || d.title.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || d.protein.includes(q));
+  const boughtTop = new Set(have && tonight && !q && bought?.size ? base
+    .filter((d) => { const r = readyOf(d); return !r.makeable && freshOf(d).length && !r.keyMissing && r.missing.length + r.sideOut.length <= 2; })
+    .sort((a, b) => (freshOf(b).length - freshOf(a).length) || (need(a) - need(b)))
+    .slice(0, 5).map((d) => d.id) : []);
   const group = (d) => {
     if (!tonight) return 'rest';
     const r = readyOf(d);
     if (r.makeable) return r.thaw.length ? 'thaw' : 'ready';
-    if (have) return freshOf(d).length ? 'bought' : 'rest';
-    return plannedSoon(d) ? 'week' : 'rest';
-  };
-  const ORDER = have ? ['ready', 'thaw', 'bought', 'rest'] : ['ready', 'thaw', 'week', 'rest'];
-  // Closest means closest: a missing main (the pulled pork, the deli Alfredo) is far; a missing side
-  // or a clove of garlic is near (gauntlet r8).
-  const need = (d) => {
-    if (!tonight) return 0;
-    const r = readyOf(d);
-    return (r.missing.length - r.keyMissing) + r.keyMissing * 4 + r.sideOut.length * 0.3 + (r.thaw.length ? Math.max(...r.thaw.map((x) => x.minutes)) / 600 : 0);
+    return boughtTop.has(d.id) ? 'bought' : 'rest';
   };
   const rank = (d) => ORDER.indexOf(group(d));
-  // The dinner already on this night isn't a choice for it (gauntlet r8), except in Cook from what we
-  // have, where tonight's dinner is one of the answers.
-  const list = rotationList(app.db, app.state)
-    .filter((d) => have || d.id !== current)
-    .filter((d) => !q || d.title.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || d.protein.includes(q))
-    .sort((a, b) => (rank(a) - rank(b)) || (freshOf(b).length - freshOf(a).length) || (need(a) - need(b)) || (isFavorite(app.state, b) - isFavorite(app.state, a)) || a.title.localeCompare(b.title));
-  const lefts = tonight && !q ? leftoversOnHand(app.state, today).filter((l) => !l.night && l.daysLeft >= 0 && l.servings >= 3 && l.date !== today) : [];
+  const byFresh = (a, b) => (group(a) !== 'rest' ? freshOf(b).length - freshOf(a).length : 0);
+  const list = base.sort((a, b) => (rank(a) - rank(b)) || byFresh(a, b) || (need(a) - need(b)) || (isFavorite(app.state, b) - isFavorite(app.state, a)) || a.title.localeCompare(b.title));
   const leftsFull = lefts.filter((l) => l.servings >= FAMILY_SIZE);
   const leftsShort = lefts.filter((l) => l.servings < FAMILY_SIZE);
-  // The heading names what came home: "Uses the chicken breasts and shredded cheddar you just bought".
+  // The heading names what came home, short: "Uses what you just bought: chicken breast, flour tortillas and cheddar".
   const boughtUsed = [...new Set(list.filter((d) => group(d) === 'bought').flatMap((d) => freshOf(d)))];
-  const boughtNames = boughtUsed.length > 3 ? `${listJoin(boughtUsed.slice(0, 2).map((id) => shortName(app, id)))} and more` : listJoin(boughtUsed.map((id) => shortName(app, id)));
+  const boughtNames = boughtUsed.length > 3 ? `${boughtUsed.slice(0, 2).map((id) => shortName(app, id)).join(', ')} and more` : listJoin(boughtUsed.map((id) => shortName(app, id)));
   const HEADS = {
     ready: 'Ready now',
     thaw: 'Ready after thawing',
-    bought: `Uses the ${boughtNames} you just bought`,
-    week: 'This week’s dinners (they trade places)',
-    rest: have ? (bought?.size ? 'Everything else, closest first' : 'Closest first') : 'Everything else',
+    bought: `Uses what you just bought: ${boughtNames}`,
+    rest: bought?.size && have ? 'Everything else, closest first' : 'Closest first',
   };
   let first = true;
   const autof = () => { const a = first ? html`data-autofocus` : ''; first = false; return a; };
@@ -261,7 +278,8 @@ function pickBody(app, st) {
     const c = costOf(app, d.id, null);
     // One meta line at 390px: the star sits by the name, and "≈ $2.67 a serving" (gauntlet r7).
     const cost = c?.perServing > 0 ? `≈ ${money(c.perServing)} a serving` : '';
-    const whereText = where ? (d.id === current ? 'on for tonight' : `on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)}${tonight ? '' : ' (they’ll trade)'}`) : '';
+    // A dinner on another night trades places with this night's, and the row says so (gauntlet r9).
+    const whereText = where ? (d.id === current ? 'on for tonight' : `on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)}${current ? ' (they’ll trade)' : ''}`) : '';
     const time = timeLabel(d);
     const meta = [time, whereText, off ? `needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : '', cost].filter(Boolean);
     const fav = isFavorite(app.state, d);
@@ -308,7 +326,7 @@ function pickBody(app, st) {
     </div>`)}`;
 }
 
-export function openPick(app, date, title, { have = false, bought = null, st: keep = null, focusDinner = null } = {}) {
+export function openPick(app, date, title, { have = false, bought = null, st: keep = null, focus = null } = {}) {
   const st = keep || { date, query: '', have, bought, all: false, title };
   openPick.state = st;
   openSheet({
@@ -326,7 +344,7 @@ export function openPick(app, date, title, { have = false, bought = null, st: ke
         ul.replaceWith(tmp.querySelector('.pick-list'));
       });
       // Back from "Make it tonight anyway?": the row you tapped, not the top of a long list (gauntlet r8).
-      if (focusDinner) requestAnimationFrame(() => el.querySelector(`.pick-row[data-dinner="${CSS.escape(focusDinner)}"]`)?.focus());
+      if (focus) requestAnimationFrame(() => el.querySelector(focus)?.focus());
     },
   });
 }
@@ -346,9 +364,17 @@ export async function place(app, { dinnerId, date, fromDate }) {
   // A dinner it bumps moves to the next open night in the same change, so it's one decision with one
   // Undo (gauntlet r8: a second "What about …?" sheet, where closing it dropped the dinner).
   const res = placeDinnerOps(app.db, app.state, { dinnerId, date, fromDate, who: app.who(), today });
-  if (!app.commit(res)) return false;
+  // Tonight's toast goes at the top, clear of Start cooking (gauntlet r9).
+  if (!app.commit(res, { top: date === today })) return false;
   closeSheet();
   return true;
+}
+
+/** After a pick from Cook from what we have: Tonight, with its new dinner's name in focus (gauntlet r9). */
+function landOnTonight(app) {
+  closeSheet({ instant: true });
+  app.ui.focusNext = 'hero-title';
+  app.navigate('#/tonight');
 }
 
 /** What happens to the dinner already on `date`, in one sentence, before the family says yes. */
@@ -678,7 +704,10 @@ export const actions = {
   // The sheet stays open on a cooked night: it asks about leftovers next.
   'night:cooked': (app, el) => { if (app.commit(markCookedOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() })) && sheetId() === `night:${el.dataset.date}`) renderSheet(); else closeSheet(); },
   'leftovers:save': (app, el) => {
-    const ok = app.commit(saveLeftoversOps(app.db, app.state, { date: el.dataset.date, servings: Number(el.dataset.n), who: app.who() }));
+    // On Tonight the next question takes focus (WCAG 2.4.3; gauntlet r9: it fell to <body>).
+    if (!sheetId() && !el.dataset.then) app.ui.focusNext = ['hw-h', 'hero-done'];
+    const ok = app.commit(saveLeftoversOps(app.db, app.state, { date: el.dataset.date, servings: Number(el.dataset.n), who: app.who() }), { top: true });
+    if (!ok) app.ui.focusNext = null;
     if (sheetId() === `leftovers:${el.dataset.date}`) closeSheet();
     else renderSheet();
     // From cook mode's last screen: the cooking session is over.
@@ -721,10 +750,30 @@ export const actions = {
     closeSheet();
   },
   'leftovers:night': (app, el) => openLeftoverNight(app, el.dataset.date),
-  'leftovers:night-set': (app, el) => {
-    const fromHave = /:have$/.test(sheetId() || '');
-    if (!app.commit(leftoverNightOps(app.db, app.state, { from: el.dataset.from, night: el.dataset.night, who: app.who(), today: app.today() }))) return;
-    if (fromHave) { closeSheet({ instant: true }); app.navigate('#/tonight'); } else closeSheet();
+  'leftovers:night-set': async (app, el) => {
+    const sid = sheetId() || '';
+    const fromHave = /:have$/.test(sid);
+    const fromPick = /^pick:/.test(sid);
+    const st = openPick.state;
+    const { from, night } = el.dataset;
+    const today = app.today();
+    const l = app.state.leftovers?.[from];
+    // A few servings for five asks once, as a short dinner does (gauntlet r9), and says where the
+    // night's dinner goes.
+    if (fromPick && l && l.servings < FAMILY_SIZE) {
+      const res = leftoverNightOps(app.db, app.state, { from, night, who: app.who(), today });
+      const moved = res.movedTo ? ` ${dinnerById(app.db, app.state, app.state.plan?.[night]?.dinner)?.title || 'The dinner planned'} moves to ${nightName(res.movedTo, today)}.` : '';
+      const ok = await confirmSheet({
+        title: `${servingsText(l.servings).replace(/^./, (c) => c.toUpperCase())} for ${FAMILY_SIZE}`,
+        body: `${l.title || 'The leftovers'} won’t feed everyone on its own: add a side or a salad.${moved} Make it a leftover night anyway?`,
+        confirm: 'Make it a leftover night',
+        safe: true,
+        onCancel: st ? () => openPick(app, st.date, st.title, { have: st.have, st, focus: `.pick-left[data-from="${CSS.escape(from)}"]` }) : null,
+      });
+      if (!ok) return;
+    }
+    if (!app.commit(leftoverNightOps(app.db, app.state, { from, night, who: app.who(), today }), { top: night === today })) return;
+    if (fromHave) landOnTonight(app); else closeSheet();
   },
   'night:uncook': (app, el) => { app.commit(unmarkCookedOps(app.db, app.state, { date: el.dataset.date })); closeSheet(); },
   'night:clear': (app, el) => { app.commit(clearNightOps(app.db, app.state, { date: el.dataset.date, today: app.today() })); closeSheet(); },
@@ -767,26 +816,37 @@ export const actions = {
     const today = app.today();
     const dinnerId = el.dataset.dinner;
     const st = openPick.state;
-    const toTonight = () => { closeSheet({ instant: true }); app.navigate('#/tonight'); };
     const cur = app.state.plan?.[today];
-    if (cur?.dinner === dinnerId && cur.status === 'planned') { toTonight(); return; }
+    if (cur?.dinner === dinnerId && cur.status === 'planned') { landOnTonight(app); return; }
     const r = readiness(app.db, app.state, dinnerId);
     if (!r.ready) {
-      // One question that says everything: what's missing and where tonight's dinner goes. Focus starts
-      // on Cancel, and Cancel goes back to the row you tapped (gauntlet r8).
+      // One question that says what Tonight will say (gauntlet r9): what's missing, the sides too, a
+      // frozen main and when dinner would be, and where tonight's dinner goes. Focus starts on Cancel,
+      // and Cancel goes back to the row you tapped (gauntlet r8).
       const d = dinnerById(app.db, app.state, dinnerId);
+      const n = r.missing.length + r.sideOut.length;
+      const mid = (xs) => listJoin(xs.map((x) => midSentence(x)));
+      const parts = [`Not in the house: ${mid(r.missing)}${r.sideOut.length ? `, and for the sides ${mid(r.sideOut)}` : ''}.`];
+      if (r.thaw.length) {
+        const t = r.thaw[0];
+        const at = eatAtFor(r, d?.minutes);
+        const m = Math.max(...r.thaw.map((x) => x.minutes));
+        parts.push(`The ${midSentence(t.name)} ${/s$/.test(t.name) ? 'are' : 'is'} frozen${at ? `: dinner about ${at}` : ` (${thawFor(m)} to thaw)`}.`);
+      }
       const bump = bumpText(app, dinnerId, today);
+      if (bump) parts.push(bump);
+      parts.push('Make it tonight anyway?');
       const ok = await confirmSheet({
-        title: `${d?.title || 'This dinner'} needs ${r.missing.length === 1 ? 'one thing' : `${r.missing.length} things`}`,
-        body: `Not in the house: ${listJoin(r.missing.map((x) => midSentence(x)))}.${bump ? ` ${bump}` : ''} Make it tonight anyway?`,
+        title: `${d?.title || 'This dinner'} needs ${n === 1 ? 'one thing' : `${n} things`}`,
+        body: parts.join(' '),
         confirm: 'Make it tonight',
         safe: true,
-        onCancel: st ? () => openPick(app, today, st.title, { have: true, st, focusDinner: dinnerId }) : null,
+        onCancel: st ? () => openPick(app, today, st.title, { have: true, st, focus: `.pick-row[data-dinner="${CSS.escape(dinnerId)}"]` }) : null,
       });
       if (!ok) return;
     }
     // Either way the family lands on Tonight to see it, with one toast and one Undo (gauntlet r7, r8).
-    if (await place(app, { dinnerId, date: today })) toTonight();
+    if (await place(app, { dinnerId, date: today })) landOnTonight(app);
   },
   'pick:all': () => {
     const st = openPick.state;
@@ -869,6 +929,8 @@ export const actions = {
     }, 30));
   },
   'lighter:dismiss': (app, el) => {
+    // "Done" on How was dinner?: focus the "Cooked." line it leaves behind (gauntlet r9).
+    if (/^howwas:/.test(el.dataset.key || '')) app.ui.focusNext = 'hero-done';
     const list = [...new Set([...(app.store.device.dismissed || []), el.dataset.key])].slice(-60);
     app.store.setDevice({ dismissed: list });
     renderSheet();

@@ -309,13 +309,19 @@ export function leftoverNightOps(db, state, { from, night, who, at, today }) {
   const prev = state?.plan?.[night];
   if (prev?.status === 'cooked') return result(state, [], 'That night is already cooked.', { error: true });
   const title = l.title || 'Leftovers';
+  // The dinner planned that night moves to the next open night, as every other pick does (gauntlet r9:
+  // this was the one place a dinner still left the plan). With no open night it stays with the night,
+  // to bring back.
+  const to = prev?.dinner && prev.status === 'planned' ? nextOpenNight(state, night, today) : null;
   const entry = {
-    dinner: prev?.dinner ?? null, sides: prev?.sides ? [...prev.sides] : [], status: 'away',
+    dinner: to ? null : prev?.dinner ?? null, sides: !to && prev?.sides ? [...prev.sides] : [], status: 'away',
     away: { reason: LEFTOVER_REASON, note: `${title}, from ${weekdayName(from)}`, from }, manual: true, ...stamp(who, at),
   };
   const ops = [set(['plan', night], entry), set(['leftovers', from, 'night'], night)];
-  const bumped = prev?.dinner && prev.status !== 'away' ? ` ${titleOf(db, state, prev.dinner)} comes off that night, and its groceries off the list.` : '';
-  return result(state, ops, `${cap(nightName(night, today))} is a leftover night: ${title}.${bumped}`);
+  if (to) ops.push(set(['plan', to], { dinner: prev.dinner, sides: prev.sides ? [...prev.sides] : [...(dinnerById(db, state, prev.dinner)?.sides || [])], status: 'planned', manual: true, ...stamp(who, at) }));
+  const bumped = to ? ` ${titleOf(db, state, prev.dinner)} moved to ${nightName(to, today)}.`
+    : prev?.dinner && prev.status !== 'away' ? ` ${titleOf(db, state, prev.dinner)} comes off that night, and its groceries off the list.` : '';
+  return result(state, ops, `${cap(nightName(night, today))} is a leftover night: ${title}.${bumped}`, { movedTo: to });
 }
 
 // Where a batch of leftovers can go besides the fridge (docs/spec/21 §21.3, folded into §22.5's one

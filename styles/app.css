@@ -522,6 +522,9 @@ html.has-sheet { overflow: hidden; }
 /* toast */
 .toast-root { position: fixed; left: var(--safe-l); right: var(--safe-r); bottom: calc(var(--tabbar-h) + var(--safe-b) + 12px); z-index: 60; display: grid; justify-items: center; padding: 0 12px; pointer-events: none; transform: translateY(24px) scale(.96); opacity: 0; transition: transform var(--dur-base) var(--ease-in), opacity var(--dur-fast) var(--ease); }
 .toast-root.is-on { transform: none; opacity: 1; transition: transform var(--dur-slow) var(--ease-spring), opacity var(--dur-fast) var(--ease); }
+/* A change that lands on a screen whose next step is at the bottom shows its toast at the top (gauntlet r9). */
+.toast-root.is-top { top: calc(var(--header-h) + var(--safe-t) + 8px); bottom: auto; transform: translateY(-24px) scale(.96); }
+.toast-root.is-top.is-on { transform: none; }
 /* A hidden toast must not keep catching taps (or be read out) where it used to be. */
 .toast-root:not(.is-on) { visibility: hidden; transition: transform var(--dur-base) var(--ease-in), opacity var(--dur-fast) var(--ease), visibility 0s var(--dur-base); }
 .toast-root:not(.is-on) .toast { pointer-events: none; }
@@ -855,6 +858,7 @@ details[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
   .page-title { font-size: var(--t-4xl); }
   .toast-root { bottom: 24px; left: var(--rail-w); }
   html.has-sheet .toast-root { bottom: 24px; left: 0; }
+  .toast-root.is-top { top: auto; bottom: 24px; transform: translateY(24px) scale(.96); } /* two columns: nothing under it */
 
   .tonight-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; gap: 48px; }
   .tonight-side { padding-top: 0; }

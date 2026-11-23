@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { tinyDb, realDb } from './helpers.mjs';
 import { applyOps } from '../app/state.js';
+import { addDays } from '../app/util.js';
 import { onHand } from '../app/coverage.js';
 import { markCookedOps, unmarkCookedOps, saveLeftoversOps, useLeftoverOps, clearLeftoversOps, leftoverNightOps, bringBackOps } from '../app/actions.js';
 import {
@@ -341,7 +342,7 @@ test('leftovers: saved after dinner with a use-by day, eaten down, gone', () => 
   assert.equal(leftoverRecord(db, state, { date: TODAY, servings: 99 }).servings, 20, 'a sane ceiling');
 });
 
-test('a leftover night takes a planned dinner’s place, keeps it to bring back, and unmarking cooked undoes it all', () => {
+test('a leftover night takes a planned dinner’s place, moves that dinner to the next open night, and unmarking cooked undoes it all', () => {
   const db = tinyDb();
   const TUE = '2026-11-17';
   let state = {
@@ -359,27 +360,40 @@ test('a leftover night takes a planned dinner’s place, keeps it to bring back,
   assert.deepEqual(leftoverNightChoices(state, l, TODAY), [TUE], 'tomorrow; not the cooked night, the night out, or past its use-by day');
 
   const res = leftoverNightOps(db, state, { from: TODAY, night: TUE, who: 'Candi', at: 'c', today: TODAY });
-  assert.equal(res.message, 'Tomorrow is a leftover night: chix-grill. burger comes off that night, and its groceries off the list.');
+  // Wednesday is cooked and Thursday is a night out, so the burgers go to Friday (gauntlet r9).
+  assert.equal(res.message, 'Tomorrow is a leftover night: chix-grill. burger moved to Friday.');
   state = applyOps(state, res.ops);
   assert.deepEqual(state.plan[TUE].away, { reason: LEFTOVER_REASON, note: 'chix-grill, from Monday', from: TODAY });
   assert.equal(state.plan[TUE].status, 'away');
-  assert.equal(state.plan[TUE].dinner, 'burger');
+  assert.equal(state.plan[TUE].dinner, null);
+  assert.equal(state.plan['2026-11-20'].dinner, 'burger');
+  assert.deepEqual(state.plan['2026-11-20'].sides, ['fries']);
   assert.equal(leftoversOnHand(state, TODAY)[0].night, TUE);
   assert.deepEqual(leftoverNightChoices(state, leftoversOnHand(state, TODAY)[0], TODAY), []);
   assert.ok(leftoverNightOps(db, state, { from: TODAY, night: '2026-11-18', today: TODAY }).error, 'not over a cooked night');
 
-  // Bringing the night back by hand: the leftovers are no longer set aside for it.
+  // Bringing the night back by hand: the leftovers are no longer set aside for it, and it's open.
   const back = applyOps(state, bringBackOps(db, state, { date: TUE, who: 'Jeff', today: TODAY }).ops);
-  assert.equal(back.plan[TUE].status, 'planned');
+  assert.equal(back.plan[TUE], undefined);
   assert.equal(leftoversOnHand(back, TODAY)[0].night, null);
 
-  // "Not cooked" after all: the pantry gets the chicken back, the leftovers go, and Tuesday's burgers return.
+  // "Not cooked" after all: the pantry gets the chicken back, the leftovers go, Tuesday opens up, and
+  // the burgers stay on Friday.
   const undone = applyOps(state, unmarkCookedOps(db, state, { date: TODAY }).ops);
   assert.equal(undone.plan[TODAY].status, 'planned');
   assert.equal(undone.pantry.chicken.qty, 4);
   assert.equal(undone.leftovers[TODAY], undefined);
-  assert.equal(undone.plan[TUE].status, 'planned');
-  assert.equal(undone.plan[TUE].dinner, 'burger');
+  assert.equal(undone.plan[TUE], undefined);
+  assert.equal(undone.plan['2026-11-20'].dinner, 'burger');
+
+  // With no open night in six weeks, the dinner stays with the night, to bring back (the old way).
+  let full = { plan: {}, leftovers: { [TODAY]: { dinner: 'chix-grill', title: 'chix-grill', servings: 5, useBy: '2026-11-19' } } };
+  for (let i = 1; i <= 50; i++) full.plan[addDays(TODAY, i)] = { dinner: 'beef-bowl', status: 'planned' };
+  full.plan[TUE] = { dinner: 'burger', status: 'planned' };
+  const f = leftoverNightOps(db, full, { from: TODAY, night: TUE, today: TODAY });
+  assert.match(f.message, /burger comes off that night/);
+  full = applyOps(full, f.ops);
+  assert.equal(full.plan[TUE].dinner, 'burger');
 });
 
 // ---------------------------------------------------------------- timers

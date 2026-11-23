@@ -459,3 +459,11 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .pick-list .pick-more { min-height: 48px; }
 .have-none { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 var(--s3); padding: 10px 12px; border-radius: var(--r-ctl); background: var(--paper-2); color: var(--ink); font-size: var(--t-sm); }
 .have-acts { margin: var(--s4) 0 0; }
+
+/* gauntlet r9: the sticky store heading stays one line on the smallest phones. */
+.store-name .store-short { display: none; }
+.store-total b { white-space: nowrap; }
+@media (max-width: 359px) {
+  .store-name .store-long { display: none; }
+  .store-name .store-short { display: inline; }
+}

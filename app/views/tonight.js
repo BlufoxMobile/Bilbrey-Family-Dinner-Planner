@@ -34,8 +34,8 @@ function leftoverHero(app, today, e, d) {
     <div class="away-card away-card-hero">
       <span class="away-ic">${ic('bowl', { size: 34 })}</span>
       <p class="hero-kicker"><span class="dot" aria-hidden="true"></span>Tonight</p>
-      <h1 class="hero-title">Leftover night</h1>
-      <p class="hero-sub">${e.away?.note || 'Dinner is already in the fridge.'}${l ? ` ${servingsText(l.servings).replace(/^./, (c) => c.toUpperCase())}, ${useByText(l, today)}.` : ''} Reheat it until it’s steaming hot all the way through (165°F).</p>
+      <h1 class="hero-title" id="hero-title" tabindex="-1">Leftover night</h1>
+      <p class="hero-sub">${e.away?.note || 'Dinner is already in the fridge.'}${l ? ` ${servingsText(l.servings).replace(/^./, (c) => c.toUpperCase())}, ${useByText(l, today)}.` : ''}${l && l.servings < 5 ? ' Not enough for all 5 on its own: add a side or a salad.' : ''} Reheat it until it’s steaming hot all the way through (165°F).</p>
       <div class="hero-actions">
         ${when(l, () => html`<button type="button" class="btn btn-on-dusk" data-action="leftovers:gone" data-date="${from}">${ic('checkCircle', { size: 20 })}We ate them</button>`)}
         <button type="button" class="btn btn-quiet btn-on-dusk-quiet" data-action="night:back" data-date="${today}">${d ? `Cook ${d.title} after all` : 'Cook something after all'}</button>
@@ -55,7 +55,7 @@ function hero(app, today) {
       <div class="away-card away-card-hero">
         <span class="away-ic">${ic('moon', { size: 34 })}</span>
         <p class="hero-kicker"><span class="dot" aria-hidden="true"></span>Tonight</p>
-        <h1 class="hero-title">${r.label}</h1>
+        <h1 class="hero-title" id="hero-title" tabindex="-1">${r.label}</h1>
         <p class="hero-sub">${e.away?.note || r.note} No dinner to cook at home${d ? `, and ${d.title.toLowerCase()} is off the list` : ''}.</p>
         <div class="hero-actions">
           ${trip.length > 1
@@ -70,7 +70,7 @@ function hero(app, today) {
     return html`<article class="hero hero-empty">
       <div class="index-card">
         <p class="hero-kicker"><span class="dot" aria-hidden="true"></span>Tonight</p>
-        <h1 class="hero-title">Nothing planned yet</h1>
+        <h1 class="hero-title" id="hero-title" tabindex="-1">Nothing planned yet</h1>
         <p class="hero-sub">Plan the week in one tap, or pick tonight’s dinner yourself. Either way you get the recipe, the timing and the shopping list.</p>
         <div class="hero-actions">
           <button type="button" class="btn btn-primary btn-lg" data-action="tonight:plan-week">${ic('sparkle', { size: 20 })}Plan this week</button>
@@ -88,16 +88,16 @@ function hero(app, today) {
     <a class="hero-photo" href="#/recipe/${d.id}" aria-label="Open the recipe for ${d.title}">${dinnerPhoto(app, d, { size: 'hero', eager: true, alt: d.title })}</a>
     <div class="index-card">
       <p class="hero-kicker"><span class="dot" aria-hidden="true"></span>Tonight${cooked ? html`<span class="kicker-done">${ic('check', { size: 16 })}Cooked</span>` : ''}</p>
-      <h1 class="hero-title">${d.title}</h1>
+      <h1 class="hero-title" id="hero-title" tabindex="-1">${d.title}</h1>
       ${when(sides.length, () => html`<p class="hero-sides">with ${listJoin(sides.map((s) => midSentence(s.info?.title || '')))}</p>`)}
       ${sides.filter((x) => x.replaced).map((x) => html`<p class="hero-replaced">${x.info?.title}: ${replacedText(app, x).replace(/^In/, 'in')}.</p>`)}
       <div class="hero-meta">${equipment(d)}${favoriteBadge(app, d)}</div>
       ${when(showNutrition(app), () => html`<p class="hero-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate' })}</p>`)}
-      ${when(!cooked, () => thawLine(app, today, { skip: [haveLine(app, d, e).meatId] }))}
+      ${when(!cooked, () => thawLine(app, today, { skip: [haveLine(app, d, e).meatId], minutes: d.minutes }))}
       ${when(!cooked, () => haveLine(app, d, e).html)}
       <div class="hero-actions">
         ${cooked
-          ? html`<p class="status-note status-cooked hero-done">${ic('checkCircle', { size: 18 })}<span>Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.${left ? (left.saved ? ` ${servingsText(left.saved)} of leftovers saved.` : ' No leftovers.') : ''}</span></p>
+          ? html`<p class="status-note status-cooked hero-done" id="hero-done" tabindex="-1">${ic('checkCircle', { size: 18 })}<span>Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.${left ? (left.saved ? ` ${servingsText(left.saved)} of leftovers saved.` : ' No leftovers.') : ''}</span></p>
             <a class="btn btn-secondary" href="#/recipe/${d.id}">${ic('recipes', { size: 20 })}Open the recipe</a>`
           : !going && haveLine(app, d, e).blocker
             ? html`<button type="button" class="btn btn-primary btn-lg" data-action="night:pick" data-date="${today}">${ic('swap', { size: 20 })}Change dinner</button>
@@ -136,10 +136,11 @@ function haveLine(app, d, e) {
   // Short on the meat: say it once, with both amounts, so nobody adds ¾ + 1¼ in their head (gauntlet r5).
   const meat = uniq.find((m) => m.status === 'short' && m.have > 0 && app.db.ingredients[m.id]?.meat);
   const frozen = meat && thawNow(app.db, app.state, app.today()).some((t) => t.id === meat.id);
-  const rest = uniq.filter((m) => m !== meat).map((m) => (m.status === 'short' && m.short ? `${unitText(m.short, m.unit)} more ${plainName(m.name).toLowerCase()}` : plainName(m.name).toLowerCase()));
+  // midSentence keeps a proper name's capitals, as the pickers do ("plain Greek yogurt"; gauntlet r9).
+  const rest = uniq.filter((m) => m !== meat).map((m) => (m.status === 'short' && m.short ? `${unitText(m.short, m.unit)} more ${midSentence(plainName(m.name))}` : midSentence(plainName(m.name))));
   const list = `${listJoin(rest.slice(0, 4))}${rest.length > 4 ? ` and ${rest.length - 4} more` : ''}`;
   const body = meat
-    ? html`<b>Only ${unitText(meat.have, meat.unit)} of the ${unitText(meat.need, meat.unit)} ${plainName(meat.name).toLowerCase()} is here${frozen ? ', and it’s frozen' : ''}.</b>${rest.length ? ` Also missing: ${list}.` : ''}`
+    ? html`<b>Only ${unitText(meat.have, meat.unit)} of the ${unitText(meat.need, meat.unit)} ${midSentence(plainName(meat.name))} is here${frozen ? ', and it’s frozen' : ''}.</b>${rest.length ? ` Also missing: ${list}.` : ''}`
     : html`<b>Not in the house:</b> ${list}.`;
   return { short: true, blocker, meatId: meat?.id || null, html: html`<p class="hero-have is-short">${ic('cart', { size: 18 })}<span>${body}${fix}</span></p>` };
 }
@@ -197,7 +198,7 @@ function howWas(app, today) {
   return html`<section class="howwas" aria-labelledby="hw-h">
     <div class="howwas-head">
       ${dinnerPhoto(app, d, { size: 'thumb' })}
-      <div><h2 id="hw-h" class="section-title">How was dinner?</h2>
+      <div><h2 id="hw-h" class="section-title" tabindex="-1">How was dinner?</h2>
         <p class="muted small">${d.title}, ${date === today ? 'tonight' : `last night (${weekdayName(date)})`}.</p></div>
     </div>
     ${rateList(app, d, sides)}
@@ -242,7 +243,8 @@ export const actions = {
   // ("Any leftovers tonight?") rather than falling to the top of the page (WCAG 2.4.3, gauntlet r8).
   'tonight:cooked': (app, el) => {
     app.ui.focusNext = `lo-ask-h-${el.dataset.date}`;
-    if (!app.commit(markCookedOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() }))) app.ui.focusNext = null;
+    // The toast sits at the top, so it doesn't cover the leftovers buttons that just appeared (gauntlet r9).
+    if (!app.commit(markCookedOps(app.db, app.state, { date: el.dataset.date, who: app.who(), today: app.today() }), { top: true })) app.ui.focusNext = null;
   },
 };
 

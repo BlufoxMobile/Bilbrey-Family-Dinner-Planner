@@ -316,7 +316,12 @@ export function announce(text) {
 
 // A toast with a button stays at least 15 seconds and waits while a finger, the mouse or keyboard focus
 // is on it (gauntlet r1: 6.5 s was too short to read and reach Undo). A plain note stays 6.5 s.
-export function toast(message, { undo = null, action = null, duration = null } = {}) {
+/**
+ * A short message with an optional Undo or action. `top`: shown under the header instead of over the
+ * tab bar, for a change that lands the family on a screen whose next step is at the bottom (Start
+ * cooking, the leftovers buttons; gauntlet r9).
+ */
+export function toast(message, { undo = null, action = null, duration = null, top = false } = {}) {
   if (!message) return;
   let root = document.getElementById('toast');
   if (!root) {
@@ -330,6 +335,7 @@ export function toast(message, { undo = null, action = null, duration = null } =
   const sheet = document.getElementById('sheet');
   const host = sheet?.open && current ? sheet : document.body; // a sheet that is sliding away is already gone
   if (root.parentNode !== host) host.appendChild(root);
+  root.classList.toggle('is-top', !!top && host === document.body);
   clearTimeout(toastTimer);
   toastAbort?.abort();
   const btn = undo ? { label: 'Undo', fn: undo } : action;

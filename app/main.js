@@ -69,20 +69,28 @@ export const app = {
   /** The one per-person thing a device can choose: whose daily calories line Tonight shows here (or null). */
   todayFor() { return this.store.device.todayFor || null; },
   /** Apply an action result: commit ops, show its message with Undo. */
-  commit(res, { quiet = false, undoable = true, onUndo } = {}) {
+  commit(res, { quiet = false, undoable = true, onUndo, top = false } = {}) {
     if (!res) return false;
     if (res.error || !res.ops?.length) {
-      if (res.message && !quiet) toast(res.message);
+      if (res.message && !quiet) toast(res.message, { top });
       return false;
     }
     // Undo puts focus back on the control the change came from (gauntlet r7: it fell to the page top).
     const origin = tv.signatureOf(document.activeElement);
     this.store.commit(res.ops);
     if (!quiet && res.message) {
-      toast(res.message, undoable && res.undo?.length ? { undo: () => {
-        this.store.commit(res.undo); onUndo?.(); renderSheet(); toast('Undone.');
-        requestAnimationFrame(() => setTimeout(() => { if (!tv.focusBySignature(document, origin)) document.querySelector('#view h1, #view .page-title')?.focus?.(); }, 60));
-      } } : {});
+      toast(res.message, undoable && res.undo?.length ? { top, undo: () => {
+        this.store.commit(res.undo); onUndo?.(); renderSheet(); toast('Undone.', { top });
+        // Back to the control the change came from; if it's gone (it was in a sheet that closed), the
+        // page's title, made focusable for this (gauntlet r9: focus fell to <body>).
+        requestAnimationFrame(() => setTimeout(() => {
+          if (tv.focusBySignature(document, origin)) return;
+          const h = document.querySelector('#view h1, #view .page-title');
+          if (!h) return;
+          if (!h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
+          h.focus({ preventScroll: true });
+        }, 60));
+      } } : { top });
     }
     return true;
   },
@@ -248,10 +256,11 @@ export function render() {
 
 /** A screen can ask for the focus after the next draw (app.ui.focusNext = an element id): a wrong passcode puts it back in the box. */
 function focusNext() {
-  const id = app.ui.focusNext;
-  if (!id) return;
+  const ids = app.ui.focusNext;
+  if (!ids) return;
   app.ui.focusNext = null;
-  const el = document.getElementById(id);
+  // One id, or a list: the first that's on the screen.
+  const el = [].concat(ids).map((id) => document.getElementById(id)).find(Boolean);
   if (!el) return;
   el.focus({ preventScroll: true }); // the text is left as typed, not selected: one slipped letter shouldn't cost the whole passcode
   // A heading that takes focus after an action (Mark cooked → "Any leftovers tonight?") comes into view too.

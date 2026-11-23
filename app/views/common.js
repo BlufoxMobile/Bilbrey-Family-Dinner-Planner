@@ -4,7 +4,7 @@ import { EQUIPMENT_LABELS } from '../config.js';
 import { EQUIPMENT_ICON } from '../icons.js';
 import { dinnerById, effectiveSides, sideInfo, isFavorite, dinnerSignal, sideSignal } from '../planner.js';
 import { lunchVote } from '../lunch.js';
-import { listJoin, midSentence, relativeDay, shortWeekday, weekdayName, hourIn, fmtQty } from '../util.js';
+import { listJoin, midSentence, relativeDay, shortWeekday, weekdayName, hourIn, fmtQty, minutesIn, clockText } from '../util.js';
 import { AWAY_REASONS } from '../config.js';
 import { fmtKcal, hasNutrition } from '../nutrition.js';
 import { prepSchedule, thawNow, prepKey, prepDone } from '../prep.js';
@@ -373,12 +373,16 @@ export function prepCard(app, { days = 7, title = 'Thaw & prep', countSuffix = '
 }
 
 /** "Still frozen? Thaw the 2 lb lean ground beef in cold water now, about 1 hr." (Tonight and cook mode's Get ready.) */
-export function thawLine(app, today, { skip = [] } = {}) {
+export function thawLine(app, today, { skip = [], minutes = 0, now = new Date() } = {}) {
   // skip: meat Tonight's "Only ¾ lb of the 2 lb … is here, and it's frozen" already speaks for.
   const t = thawNow(app.db, app.state, today).filter((x) => !skip.includes(x.id));
   if (!t.length) return '';
-  const time = (m) => (m >= 60 ? `${Math.round((m / 60) * 2) / 2} ${m >= 90 ? 'hrs' : 'hr'}` : `${m} min`);
   const what = listJoin(t.map((x) => `${x.unit === 'lb' ? `${fmtQty(Math.round(x.qty * 4) / 4)} lb ` : ''}${x.what}`));
   const longest = Math.max(0, ...t.map((x) => x.minutes || 0));
-  return html`<p class="hero-thaw" role="note">${ic('snow', { size: 20 })}<span><b>Still frozen?</b> Thaw the ${what} in cold water now${longest ? `, about ${time(longest)}` : ''}.</span></p>`;
+  // In the evening, when rather than how long (gauntlet r9): the pickers already said "dinner about 7:15".
+  const at = minutesIn(now);
+  const when = longest && at >= 15 * 60
+    ? `: start cooking about ${clockText(at + longest)}, dinner about ${clockText(at + longest + (Number(minutes) || 30))}`
+    : longest ? `, about ${longest >= 60 ? `${fmtQty(Math.round(longest / 30) / 2)} hr` : `${longest} min`}` : '';
+  return html`<p class="hero-thaw" role="note">${ic('snow', { size: 20 })}<span><b>Still frozen?</b> Thaw the ${what} in cold water now${when}.</span></p>`;
 }

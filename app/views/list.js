@@ -18,6 +18,8 @@ import { LIST_MODES, aisleFor, shopStops, storeProductUrl, cleanAisle, aisleCove
 
 export const title = () => 'Shopping list';
 const NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
+// Below 360px the sticky heading uses the short name, so it stays one line (gauntlet r9).
+const SHORT_NAMES = { sams: "Sam's", jewel: 'Jewel' };
 const SHORT = { sams: "Sam's", jewel: 'Jewel' };
 
 /** How this phone is shopping the list (docs/spec/28): 'store' (in the aisles) or 'online'. Per device. */
@@ -412,7 +414,7 @@ function storeSection(app, list, store, listKey) {
   const left = s.remaining;
   return html`<section class="store-sec store-${store}" aria-labelledby="sec-${store}">
     <header class="store-head">
-      <h2 id="sec-${store}" class="store-name">${info?.name || NAMES[store]}</h2>
+      <h2 id="sec-${store}" class="store-name"><span class="store-long">${info?.name || NAMES[store]}</span><span class="store-short">${SHORT_NAMES[store] || info?.name || NAMES[store]}</span></h2>
       ${f === 'all'
         ? html`<p class="store-total"><b>${left ? `${left} left` : 'All in the cart'}</b><small>· ${money(s.subtotal)}</small></p>`
         : html`<p class="store-total"><b>${money(share)}</b><small>for ${f}: ${visible} of ${s.items.length} ${s.items.length === 1 ? 'item' : 'items'}</small></p>`}

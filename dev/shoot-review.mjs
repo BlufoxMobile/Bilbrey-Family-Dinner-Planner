@@ -65,7 +65,7 @@ const item = (qty, since, extra = {}) => ({ qty, stocked: false, ...(since ? { s
 const set = (path, value) => ({ op: 'set', path, value });
 const ops = [
   ...Object.entries({ chickenThighs: item(9, '2026-09-03'), chicken: item(6, '2026-09-10'), eyeRoundSteak: item(2.5, '2026-07-01'), beef: item(3, null), lettuce: item(2, '2026-11-12'),
-    buns: item(8, '2026-11-14'), broccoli: item(6, '2026-11-01'), milk: item(8, null), potatoes: item(10, '2026-11-14'), butter: item(16, '2026-11-14'), freshGreenBeans: item(2, '2026-11-14'), garlic: item(10, '2026-11-14'), salt: { qty: null, stocked: true, by: 'Family', at } }).map(([id, v]) => set(['pantry', id], v)),
+    buns: item(8, '2026-11-14'), broccoli: item(6, '2026-11-01'), milk: item(8, null), potatoes: item(10, '2026-11-14'), butter: item(16, '2026-11-14'), freshGreenBeans: item(2, '2026-11-14'), garlic: item(10, '2026-11-14'), chickenAlfredoDeli: item(3.4, '2026-11-15'), bread: item(20, '2026-11-14'), lemons: item(4, '2026-11-14'), salt: { qty: null, stocked: true, by: 'Family', at } }).map(([id, v]) => set(['pantry', id], v)),
   set(['plan', '2026-11-15'], { ...plan['2026-11-18'], status: 'cooked', cookedAt: at, cookedBy: 'Family', deducted: {} }),
   set(['leftovers', '2026-11-15'], { dinner: plan['2026-11-18'].dinner, title: 'Smoky paprika chicken', servings: 3, saved: 4, useBy: '2026-11-18', by: 'Family', at }),
   set(['plan', '2026-11-14'], { ...plan['2026-11-19'], status: 'planned' }),
