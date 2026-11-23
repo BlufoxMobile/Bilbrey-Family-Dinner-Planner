@@ -510,7 +510,8 @@ test('what a meal costs (docs/spec/24): beside the calories on Tonight, the week
   await page.waitForSelector('dialog[open] .pick-row');
   // The cost ends each row's one meta line ("30 min · on Sat · about $2.67 a serving", gauntlet r6).
   const picks = await page.$$eval('dialog[open] .pick-row:not(.pick-left)', (els) => els.map((e) => (e.querySelector('.pick-meta')?.textContent || '').split(' · ').pop().trim()));
-  assert.ok(picks.length > 20 && picks.every((t) => COST.test(t)), 'every option in the picker has a cost');
+  // The picker's one meta line uses "≈ $2.67 a serving" so it fits at 390px (gauntlet r7).
+  assert.ok(picks.length > 20 && picks.every((t) => /^≈ \$\d+\.\d\d a serving$/.test(t)), `every option in the picker has a cost (${picks.slice(0, 3).join(' | ')})`);
   assert.ok(new Set(picks).size > 10, 'and they differ');
   await page.keyboard.press('Escape');
   await settled(page);
