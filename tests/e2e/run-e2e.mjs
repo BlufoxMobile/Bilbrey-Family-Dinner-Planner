@@ -727,7 +727,7 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   // One line when the groceries go in the pantry, then Cook from what we have opens with them (gauntlet r7).
   // The saved line and its Undo sit at the top of Cook from what we have, not in a toast over it (gauntlet r10).
   await page.waitForSelector('dialog[open] .have-acts');
-  assert.match((await page.textContent('dialog[open] .have-saved')).trim(), /^Saved \$[\d.,]+ · \d+ items? in the pantry\s*Undo$/);
+  assert.match((await page.textContent('dialog[open] .have-saved')).trim(), /^Saved \$[\d.,]+ · \d+ items? in the pantry\s*·\s*Undo$/);
   assert.match(await page.textContent('dialog[open] .sheet-title'), /Cook from what we have/);
   // The group names what came home, short, and holds at most five close dinners (gauntlet r8, r9).
   // (Only dinners a side or two things away qualify; this test family's pantry may have none.)
