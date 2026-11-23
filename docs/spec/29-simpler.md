@@ -226,6 +226,28 @@ The Pantry page opens the same sheet ("What can we make with what we have?"), an
 `add_receipt`, `list_recipes` (makeableNow) and `plan_dinner` already do the same from a receipt photo,
 screenshot or PDF.
 
+### Round 7 (all five at 9; the reviews agreed most on Cook from what you have)
+
+- **One readiness count.** `readiness()` lives in `app/coverage.js` and serves Tonight's picker, the
+  Cook sheet, the side picker and the recipe box's "Can make now". A staple (oil, soy sauce, paprika…)
+  is in the house unless it's switched off or marked low, the rule Tonight already used.
+- **Cook from what we have** (renamed from "you"): Leftovers, Ready now, "Uses what you just bought"
+  right after a receipt, then closest first. When nothing is ready, it says so. The two buttons sit
+  under the list, and there's no subtitle. Picking a dinner that's still short asks first, and either
+  way you land on Tonight. Plan ahead opened from it is titled "Plan from the pantry". "New ideas from
+  Claude" is the one name for the ideas sheet. The recipe box's extra sort is gone.
+- **Pickers**: real `<h3>` group headings. The sheet opens at its top: the native `autofocus` made
+  `showModal()` scroll, so the first row now has `[data-autofocus]` and is focused with
+  `preventScroll`. A favorite is a star. The meta line is one line: "30 min · on Sat · ≈ $2.67 a
+  serving". Proper names keep their capitals mid-sentence.
+- **Plan ahead**: "Undo this plan" sits under the card. After Plan it, `closeSheet({ focusTo })` lands
+  focus on the card heading, and a polite live region (`announce()`) reads the result.
+- **Undo everywhere** refocuses the control the change came from, found by its signature, or else the
+  page title.
+- **List / Check-in**: Open sits under the amount below 375px, and words never split. Counted packs
+  keep the pantry's word ("1 bag (8 buns)"). The Check-in buttons stack below 420px, and the day chips
+  are a real 44px.
+
 ## 29.7 Tests
 
 `tests/e2e/*.mjs` follow the new layout (rows tick, the › opens the item sheet, Plan's extra actions
