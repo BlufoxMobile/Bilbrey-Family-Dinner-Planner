@@ -290,6 +290,19 @@ screenshot or PDF.
   - Landing on Tonight focuses the hero title, and Undo falls back to a focusable page title.
 - **List**: "Sam's" and "Jewel" in the sticky heading below 360px.
 
+### Round 10 (all five at 9)
+
+- **Just back from Sam's.**
+  - `freshMeatQty`: a meat pack bought in the last day is fresh, so readiness, the question, Tonight and the Thaw & prep card thaw only the older, frozen amount.
+  - `mergedSince`: a freezer lot keeps its older date when more comes home.
+  - The receipt's Saved line and its Undo sit at the top of Cook from what we have.
+- **Short rows.** One status line, plus a ❄ time for a frozen main (`thawMark`). No cook time when the dinner time is shown, "on Sat" without "(they'll trade)", no catalog asides, and "French-style" keeps its capital.
+- **Inline on Tonight.**
+  - `commit({ note })` says what a pick did under the hero title, with its Undo, instead of a toast. Any other change or leaving Tonight clears it.
+  - Focus goes to the hero title from either picker.
+  - Every focused line comes into view.
+- **After dinner.** Once tonight is cooked or away, Cook from what we have answers for tomorrow ("move it to the fridge tonight") and lands on Plan.
+
 ## 29.7 Tests
 
 `tests/e2e/*.mjs` follow the new layout (rows tick, the › opens the item sheet, Plan's extra actions
