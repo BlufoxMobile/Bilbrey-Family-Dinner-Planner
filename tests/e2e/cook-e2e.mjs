@@ -441,21 +441,24 @@ test('leftovers wait on Tonight: eat one, or make it a leftover night', async ()
   await hideToast(page);
   await page.click('dialog[open] [data-action="leftovers:night"]');
   await page.waitForSelector('dialog[open] [data-action="leftovers:night-set"]');
-  assert.match(await page.textContent('dialog[open]'), /Instead of Chicken tikka masala/);
+  // The row says where that night's dinner goes (gauntlet r9: a leftover night no longer drops it).
+  assert.match(await page.textContent('dialog[open]'), /Chicken tikka masala moves to \w{3}, /);
   await page.click(`dialog[open] [data-action="leftovers:night-set"][data-night="${TOMORROW}"]`);
   let s = await waitFor(async () => { const x = await familyState(page); return x.plan[TOMORROW].status === 'away' ? x : null; });
   assert.deepEqual(s.plan[TOMORROW].away, { reason: 'Leftovers', note: 'Blackstone smashburgers, from Monday', from: TODAY });
-  assert.equal(s.plan[TOMORROW].dinner, 'tikka-masala', 'the dinner it bumped is kept, to bring back');
+  assert.equal(s.plan[TOMORROW].dinner, null, 'the night holds the leftovers');
+  const movedTo = Object.keys(s.plan).find((d) => d > TOMORROW && s.plan[d]?.dinner === 'tikka-masala' && s.plan[d].status === 'planned');
+  assert.ok(movedTo, 'the dinner it bumped moved to the next open night');
   assert.equal(s.leftovers[TODAY].night, TOMORROW);
-  // The next day Tonight says so; cooking after all brings the dinner back.
+  // The next day Tonight says so; cooking after all opens the night, and the tikka masala keeps its new night.
   await page.clock.setSystemTime(new Date('2026-11-17T17:30:00-06:00'));
   await page.reload();
   await page.waitForSelector('.hero-leftover');
-  assert.match(await page.textContent('.hero-leftover'), /Leftover night.*3 servings.*165°F/s);
+  assert.match(await page.textContent('.hero-leftover'), /Leftover night.*3 servings.*add a side or a salad.*165°F/s);
   await shot(page, 'leftover-night-390');
   await page.click('.hero-leftover [data-action="night:back"]');
-  s = await waitFor(async () => { const x = await familyState(page); return x.plan[TOMORROW].status === 'planned' ? x : null; });
-  assert.equal(s.plan[TOMORROW].dinner, 'tikka-masala');
+  s = await waitFor(async () => { const x = await familyState(page); return x.plan[TOMORROW]?.status !== 'away' ? x : null; });
+  assert.equal(s.plan[movedTo].dinner, 'tikka-masala');
   await page.clock.setSystemTime(NOW);
   await page.reload();
   await page.waitForSelector('.page-tonight');

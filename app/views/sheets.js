@@ -10,7 +10,7 @@ import {
   dinnerFeasibleAt, sideSlotsFor, isRetired, isSideDropped,
 } from '../planner.js';
 import {
-  placeDinnerOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps, nightSideOps, prepDoneOps,
+  placeDinnerOps, nextOpenNight, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps, nightSideOps, prepDoneOps,
   resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName, awayBlock, bringBackTripOps,
   voteOps, sideVoteOps, lunchVoteOps, saveLeftoversOps, useLeftoverOps, clearLeftoversOps, leftoverNightOps,
   leftoverLunchChoices, leftoverLunchOps, freezeLeftoversOps, tossLeftoversOps,
@@ -597,12 +597,14 @@ export function openLeftoverNight(app, from) {
       const nights = leftoverNightChoices(app.state, l, today);
       if (!nights.length) return html`<p class="sheet-text">There’s no free night before they’re past their best (${useByText(l, today)}). Have them for lunch instead.</p><div class="sheet-actions"><button type="button" class="btn btn-primary btn-block" data-action="sheet:close">OK</button></div>`;
       return html`
-        <p class="sheet-text">Nothing is cooked that night, and its groceries come off the list.${l.servings < 5 ? ` With ${servingsText(l.servings)} for five, plan to add a side or a salad.` : ''}</p>
+        <p class="sheet-text">Nothing is cooked that night. A dinner planned there moves to the next open night.${l.servings < 5 ? ` With ${servingsText(l.servings)} for five, plan to add a side or a salad.` : ''}</p>
         <ul class="move-list">${nights.map((x) => {
           const t = app.state.plan?.[x];
           const td = t?.dinner ? dinnerById(app.db, app.state, t.dinner) : null;
+          // Its dinner moves to the next open night, and the row says where (gauntlet r9).
+          const to = td && t.status === 'planned' ? nextOpenNight(app.state, x, today) : null;
           return html`<li><button type="button" class="move-row ${td ? '' : 'is-open'}" data-action="leftovers:night-set" data-from="${from}" data-night="${x}">
-            <span class="move-day"><b>${dayWord(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${td ? `Instead of ${td.title}` : 'Nothing planned'}</span>${ic('right', { size: 18 })}
+            <span class="move-day"><b>${dayWord(x, today)}</b><small>${shortDate(x)}</small></span><span class="move-what">${td ? (to ? `${td.title} moves to ${shortWeekday(to)}, ${shortDate(to)}` : `Instead of ${td.title}`) : 'Nothing planned'}</span>${ic('right', { size: 18 })}
           </button></li>`;
         })}</ul>`;
     },
