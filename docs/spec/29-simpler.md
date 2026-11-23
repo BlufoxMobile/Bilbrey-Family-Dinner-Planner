@@ -303,6 +303,19 @@ screenshot or PDF.
   - Every focused line comes into view.
 - **After dinner.** Once tonight is cooked or away, Cook from what we have answers for tomorrow ("move it to the fridge tonight") and lands on Plan.
 
+### Round 11 (busy parent 10; the others 9)
+
+- **The fresh pack, everywhere.**
+  - `thawTasks` takes tonight's and tomorrow's need from a pack bought in the last day before the freezer lot, so Tonight's thaw line and Thaw & prep agree with the pickers.
+  - The portion job freezes only what came home.
+- **Words.** The ❄ mark says "dinner about 7:15", "1½ hr to thaw" or "to the fridge tonight". Tomorrow's planned row says "on for tomorrow".
+- **Landings.**
+  - `closeSheet({ focusTo })` scrolls the focused element into view.
+  - A pick for tomorrow lands on Plan with focus on `#day-<date>`.
+  - Every page's h1 is `#page-title` (tabindex −1), so Undo's fallback survives a redraw.
+  - The inline note keeps "Nov 23. Undo" together, and its Undo says what came back.
+- **Small.** The receipt's Saved line is one row, and Pantry rows use short names.
+
 ## 29.7 Tests
 
 `tests/e2e/*.mjs` follow the new layout (rows tick, the › opens the item sheet, Plan's extra actions
