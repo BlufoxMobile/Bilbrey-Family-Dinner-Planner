@@ -309,13 +309,19 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .use-ask { display: grid; gap: 8px; padding: 10px 0; }
 .use-ask-name { display: grid; }
 .use-ask-name small { color: var(--ink-2); font-size: var(--t-xs); }
-.when-chips .chip { min-height: 44px; }
-.pan-jump { flex-wrap: wrap; overflow: visible; }
+.when-chips .chip.chip { min-height: 44px; }
+/* Round 5: Fridge / Freezer / Pantry / Counter as one fitted row on a phone, never two. */
+.pan-jump { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; overflow: visible; }
+.pan-jump .chip { justify-content: center; min-width: 0; padding: 0 6px; white-space: nowrap; }
+.pan-jump .chip .chip-count { margin-left: 2px; }
+@media (min-width: 700px) { .pan-jump { display: flex; } .pan-jump .chip { padding: 0 14px; } }
+.use-more { margin-top: 4px; }
+.use-more > summary { display: flex; align-items: center; min-height: 44px; font-weight: 700; color: var(--pine); cursor: pointer; }
 
 /* Thaw & prep, round 5: tick a job off and it's gone for everyone. */
 .prep-task { grid-template-columns: auto 1fr 44px; }
 .prep-check { display: grid; place-items: center; width: 44px; height: 44px; margin: -6px -6px 0 0; padding: 0; border: 0; background: transparent; }
-.prep-check .check-box { display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid var(--line-2); border-radius: 8px; color: transparent; background: var(--card); }
+.prep-check .check-box { display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid var(--control-line); border-radius: 8px; color: transparent; background: var(--card); }
 .prep-check:hover .check-box { border-color: var(--pine); color: var(--ink-3); }
 .prep-done-line { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--sage); }
 
@@ -326,11 +332,33 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .pack-list { display: grid; gap: 8px; }
 .pack-list li { display: grid; grid-template-columns: 64px 1fr; gap: 10px; font-size: var(--t-md); line-height: 1.4; }
 .pack-list b { font-weight: 700; color: var(--person, var(--ink)); }
+/* Round 5: one short item each, separated by a dot, never a comma-run sentence. */
+.pack-items { display: flex; flex-wrap: wrap; gap: 0 6px; margin: 0; padding: 0; list-style: none; }
+.pack-items li { display: inline; }
+.pack-items li:not(:last-child)::after { content: "·"; content: "·" / ""; margin-left: 5px; color: var(--ink-3); }
+.lunch-change { margin: 0 0 var(--s3); }
 /* The trip on one line: what and through when, then two text links (gauntlet r4). */
 .trip-bar { grid-template-columns: auto minmax(0, 1fr) auto; padding: 8px 12px; }
 .trip-acts { grid-column: auto; gap: 2px; flex-wrap: nowrap; }
 .trip-acts .trip-link { padding: 0 8px; }
-@media (max-width: 380px) { .trip-bar { grid-template-columns: auto minmax(0, 1fr); } .trip-acts { grid-column: 1 / -1; justify-content: flex-end; } }
+/* Round 5: on a phone the trip is one short line ("Jewel · through Fri · Change · End"); the long form is for wide screens. */
+.trip-short { display: none; }
+@media (max-width: 600px) {
+  .trip-bar .trip-long { display: none; }
+  .trip-bar .trip-short { display: inline; }
+  .trip-bar p.trip-short { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width: 340px) { .trip-bar { grid-template-columns: auto minmax(0, 1fr); } .trip-acts { grid-column: 1 / -1; justify-content: flex-end; } }
+/* Round 5: the price rides on the amount's last word ("2 × 3.1 lb · $38.26"), so a wrap never starts with "·". */
+.item .item-qty { display: block; }
+.item .item-qty .item-price { display: inline; }
+.item .item-qty .tag { display: inline-flex; margin: 2px 0 0 8px; vertical-align: middle; }
+/* Round 5: Plan ahead with nothing left to plan says so; Plan it waits. */
+.ahead-idle { margin: var(--s3) 0; color: var(--ink-2); font-size: var(--t-sm); }
+/* Round 5: Large text on a 320px phone: the day card's text column shrinks instead of pushing the page sideways. */
+.day-hit { grid-template-columns: 48px 88px minmax(0, 1fr); }
+.day-title, .day-sides { overflow-wrap: anywhere; }
+@media (max-width: 360px) { :root[data-text="large"] .day-hit { grid-template-columns: 40px 64px minmax(0, 1fr); column-gap: 10px; padding: 10px; } :root[data-text="large"] .day-hit > .photo, :root[data-text="large"] .day-hit > .day-ph { width: 64px; height: 56px; } }
 /* Recipe page, round 5: the plate's timing folds like the sides. */
 .recipe-fold { margin: var(--s5) 0; }
 .recipe-fold > summary { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; cursor: pointer; list-style: none; min-height: 44px; }
@@ -349,3 +377,17 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .store-row[open] > summary::after { transform: rotate(-135deg); }
 .store-row[open] { padding-bottom: 10px; }
 .page-list .head-tools { align-items: center; }
+/* Round 5: tonight's picker says what can happen now ("All in the house", "Needs: sliced cheese", "frozen"). */
+.pick-row .pick-main small.pick-ready { display: block; font-weight: 700; }
+.pick-row .pick-main small.pick-ready .ic { display: inline-block; vertical-align: -2px; margin-right: 5px; }
+.pick-row .pick-main small.pick-ready.is-ready { color: var(--pine); }
+.pick-row .pick-main small.pick-ready.is-thaw { color: var(--dusk-text); }
+.pick-row .pick-main small.pick-ready.is-need { color: var(--ink-2); font-weight: 600; }
+.pick-row.pick-left { grid-template-columns: auto 1fr; }
+.pick-row .pick-ic { display: grid; place-items: center; width: 56px; height: 56px; border-radius: var(--r-thumb); background: var(--sage-tint); color: var(--pine); }
+/* Round 5: the receipt's store, date and total as one line to confirm; a best guess reads as words with Fix. */
+.rcpt-headline { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 var(--s3); padding: 10px 14px; border-radius: var(--r-ctl); background: var(--sage-tint); }
+.rcpt-headline .link-btn { min-height: 44px; min-width: 44px; }
+.rcpt-fix { display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border: 1px solid var(--control-line); border-radius: var(--r-pill); font-size: var(--t-sm); font-weight: 700; color: var(--pine); }
+.span-note { margin: 0 0 var(--s3); font-size: var(--t-sm); color: var(--ink-2); text-align: center; }
+.span-note .link-btn { min-height: 44px; }

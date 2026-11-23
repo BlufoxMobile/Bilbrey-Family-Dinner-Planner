@@ -190,7 +190,9 @@ test('pressing plan ahead again changes nothing: it only re-plans when that help
   const again = planAheadOps(db, s, { start: TUE, end: NEXT_MON, today: TUE, ...ctx });
   assert.deepEqual(planOps(again), [], 'no night is written twice');
   assert.equal(again.count, 0);
-  assert.equal(again.message, 'Every night through Monday, Nov 23 is already planned, and the plan already makes the most of the pantry.');
+  // One line, no result card and nothing to undo (gauntlet r5).
+  assert.equal(again.message, 'Every night through Monday, Nov 23 is already planned.');
+  assert.deepEqual(again.ops, [], 'no result card for a press that changed nothing');
   assert.deepEqual([again.after.fromPantry, again.after.groceries, again.after.dinners], [again.before.fromPantry, again.before.groceries, again.before.dinners]);
   // A plan that can't be beaten stays exactly as it is, by/at included.
   assert.deepEqual(applyOps(s, again.ops).plan, s.plan);

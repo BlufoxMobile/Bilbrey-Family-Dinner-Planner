@@ -93,7 +93,7 @@ function hero(app, today) {
       ${sides.filter((x) => x.replaced).map((x) => html`<p class="hero-replaced">${x.info?.title}: ${replacedText(app, x).replace(/^In/, 'in')}.</p>`)}
       <div class="hero-meta">${equipment(d)}${favoriteBadge(app, d)}</div>
       ${when(showNutrition(app), () => html`<p class="hero-nutri">${nutri(app, plate(app, d.id, e), { suffix: 'a plate' })}</p>`)}
-      ${when(!cooked, () => thawLine(app, today))}
+      ${when(!cooked, () => thawLine(app, today, { skip: [haveLine(app, d, e).meatId] }))}
       ${when(!cooked, () => haveLine(app, d, e).html)}
       <div class="hero-actions">
         ${cooked
@@ -123,11 +123,19 @@ function hero(app, today) {
 function haveLine(app, d, e) {
   const miss = plateRecipes(app.db, app.state, d.id, e).flatMap((r) => pantryCheck(app.db, app.state, r.recipe.items).missing).filter((m) => !m.staple);
   const seen = new Set();
-  const words = miss.filter((m) => !seen.has(m.id) && seen.add(m.id)).map((m) => (m.status === 'short' && m.short ? `${unitText(m.short, m.unit)} more ${plainName(m.name).toLowerCase()}` : plainName(m.name).toLowerCase()));
-  if (!words.length) return { short: false, html: html`<p class="hero-have is-ok">${ic('checkCircle', { size: 18 })}<span>Everything’s in the house.</span></p>` };
+  const uniq = miss.filter((m) => !seen.has(m.id) && seen.add(m.id));
+  if (!uniq.length) return { short: false, html: html`<p class="hero-have is-ok">${ic('checkCircle', { size: 18 })}<span>Everything’s in the house.</span></p>` };
   // The meat isn't there, or three things or more: changing dinner is the likelier next step (gauntlet r4).
   const blocker = miss.some((m) => app.db.ingredients[m.id]?.meat) || seen.size >= 3;
-  return { short: true, blocker, html: html`<p class="hero-have is-short">${ic('cart', { size: 18 })}<span><b>Not in the house:</b> ${listJoin(words.slice(0, 4))}${words.length > 4 ? ` and ${words.length - 4} more` : ''}.</span></p>` };
+  // Short on the meat: say it once, with both amounts, so nobody adds ¾ + 1¼ in their head (gauntlet r5).
+  const meat = uniq.find((m) => m.status === 'short' && m.have > 0 && app.db.ingredients[m.id]?.meat);
+  const frozen = meat && thawNow(app.db, app.state, app.today()).some((t) => t.id === meat.id);
+  const rest = uniq.filter((m) => m !== meat).map((m) => (m.status === 'short' && m.short ? `${unitText(m.short, m.unit)} more ${plainName(m.name).toLowerCase()}` : plainName(m.name).toLowerCase()));
+  const list = `${listJoin(rest.slice(0, 4))}${rest.length > 4 ? ` and ${rest.length - 4} more` : ''}`;
+  const body = meat
+    ? html`<b>Only ${unitText(meat.have, meat.unit)} of the ${unitText(meat.need, meat.unit)} ${plainName(meat.name).toLowerCase()} is here${frozen ? ', and it’s frozen' : ''}.</b>${rest.length ? ` Also missing: ${list}.` : ''}`
+    : html`<b>Not in the house:</b> ${list}.`;
+  return { short: true, blocker, meatId: meat?.id || null, html: html`<p class="hero-have is-short">${ic('cart', { size: 18 })}<span>${body}</span></p>` };
 }
 
 /** Easy tonight is offered only when it has something real to show: a dinner that needs no store. */

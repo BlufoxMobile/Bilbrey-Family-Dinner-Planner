@@ -251,14 +251,15 @@ export function planAheadOps(db, state, { start, end, who, today, at, pantryFirs
   let message;
   if (!n && !l) {
     message = open ? 'Couldn’t find dinners that fit those rules. Try planning from both stores.'
-      : `Every night through ${dayText(last)} is already planned${replan && pantryFirst && own.length ? ', and the plan already makes the most of the pantry' : ''}.`;
+      : `Every night through ${dayText(last)} is already planned.`;
   } else {
     // One line (gauntlet r2: the toast was five lines of numbers); the result card has the rest.
     message = n ? `Planned ${n} ${n === 1 ? 'dinner' : 'dinners'} through ${dayText(last)}.` : `Dinners through ${dayText(last)} were already planned.`;
     if (open) message += ` ${open} ${open === 1 ? 'night is' : 'nights are'} still open.`;
   }
   // The result card reads this, so it's there after a reload and on the family's other screens.
-  if (record) ops.push(set(['planAhead'], { start: day0, end: last, pantryFirst: !!pantryFirst, replan: !!replan, before, changed: n, by, at: stamp }));
+  // Nothing changed: no result card and no Undo, just the one line (gauntlet r5).
+  if (record && (n || l)) ops.push(set(['planAhead'], { start: day0, end: last, pantryFirst: !!pantryFirst, replan: !!replan, before, changed: n, by, at: stamp }));
   return { ops, undo: undoFor(state, ops), message, count: n, fromPantry: pass.fromPantry, replanned, lunchPicks: pass.picks, unfilled: pass.unfilled, start: day0, end: last, replan: did, before, after };
 }
 

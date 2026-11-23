@@ -21,6 +21,34 @@ export const EASY_MAX_MISSING = 2;
 const plain = (name) => String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/,.*$/, '').trim();
 
 /**
+ * Can this dinner be made from what's in the house right now? (gauntlet r5: tonight's picker listed
+ * 40 dinners with nothing to say which ones could actually happen.)
+ * → { ready (the main is in), missing: [names], sideOut: [names], thaw: [{ name, minutes }] }
+ * rem: onHand(db, state), passed in when rating many dinners at once.
+ */
+export function readiness(db, state, dinnerId, rem = onHand(db, state)) {
+  const d = db.dinners?.[dinnerId] || state?.customDinners?.[dinnerId];
+  const items = itemsForNight(db, state, dinnerId, null);
+  const main = scaleItems(db, state, d?.items || {});
+  const cooker = d ? isSlowCooked(d) : false;
+  const missing = [];
+  const sideOut = [];
+  const thaw = [];
+  // The short shelf name ("Chicken thighs"), as on the list.
+  const nameOf = (id) => db.ingredients?.[id]?.short || plain(itemMeta(db, state, id).name);
+  for (const id of Object.keys(items)) {
+    const have = rem[id] ?? 0;
+    if (!(have === Infinity || have + 1e-9 >= items[id] * ENOUGH)) (id in main ? missing : sideOut).push(nameOf(id));
+    else if (isMeat(db, id) && have !== Infinity && placeOf(db, state, id) === 'freezer' && !cooker) {
+      // A cold-water thaw: about 30 minutes a pound, never less than half an hour.
+      const lb = itemMeta(db, state, id).unit === 'lb' ? items[id] : 1;
+      thaw.push({ name: nameOf(id), minutes: Math.max(30, Math.round(lb * 2) * 15) });
+    }
+  }
+  return { ready: !missing.length, missing, sideOut, thaw };
+}
+
+/**
  * The easiest dinners for tonight, best first. Everything in the house beats a short thing to pick
  * up; nothing frozen solid beats a thaw; then the least hands-on work, with a loved dinner breaking ties.
  * → { picks: [{ dinner, work, total, cooker, ready (the main is in the house), missing: [names], sideOut: [names], thaw: [names], loved }],

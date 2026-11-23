@@ -188,20 +188,31 @@ const SAFE = {
   145: { food: 'Pork chops and steaks', note: 'then rest 3 minutes' },
 };
 const BY_PROTEIN = { chicken: 165, turkey: 165, beef: 160, pork: 145, sausage: 160 };
-const PROTEIN_FOOD = { chicken: 'Chicken', turkey: 'Turkey', sausage: 'Sausage' };
+// The line names this dinner's own meat (gauntlet r5: a beef pot roast read "145°F Pork chops and steaks").
+const FOODS = {
+  chicken: { 165: 'Chicken' }, turkey: { 165: 'Turkey' }, sausage: { 160: 'Sausage' },
+  beef: { 160: 'Ground beef', 145: 'Beef steaks and roasts' },
+  pork: { 160: 'Ground pork', 145: 'Pork chops and roasts' },
+  seafood: { 145: 'Shrimp and fish' },
+};
+const GROUND = new Set(['beef', 'beefPatties', 'groundTurkey', 'groundPork', 'chorizo']);
 
 /** Safe internal temperatures for this dinner, from its steps and its protein. → [{ temp, food, note }] */
 export function safeTemps(recipe) {
   const found = new Set();
-  for (const s of Array.isArray(recipe?.steps) ? recipe.steps : []) for (const m of String(s).matchAll(/(\d{3})\s*°\s*F/g)) if (SAFE[m[1]]) found.add(Number(m[1]));
-  for (const s of Array.isArray(recipe?.stepDetail) ? recipe.stepDetail : []) for (const m of String(s?.text || '').matchAll(/(\d{3})\s*°\s*F/g)) if (SAFE[m[1]]) found.add(Number(m[1]));
-  const usual = BY_PROTEIN[recipe?.protein];
+  const texts = [...(Array.isArray(recipe?.steps) ? recipe.steps.map(String) : []), ...(Array.isArray(recipe?.stepDetail) ? recipe.stepDetail.map((s) => String(s?.text || '')) : [])];
+  for (const t of texts) for (const m of t.matchAll(/(\d{3})\s*°\s*F/g)) if (SAFE[m[1]]) found.add(Number(m[1]));
+  const protein = recipe?.protein;
+  const ground = Object.keys(recipe?.items || {}).some((id) => GROUND.has(id));
+  const usual = protein === 'beef' ? (ground || !Object.keys(recipe?.items || {}).length ? 160 : 145) : BY_PROTEIN[protein];
   if (!found.size && usual) found.add(usual);
-  return [...found].sort((a, b) => b - a).map((temp) => ({
-    temp,
-    food: (usual === temp && PROTEIN_FOOD[recipe.protein]) || SAFE[temp].food,
-    note: SAFE[temp].note,
-  }));
+  // A braise or slow-cooked roast is done long after it's safe: by the fork, not the thermometer.
+  const braised = (protein === 'beef' || protein === 'pork') && texts.some((t) => /pulls? apart|fork-tender|shreds? easily/i.test(t));
+  return [...found].sort((a, b) => b - a).map((temp) => {
+    if (braised && temp === 145) return { temp, food: protein === 'beef' ? 'Beef roast' : 'Pork roast', note: 'done when it pulls apart with a fork, well past this' };
+    if (protein === 'seafood' && temp === 145) return { temp, food: 'Shrimp and fish', note: 'opaque all the way through' };
+    return { temp, food: FOODS[protein]?.[temp] || SAFE[temp].food, note: SAFE[temp].note };
+  });
 }
 
 // ---------------------------------------------------------------- the whole plate, timed together

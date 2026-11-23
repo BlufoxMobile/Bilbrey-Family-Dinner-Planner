@@ -67,6 +67,10 @@ function dayCard(app, name, date, { packTonight = false } = {}) {
   </article>`;
 }
 
+// "Change tomorrow's lunch" stays open while a swap redraws the page.
+let lunchChangeOpen = false;
+if (typeof document !== 'undefined') document.addEventListener('toggle', (ev) => { if (ev.target?.classList?.contains('lunch-change')) lunchChangeOpen = ev.target.open; }, true);
+
 /** After 2 PM, the lunch to think about is tomorrow's (gauntlet r1). */
 const packTonightAny = (app) => hourIn(new Date()) >= 14;
 
@@ -74,16 +78,21 @@ const packTonightAny = (app) => hourIn(new Date()) >= 14;
  * Everyone's next lunch on one card (gauntlet r4: packing meant reading one person, tapping the next,
  * reading again). Just what goes in the bag, no calories; the tabs below stay for changing things.
  */
+/** The day the packing card is about: today, or tomorrow after 2 PM. */
+const packDay = (app) => (packTonightAny(app) ? addDays(app.today(), 1) : app.today());
+
 function packCard(app, people) {
   const today = app.today();
-  const day = packTonightAny(app) ? addDays(today, 1) : today;
+  const day = packDay(app);
   const rows = people.filter((p) => !p.paused).map((p) => ({ name: p.name, l: lunchFor(app.db, app.state, p.name, day) }))
     .filter((r) => r.l && !r.l.empty);
   if (!rows.length) return '';
   const label = day === today ? 'Today’s lunches' : day === addDays(today, 1) ? 'Tomorrow’s lunches' : `${weekdayName(day)}’s lunches`;
   return html`<section class="pack-card" aria-labelledby="pack-h">
     <h2 id="pack-h" class="section-title">${ic('lunch', { size: 22 })}<span>${label}</span>${day !== today ? html`<small class="pack-when">Pack them tonight</small>` : ''}</h2>
-    <ul class="pack-list">${rows.map((r) => html`<li><b style="${personStyle(r.name)}">${r.name}</b><span>${r.l.skip ? html`<i>${r.l.reason || 'No packed lunch'}</i>` : listJoin(r.l.slots.filter((s) => s.item).map((s) => s.item.title))}</span></li>`)}</ul>
+    <ul class="pack-list">${rows.map((r) => html`<li><b style="${personStyle(r.name)}">${r.name}</b>${r.l.skip ? html`<span><i>${r.l.reason || 'No packed lunch'}</i></span>`
+      // Short names, one item each, so "portioned from a party bag" never reads as a fourth thing (gauntlet r5).
+      : html`<ul class="pack-items" aria-label="${r.name}’s lunch">${r.l.slots.filter((s) => s.item).map((s) => html`<li>${s.item.short || s.item.title}</li>`)}</ul>`}</li>`)}</ul>
   </section>`;
 }
 
@@ -155,6 +164,8 @@ export function render(app) {
   // The next lunch to pack comes first: today's, or tomorrow's after 2 PM; days gone by go last.
   const focus = days.find((d) => d >= (packTonightAny(app) ? addDays(today, 1) : today)) || null;
   const ordered = focus ? [...days.filter((d) => d >= focus), ...days.filter((d) => d < focus)] : days;
+  // The packing card above already shows this person's next lunch: here it folds to "Change tomorrow's lunch" (gauntlet r5).
+  const onCard = !!focus && focus === packDay(app) && (() => { const l = lunchFor(app.db, app.state, name, focus); return !!l && !l.empty; })();
   return html`<div class="page page-lunch">
     <header class="page-head"><h1 class="page-title">Lunch</h1></header>
     ${packCard(app, people)}
@@ -177,7 +188,8 @@ export function render(app) {
             <p class="muted small">${lunches.length} packed this week${food > 0 ? `, about ${money(food)} of food` : ''}. ${daysText(cfg)}.</p></div>
           <button type="button" class="btn btn-small btn-secondary" data-action="lunch:edit" data-who="${name}">${ic('edit', { size: 18 })}Edit ${name}’s lunches</button>
         </div>
-        ${days.length ? html`<div class="lunch-days">${days.filter((d) => !focus || d >= focus).map((d) => dayCard(app, name, d, { packTonight: d === focus && focus !== today }))}</div>
+        ${days.length ? html`${when(onCard, () => html`<details class="lunch-earlier lunch-change" ${lunchChangeOpen ? 'open' : ''}><summary>Change ${focus === today ? 'today’s' : focus === addDays(today, 1) ? 'tomorrow’s' : `${weekdayName(focus)}’s`} lunch</summary><div class="lunch-days">${dayCard(app, name, focus, { packTonight: focus !== today })}</div></details>`)}
+          <div class="lunch-days">${days.filter((d) => !focus || (onCard ? d > focus : d >= focus)).map((d) => dayCard(app, name, d, { packTonight: d === focus && focus !== today }))}</div>
           ${when(focus && days.some((d) => d < focus), () => { const earlier = days.filter((d) => d < focus); return html`<details class="lunch-earlier"><summary>Earlier this week (${earlier.length})</summary><div class="lunch-days">${earlier.map((d) => dayCard(app, name, d))}</div></details>`; })}`
           : html`<p class="empty-body pad">No lunch days picked for ${name}. Edit ${name}’s lunches to choose days.</p>`}
       </section>`}

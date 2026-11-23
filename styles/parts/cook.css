@@ -242,7 +242,7 @@
 .cook-need-h { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; font-family: var(--font-text); font-size: var(--t-md); font-weight: 700; }
 .cook-gather-row { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; width: 100%; min-height: 50px; padding: 8px 2px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; font-size: calc(var(--t-md) * var(--cook-scale)); }
 .cook-gather li:last-child .cook-gather-row { border-bottom: 0; }
-.cook-check { display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid var(--line-2); border-radius: 8px; }
+.cook-check { display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid var(--control-line); border-radius: 8px; }
 .cook-gather-row.is-on .cook-check { border-color: var(--sage); background: var(--sage); color: var(--card); }
 .cook-gather-row.is-on .cook-gather-name { color: var(--ink-3); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--ink-3) 60%, transparent); }
 .cook-gather-name small { display: block; color: color-mix(in srgb, var(--butter) 40%, var(--ink)); font-size: var(--t-xs); font-weight: 600; text-decoration: none; }

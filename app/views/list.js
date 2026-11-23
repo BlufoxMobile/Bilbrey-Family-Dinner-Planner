@@ -50,9 +50,20 @@ function current(app) {
     const listKey = tripKey(trip);
     return { range, listKey, trip, list: buildList(app.db, app.state, { dates: range.dates, listKey, store: trip.store === 'both' ? null : trip.store, today }) };
   }
-  const range = currentRange(app);
+  const span = listSpan(app);
+  const range = span ? { start: today, end: span.end, dates: datesBetween(today, span.end), span: true } : currentRange(app);
   const listKey = listKeyFor(range);
   return { range, listKey, trip: null, list: buildList(app.db, app.state, { dates: range.dates, listKey, today }) };
+}
+
+/**
+ * "See the shopping list" after Plan ahead shows everything it planned, tonight through its last night,
+ * without starting a trip (gauntlet r5: the list opened in a trip nobody started). Only on this screen;
+ * the arrows or a reload go back to the Plan page's week.
+ */
+function listSpan(app) {
+  const s = app.ui.listSpan;
+  return s && isISODate(s.end) && s.end >= app.today() && s.end > currentRange(app).end ? s : null;
 }
 
 const TRIP_STORES = [{ id: 'jewel', label: 'Jewel-Osco' }, { id: 'sams', label: "Sam's Club" }, { id: 'both', label: 'Both' }];
@@ -62,10 +73,11 @@ function tripBar(app, trip, range, list) {
   // One slim line (gauntlet r2): which store, through when, Change, End.
   return html`<div class="trip-bar">
     <span class="trip-ic">${ic('cart', { size: 20 })}</span>
-    <p class="trip-what"><b>Shopping through ${dayAndDate(range.end, app.today())}</b> <small>${trip.store === 'both' ? 'Sam’s Club and Jewel-Osco' : NAMES[trip.store]}</small></p>
+    <p class="trip-what trip-long"><b>Shopping through ${dayAndDate(range.end, app.today())}</b> <small>${trip.store === 'both' ? 'Sam’s Club and Jewel-Osco' : NAMES[trip.store]}</small></p>
+    <p class="trip-what trip-short"><b>${trip.store === 'both' ? 'Both stores' : trip.store === 'sams' ? 'Sam’s' : 'Jewel'} · through ${range.end <= addDays(app.today(), 6) ? shortWeekday(range.end) : shortDate(range.end)}</b></p>
     <span class="trip-acts">
-      <button type="button" class="link-btn trip-link" data-action="trip:new">Change</button>
-      <button type="button" class="link-btn trip-link" data-action="trip:end">End trip</button>
+      <button type="button" class="link-btn trip-link" data-action="trip:new" aria-label="Change this trip">Change</button>
+      <button type="button" class="link-btn trip-link" data-action="trip:end" aria-label="End this trip"><span class="trip-long">End trip</span><span class="trip-short">End</span></button>
     </span>
   </div>`;
 }
@@ -273,7 +285,7 @@ function amt(n, unit) {
 
 /** "1 bottle", "2 × ~3.1 lb pack", "3 lemons": what to pick up, without "(about 190 tbsp)" (gauntlet r4). */
 function buyText(i) {
-  return formatPackQty(i).replace(/\s*\(about [^)]*\)/, '').replace(/^1 × (?=[a-z])/, '1 ');
+  return i.freeText ? formatPackQty(i) : shelfQty(i); // the row's own words (gauntlet r5)
 }
 
 function detail(app, i) {
@@ -336,7 +348,8 @@ function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
   const label = (!i.freeText && app.db.ingredients[i.id]?.short) || i.name;
   const product = !i.freeText && i.product?.label && i.product.label.toLowerCase() !== i.name.toLowerCase() ? i.product.label : '';
   // The size rides on the amount line ("2 × 3.1 lb"), so a cut-off product name never hides it (gauntlet r4).
-  const many = i.freeText ? (i.qty > 1 ? `${fmtQty(i.qty)} of them` : '') : shelfQty(i);
+  // "(40 pouches)" never splits across lines; the wrap, when needed, comes before it.
+  const many = i.freeText ? (i.qty > 1 ? `${fmtQty(i.qty)} of them` : '') : shelfQty(i).replace(/\(([^)]*)\)/, (m) => m.replace(/ /g, '\u00a0'));
   const inCart = mode === 'online' ? 'added to the cart' : 'in the cart';
   const tags = [
     i.pack?.sale ? html`<span class="tag tag-sale">Sale</span>` : '',
@@ -349,7 +362,7 @@ function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
     <span class="item-thumb-hit" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-hidden="true">${itemThumb(app, i, mode || 'store')}</span>
     <button type="button" class="item-main" data-action="list:check" data-key="${i.key}" data-list="${listKey}" tabindex="-1" aria-hidden="true">
       <span class="item-name">${label}</span>${product ? html`<span class="item-product" id="${rid}-p">${product}</span>` : ''}
-      <span class="item-qty" id="${rid}-q">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? '· ' : ''}${money(i.cost)}</span>`}${tags}</span>
+      <span class="item-qty" id="${rid}-q">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? '\u00a0·\u00a0' : ''}${money(i.cost)}</span>`}${tags}</span>
     </button>
     ${when(mode === 'online' && !i.freeText, () => html`<a class="btn btn-small ${i.checked ? 'btn-quiet' : 'btn-secondary'} order-it" href="${orderUrl(app, i)}" target="_blank" rel="noopener" data-findit="${i.id}" data-order="${storeProductUrl(app.db, i.store, i.id) ? 'product' : 'search'}" aria-label="Open ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">${ic('cart', { size: 18 })}${i.checked ? 'Again' : 'Open'}</a>`)}
     <button type="button" class="item-more" data-action="list:item" data-key="${i.key}" aria-label="More about ${label}">${ic('right', { size: 20 })}</button>
@@ -522,7 +535,7 @@ export function render(app) {
         <button type="button" class="icon-btn" data-action="list:print" aria-label="Print the list">${ic('print')}</button>
       </div>
     </header>
-    ${trip ? html`${tripBar(app, trip, range, list)}${afterTrip(app, trip, list)}` : periodNav(app, range, { compact: true })}
+    ${trip ? html`${tripBar(app, trip, range, list)}${afterTrip(app, trip, list)}` : html`${periodNav(app, range, { compact: true })}${when(range.span, () => html`<p class="span-note">Everything Plan ahead planned, tonight through ${dayAndDate(range.end, app.today())}. <button type="button" class="link-btn" data-action="list:span-clear">Just this week</button></p>`)}`}
     ${noNights && !list.lunches.length && !list.items.length ? html`<div class="empty">
         <span class="empty-ic">${ic('list', { size: 28 })}</span>
         <h3 class="empty-title">Nothing planned for ${rangeLabel(range.start, range.end)}</h3>
@@ -762,6 +775,7 @@ export const actions = {
     app.commit({ ops, undo: undoFor(app.state, ops), message: `Trip list for ${store === 'both' ? 'both stores' : NAMES[store]}, through ${weekdayName(end)}.${moved ? ` ${moved} ${store === 'sams' ? 'Jewel' : 'Sam’s'} ${moved === 1 ? 'item moved' : 'items moved'} to it.` : ''}` });
     closeSheet();
   },
+  'list:span-clear': (app) => { app.ui.listSpan = null; app.render(); },
   'trip:end': (app) => {
     const t = app.settings.trip;
     const ops = [del(['settings', 'trip'])];

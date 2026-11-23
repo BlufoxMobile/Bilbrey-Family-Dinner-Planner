@@ -9,6 +9,7 @@ import {
   canBuyAt, dinnerById, itemsForNight, kindOf, packFor, storeFor, rotationList, unitPrice,
 } from './planner.js';
 import { lunchNeeds, lunchesIn } from './lunch.js';
+import { wordFrom, defaultWord, plural } from './packages.js';
 import { shownProduct, productLabel } from './products.js';
 import { activeDeal, applyDeal, regularPrice } from './deals.js';
 // freshness.js and waste.js import this file back; every use is inside a function.
@@ -120,19 +121,35 @@ export function formatPackQty(item) {
   return `${n} × ${containerWord(item)} (about ${fmtQty(size)} ${unit})`;
 }
 
+/** What goes in the cart: "bag", "bottle", "bulb", "pack" (a multipack), or null for meat sold by the pound. */
+function cartWord(item) {
+  const { unit, name = '', aisle } = item;
+  const label = `${item.product?.label || ''} ${item.pack?.label || ''}`;
+  let w = /\b\d+\s*(pk|pack|ct|count)\b/i.test(label) ? 'pack' : wordFrom(label) || wordFrom(name);
+  const weight = WEIGHT_UNITS.has(unit);
+  if (!w) w = weight ? (aisle === 'Produce' ? 'bag' : defaultWord(name, unit)) : COUNT_UNITS.has(unit) ? (aisle === 'Produce' ? 'bag' : defaultWord(name, unit)) : containerWord(item);
+  // "1 box (40 boxes)" says nothing: the thing around them is a case, or a box.
+  if (w === singular(unit)) w = w === 'box' ? 'case' : 'box';
+  return weight && w === 'pack' ? null : w;
+}
+
 /**
- * The amount line on a list row: the size for weights and counts ("18.37 oz", "2 × 3.1 lb",
- * "40 packs"), but the container for spoon and cup amounts ("1 bottle", not "190 tbsp"; gauntlet r5).
+ * The amount line on a list row (gauntlet r5): what goes in the cart, then what's inside when it helps.
+ * "4 cans", "3 packs", "1 bag (10 lb)", "1 box (40 pouches)", "1 bulb (10 cloves)", "2 × 3.1 lb",
+ * and the container for spoon and cup amounts ("1 bottle", never "190 tbsp").
  */
 export function shelfQty(item) {
-  if (!item.pack) return unitText(item.shortfall || item.qty || 0, item.unit);
+  const { unit } = item;
+  if (!item.pack) return unitText(item.shortfall || item.qty || 0, unit);
   const n = item.packs || 1;
-  if (!WEIGHT_UNITS.has(item.unit) && !COUNT_UNITS.has(item.unit)) {
-    const w = containerWord(item);
-    return `${n} ${n > 1 ? (w === 'box' ? 'boxes' : `${w}s`) : w}`;
-  }
-  const size = item.pack.size > 0 ? unitText(Math.round(item.pack.size * 100) / 100, item.unit) : '';
-  return n > 1 ? `${n} × ${size || 'packs'}` : size;
+  const sizeN = Math.round((item.pack.size || 0) * 100) / 100;
+  const volume = !WEIGHT_UNITS.has(unit) && !COUNT_UNITS.has(unit);
+  if (COUNT_UNITS.has(unit) && (!(sizeN > 0) || Math.abs(sizeN - 1) < 1e-9)) return unitText(n, unit);
+  const w = cartWord(item);
+  if (volume || !(sizeN > 0)) return `${n} ${plural(w || 'pack', n)}`;
+  const size = unitText(sizeN, unit);
+  if (!w) return n > 1 ? `${n} × ${size}` : size;
+  return n > 1 ? `${n} ${plural(w, n)} (${size} each)` : `1 ${w} (${size})`;
 }
 
 const aisleIndex = (a) => { const i = AISLES.indexOf(a); return i < 0 ? AISLES.length : i; };

@@ -25,6 +25,7 @@
    "id": "bh-black-forest-ham-sandwich",
    "slot": "main",
    "title": "Boar's Head Black Forest ham sandwich",
+   "short": "Ham sandwich",
    "subtitle": "Smoky deli ham piled on whole-grain bread — Knox's go-to.",
    "items": {
     "bhBlackForestHam": 0.19,
@@ -41,6 +42,7 @@
    "id": "bh-genoa-provolone-snack",
    "slot": "main",
    "title": "Boar's Head Italian salami & provolone",
+   "short": "Salami & provolone",
    "subtitle": "Genoa salame and sharp provolone slices, ready to snack or stack.",
    "items": {
     "bhGenoaProvolone": 1
@@ -57,6 +59,7 @@
    "id": "mm-cobb-salad-avocado-ranch",
    "slot": "main",
    "title": "Chicken Cobb salad with avocado ranch",
+   "short": "Cobb salad",
    "subtitle": "Grilled chicken, egg, bacon and greens with creamy avocado ranch — about 40 g protein.",
    "items": {
     "mmCobbSalad": 10
@@ -73,6 +76,7 @@
    "id": "tf-ranch-chicken-bowl",
    "slot": "main",
    "title": "Ranch chicken salad bowl",
+   "short": "Ranch chicken bowl",
    "subtitle": "Single-serve romaine bowl with chicken, cheddar, bacon bits and homestyle ranch.",
    "items": {
     "tfRanchChickenBowl": 1
@@ -89,6 +93,7 @@
    "id": "tf-ranch-chicken-bowl-plus-chicken",
    "slot": "main",
    "title": "Ranch chicken salad bowl + extra grilled chicken",
+   "short": "Ranch chicken bowl, extra chicken",
    "subtitle": "The ranch bowl with 3 oz more grilled chicken so it actually keeps you full.",
    "items": {
     "tfRanchChickenBowl": 1,
@@ -106,6 +111,7 @@
    "id": "garden-salad-chicken-light-ranch",
    "slot": "main",
    "title": "Grilled chicken garden salad, light ranch",
+   "short": "Chicken garden salad",
    "subtitle": "A big bowl of greens with 4 oz grilled chicken and light ranch — the lightest high-protein lunch.",
    "items": {
     "gardenSalad": 4,
@@ -124,6 +130,7 @@
    "id": "turkey-cheese-wrap",
    "slot": "main",
    "title": "Turkey & cheese wrap",
+   "short": "Turkey wrap",
    "subtitle": "Sliced turkey, cheese and crisp romaine rolled in a soft tortilla.",
    "items": {
     "tortillas": 1,
@@ -142,6 +149,7 @@
    "id": "ham-cheese-wrap",
    "slot": "main",
    "title": "Ham & cheese spinach wrap",
+   "short": "Ham wrap",
    "subtitle": "Black Forest ham and cheese with baby spinach in a tortilla.",
    "items": {
     "tortillas": 1,
@@ -160,6 +168,7 @@
    "id": "chicken-salad-crackers",
    "slot": "main",
    "title": "Greek-yogurt chicken salad with whole-grain crackers",
+   "short": "Chicken salad & crackers",
    "subtitle": "Creamy chicken salad made with Greek yogurt instead of mayo, scooped onto crackers.",
    "items": {
     "cannedChicken": 0.5,
@@ -177,6 +186,7 @@
    "id": "pb-banana-sandwich",
    "slot": "main",
    "title": "Peanut butter & banana sandwich",
+   "short": "PB & banana sandwich",
    "subtitle": "Creamy peanut butter and sliced banana on whole-grain bread.",
    "items": {
     "bread": 2,
@@ -193,6 +203,7 @@
    "id": "doritos-snack-bag",
    "slot": "side",
    "title": "Doritos snack bag from the variety pack (mixed flavors)",
+   "short": "Doritos",
    "subtitle": "The Sam’s variety pack mixes Cool Ranch with Nacho Cheese and others. Knox gets the Cool Ranch portion instead.",
    "items": {
     "doritosMix": 1
@@ -208,6 +219,7 @@
    "id": "cool-ranch-portion",
    "slot": "side",
    "title": "Cool Ranch Doritos, portioned from a party bag",
+   "short": "Doritos",
    "subtitle": "Cool Ranch only (Knox doesn’t like Nacho Cheese), portioned from a party bag for about $0.37 a lunch.",
    "items": {
     "doritosCoolRanchBag": 1.5
@@ -224,6 +236,7 @@
    "id": "baked-chips-bag",
    "slot": "side",
    "title": "Baked chips snack bag",
+   "short": "Baked chips",
    "subtitle": "Baked Lay's, Cheetos or Ruffles — the crunch with less fat.",
    "items": {
     "bakedChipsMix": 1
@@ -239,6 +252,7 @@
    "id": "baby-carrots-ranch-cup",
    "slot": "side",
    "title": "Baby carrots with a ranch cup",
+   "short": "Carrots & ranch",
    "subtitle": "Sweet crunchy carrots and a cup of ranch for dipping.",
    "items": {
     "babyCarrots": 0.19,
@@ -254,6 +268,7 @@
    "id": "baby-carrots-light-ranch",
    "slot": "side",
    "title": "Baby carrots with light ranch",
+   "short": "Carrots & ranch",
    "subtitle": "Same carrot-and-ranch crunch with light ranch.",
    "items": {
     "babyCarrots": 0.19,
@@ -269,6 +284,7 @@
    "id": "carrots-hummus",
    "slot": "side",
    "title": "Baby carrots & hummus",
+   "short": "Carrots & hummus",
    "subtitle": "Carrots with a single-serve cup of classic hummus.",
    "items": {
     "babyCarrots": 0.19,
@@ -284,6 +300,7 @@
    "id": "apple-slices",
    "slot": "side",
    "title": "Apple",
+   "short": "Apple",
    "subtitle": "A crisp whole apple (or slices).",
    "items": {
     "apples": 0.4
@@ -299,6 +316,7 @@
    "id": "clementines-two",
    "slot": "side",
    "title": "Two clementines",
+   "short": "2 clementines",
    "subtitle": "Easy-peel, sweet and school-friendly.",
    "items": {
     "clementines": 0.33
@@ -314,6 +332,7 @@
    "id": "fruit-cup",
    "slot": "side",
    "title": "Fruit cup (no sugar added)",
+   "short": "Fruit cup",
    "subtitle": "Peaches, mandarins or mixed fruit packed in water.",
    "items": {
     "fruitCups": 1
@@ -329,6 +348,7 @@
    "id": "nabisco-snack-pack",
    "slot": "snack",
    "title": "Cookie & cracker snack pack (Oreo Mini and friends)",
+   "short": "Oreo Minis",
    "subtitle": "One 1 oz pack from the Nabisco 40-pack: Oreo Mini, Chips Ahoy!, Ritz Bits and more.",
    "items": {
     "nabiscoMix": 1
@@ -344,6 +364,7 @@
    "id": "greek-yogurt-cup",
    "slot": "snack",
    "title": "Greek yogurt cup",
+   "short": "Greek yogurt",
    "subtitle": "High-protein Greek yogurt in a single cup.",
    "items": {
     "greekYogurtCups": 1
@@ -360,6 +381,7 @@
    "id": "string-cheese",
    "slot": "snack",
    "title": "String cheese",
+   "short": "String cheese",
    "subtitle": "One mozzarella stick — protein in a peel-able package.",
    "items": {
     "stringCheese": 1
@@ -375,6 +397,7 @@
    "id": "hard-boiled-eggs",
    "slot": "snack",
    "title": "Two hard-boiled eggs",
+   "short": "2 hard-boiled eggs",
    "subtitle": "Peeled and ready — 12 g protein.",
    "items": {
     "hardBoiledEggs": 2
@@ -391,6 +414,7 @@
    "id": "protein-bar",
    "slot": "snack",
    "title": "Protein bar",
+   "short": "Protein bar",
    "subtitle": "Chewy peanut butter–chocolate protein bar.",
    "items": {
     "proteinBars": 1
@@ -406,6 +430,7 @@
    "id": "cheese-and-crackers",
    "slot": "snack",
    "title": "Cheese & whole-grain crackers",
+   "short": "Cheese & crackers",
    "subtitle": "A string cheese with an ounce of whole-grain crackers.",
    "items": {
     "stringCheese": 1,
@@ -421,6 +446,7 @@
    "id": "apple-peanut-butter",
    "slot": "snack",
    "title": "Apple & peanut butter",
+   "short": "Apple & peanut butter",
    "subtitle": "Apple slices with a tablespoon of peanut butter for dipping.",
    "items": {
     "apples": 0.4,
@@ -436,6 +462,7 @@
    "id": "skinnypop-bag",
    "slot": "snack",
    "title": "Popcorn snack bag",
+   "short": "Popcorn",
    "subtitle": "A light, salty 0.65 oz bag of ready-to-eat popcorn.",
    "items": {
     "skinnyPop": 1
@@ -451,6 +478,7 @@
    "id": "yoohoo-box",
    "slot": "drink",
    "title": "Yoo-hoo chocolate drink",
+   "short": "Yoo-hoo",
    "subtitle": "A 6.5 oz box of chocolate drink.",
    "items": {
     "yoohoo": 1
@@ -465,6 +493,7 @@
    "id": "capri-sun-fruit-punch",
    "slot": "drink",
    "title": "Capri Sun Fruit Punch",
+   "short": "Capri Sun",
    "subtitle": "A 6 oz fruit punch pouch.",
    "items": {
     "capriSun": 1
@@ -479,6 +508,7 @@
    "id": "bodyarmor-orange-mango",
    "slot": "drink",
    "title": "BODYARMOR Orange Mango",
+   "short": "BODYARMOR",
    "subtitle": "A 16 oz Orange Mango sports drink — Jeff's daily pick.",
    "items": {
     "bodyArmorOM": 1
@@ -491,6 +521,7 @@
    "id": "bodyarmor-lyte",
    "slot": "drink",
    "title": "BODYARMOR LYTE (Orange Clementine)",
+   "short": "BODYARMOR LYTE",
    "subtitle": "The low-calorie version — 20 calories. No Orange Mango LYTE exists, so this is the closest orange flavor.",
    "items": {
     "bodyArmorLyte": 1
@@ -505,6 +536,7 @@
    "id": "water-bottle",
    "slot": "drink",
    "title": "Bottle of water",
+   "short": "Water",
    "subtitle": "16.9 oz purified water.",
    "items": {
     "waterBottles": 1
@@ -520,6 +552,7 @@
    "id": "sparkling-water",
    "slot": "drink",
    "title": "Sparkling water",
+   "short": "Sparkling water",
    "subtitle": "Unsweetened sparkling water — lime, lemon or grapefruit.",
    "items": {
     "sparklingWater": 1
@@ -535,6 +568,7 @@
    "id": "milk-box",
    "slot": "drink",
    "title": "Milk box",
+   "short": "Milk box",
    "subtitle": "Shelf-stable 8 oz organic milk — 8 g protein.",
    "items": {
     "milkBoxes": 1
@@ -550,6 +584,7 @@
    "id": "bonduelle-chef-turkey-ham",
    "slot": "main",
    "title": "Bonduelle Chef salad bowl (turkey & ham)",
+   "short": "Chef salad bowl",
    "subtitle": "Turkey and ham with creamy ranch. 250 cal, 12 g protein.",
    "items": {
     "bonduelleChefBowl": 1
@@ -566,6 +601,7 @@
    "id": "bonduelle-bbq-chicken",
    "slot": "main",
    "title": "Bonduelle Kickin' BBQ chicken salad bowl",
+   "short": "BBQ chicken salad bowl",
    "subtitle": "BBQ-style chicken with BBQ ranch. 230 cal, 9 g protein.",
    "items": {
     "bonduelleBbqBowl": 1
@@ -582,6 +618,7 @@
    "id": "bonduelle-chicken-blt",
    "slot": "main",
    "title": "Bonduelle Chicken BLT salad bowl, hold the tomatoes",
+   "short": "Chicken BLT salad bowl",
    "subtitle": "Chicken, bacon and greens with buttermilk ranch; the tomatoes come off. 260 cal, 11 g protein.",
    "items": {
     "bonduelleBltBowl": 1
@@ -601,6 +638,7 @@
    "id": "ritz-crackers-portion",
    "slot": "snack",
    "title": "Ritz crackers from the pantry box",
+   "short": "Ritz crackers",
    "subtitle": "About 9 crackers in a snack bag, from the boxes already at home.",
    "items": {
     "crackers": 1
@@ -617,6 +655,7 @@
    "id": "bh-buffalo-chicken-sandwich",
    "slot": "main",
    "title": "Boar's Head spicy chicken sandwich with pickles, hot giardiniera and chips",
+   "short": "Spicy chicken sandwich & chips",
    "subtitle": "Blazing Buffalo chicken on Artesano with dill chips and Buona hot giardiniera, Miss Vickie’s on the side. About 600 cal and 35 g protein.",
    "items": {
     "bhBuffaloChicken": 0.25,
@@ -636,6 +675,7 @@
    "id": "bonduelle-chicken-queso-fresco",
    "slot": "main",
    "title": "Bonduelle Chicken Queso Fresco salad bowl",
+   "short": "Chicken queso salad bowl",
    "subtitle": "Chicken and queso fresco over greens, dressing inside. A no-prep store salad.",
    "items": {
     "bonduelleQuesoBowl": 1
@@ -652,6 +692,7 @@
    "id": "bonduelle-santa-fe",
    "slot": "main",
    "title": "Bonduelle Santa Fe salad bowl",
+   "short": "Santa Fe salad bowl",
    "subtitle": "Southwest-style salad with chicken, dressing inside. A no-prep store salad.",
    "items": {
     "bonduelleSantaFeBowl": 1
@@ -668,6 +709,7 @@
    "id": "bh-salsalito-turkey-sandwich",
    "slot": "main",
    "title": "Boar's Head Salsalito turkey sandwich with pickles, hot giardiniera and chips",
+   "short": "Turkey sandwich & chips",
    "subtitle": "Bold Salsalito turkey on Dave's Killer Bread with dill chips and Buona hot giardiniera, chips on the side. About 610 cal and 35 g protein.",
    "items": {
     "bhSalsalitoTurkey": 0.25,

@@ -159,7 +159,42 @@ Not done (named honestly): Thaw & prep jobs can't be ticked off yet; "See the sh
 Pantry steppers can still show part-packages (1¾ packs); the recipe page is still long (about 8 phone screens);
 cook-mode timing cues are worded by step number; Tonight-at-a-glance lunch packing still lives on the Lunch tab.
 
-## 29.6 Tests
+## 29.6 Round 5 (all five reviewers at 9: parent, shopper, first-timer, designer, accessibility)
+
+v3.6.0 shipped what round 4 named as not done:
+- **Thaw & prep** jobs tick off for the whole family (`prepDoneOps`, `state.prepDone[date][prepKey]`, pruned
+  after 7 days), with Undo and a quiet "1 job done" line. After a tick, focus moves to the next job's box,
+  or to the "done" line after the last one. The folded Thaw & prep on Plan stays open while you tick.
+- **Lunch** opens on one "Tomorrow's lunches · Pack them tonight" card: each person's short item names
+  ("Ham sandwich · Doritos · Oreo Minis · Yoo-hoo", the `short` field in data/lunches.json), no calories.
+  Below it, each person's tab folds that day into "Change tomorrow's lunch" instead of repeating it.
+- **Recipe page**: Timing, each side's method, Tips and Nutrition fold. Timing cues count back from dinner
+  ("Start it about 15 min before dinner is ready"). "Done and safe" names the dinner's own meat; a braised
+  roast is "done when it pulls apart with a fork, well past this", never "Pork chops and steaks".
+- **Plan ahead**: two quick choices (1 week, 2 weeks), the rest folded. It opens on the first stretch that
+  has an empty night. When nothing is left to plan it says so, and Plan it waits. A press that changes
+  nothing shows one line, with no Undo and no result card. "See the shopping list" opens the plain list for
+  the nights it planned (tonight through its last night, with "Just this week" to go back), never a trip.
+- **List rows** say what goes in the cart, then what's inside: "4 cans", "3 packs", "1 bag (10 lb)",
+  "1 box (40 packs)", "1 bulb (10 cloves)", "2 × 3.1 lb", "1 bottle" (never "190 tbsp"; `shelfQty`). The
+  price is glued to the amount, so a wrap never starts with "·". Long items get short names on rows (the
+  catalog's `short`). On a phone the trip bar is one line ("Jewel · through Fri · Change · End").
+  The Add-an-item store follows the last tick: a `<select>` no longer snaps back on redraw (`snapshotForms`).
+- **Pantry** steppers count whole packages; a container that's been opened reads "1 full + 1 open · about
+  8 cups" (never for meat). Fridge / Freezer / Pantry / Counter are one fitted row. Use first shows three
+  things (past its use-by, then meat nobody dated, then the rest) with "N more"; every "when did it come
+  home?" question lives there, once.
+- **Tonight**: short on the meat, it says so once ("Only ¾ lb of the 2 lb lean ground beef is here, and
+  it's frozen. Also missing: …"). Tonight's dinner picker puts what can be made now first, labels every row
+  ("All in the house", "Needs: sliced cheese", "Chicken thighs are frozen (about 1 hr to thaw)"), then this
+  week's planned dinners, and offers the leftovers in the fridge as a night with nothing to cook.
+- **Receipt check**: store, date and total are one line with Edit; an unsure line is its best guess in
+  words ("Probably flour tortillas · 20 tortillas") with Fix; only a line with no guess is a form.
+- **Smaller**: Change side's "every time" is one switch (off: just this night). Check-in says "Missing a
+  receipt". Tick boxes use the 3:1 control line. Large text on a 320px phone keeps Plan cards inside the
+  screen. The four heat-and-serve Sam's dinners joined the recipe box.
+
+## 29.7 Tests
 
 `tests/e2e/*.mjs` follow the new layout (rows tick, the › opens the item sheet, Plan's extra actions
 are under More, "Not for us" confirms). Unit tests cover the retire rule (nights after tonight only).

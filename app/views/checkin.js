@@ -103,7 +103,7 @@ function moneyCard(app, m, week) {
     ? html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}<span>Checked${m.checked.at ? ` on ${shortDate(String(m.checked.at).slice(0, 10))}` : ''}.</span></p>
           <button type="button" class="btn btn-quiet btn-small" data-action="checkin:undone" data-start="${week.start}" data-end="${week.end}">Reopen</button>`
     : html`<button type="button" class="btn btn-primary" id="ck-done" data-action="checkin:done" data-start="${week.start}" data-end="${week.end}">${ic('checkCircle', { size: 20 })}Looks right</button>
-          <a class="btn btn-secondary" href="#/budget">${ic('receipt', { size: 20 })}A receipt is missing</a>`}
+          <a class="btn btn-secondary" href="#/budget">${ic('receipt', { size: 20 })}Missing a receipt</a>`}
     </div>
     ${weekBars(m.history, w.share)}
     <details class="cover-more ck-record ck-details"><summary>Details: the last ${m.record.length} weeks and the month</summary>

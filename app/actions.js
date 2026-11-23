@@ -407,7 +407,7 @@ export function prepDoneOps(state, { date, key, done = true, who = SHARED_PROFIL
   if (!date || !key) return result(state, [], '');
   const ops = [done ? set(['prepDone', date, key], { by: who, at: at || new Date().toISOString() }) : del(['prepDone', date, key])];
   if (today) for (const d of Object.keys(state?.prepDone || {})) if (d < addDays(today, -7)) ops.push(del(['prepDone', d]));
-  return result(state, ops, done ? 'Done. It’s off the list for everyone.' : 'It’s back on the list.');
+  return result(state, ops, done ? 'Done for everyone.' : 'It’s back on the to-do list.');
 }
 
 // ---------------------------------------------------------------- sides

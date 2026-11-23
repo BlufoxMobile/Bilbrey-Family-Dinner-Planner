@@ -152,7 +152,10 @@ function snapshotForms(root) {
     const form = el.form?.dataset.submit;
     if (!form || el.form.dataset.submitted) return;
     const check = el.type === 'checkbox' || el.type === 'radio';
-    const dirty = check ? el.checked !== el.defaultChecked : el.value !== el.defaultValue;
+    // A <select> has no defaultValue: it's edited only when it differs from the option the page chose
+    // (gauntlet r5: the Add-an-item store snapped back to Sam's after a Jewel tick).
+    const initial = el.tagName === 'SELECT' ? ([...el.options].find((o) => o.defaultSelected) || el.options[0])?.value : el.defaultValue;
+    const dirty = check ? el.checked !== el.defaultChecked : el.value !== initial;
     if (dirty) out.push({ form, name: el.name, type: el.type, value: el.value, checked: el.checked });
   });
   return out;

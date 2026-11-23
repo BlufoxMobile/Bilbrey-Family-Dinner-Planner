@@ -113,7 +113,9 @@ test('equipment: each appliance with the settings its steps call for; the Possib
 
 test('safe temperatures come from the steps, or from the protein when the steps don’t say', () => {
   const db = realDb();
-  assert.deepEqual(safeTemps(db.dinners.smashburgers), [{ temp: 160, food: 'Ground meat and sausage', note: 'no pink in the middle' }]);
+  assert.deepEqual(safeTemps(db.dinners.smashburgers), [{ temp: 160, food: 'Ground beef', note: 'no pink in the middle' }]);
+  // The dinner's own meat, never a generic list (gauntlet r5: a pot roast read "Pork chops and steaks").
+  assert.deepEqual(safeTemps({ protein: 'beef', items: { chuckRoast: 2.25 }, steps: ['Cook until it pulls apart, far past the safe 145°F.'] }).map((t) => [t.temp, t.food]), [[145, 'Beef roast']]);
   assert.deepEqual(safeTemps(db.dinners['tikka-masala']).map((t) => [t.temp, t.food]), [[165, 'Chicken']]);
   assert.deepEqual(safeTemps({ protein: 'pork', steps: ['Grill the chops.'] }).map((t) => [t.temp, t.note]), [[145, 'then rest 3 minutes']]);
   assert.deepEqual(safeTemps({ protein: 'mixed', steps: ['Warm it through.'] }), []);

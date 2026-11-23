@@ -5,7 +5,7 @@
 
 import { containerSize, normUnit } from './scanqty.js';
 
-const WORDS = ['jar', 'bottle', 'can', 'box', 'bag', 'loaf', 'pouch', 'tub', 'carton', 'canister', 'jug', 'bowl', 'tray', 'sleeve', 'pack', 'package', 'bunch', 'head'];
+const WORDS = ['jar', 'bottle', 'can', 'box', 'bag', 'loaf', 'pouch', 'tub', 'carton', 'canister', 'jug', 'bowl', 'tray', 'sleeve', 'pack', 'package', 'bunch', 'head', 'bulb'];
 const PLURAL = { box: 'boxes', pouch: 'pouches', loaf: 'loaves', bunch: 'bunches', package: 'packages' };
 /** Units that already count packages: 3 cans are 3 cans. */
 const COUNTED = new Set(['can', 'bottle', 'jar', 'box', 'bag', 'pouch', 'bowl', 'pack', 'package', 'tub', 'carton', 'crust', 'biscuit', 'each', 'item', 'unit',
@@ -14,7 +14,7 @@ const COUNTED = new Set(['can', 'bottle', 'jar', 'box', 'bag', 'pouch', 'bowl', 
 
 export const plural = (word, n) => (Math.abs(n - 1) < 1e-9 ? word : PLURAL[word] || `${word}s`);
 
-function wordFrom(text) {
+export function wordFrom(text) {
   // Notes in parentheses ("delivery-app prices can run above in-store") never name the package.
   let s = String(text || '').toLowerCase();
   for (let was = null; was !== s;) { was = s; s = s.replace(/\([^()]*\)/g, ' '); }
@@ -28,7 +28,7 @@ function wordFrom(text) {
 }
 
 /** What a package of this is usually called, when no label says. */
-function defaultWord(name, unit) {
+export function defaultWord(name, unit) {
   const n = String(name || '').toLowerCase();
   if (unit === 'slice' && /bread|loaf/.test(n)) return 'loaf';
   if (/milk/.test(n)) return 'jug';

@@ -183,9 +183,12 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   const planned = (await familyState()).plan;
   await page.click('.plan-actions [data-action="ahead:open"]');
   await page.waitForSelector('dialog[open] [data-action="ahead:go"]');
-  assert.equal(await page.inputValue('dialog[open] #ahead-end'), end, 'the sheet remembers the stretch');
+  // The two weeks are planned, so the sheet moves on to the first stretch with an empty night (gauntlet r5).
+  assert.ok((await page.inputValue('dialog[open] #ahead-end')) > end, 'it never opens on a stretch that is already planned');
+  await page.click(`dialog[open] [data-action="ahead:quick"][data-end="${end}"]`);
   await page.click('dialog[open] [data-action="ahead:go"]');
-  await toastMatch(page, /Every night through Sunday, Nov 29 is already planned, and the plan already makes the most of the pantry\./);
+  await toastMatch(page, /^Every night through Sunday, Nov 29 is already planned\.$/);
+  assert.equal(await page.locator('.toast-root .toast-btn').count(), 0, 'no Undo for a press that changed nothing');
   assert.deepEqual((await familyState()).plan, planned);
   await closeToast(page);
 
@@ -246,17 +249,17 @@ test('lean by default and busy nights are family settings under More on the Plan
 
 test('taking food off the shelf asks why: “threw it out” goes in the waste log, and the Budget adds it up', async () => {
   await go(page, '#/pantry', '.page-pantry');
-  // No came-home date: a rough answer gives it a use-by.
-  const ask = await page.textContent('#when-card');
-  assert.match(ask, /About when did these go in\?/);
-  assert.equal(await page.locator('#when-card .when-list li').count(), 2, 'the milk and the garlic were never dated (the beef is asked in Use first)');
-  assert.equal(await page.locator('#when-card [data-id="beef"]').count(), 0, 'not asked twice');
-  await shotOf(page, '#when-card', 'planner-06-when-did-this-go-in-390');
+  // No came-home date: a rough answer gives it a use-by. Every date question is in Use first, once (gauntlet r5).
+  assert.equal(await page.locator('#when-card').count(), 0, 'no second card at the bottom');
+  assert.equal(await page.locator('.use-first .use-ask').count(), 3, 'the beef, the milk and the garlic, each asked once');
+  assert.equal(await page.locator('.use-first > .use-list > li').count(), 3, 'three on the first screen, the rest under "more"');
+  await textMatch(page, '.use-first .use-more > summary', /^\d+ more$/);
+  await shotOf(page, '.use-first', 'planner-06-when-did-this-go-in-390');
   await page.click('.use-first [data-action="pan:about"][data-id="beef"][data-about="older"]');
   await toastMatch(page, /went in a while ago\. It has a use-by now\./);
   assert.equal((await familyState()).pantry.beef.since, '2026-08-18', '“older” is about three months back');
   await closeToast(page);
-  assert.equal(await page.locator('#when-card .when-list li').count(), 2);
+  assert.equal(await page.locator('.use-first .use-ask').count(), 2);
   await textMatch(page, '.use-first', /Lean ground beefIn the freezer since Aug 18/);
 
   // Taking it off the shelf (from the row's › sheet) opens the question.

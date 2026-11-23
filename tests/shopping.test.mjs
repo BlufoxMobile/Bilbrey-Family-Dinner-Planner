@@ -135,6 +135,15 @@ test('store list text is clean and in packs', () => {
   assert.equal(shelfQty({ name: 'Whole milk', aisle: 'Dairy & Eggs', unit: 'cups', pack: { size: 16 }, packs: 2 }), '2 jugs');
   assert.equal(shelfQty({ name: 'Lean ground beef', unit: 'lb', pack: { size: 3.1 }, packs: 2 }), '2 × 3.1 lb');
   assert.equal(shelfQty({ name: 'Doritos', unit: 'oz', pack: { size: 18.37 }, packs: 1 }), '18.37 oz');
+  // What goes in the cart first, then what's inside (gauntlet r5: not "4 × 1 can" or "10 cloves").
+  assert.equal(shelfQty({ name: 'Green beans', unit: 'cans', pack: { size: 1 }, packs: 4 }), '4 cans');
+  assert.equal(shelfQty({ name: 'Salame snack pack', unit: 'packs', pack: { size: 1 }, packs: 3 }), '3 packs');
+  assert.equal(shelfQty({ name: 'Garlic', aisle: 'Produce', unit: 'cloves', product: { label: 'Garlic bulb, each' }, pack: { size: 10 }, packs: 1 }), '1 bulb (10 cloves)');
+  assert.equal(shelfQty({ name: 'Potatoes (russet)', aisle: 'Produce', unit: 'lb', product: { label: 'Russet Potatoes, 10 lb bag' }, pack: { size: 10 }, packs: 1 }), '1 bag (10 lb)');
+  assert.equal(shelfQty({ name: 'Cool Ranch Doritos, party-size bag', unit: 'oz', pack: { size: 18.37 }, packs: 1 }), '1 bag (18.37 oz)');
+  assert.equal(shelfQty({ name: 'Capri Sun juice pouches', unit: 'pouches', product: { label: 'Capri Sun Variety Pack, 6 fl oz, 40 ct' }, pack: { size: 40 }, packs: 1 }), '1 pack (40 pouches)');
+  assert.equal(shelfQty({ name: 'Oreo Mini snack packs', unit: 'packs', product: { label: 'Nabisco Classic Mix, 40 ct' }, pack: { size: 40 }, packs: 1 }), '1 box (40 packs)');
+  assert.equal(shelfQty({ name: 'Oranges', aisle: 'Produce', unit: 'oranges', product: { label: 'Navel Oranges, 6 lb' }, pack: { size: 12 }, packs: 2 }), '2 bags (12 oranges each)');
 });
 
 test('budget: receipts + still to buy, savings vs $1,000', () => {

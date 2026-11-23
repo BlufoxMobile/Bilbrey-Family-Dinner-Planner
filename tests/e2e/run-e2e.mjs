@@ -270,9 +270,9 @@ test('substituting a side is remembered for that dinner and survives a reload', 
   await btn.click();
   await page.waitForSelector('dialog[open] .pick-row');
   // From a night it's that night only unless you pick "Every time" (gauntlet r4).
-  assert.equal(await page.getAttribute('dialog[open] [data-sub-scope="night"]', 'aria-checked'), 'true');
-  await page.click('dialog[open] [data-sub-scope="always"]');
-  await page.waitForSelector('dialog[open] [data-sub-scope="always"][aria-checked="true"]');
+  assert.equal(await page.getAttribute('dialog[open] [data-action="side:scope"]', 'aria-checked'), 'false', 'just this night unless switched on');
+  await page.click('dialog[open] [data-action="side:scope"]');
+  await page.waitForSelector('dialog[open] [data-action="side:scope"][aria-checked="true"]');
   const choice = await page.$('dialog[open] .pick-row');
   const ref = await choice.getAttribute('data-ref');
   const title = (await choice.textContent()).trim();
@@ -709,7 +709,10 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   assert.equal(mock.lastReceipt.images, 1);
   assert.equal(mock.lastReceipt.store, 'sams');
   assert.ok(mock.lastReceipt.known > 50, 'sends the catalog so lines come back matched');
-  // The tortillas line had no match from the scanner; the review suggests one.
+  // The tortillas line had no match from the scanner; the review suggests one, in words with Fix (gauntlet r5).
+  assert.match(await page.textContent('dialog[open] .rcpt-line:nth-child(3)'), /Probably /);
+  assert.match(await page.textContent('dialog[open] .rcpt-headline'), /Sam's Club · Nov 15 · \$/, 'store, date and total as one line');
+  await page.click('dialog[open] .rcpt-line:nth-child(3) [data-action="rcpt:open"]');
   const tortSel = await page.$eval('dialog[open] .rcpt-line:nth-child(3) select', (el) => el.value);
   assert.ok(tortSel, 'a suggested match for the tortillas');
   // Paper towels: not on our list, still counted.
@@ -880,21 +883,20 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   // The pantry page says how far the pantry carries the plan when it covers tonight.
   await go(page, '#/pantry', '.page-pantry');
   assert.ok(await page.$('.use-first, .pan-place'), 'the pantry shows what to use first and the shelves');
-  // Make the shopping list: a trip list, both stores, today through the planned day.
+  // See the shopping list: the plain list for the nights it planned, tonight through Nov 29, and no
+  // trip nobody started (gauntlet r5).
   await go(page, '#/plan', '.page-plan');
   await page.waitForSelector('#ahead-card');
   await page.click('[data-action="ahead:list"]');
-  await page.waitForSelector('.page-list .trip-bar');
-  const trip = (await familyState(page)).state.settings.trip;
-  assert.deepEqual([trip.start, trip.end, trip.store, trip.by], [TODAY, end, 'both', 'Family']);
-  assert.match(await page.textContent('.trip-bar'), /Sam’s Club and Jewel-Osco/);
+  await page.waitForSelector('.page-list [data-action="list:span-clear"]');
+  assert.equal(await page.locator('.page-list .trip-bar').count(), 0, 'no trip bar');
+  assert.equal((await familyState(page)).state.settings?.trip, undefined, 'no trip started');
+  assert.match(await page.textContent('.page-list .period-label'), /Nov 16 – 29/);
   assert.ok(await noOverflow(page));
-  await toastMatch(page, /Shopping list for both stores, through Sunday, Nov 29/);
-  await page.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
   await page.waitForTimeout(400);
   await shot(page, 'e2e-34-plan-ahead-list');
-  await page.click('[data-action="trip:end"]'); // back to the week for the tests that follow
-  await waitFor(async () => !(await familyState(page)).state.settings?.trip);
+  await page.click('[data-action="list:span-clear"]'); // back to the week for the tests that follow
+  await page.waitForSelector('.page-list [data-action="list:span-clear"]', { state: 'detached' });
   assert.equal(errors.length, 0, errors.join('\n'));
 });
 

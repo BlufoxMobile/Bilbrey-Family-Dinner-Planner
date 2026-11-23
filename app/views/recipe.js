@@ -110,8 +110,9 @@ function nutritionSection(app, d, entry, sides, facts) {
   const main = entreeNutrition(app.db, app.state, d.id);
   const rows = [['The dinner', main], ...sides.map((s) => [s.info?.title || 'Side', sideNutrition(app.db, app.state, s.parsed)])];
   const more = facts ? [['Carbs', facts.carbsG], ['Fat', facts.fatG], ['Fiber', facts.fiberG]].filter(([, v]) => Number.isFinite(v)) : [];
-  return html`<section class="recipe-nutrition" aria-labelledby="nutri-h">
-    <h2 id="nutri-h" class="section-title">Nutrition, one plate</h2>
+  // Folded like the tips and the timing (gauntlet r5: the recipe page was the longest screen in the app).
+  return html`<details class="recipe-nutrition recipe-fold">
+    <summary><span class="section-title">Nutrition, one plate</span><small>${facts ? `≈ ${fmtKcal(facts.kcal)} calories, ${Math.round(facts.protein)} g protein` : 'No calorie data yet'}</small></summary>
     ${facts ? html`<p class="nutri-big"><span><b>≈ ${fmtKcal(facts.kcal)}</b> calories</span><span><b>${Math.round(facts.protein)} g</b> protein</span>${more.map(([k, v]) => html`<span><b>${Math.round(v)} g</b> ${k.toLowerCase()}</span>`)}${leanMark(facts)}</p>`
       : html`<p class="muted">No calorie data for this one yet.</p>`}
     ${when(facts?.lean, () => html`<p class="muted small">Why it’s marked lean: a plate is ${fmtKcal(LEAN_RULE.maxKcal)} calories or less with at least ${LEAN_RULE.minProteinG} g of protein.</p>`)}
@@ -120,7 +121,7 @@ function nutritionSection(app, d, entry, sides, facts) {
       <tbody>${rows.map(([name, n]) => html`<tr><th scope="row">${name}</th><td>${n ? fmtKcal(n.kcal) : '—'}</td><td>${n ? `${Math.round(n.protein)} g` : '—'}</td></tr>`)}</tbody>
     </table>
     <p class="muted small">One of five equal, adult-size plates, worked out from the ingredients (USDA figures). Real plates vary, and that’s fine.${facts && facts.complete === false ? ' A few ingredients have no data yet and aren’t counted.' : ''}</p>
-  </section>`;
+  </details>`;
 }
 
 export function render(app) {
@@ -246,10 +247,10 @@ export function render(app) {
           }) : html`<p class="muted">No sides with this one.</p>`}
         </section>
 
-        ${when(tips.length, () => html`<section class="recipe-tips" aria-labelledby="tips-h">
-          <h2 id="tips-h" class="section-title">Tips</h2>
+        ${when(tips.length, () => html`<details class="recipe-tips recipe-fold">
+          <summary><span class="section-title">Tips</span><small>${tips.length} from the family’s kitchen</small></summary>
           <ul class="tips">${tips.map((t) => html`<li>${t}</li>`)}</ul>
-        </section>`)}
+        </details>`)}
 
         <section class="recipe-safe" aria-labelledby="safe-h">
           <h2 id="safe-h" class="section-title">Done and safe</h2>

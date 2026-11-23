@@ -341,6 +341,8 @@ export function normalizeLunchItem(raw, extra = {}) {
     id: String(raw.id),
     slot: String(raw.slot || 'main'),
     title: String(raw.title || raw.name || 'Lunch item'),
+    // A few words for the packing card ("Oreo Minis", "Ham sandwich"; gauntlet r5).
+    ...(raw.short ? { short: String(raw.short) } : {}),
     subtitle: raw.subtitle ? String(raw.subtitle) : '',
     items: cleanItems(raw.items),
     tags: Array.isArray(raw.tags) ? raw.tags.map((t) => String(t).toLowerCase()) : [],

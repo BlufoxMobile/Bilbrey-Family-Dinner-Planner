@@ -1,6 +1,6 @@
 // Sheets shared by Tonight, Plan and Recipes: a night's actions, picking a dinner,
 // moving/swapping, not eating at home, substituting sides, the family's signal, sync.
-import { html, ic, when, openSheet, closeSheet, toast, renderSheet, confirmSheet, stepper, sheetId, tf } from '../ui.js';
+import { html, ic, when, openSheet, closeSheet, toast, renderSheet, confirmSheet, stepper, sheetId, tf, switchToggle } from '../ui.js';
 import { AWAY_REASONS } from '../config.js';
 import {
   addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate, byLabel, listJoin, hourIn,
@@ -24,6 +24,8 @@ import { leftoversOnHand, leftoverNightChoices, servingsText, useByText, timeLab
 import { finishCooking } from './cook.js';
 import { waitText } from '../state.js';
 import { fmtMinutes } from '../data.js';
+import { readiness } from '../easy.js';
+import { onHand } from '../coverage.js';
 
 const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
 
@@ -153,24 +155,50 @@ function nightActions(app, { date, d, today, past, cooked }) {
 
 // ---------------------------------------------------------------- pick a dinner
 
+/** "All in the house", "Needs: sliced cheese", "Chicken thighs are frozen (about 1 hr to thaw)". */
+function readyText(r) {
+  const few = (xs) => { const l = xs.map((x) => x.toLowerCase()); return l.length <= 2 ? listJoin(l) : `${l[0]}, ${l[1]} and ${l.length - 2} more`; };
+  if (!r.ready) return `Needs: ${few(r.missing)}`;
+  if (r.thaw.length) { const t = r.thaw[0]; const m = Math.max(...r.thaw.map((x) => x.minutes)); return `${t.name} ${/s$/.test(t.name) ? 'are' : 'is'} frozen (about ${m >= 60 ? `${Math.round(m / 30) / 2} hr` : `${m} min`} to thaw)`; }
+  if (r.sideOut.length) return `All in but a side: ${few(r.sideOut)}`;
+  return 'All in the house';
+}
+
 function pickBody(app, { date, query }) {
   const today = app.today();
   const q = (query || '').trim().toLowerCase();
   const planStore = app.settings.planStore;
+  const tonight = date === today;
+  // Tonight: what can be made now first, then this week's planned dinners (a trade), then the rest (gauntlet r5).
+  const rem = tonight ? onHand(app.db, app.state) : null;
+  const ready = new Map();
+  const rank = (d) => {
+    if (!tonight) return 0;
+    if (!ready.has(d.id)) ready.set(d.id, readiness(app.db, app.state, d.id, rem));
+    const r = ready.get(d.id);
+    const planned = findInPlan(app.state, d.id, { exclude: date, from: today }).some((w) => w <= addDays(today, 6));
+    return r.ready ? (r.thaw.length ? 1 : r.sideOut.length ? 0.5 : 0) : planned ? 2 : 3 + Math.min(r.missing.length, 5) / 10;
+  };
   const list = rotationList(app.db, app.state)
     .filter((d) => !q || d.title.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || d.protein.includes(q))
-    .sort((a, b) => (isFavorite(app.state, b) - isFavorite(app.state, a)) || a.title.localeCompare(b.title));
+    .sort((a, b) => (rank(a) - rank(b)) || (isFavorite(app.state, b) - isFavorite(app.state, a)) || a.title.localeCompare(b.title));
   const current = app.state.plan?.[date]?.dinner;
+  const lefts = tonight && !q ? leftoversOnHand(app.state, today).filter((l) => !l.night && l.daysLeft >= 0 && l.servings >= 3 && l.date !== today) : [];
   return html`
     <label class="search">${ic('search', { size: 20 })}<input type="search" placeholder="Search dinners" value="${query || ''}" data-input="pick:query" data-date="${date}" aria-label="Search dinners" autocomplete="off"></label>
     <ul class="pick-list">
+      ${lefts.map((l) => html`<li><button type="button" class="pick-row pick-left" data-action="leftovers:night-set" data-from="${l.date}" data-night="${date}">
+          <span class="pick-ic" aria-hidden="true">${ic('bowl', { size: 22 })}</span>
+          <span class="pick-main"><b>Leftovers: ${l.title}</b><small class="pick-ready is-ready">${servingsText(l.servings)} in the fridge. Nothing to cook.</small></span></button></li>`)}
       ${list.length ? list.map((d) => {
+        const r = tonight ? ready.get(d.id) || readiness(app.db, app.state, d.id, rem) : null;
         const where = findInPlan(app.state, d.id, { exclude: date, from: today, near: date })[0];
         const off = planStore !== 'both' && !dinnerFeasibleAt(app.db, app.state, d.id, planStore);
         const facts = showNutrition(app) ? plate(app, d.id, null) : null;
         return html`<li><button type="button" class="pick-row ${d.id === current ? 'is-current' : ''}" data-action="pick:choose" data-date="${date}" data-dinner="${d.id}" ${d.id === current ? html`aria-current="true"` : ''}>
           ${dinnerPhoto(app, d, { size: 'thumb' })}
           <span class="pick-main"><b>${d.title}</b>
+            ${when(r, () => html`<small class="pick-ready ${r.ready && !r.thaw.length ? 'is-ready' : r.ready ? 'is-thaw' : 'is-need'}">${r.ready && !r.thaw.length ? ic('checkCircle', { size: 14 }) : r.ready ? ic('snow', { size: 14 }) : ''}${readyText(r)}</small>`)}
             <small>${timeLabel(d)}${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small>
             ${when(facts, () => html`<small class="pick-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein a plate${leanMark(facts, { compact: true })}</small>`)}
             ${costNote(costOf(app, d.id, null), { short: true, tag: 'small', cls: 'pick-cost' })}</span>
@@ -358,7 +386,6 @@ export function openSubstitute(app, { date, dinnerId, slot }) {
     render: () => subBody(app, d, slot, st, date),
     onMount: (el) => {
       el.querySelectorAll('[data-sub-tab]').forEach((b) => b.addEventListener('click', () => { st.tab = b.dataset.subTab; renderSheet(); }));
-      el.querySelectorAll('[data-sub-scope]').forEach((b) => b.addEventListener('click', () => { st.scope = b.dataset.subScope; renderSheet(); }));
     },
   });
   openSubstitute.state = st;
@@ -398,9 +425,9 @@ function subBody(app, d, slot, st, date) {
       <span><small>${remembered ? 'Now (remembered)' : 'Now'}</small><b>${current.info?.title}</b></span>
       ${when(remembered, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:reset" data-dinner="${d.id}" data-slot="${slot}">${slot >= sideSlotsFor(d) ? 'Remove' : 'Reset to the recipe’s side'}</button>`)}
     </div>`)}
-    ${when(st.canNight, () => html`<div class="seg sub-scope" role="radiogroup" aria-label="How long">
-      <button type="button" role="radio" aria-checked="${tf(st.scope === 'night')}" class="seg-opt ${st.scope === 'night' ? 'is-on' : ''}" data-sub-scope="night">Just ${date === app.today() ? 'tonight' : weekdayName(date)}</button>
-      <button type="button" role="radio" aria-checked="${tf(st.scope === 'always')}" class="seg-opt ${st.scope === 'always' ? 'is-on' : ''}" data-sub-scope="always">Every time</button>
+    ${when(st.canNight, () => html`<div class="set-row sub-scope">
+      <span class="set-label">Use it every time<small>${st.scope === 'always' ? `Whenever ${d.title} is on the menu.` : `Off: just ${date === app.today() ? 'tonight' : weekdayName(date)}.`}</small></span>
+      ${switchToggle({ on: st.scope === 'always', action: 'side:scope', label: `Use the new side every time ${d.title} is on the menu` })}
     </div>`)}
     <div class="seg" role="tablist" aria-label="Where the side comes from">
       <button type="button" role="tab" aria-selected="${tf(st.tab === 'box')}" class="seg-opt ${st.tab === 'box' ? 'is-on' : ''}" data-sub-tab="box">Recipe box</button>
@@ -634,6 +661,7 @@ export const actions = {
     closeSheet();
   },
   'side:sub': (app, el) => openSubstitute(app, { date: el.dataset.date, dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot) }),
+  'side:scope': () => { const st = openSubstitute.state; if (st?.canNight) { st.scope = st.scope === 'always' ? 'night' : 'always'; renderSheet(); } },
   'side:use': (app, el) => {
     const st = openSubstitute.state;
     const date = el.dataset.date;
@@ -690,7 +718,20 @@ export const actions = {
     app.commit(lunchVoteOps(app.db, app.state, { itemId: el.dataset.id, person: el.dataset.person, value: Number(el.dataset.value) }));
     renderSheet();
   },
-  'prep:done': (app, el) => app.commit(prepDoneOps(app.state, { date: el.dataset.date, key: el.dataset.key, who: app.who(), today: app.today() })),
+  'prep:done': (app, el) => {
+    // The ticked job leaves the card, so focus goes to the next job's box, or the "done" line after the
+    // last one, never back to the top of the page (gauntlet r5, WCAG 2.4.3).
+    const card = el.closest('.prep-card') || document;
+    const boxes = [...card.querySelectorAll('.prep-check')];
+    const at = boxes.indexOf(el);
+    const cardId = card.id;
+    if (!app.commit(prepDoneOps(app.state, { date: el.dataset.date, key: el.dataset.key, who: app.who(), today: app.today() }))) return;
+    requestAnimationFrame(() => setTimeout(() => {
+      const root = (cardId && document.getElementById(cardId)) || document;
+      const next = [...root.querySelectorAll('.prep-check')][Math.max(0, at)] || root.querySelector('.prep-done-line');
+      next?.focus({ preventScroll: false });
+    }, 30));
+  },
   'lighter:dismiss': (app, el) => {
     const list = [...new Set([...(app.store.device.dismissed || []), el.dataset.key])].slice(-60);
     app.store.setDevice({ dismissed: list });

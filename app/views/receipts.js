@@ -169,12 +169,16 @@ function reviewBody(app, st) {
   const matched = included.filter((l) => l.matchId).length;
   return html`
     ${when(st.readBy, () => html`<p class="read-by">${ic('sparkle', { size: 16 })}${st.readBy}</p>`)}
-    <div class="rcpt-head">
+    ${st.headOpen || !(Number(st.total) > 0) || !isISODate(st.date) || st.store === 'other'
+      ? html`<div class="rcpt-head">
       <label class="field"><span class="field-label">Store</span><select class="input" data-change="rcpt:head" data-f="store">
         ${['sams', 'jewel', 'other'].map((x) => html`<option value="${x}" ${st.store === x ? 'selected' : ''}>${STORE_NAMES[x]}</option>`)}</select></label>
       <label class="field"><span class="field-label">Date</span><input class="input" type="date" value="${st.date}" max="${app.today()}" data-change="rcpt:head" data-f="date"></label>
       <label class="field field-money"><span class="field-label">Total</span><span class="prefix" aria-hidden="true">$</span><input class="input" type="number" inputmode="decimal" min="0.01" step="0.01" value="${st.total}" data-input="rcpt:head" data-f="total" aria-label="Receipt total"></label>
-    </div>
+    </div>`
+      // Read right: one line to confirm, not three boxes to fill (gauntlet r5).
+      : html`<p class="rcpt-headline"><span><b>${STORE_NAMES[st.store]}</b> · ${shortDate(st.date)} · <b>${money(Number(st.total))}</b></span>
+      <button type="button" class="link-btn" data-action="rcpt:edit-head" aria-label="Edit the store, date or total">Edit</button></p>`}
     ${when(st.savings, () => html`<p class="muted small">${STORE_NAMES[st.store] || 'The store'} took off ${money(st.savings)} in savings.</p>`)}
     ${when(st.store === 'other', () => html`<p class="hint">${ic('info', { size: 18 })}<span>Prices and products are learned for Sam’s Club and Jewel-Osco receipts. This one still counts in the Budget.</span></p>`)}
     ${when(dupe, () => html`<p class="hint hint-warn">${ic('info', { size: 18 })}<span>This receipt is already saved (${STORE_NAMES[rec.store]}, ${shortDate(rec.date)}, ${money(rec.total)}). Saving again won’t count it twice.</span></p>`)}
@@ -200,6 +204,18 @@ function lineRow(app, st, l, k) {
       <button type="button" class="rcpt-sure" data-action="rcpt:open" data-k="${k}" aria-label="${nameOf(app, l.matchId)}: ${l.product}. Tap to fix">
         <span><b>${nameOf(app, l.matchId)}</b><small>${[l.text || l.product, `${fmtQty(Number(l.packSize))} ${u}`].filter(Boolean).join(' · ')}</small></span>
         <span class="rcpt-sure-paid">${paid != null ? money(paid) : ''}${ic('check', { size: 16 })}</span>
+      </button>
+    </li>`;
+  }
+  // Unsure, but with a best guess: the guess in words and a Fix button; the form only when asked (gauntlet r5).
+  if (!l.open && l.include && l.matchId) {
+    const u = itemMeta(app.db, app.state, l.matchId).unit;
+    const size = Number(l.packSize) > 0 ? `${fmtQty(Number(l.packSize))} ${u}` : '';
+    return html`<li class="rcpt-line is-sure is-guess" data-k="${k}">
+      <label class="review-inc"><input type="checkbox" checked data-change="rcpt:line" data-k="${k}" data-f="include"><span class="sr-only">Include ${l.product}</span></label>
+      <button type="button" class="rcpt-sure" data-action="rcpt:open" data-k="${k}" aria-label="Probably ${nameOf(app, l.matchId)}${size ? `, ${size}` : ''}: ${l.product}. Fix it">
+        <span><b>Probably ${nameOf(app, l.matchId)}</b><small>${[l.text || l.product, size ? `${size}${l.sizeHow === 'default' ? ' (the usual pack)' : ''}` : 'size not read'].filter(Boolean).join(' · ')}</small></span>
+        <span class="rcpt-sure-paid">${paid != null ? money(paid) : ''}<span class="rcpt-fix">Fix</span></span>
       </button>
     </li>`;
   }
@@ -310,6 +326,7 @@ export const actions = {
     if (el.tagName === 'SELECT' || el.type === 'date') renderSheet();
     else updateCheck(app);
   },
+  'rcpt:edit-head': () => { const st = review.state; if (st) { st.headOpen = true; renderSheet(); } },
   'rcpt:open': (app, el) => { const l = review.state?.lines?.[Number(el.dataset.k)]; if (l) { l.open = true; renderSheet(); } },
   'rcpt:line': (app, el) => {
     const st = review.state;

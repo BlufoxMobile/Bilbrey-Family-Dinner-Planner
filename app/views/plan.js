@@ -16,7 +16,7 @@ import { plateNutrition, fmtKcal } from '../nutrition.js';
 import { openNight } from './sheets.js';
 import { tripAdviceCard } from './budget.js';
 import { veggieCheck, leanOn, busyNightsOf, leanSummary } from '../health.js';
-import { AHEAD_QUICK, aheadEnd, aheadLimit, clampAheadEnd, planAheadOps, pantryStretch, shoppingTripOps, aheadStats, aheadRecord } from '../planahead.js';
+import { AHEAD_QUICK, aheadEnd, aheadLimit, clampAheadEnd, planAheadOps, pantryStretch, aheadStats, aheadRecord } from '../planahead.js';
 import { freezerWatch } from '../freshness.js';
 import { catchUp, skippedNightOps, lunchUsedOps } from '../waste.js';
 
@@ -210,9 +210,10 @@ export const actions = {
     const r = currentRange(app);
     app.ui.anchor = shiftPeriod(r.start, app.settings.period, Number(el.dataset.dir));
     app.ui.swapPick = null;
+    app.ui.listSpan = null;
     app.render();
   },
-  'plan:today': (app) => { app.ui.anchor = app.today(); app.render(); },
+  'plan:today': (app) => { app.ui.anchor = app.today(); app.ui.listSpan = null; app.render(); },
   'plan:fill': (app) => {
     closeSheet();
     const r = currentRange(app);
@@ -270,7 +271,8 @@ export const actions = {
   'ahead:list': (app) => {
     const a = aheadRecord(app.state, app.today());
     if (!a) return;
-    app.commit(shoppingTripOps(app.state, { today: app.today(), end: a.end, who: app.who() }));
+    // The plain list for the nights it planned; a trip is only ever started by "Just this trip?" (gauntlet r5).
+    app.ui.listSpan = { end: a.end };
     app.navigate('#/list');
   },
   'ahead:close': (app) => { const ops = [del(['planAhead'])]; app.commit({ ops, undo: undoFor(app.state, ops), message: '' }, { quiet: true }); },
@@ -325,10 +327,14 @@ function openPlanAhead(app) {
   const today = app.today();
   const last = app.ui.aheadLast || aheadRecord(app.state, today);
   const pantryFirst = last ? last.pantryFirst !== false : true;
+  // Unless it was used before, it plans what the Plan page is showing (gauntlet r4: "1 week" on screen,
+  // "2 weeks" in the sheet planned 12 dinners nobody asked for)…
+  const preferred = last && last.end >= today ? last.end : (() => { const r = currentRange(app); return r.end >= today && r.end <= aheadLimit(today) ? r.end : aheadEnd(today, 'week'); })();
+  // …but never a stretch that's already planned: then the first quick choice with an empty night (gauntlet r5).
+  const hasOpen = (end) => datesBetween(today, end).some((d) => isFillable(app.state.plan?.[d], 'fill'));
+  const firstOpen = hasOpen(preferred) ? preferred : AHEAD_QUICK.map((q) => aheadEnd(today, q.id)).find((e) => e > preferred && hasOpen(e));
   const st = (openPlanAhead.state = {
-    // Unless it was used before, it plans what the Plan page is showing (gauntlet r4: "1 week" on screen,
-    // "2 weeks" in the sheet planned 12 dinners nobody asked for).
-    end: last && last.end >= today ? last.end : (() => { const r = currentRange(app); return r.end >= today && r.end <= aheadLimit(today) ? r.end : aheadEnd(today, 'week'); })(),
+    end: firstOpen || preferred,
     pantryFirst,
     // Re-plan the planner's own picks: on whenever the pantry goes first, unless switched by hand.
     replan: pantryFirst, replanSet: false,
@@ -340,6 +346,9 @@ function openPlanAhead(app) {
     render: () => {
       const dates = datesBetween(today, st.end);
       const own = dates.filter((d) => d > today && app.state.plan?.[d]?.dinner && isFillable(app.state.plan[d], 'replan')).length; // never tonight's
+      const empty = dates.filter((d) => isFillable(app.state.plan?.[d], 'fill')).length;
+      // Nothing to plan: say so, and Plan it waits (gauntlet r5: it "planned" a full week with an Undo for nothing).
+      const idle = !empty && !(st.replan && own > 0);
       return html`
         <h3 class="sheet-h" id="ahead-through-h">Plan through</h3>
         <div class="ahead-quick" role="group" aria-labelledby="ahead-through-h">
@@ -361,7 +370,8 @@ function openPlanAhead(app) {
         <div class="set-row ahead-switch"><span class="set-label">Use what we have first</span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
         <div class="set-row ahead-switch"><span class="set-label">Let it replace dinners it picked before<small>${own ? 'Never tonight, and never one you chose.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Let it replace dinners it picked before' })}</div>
         </details>
-        <button type="button" class="btn btn-primary btn-block" data-action="ahead:go">${ic('sparkle', { size: 20 })}Plan it</button>`;
+        ${idle ? html`<p class="ahead-idle" id="ahead-idle">Every night through ${weekdayName(st.end)}, ${shortDate(st.end)} is planned. Pick a longer stretch to plan more.</p>` : ''}
+        <button type="button" class="btn btn-primary btn-block" data-action="ahead:go" ${idle ? 'disabled aria-describedby="ahead-idle"' : ''}>${ic('sparkle', { size: 20 })}Plan it</button>`;
     },
   });
 }

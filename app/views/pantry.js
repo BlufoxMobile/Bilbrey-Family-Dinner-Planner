@@ -64,6 +64,16 @@ function useByText(app, s) {
  * like a math problem). The amount line under the name says how much is really there.
  */
 const wholePacks = (n) => (n > 0.05 ? Math.ceil(n - 0.1) || 1 : 0);
+/** Meat is counted by the pack, but a light pack isn't an "opened" one. */
+const meatItem = (app, id) => !!app.db.ingredients[id]?.meat;
+/** "1 full + 1 open · " when one is opened, so "2 jugs" over "about 8 cups" adds up (gauntlet r5). */
+function openedText(count, word) {
+  if (!(count > 0.05)) return '';
+  const full = Math.floor(count + 0.1);
+  const open = count - full > 0.1;
+  if (!open) return '';
+  return full ? `${full} full + 1 open · ` : `1 open ${word} · `;
+}
 
 function pantryRow(app, id, p) {
   const m = meta(app, id);
@@ -80,7 +90,7 @@ function pantryRow(app, id, p) {
     <span class="pan-name"><b>${m.name}</b>
       ${when(soon, () => html`<small class="pan-soon ${soon.daysLeft <= 0 ? 'is-now' : ''}">${useByText(app, soon)}</small>`)}
       ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
-      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `about ${unitText(p.qty, m.unit)}` : pk?.counted ? '' : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}</small></span>
+      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `${m.unit === 'lb' || meatItem(app, id) ? '' : openedText(count, pk.word)}about ${unitText(p.qty, m.unit)}` : pk?.counted ? '' : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}</small></span>
     <span class="pan-ctrl">
       ${staple
         ? html`<span class="have-it"><span class="have-label" aria-hidden="true">Have it</span>${switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `Have ${m.name}` })}</span>`
@@ -156,36 +166,41 @@ function syncCard(app) {
 const bare = (name) => String(name || '').replace(/\s*\(.*?\)\s*/g, ' ').trim();
 const agoText = (days) => (days >= 60 ? `about ${Math.round(days / 30)} months` : `${days} days`);
 
-function useFirstCard(app, soon) {
+function useFirstCard(app, soon, ask = []) {
   // Old freezer food belongs here too (SPEC §21.3): 60 days in, past its keep time, or meat nobody dated.
   const seen = new Set(soon.map((s) => s.id));
   const old = freezerWatch(app.db, app.state, app.today()).filter((w) => !seen.has(w.id));
-  if (!soon.length && !old.length) return '';
+  // Every "when did it come home?" question lives here, once (gauntlet r5: milk was asked again at the bottom).
+  const asked = new Set(old.filter((w) => w.unknown).map((w) => w.id));
+  const asks = [...old.filter((w) => w.unknown), ...ask.filter((r) => !seen.has(r.id) && !asked.has(r.id))];
+  if (!soon.length && !old.length && !asks.length) return '';
   const place = (id) => PLACES.find((p) => p.id === id)?.label.replace(/^(In|On) the /, '') || '';
+  const soonRow = (s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${bare(s.name)}</b><small>${useByText(app, s)} (${place(s.place)})</small></button></li>`;
+  const meatAsk = (w) => w.meat || old.some((o) => o.id === w.id);
+  // Most pressing first: past its use-by, then meat nobody dated (counted as old), then the rest.
+  const rows = [
+    ...soon.slice(0, 5).filter((x) => x.daysLeft <= 0).map(soonRow),
+    ...asks.filter(meatAsk).map((w) => askRow(w)),
+    ...soon.slice(0, 5).filter((x) => x.daysLeft > 0).map(soonRow),
+    ...old.filter((w) => !w.unknown).slice(0, 4).map((w) => html`<li class="${w.past ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${w.id}"><b>${bare(w.name)}</b><small>In the freezer since ${shortDate(w.since)}</small></button></li>`),
+    ...asks.filter((w) => !meatAsk(w)).map((w) => askRow(w)),
+  ];
+  function askRow(w) {
+    return html`<li class="use-ask"><span class="use-ask-name"><b>${bare(w.name)}</b><small>${w.meat && (w.place || 'freezer') === 'freezer' ? 'Not sure when it went in: use it soon. When was it?' : `${place(w.place) || 'Here'}: not sure when it came home. When was it?`}</small></span>
+        <span class="when-chips" role="group" aria-label="When ${bare(w.name)} came home">${ABOUT_WHEN.map((a) => html`<button type="button" class="chip" data-action="pan:about" data-id="${w.id}" data-about="${a.id}">${a.label}</button>`)}</span></li>`;
+  }
+  // Three on a phone screen, the rest one tap away (gauntlet r5: Use first filled the first screen).
+  const SHOW = 3;
   return html`<section class="use-first" aria-labelledby="use-h">
     <h2 id="use-h" class="section-title">${ic('clock', { size: 22 })}Use first</h2>
-    <ul class="use-list">${soon.slice(0, 5).map((s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${bare(s.name)}</b><small>${useByText(app, s)} (${place(s.place)})</small></button></li>`)}
-      ${old.filter((w) => !w.unknown).slice(0, Math.max(0, 6 - Math.min(5, soon.length))).map((w) => html`<li class="${w.past ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${w.id}"><b>${bare(w.name)}</b><small>In the freezer since ${shortDate(w.since)}</small></button></li>`)}
-      ${old.filter((w) => w.unknown).map((w) => html`<li class="use-ask"><span class="use-ask-name"><b>${bare(w.name)}</b><small>Not sure when it went in: use it soon. When was it?</small></span>
-        <span class="when-chips" role="group" aria-label="When ${bare(w.name)} went in">${ABOUT_WHEN.map((a) => html`<button type="button" class="chip" data-action="pan:about" data-id="${w.id}" data-about="${a.id}">${a.label}</button>`)}</span></li>`)}</ul>
+    <ul class="use-list">${rows.slice(0, SHOW)}</ul>
+    ${when(rows.length > SHOW, () => html`<details class="use-more" ${useMoreOpen ? 'open' : ''}><summary>${rows.length - SHOW} more</summary><ul class="use-list">${rows.slice(SHOW)}</ul></details>`)}
   </section>`;
 }
 
-/** Food with no came-home date can't get a use-by (SPEC §21.3): one tap says about when it went in. */
-function whenCard(app, all) {
-  // Undated meat in the freezer is asked about in Use first (gauntlet r4: the same question twice).
-  const rows = all.filter((r) => !(r.meat && r.place === 'freezer'));
-  if (!rows.length) return '';
-  const place = (id) => PLACES.find((p) => p.id === id)?.label.replace(/^(In|On) the /, '') || '';
-  const shown = rows.slice(0, 6);
-  return html`<section class="when-card" id="when-card" aria-labelledby="when-h">
-    <h2 id="when-h" class="section-title">${ic('info', { size: 22 })}About when did these go in?</h2>
-    <p class="small">A rough answer is enough.</p>
-    <ul class="when-list">${shown.map((r) => html`<li><span class="when-name"><b>${bare(r.name)}</b><small>${place(r.place)}${r.meat && r.place === 'freezer' ? ', not sure when' : ''}</small></span>
-      <span class="when-chips" role="group" aria-label="When ${bare(r.name)} went in">${ABOUT_WHEN.map((a) => html`<button type="button" class="chip" data-action="pan:about" data-id="${r.id}" data-about="${a.id}">${a.label}</button>`)}</span></li>`)}</ul>
-    ${when(rows.length > shown.length, () => html`<p class="muted small">${rows.length - shown.length} more after these.</p>`)}
-  </section>`;
-}
+// "N more" in Use first stays open while the page redraws (a date chip answered, a stepper tapped).
+let useMoreOpen = false;
+if (typeof document !== 'undefined') document.addEventListener('toggle', (ev) => { if (ev.target?.classList?.contains('use-more')) useMoreOpen = ev.target.open; }, true);
 
 /** What's been thrown out this month, in dollars, with a way to the details. */
 function wasteLine(app) {
@@ -232,7 +247,7 @@ export function render(app) {
       </div>
       <p class="muted small pan-add-how">${canScan ? 'Photos of the shelves: the app suggests what it sees, you confirm.' : app.store.device.localOnly ? 'Photo scanning needs the family server; this device is set to “this device only.”' : !app.store.device.key ? 'Photo scanning needs the family passcode (Family & settings).' : 'Photo scanning isn’t available right now.'} Just shopped? <button type="button" class="link-btn" data-action="rcpt:scan">Scan the receipt</button>.</p>
     </section>
-    ${useFirstCard(app, soon)}
+    ${useFirstCard(app, soon, ask)}
     ${syncCard(app)}
     ${when(low.length, () => html`<section class="pan-group"><h2 class="section-title">Running low</h2><ul class="pan-list">${low.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)}
     ${entries.length ? html`
@@ -249,7 +264,6 @@ export function render(app) {
         <button type="button" class="btn btn-small btn-secondary" data-action="pan:clear-empty">Clear all ${empty.length}</button>
         <ul class="pan-list">${empty.map(([id, p]) => pantryRow(app, id, p))}</ul>
       </section>`)}
-      ${whenCard(app, ask)}
       ${wasteLine(app)}`
       : html`<div class="empty"><span class="empty-ic">${ic('pantry', { size: 28 })}</span><h3 class="empty-title">The pantry is empty</h3><p class="empty-body">Scan your shelves or add what you have. Staples like salt and spices stay off the list until you mark them running low.</p></div>`}
   </div>`;

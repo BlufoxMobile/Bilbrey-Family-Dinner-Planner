@@ -1193,6 +1193,7 @@
   },
   "tomatoes": {
    "name": "Diced tomatoes, 14.5 oz cans",
+   "short": "Diced tomatoes",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -1233,6 +1234,7 @@
   },
   "marinara": {
    "name": "Marinara sauce (Rao's Homemade)",
+   "short": "Marinara (Rao's)",
    "unit": "oz",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -2213,6 +2215,7 @@
   },
   "bbq": {
    "name": "Barbecue sauce (seafood-free)",
+   "short": "BBQ sauce",
    "unit": "tbsp",
    "aisle": "Condiments & Sauces",
    "storage": "pantry",
@@ -2425,6 +2428,7 @@
   },
   "tikka": {
    "name": "Tikka masala simmer sauce (Maya Kaimal mild)",
+   "short": "Tikka masala sauce",
    "unit": "oz",
    "aisle": "Condiments & Sauces",
    "storage": "pantry",
@@ -2462,6 +2466,7 @@
   },
   "taco": {
    "name": "Taco seasoning (La Preferida packets)",
+   "short": "Taco seasoning",
    "unit": "tbsp",
    "aisle": "Spices & Baking",
    "storage": "pantry",
@@ -2755,6 +2760,7 @@
   },
   "minis": {
    "name": "Frozen personal cheese pizzas (air-fryer labeled)",
+   "short": "Mini cheese pizzas",
    "unit": "pizzas",
    "aisle": "Frozen",
    "storage": "freezer",
@@ -2797,6 +2803,7 @@
   },
   "fries": {
    "name": "Frozen fries (fast-food style)",
+   "short": "Frozen fries",
    "unit": "oz",
    "aisle": "Frozen",
    "storage": "freezer",
@@ -2848,6 +2855,7 @@
   },
   "greenBeans": {
    "name": "Green beans, 14.5 oz cans (French style)",
+   "short": "French-style green beans",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -2934,6 +2942,7 @@
   },
   "cannedCarrots": {
    "name": "Sliced carrots, 14.5 oz cans",
+   "short": "Sliced carrots (cans)",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -2961,6 +2970,7 @@
   },
   "chickenThighs": {
    "name": "Boneless skinless chicken thighs",
+   "short": "Chicken thighs",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "freezer",
@@ -3126,6 +3136,7 @@
   },
   "italianSausage": {
    "name": "Mild Italian sausage (links or bulk)",
+   "short": "Italian sausage",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "freezer",
@@ -3448,6 +3459,7 @@
   },
   "chickenBroth": {
    "name": "Chicken stock (Kitchen Basics)",
+   "short": "Chicken stock",
    "unit": "cups",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -3495,6 +3507,7 @@
   },
   "pineapple": {
    "name": "Pineapple chunks in juice, 20 oz cans",
+   "short": "Pineapple chunks",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -3972,6 +3985,7 @@
   },
   "cornCobs": {
    "name": "Frozen mini corn on the cob",
+   "short": "Mini corn on the cob",
    "unit": "ears",
    "aisle": "Frozen",
    "storage": "freezer",
@@ -4032,6 +4046,7 @@
   },
   "potstickers": {
    "name": "Frozen chicken & vegetable potstickers",
+   "short": "Chicken potstickers",
    "unit": "potstickers",
    "aisle": "Frozen",
    "storage": "freezer",
@@ -4486,6 +4501,7 @@
   },
   "deliTurkey": {
    "name": "Sliced turkey breast (lunch meat)",
+   "short": "Sliced turkey",
    "unit": "oz",
    "aisle": "Meat",
    "storage": "fridge",
@@ -5022,6 +5038,7 @@
   },
   "doritosMix": {
    "name": "Doritos snack bags, variety pack (with Cool Ranch)",
+   "short": "Doritos snack bags",
    "unit": "bags",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -5065,6 +5082,7 @@
   },
   "doritosCoolRanchBag": {
    "name": "Cool Ranch Doritos, party-size bag",
+   "short": "Cool Ranch Doritos",
    "unit": "oz",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -5105,6 +5123,7 @@
   },
   "bakedChipsMix": {
    "name": "Baked chips snack bags (variety)",
+   "short": "Baked chips snack bags",
    "unit": "bags",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -5190,6 +5209,7 @@
   },
   "yoohoo": {
    "name": "Yoo-hoo chocolate drink boxes (6.5 fl oz)",
+   "short": "Yoo-hoo boxes",
    "unit": "boxes",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -5231,6 +5251,7 @@
   },
   "capriSun": {
    "name": "Capri Sun juice pouches (6 fl oz), Fruit Punch",
+   "short": "Capri Sun pouches",
    "unit": "pouches",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -5272,6 +5293,7 @@
   },
   "bodyArmorOM": {
    "name": "BODYARMOR Orange Mango (16 fl oz)",
+   "short": "BODYARMOR Orange Mango",
    "unit": "bottles",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -5301,6 +5323,7 @@
   },
   "bodyArmorLyte": {
    "name": "BODYARMOR LYTE (low-calorie sports drink)",
+   "short": "BODYARMOR LYTE",
    "unit": "bottles",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -5431,6 +5454,7 @@
   },
   "gardenSalad": {
    "name": "Garden salad mix (bagged greens)",
+   "short": "Garden salad mix",
    "unit": "oz",
    "aisle": "Produce",
    "storage": "fridge",
@@ -5481,6 +5505,7 @@
   },
   "grilledChicken": {
    "name": "Fully cooked grilled chicken breast",
+   "short": "Grilled chicken breast",
    "unit": "oz",
    "aisle": "Meat",
    "storage": "fridge",
@@ -5568,6 +5593,7 @@
   },
   "ranchCups": {
    "name": "Ranch dip cups (single-serve)",
+   "short": "Ranch cups",
    "unit": "dip cups",
    "aisle": "Condiments & Sauces",
    "storage": "fridge",
@@ -5736,6 +5762,7 @@
   },
   "fruitCups": {
    "name": "Fruit cups, no sugar added (4 oz)",
+   "short": "Fruit cups",
    "unit": "snack cups",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -5778,6 +5805,7 @@
   },
   "hummusSingles": {
    "name": "Hummus snack cups (single-serve)",
+   "short": "Hummus cups",
    "unit": "snack cups",
    "aisle": "Produce",
    "storage": "fridge",
@@ -5901,6 +5929,7 @@
   },
   "wholeGrainCrackers": {
    "name": "Whole-grain crackers (Triscuit-style)",
+   "short": "Whole-grain crackers",
    "unit": "oz",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -5942,6 +5971,7 @@
   },
   "cannedChicken": {
    "name": "Canned chunk chicken breast (12.5 oz)",
+   "short": "Canned chicken",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -5983,6 +6013,7 @@
   },
   "skinnyPop": {
    "name": "Ready-to-eat popcorn snack bags",
+   "short": "Popcorn snack bags",
    "unit": "bags",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -6024,6 +6055,7 @@
   },
   "sparklingWater": {
    "name": "Sparkling water cans (unsweetened)",
+   "short": "Sparkling water",
    "unit": "cans",
    "aisle": "Snacks & Extras",
    "storage": "pantry",
@@ -6066,6 +6098,7 @@
   },
   "milkBoxes": {
    "name": "Milk boxes (8 fl oz, shelf-stable)",
+   "short": "Milk boxes",
    "unit": "boxes",
    "aisle": "Dairy & Eggs",
    "storage": "pantry",
@@ -6148,6 +6181,7 @@
   },
   "beefPatties": {
    "name": "Ground sirloin beef patties, ⅓ lb (frozen, 85/15)",
+   "short": "Sirloin burger patties",
    "unit": "patties",
    "aisle": "Meat",
    "storage": "freezer",
@@ -6202,6 +6236,7 @@
   },
   "cookedBacon": {
    "name": "Fully cooked bacon (Hormel Black Label)",
+   "short": "Cooked bacon",
    "unit": "slices",
    "aisle": "Meat",
    "storage": "pantry",
@@ -6250,6 +6285,7 @@
   },
   "smokedSausage": {
    "name": "Smoked sausage (hardwood smoked, fully cooked)",
+   "short": "Smoked sausage",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "fridge",
@@ -6299,6 +6335,7 @@
   },
   "fajitaChicken": {
    "name": "Seasoned fajita chicken (raw, Buena Mesa)",
+   "short": "Fajita chicken",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "freezer",
@@ -6346,6 +6383,7 @@
   },
   "pulledChicken": {
    "name": "Seasoned pulled chicken (fully cooked)",
+   "short": "Pulled chicken",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "fridge",
@@ -6393,6 +6431,7 @@
   },
   "pulledPork": {
    "name": "BBQ pulled pork (fully cooked, sauced)",
+   "short": "Pulled pork",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "fridge",
@@ -6440,6 +6479,7 @@
   },
   "chickenAlfredoDeli": {
    "name": "Chicken Alfredo (Member's Mark deli, heat & serve)",
+   "short": "Chicken Alfredo (deli)",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "fridge",
@@ -6508,6 +6548,7 @@
   },
   "cajunPotatoes": {
    "name": "Cajun-style diced potatoes, 14.5 oz cans",
+   "short": "Cajun diced potatoes",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -6541,6 +6582,7 @@
   },
   "chiliBeans": {
    "name": "Chili beans in chili sauce, 16 oz cans",
+   "short": "Chili beans",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -6586,6 +6628,7 @@
   },
   "knorrTeriyaki": {
    "name": "Teriyaki noodles side mix (Knorr Asian Sides)",
+   "short": "Teriyaki noodles (Knorr)",
    "unit": "pouches",
    "aisle": "Pasta & Grains",
    "storage": "pantry",
@@ -6619,6 +6662,7 @@
   },
   "streetTacoFlour": {
    "name": "Street taco flour tortillas (Mission)",
+   "short": "Street taco flour tortillas",
    "unit": "tortillas",
    "aisle": "Bakery",
    "storage": "pantry",
@@ -6652,6 +6696,7 @@
   },
   "streetTacoCorn": {
    "name": "Street taco white corn tortillas (Mission)",
+   "short": "Street taco corn tortillas",
    "unit": "tortillas",
    "aisle": "Bakery",
    "storage": "pantry",
@@ -6685,6 +6730,7 @@
   },
   "cajunSeasoning": {
    "name": "Cajun seasoning (Slap Ya Mama)",
+   "short": "Cajun seasoning",
    "unit": "tsp",
    "aisle": "Spices & Baking",
    "storage": "pantry",
@@ -6750,6 +6796,7 @@
   },
   "mangoPepper": {
    "name": "Mango pepper seasoning (Badia)",
+   "short": "Mango pepper seasoning",
    "unit": "tsp",
    "aisle": "Spices & Baking",
    "storage": "pantry",
@@ -6870,6 +6917,7 @@
   },
   "mangoHabanero": {
    "name": "Mango habanero sauce (Buffalo Wild Wings)",
+   "short": "Mango habanero sauce",
    "unit": "tbsp",
    "aisle": "Condiments & Sauces",
    "storage": "pantry",
@@ -6936,6 +6984,7 @@
   },
   "roastBeef": {
    "name": "Deli roast beef, shaved thin",
+   "short": "Roast beef",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "fridge",
@@ -6993,6 +7042,7 @@
   },
   "crispyOnions": {
    "name": "Crispy fried onions (French's)",
+   "short": "Crispy fried onions",
    "unit": "oz",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -7038,6 +7088,7 @@
   },
   "eyeRoundSteak": {
    "name": "Eye of round steaks (Member’s Mark Choice Angus)",
+   "short": "Eye of round steaks",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "freezer",
@@ -7146,6 +7197,7 @@
   },
   "charroBeans": {
    "name": "Charro beans (La Preferida), 15 oz cans",
+   "short": "Charro beans",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -7179,6 +7231,7 @@
   },
   "bonduelleBltBowl": {
    "name": "Bonduelle Bistro Bowl, Chicken BLT (buttermilk ranch)",
+   "short": "Chicken BLT salad bowl",
    "unit": "bowls",
    "aisle": "Produce",
    "storage": "fridge",
@@ -7208,6 +7261,7 @@
   },
   "bonduelleChefBowl": {
    "name": "Bonduelle Bistro Bowl, Chef with turkey & ham (creamy ranch)",
+   "short": "Chef salad bowl",
    "unit": "bowls",
    "aisle": "Produce",
    "storage": "fridge",
@@ -7237,6 +7291,7 @@
   },
   "bonduelleBbqBowl": {
    "name": "Bonduelle Bistro Bowl, Kickin' BBQ chicken (BBQ ranch)",
+   "short": "BBQ chicken salad bowl",
    "unit": "bowls",
    "aisle": "Produce",
    "storage": "fridge",
@@ -7266,6 +7321,7 @@
   },
   "bhBuffaloChicken": {
    "name": "Boar's Head Blazing Buffalo chicken (deli-sliced)",
+   "short": "Buffalo chicken (deli)",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "fridge",
@@ -7332,6 +7388,7 @@
   },
   "bonduelleQuesoBowl": {
    "name": "Bonduelle Bistro Bowl, Chicken Queso Fresco",
+   "short": "Chicken queso salad bowl",
    "unit": "bowls",
    "aisle": "Produce",
    "storage": "fridge",
@@ -7360,6 +7417,7 @@
   },
   "bonduelleSantaFeBowl": {
    "name": "Bonduelle Bistro Bowl, Santa Fe Style",
+   "short": "Santa Fe salad bowl",
    "unit": "bowls",
    "aisle": "Produce",
    "storage": "fridge",
@@ -7388,6 +7446,7 @@
   },
   "bhSalsalitoTurkey": {
    "name": "Boar's Head Bold Salsalito turkey (deli-sliced)",
+   "short": "Salsalito turkey (deli)",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "fridge",
@@ -7487,6 +7546,7 @@
   },
   "turkeySausage": {
    "name": "Lean turkey Italian sausage (links)",
+   "short": "Turkey Italian sausage",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "freezer",
@@ -7517,6 +7577,7 @@
   },
   "greenChiles": {
    "name": "Diced green chiles (mild), 4 oz cans",
+   "short": "Green chiles",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -7640,6 +7701,7 @@
   },
   "sirloinTip": {
    "name": "Sirloin tip roast (Member’s Mark Choice Angus)",
+   "short": "Sirloin tip roast",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "freezer",
@@ -7692,6 +7754,7 @@
   },
   "chuckRoast": {
    "name": "Boneless chuck roast (Member’s Mark Choice Angus)",
+   "short": "Chuck roast",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "freezer",
@@ -7794,6 +7857,7 @@
   },
   "chickenSausage": {
    "name": "Italian chicken sausage links (fully cooked)",
+   "short": "Chicken sausage",
    "unit": "lb",
    "aisle": "Meat",
    "storage": "fridge",
@@ -7959,6 +8023,7 @@
   },
   "frozenTenders": {
    "name": "Breaded chicken tenders (frozen, fully cooked)",
+   "short": "Chicken tenders",
    "unit": "lb",
    "aisle": "Frozen",
    "storage": "freezer",
@@ -8008,6 +8073,7 @@
   },
   "biscuits": {
    "name": "Refrigerated biscuits (Grands-size)",
+   "short": "Biscuits",
    "unit": "biscuits",
    "aisle": "Dairy & Eggs",
    "storage": "fridge",
@@ -8042,6 +8108,7 @@
   },
   "mexicorn": {
    "name": "Mexicorn (corn with red and green peppers), 11 oz cans",
+   "short": "Mexicorn",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
@@ -8075,6 +8142,7 @@
   },
   "newPotatoes": {
    "name": "Whole new potatoes, 15 oz cans",
+   "short": "New potatoes (cans)",
    "unit": "cans",
    "aisle": "Canned & Jarred",
    "storage": "pantry",
