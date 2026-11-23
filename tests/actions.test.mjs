@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { tinyDb, realDb } from './helpers.mjs';
 import { applyOps } from '../app/state.js';
 import {
-  placeDinnerOps, swapNightsOps, markAwayOps, bringBackOps, substituteOps, resetSideOps, voteOps, markCookedOps,
+  placeDinnerOps, swapNightsOps, markAwayOps, bringBackOps, substituteOps, nightSideOps, resetSideOps, voteOps, markCookedOps,
   unmarkCookedOps, moveDisplacedOps, retireOps, restoreOps, generateOps,
 } from '../app/actions.js';
 import { buildList } from '../app/shopping.js';
@@ -119,6 +119,18 @@ test('substituting a side is remembered for that dinner on every future night, a
   assert.ok(!list.items.find((i) => i.id === 'broccoli'), 'broccoli no longer needed');
   s = run(s, resetSideOps(db, s, { dinnerId: 'chix-grill', slot: 0 }));
   assert.equal(effectiveSides(db, s, 'chix-grill', s.plan['2026-11-24'])[0].ref, 'broc');
+});
+
+test('a side for one night changes only that night (gauntlet r4)', () => {
+  let s = week();
+  s.plan['2026-11-24'] = { dinner: 'chix-grill', sides: ['broc', 'beans'], status: 'planned' };
+  const r = nightSideOps(db, s, { date: '2026-11-17', dinnerId: 'chix-grill', slot: 0, ref: 'item:greenBeans@2' });
+  s = run(s, r);
+  assert.match(r.message, /^Tuesday only: Green beans instead of steamed broccoli\.$/);
+  assert.equal(effectiveSides(db, s, 'chix-grill', s.plan['2026-11-17'])[0].ref, 'item:greenBeans@2');
+  assert.equal(effectiveSides(db, s, 'chix-grill', s.plan['2026-11-24'])[0].ref, 'broc', 'the next time it’s planned, the recipe’s side');
+  assert.equal(s.substitutions?.['chix-grill'], undefined, 'nothing remembered');
+  assert.equal(nightSideOps(db, s, { date: '2026-11-17', dinnerId: 'other', slot: 0, ref: 'broc' }).error, true, 'only the dinner on that night');
 });
 
 test('“not for us” drops a dinner and promotes the best bench dinner (SPEC §9.2, one family signal)', () => {

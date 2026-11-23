@@ -249,18 +249,20 @@ test('taking food off the shelf asks why: “threw it out” goes in the waste l
   // No came-home date: a rough answer gives it a use-by.
   const ask = await page.textContent('#when-card');
   assert.match(ask, /About when did these go in\?/);
-  assert.equal(await page.locator('#when-card .when-list li').count(), 3, 'the beef, the milk and the garlic were never dated');
+  assert.equal(await page.locator('#when-card .when-list li').count(), 2, 'the milk and the garlic were never dated (the beef is asked in Use first)');
+  assert.equal(await page.locator('#when-card [data-id="beef"]').count(), 0, 'not asked twice');
   await shotOf(page, '#when-card', 'planner-06-when-did-this-go-in-390');
-  await page.click('#when-card [data-action="pan:about"][data-id="beef"][data-about="older"]');
+  await page.click('.use-first [data-action="pan:about"][data-id="beef"][data-about="older"]');
   await toastMatch(page, /went in a while ago\. It has a use-by now\./);
   assert.equal((await familyState()).pantry.beef.since, '2026-08-18', '“older” is about three months back');
   await closeToast(page);
-  await waitFor(async () => (await page.locator('#when-card .when-list li').count()) === 2);
+  assert.equal(await page.locator('#when-card .when-list li').count(), 2);
   await textMatch(page, '.use-first', /Lean ground beefIn the freezer since Aug 18/);
 
-  // The trash can on a row opens the question.
+  // Taking it off the shelf (from the row's › sheet) opens the question.
   const corn = (await familyState()).pantry.cornCobs.qty;
-  await page.click('#pan-cornCobs [data-action="pan:remove"]');
+  await page.click('#pan-cornCobs .pan-more');
+  await page.click('dialog[open] [data-action="pan:remove"]');
   await page.waitForSelector('dialog[open] [data-action="pan:gone"][data-reason="tossed"]');
   const sheet = await page.textContent('dialog[open]');
   assert.match(sheet, /Used it up/);
@@ -283,11 +285,13 @@ test('taking food off the shelf asks why: “threw it out” goes in the waste l
   assert.ok(log[0].cost > 0 && log[0].name);
   await closeToast(page);
   // The whole steak goes too; "used it up" logs nothing.
-  await page.click('#pan-eyeRoundSteak [data-action="pan:remove"]');
+  await page.click('#pan-eyeRoundSteak .pan-more');
+  await page.click('dialog[open] [data-action="pan:remove"]');
   await page.click('dialog[open] [data-action="pan:gone"][data-reason="tossed"]');
   await toastMatch(page, /^Logged: 2½ lb of .+ thrown out/);
   await closeToast(page);
-  await page.click('#pan-butter [data-action="pan:remove"]');
+  await page.click('#pan-butter .pan-more');
+  await page.click('dialog[open] [data-action="pan:remove"]');
   await page.click('dialog[open] [data-action="pan:gone"][data-reason="used"]');
   await toastMatch(page, /used up\. It’s off the shelf\./);
   s = await familyState();
@@ -355,8 +359,8 @@ test('the Budget shows trips against the goal and the year at this rate; a short
   await seed([setOp(['settings', 'trip'], { start: TODAY, end: '2026-11-20', store: 'both', by: 'Candi', at: '2026-11-16T22:00:00.000Z' })], (s) => s.settings?.trip?.end === '2026-11-20');
   await go(page, '#/budget', '.page-budget');
   const advice = await page.textContent('#trip-advice');
-  assert.match(advice, /This list covers 5 days, so the next store run is right after Friday\./);
-  assert.match(advice, /5 more days of food would carry you through Wed, Nov 25 and skip it: about \$[\d,]+\.\d\d more today/);
+  assert.match(advice, /This trip covers 5 days\. 5 more \(about \$[\d,]+\) skips the next store run\./);
+  assert.match(advice, /Extend the trip to Wed, Nov 25/);
   assert.match(advice, /Sam’s .+; Jewel .+\./, 'and how the trip splits between the stores');
   clean(advice, 'the trip advice');
   await shotOf(page, '#trip-advice', 'planner-10-trip-advice-390');

@@ -189,7 +189,6 @@ function openEditor(app, name) {
         </div></fieldset>
         <div class="set-row"><span class="set-label">Lighter swap ideas<small>${cfg.ideas ? `On. A gentle idea now and then for ${name}’s lunches.` : `Off. No swap ideas for ${name}’s lunches.`}</small></span>
           ${switchToggle({ on: cfg.ideas, action: 'lunch:ideas', data: { who: name }, label: `Lighter swap ideas for ${name}’s lunches` })}</div>
-        ${swapIdeas(app, name, { inEditor: true })}
         ${lunchSlots(app.db).map((sl) => {
           const list = cfg.slots[sl.id] || [];
           const lib = lunchLibrary(app.db, app.state, sl.id, name);
@@ -206,6 +205,7 @@ function openEditor(app, name) {
             })}</ul>
           </section>`;
         })}
+        ${swapIdeas(app, name, { inEditor: true })}
         <form class="form form-inline-card" data-submit="lunch:custom" data-who="${name}">
           <p class="field-label">Add your own</p>
           <input class="input" name="title" placeholder="Pickle spears" required maxlength="50" aria-label="Item name">

@@ -599,6 +599,12 @@ test('leftovers are one batch (state.leftovers) with a plan: eat one, a lunch, a
   // A paused packer isn't offered.
   const paused = { ...state, lunch: { people: { Jeff: { enabled: false, paused: true } } } };
   assert.ok(!leftoverLunchChoices(db, paused, { from: TUE, today: TUE }).some((c) => c.name === 'Jeff'));
+  // Leftovers from an earlier night, asked about after lunch is eaten (after 2 PM): the choices start
+  // tomorrow instead of offering nothing (gauntlet r4), and picking tomorrow's lunch is accepted.
+  const later = leftoverLunchChoices(db, state, { from: TUE, today: WED, after: THU });
+  assert.ok(later.some((c) => c.name === 'Jeff' && c.date === THU), JSON.stringify(later));
+  assert.ok(!later.some((c) => c.date === WED), 'today’s lunch has been eaten');
+  assert.equal(leftoverLunchOps(db, state, { from: TUE, name: 'Jeff', to: THU, today: WED }).error, undefined);
 
   // A leftover night: the same record cook mode uses; nothing to buy, and plan ahead leaves it alone.
   const night = leftoverNightOps(db, state, { from: TUE, night: WED, today: TUE, ...ctx });

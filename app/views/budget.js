@@ -102,7 +102,7 @@ export function tripAdviceCard(app, list = null) {
     </section>`;
   }
   return html`<section class="trip-advice" id="trip-advice" aria-label="This trip">
-    <p class="trip-advice-line">${ic('info', { size: 18 })}<span>This list covers <b>${a.days} ${a.days === 1 ? 'day' : 'days'}</b>, so the next store run is ${weekdayName(a.trip.end) === weekdayName(today) && a.days === 1 ? 'tomorrow' : `right after ${weekdayName(a.trip.end)}`}. <b>${a.more} more ${a.more === 1 ? 'day' : 'days'} of food</b> would carry you through ${dayDate(a.newEnd)} and skip it: about ${money(Math.max(0, a.added))} more today${a.open ? `, with ${a.open} open ${a.open === 1 ? 'night' : 'nights'} planned from the pantry first` : ''}.</span></p>
+    <p class="trip-advice-line">${ic('info', { size: 18 })}<span>This trip covers <b>${a.days} ${a.days === 1 ? 'day' : 'days'}</b>. <b>${a.more} more</b> (about ${money(Math.max(0, a.added), { whole: true })}) skips the next store run.</span></p>
     <button type="button" class="btn btn-secondary btn-block" data-action="trip:extend">${ic('plus', { size: 20 })}Extend the trip to ${dayDate(a.newEnd)} (${TRIP_MIN_DAYS} days)</button>
     ${splitLine}
   </section>`;

@@ -92,27 +92,12 @@ function moneyCard(app, m, week) {
   const w = m.week;
   const mo = m.month;
   const tone = m.status === 'over' ? 'is-over' : m.status === 'tight' ? 'is-tight' : 'is-under';
+  // The week's number, the month's answer in Budget's words, then the two buttons; the record, the month
+  // and the tip share one fold (gauntlet r4).
   return html`<section class="ck-card ck-money" id="ck-money" aria-labelledby="ckm-h">
     <h2 id="ckm-h" class="section-title">${ic('budget', { size: 22 })}Groceries</h2>
     <p class="trips-big"><b>${money(w.total)}</b><span>${w.done ? 'spent that week' : 'spent so far this week'}<small>${w.trips ? `${w.trips} store ${w.trips === 1 ? 'trip' : 'trips'}` : 'no receipts logged'}${m.last.total ? `, ${money(m.last.total)} the week before` : ''}</small></span></p>
-    ${weekBars(m.history, w.share)}
-    <details class="cover-more ck-record"><summary>The record: the last ${m.record.length} weeks</summary>
-      <table class="ck-table"><thead><tr><th scope="col">Week</th><th scope="col">Trips</th><th scope="col">Spent</th><th scope="col">Against ${money(w.share, { whole: true })}</th></tr></thead>
-        <tbody>${m.record.map((h) => html`<tr><th scope="row">${shortDate(h.start)} to ${shortDate(h.end)}${h.checked ? html` <span class="ck-checked" title="Checked in">${ic('check', { size: 14 })}<span class="sr-only">checked in</span></span>` : ''}</th><td>${h.trips}</td><td>${money(h.total)}</td><td>${h.total ? `${h.diff > 0 ? '+' : '−'}${money(Math.abs(h.diff), { whole: true })}` : '—'}</td></tr>`)}</tbody></table>
-      ${when(m.average != null, () => html`<p class="muted small">Since the first receipt in this record, the average is ${money(m.average)} a week.</p>`)}
-    </details>
-    <p class="budget-verdict ${tone}" id="ck-verdict">${m.verdict}</p>
-    <details class="cover-more ck-month"><summary>The month so far</summary>
-    <ul class="legend">
-      <li><span class="key key-spent"></span>Spent so far<b>${money(mo.spent)}</b></li>
-      <li><span class="key key-plan"></span>Still to buy for what’s planned<b>${money(mo.stillToBuy)}</b></li>
-      ${when(mo.unplanned, () => html`<li><span class="key key-maybe"></span>${mo.unplanned} ${mo.unplanned === 1 ? 'night' : 'nights'} not planned yet, at the usual cost<b>+${money(mo.ifPlanned - mo.projected)}</b></li>`)}
-      <li><span class="key key-spent"></span><strong>Heading for</strong><b>${money(mo.ifPlanned)} of ${money(mo.target, { whole: true })}</b></li>
-    </ul>
-    ${when(mo.perWeekLeft > 0, () => html`<p class="small">That leaves about <b>${money(mo.perWeekLeft, { whole: true })} ${mo.daysLeft > 7 ? 'a week' : ''}</b> for the ${mo.daysLeft} ${mo.daysLeft === 1 ? 'day' : 'days'} left${mo.tripsLeft ? `, in ${mo.tripsLeft} more store ${mo.tripsLeft === 1 ? 'trip' : 'trips'}` : ''}.</p>`)}
-    <p class="muted small">At this rate the year comes to about ${money(m.year.year, { whole: true })}; the target is ${money(m.year.yearTarget, { whole: true })}. ${m.year.overYear > 0 ? `That’s ${money(m.year.overYear / 12, { whole: true })} a month to find.` : `That’s ${money(-m.year.overYear, { whole: true })} under.`}</p>
-    </details>
-    <ul class="ck-tips">${m.tips.slice(0, 1).map((t) => html`<li class="hint ${m.status === 'on' ? '' : 'hint-warn'}">${ic('leaf', { size: 18 })}<span>${t.text}${t.href ? html` <a class="text-link" href="${t.href}">${t.label}</a>` : ''}</span></li>`)}</ul>
+    <p class="ck-verdict ${tone}" id="ck-verdict"><b>This month:</b> ${m.verdict.replace(/^About/, 'about')}</p>
     <div class="ck-actions">
       ${m.checked
     ? html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}<span>Checked${m.checked.at ? ` on ${shortDate(String(m.checked.at).slice(0, 10))}` : ''}.</span></p>
@@ -120,13 +105,29 @@ function moneyCard(app, m, week) {
     : html`<button type="button" class="btn btn-primary" id="ck-done" data-action="checkin:done" data-start="${week.start}" data-end="${week.end}">${ic('checkCircle', { size: 20 })}Looks right</button>
           <a class="btn btn-secondary" href="#/budget">${ic('receipt', { size: 20 })}A receipt is missing</a>`}
     </div>
+    ${weekBars(m.history, w.share)}
+    <details class="cover-more ck-record ck-details"><summary>Details: the last ${m.record.length} weeks and the month</summary>
+      <ul class="ck-tips">${m.tips.slice(0, 1).map((t) => html`<li class="hint ${m.status === 'on' ? '' : 'hint-warn'}">${ic('leaf', { size: 18 })}<span>${t.text}${t.href ? html` <a class="text-link" href="${t.href}">${t.label}</a>` : ''}</span></li>`)}</ul>
+      <table class="ck-table"><thead><tr><th scope="col">Week</th><th scope="col">Trips</th><th scope="col">Spent</th><th scope="col">Against ${money(w.share, { whole: true })}</th></tr></thead>
+        <tbody>${m.record.map((h) => html`<tr><th scope="row">${shortDate(h.start)} to ${shortDate(h.end)}${h.checked ? html` <span class="ck-checked" title="Checked in">${ic('check', { size: 14 })}<span class="sr-only">checked in</span></span>` : ''}</th><td>${h.trips}</td><td>${money(h.total)}</td><td>${h.total ? `${h.diff > 0 ? '+' : '−'}${money(Math.abs(h.diff), { whole: true })}` : '—'}</td></tr>`)}</tbody></table>
+      ${when(m.average != null, () => html`<p class="muted small">Since the first receipt in this record, the average is ${money(m.average)} a week.</p>`)}
+      <h3 class="ck-sub">The month so far</h3>
+      <ul class="legend">
+        <li><span class="key key-spent"></span>Spent so far<b>${money(mo.spent)}</b></li>
+        <li><span class="key key-plan"></span>Still to buy for what’s planned<b>${money(mo.stillToBuy)}</b></li>
+        ${when(mo.unplanned, () => html`<li><span class="key key-maybe"></span>${mo.unplanned} ${mo.unplanned === 1 ? 'night' : 'nights'} not planned yet, at the usual cost<b>+${money(mo.ifPlanned - mo.projected)}</b></li>`)}
+        <li><span class="key key-spent"></span><strong>Heading for</strong><b>${money(mo.ifPlanned)} of ${money(mo.target, { whole: true })}</b></li>
+      </ul>
+      ${when(mo.perWeekLeft > 0, () => html`<p class="small">That leaves about <b>${money(mo.perWeekLeft, { whole: true })} ${mo.daysLeft > 7 ? 'a week' : ''}</b> for the ${mo.daysLeft} ${mo.daysLeft === 1 ? 'day' : 'days'} left${mo.tripsLeft ? `, in ${mo.tripsLeft} more store ${mo.tripsLeft === 1 ? 'trip' : 'trips'}` : ''}.</p>`)}
+      <p class="muted small">At this rate the year comes to about ${money(m.year.year, { whole: true })}; the target is ${money(m.year.yearTarget, { whole: true })}. ${m.year.overYear > 0 ? `That’s ${money(m.year.overYear / 12, { whole: true })} a month to find.` : `That’s ${money(-m.year.overYear, { whole: true })} under.`}</p>
+    </details>
   </section>`;
 }
 
 function dinnersCard(app, week) {
   const s = weekSummary(app.db, app.state, datesBetween(week.start, week.end));
   if (!s.home && !s.away && !s.leftoverNights) return '';
-  const parts = [`${s.cooked} of ${s.home} ${s.home === 1 ? 'dinner' : 'dinners'} cooked at home`, `${s.withVeg} with a vegetable or salad`];
+  const parts = [`${s.cooked} of ${s.home} planned ${s.home === 1 ? 'dinner' : 'dinners'} cooked at home`, `${s.withVeg} with a vegetable or salad`];
   if (s.counted && s.lean) parts.push(`${s.lean} lean`);
   const out = s.away + s.leftoverNights;
   // One sentence, not four tiles (gauntlet r3).
@@ -259,8 +260,8 @@ export function render(app) {
     <header class="page-head"><div><h1 class="page-title">Weekly check-in</h1>
       <p class="muted ck-week">${m.week.done ? 'The week of' : 'This week so far,'} ${weekLabel(week)}</p></div></header>
     <div class="ck-grid">
-      <div class="ck-col">${moneyCard(app, m, week)}${dinnersCard(app, week)}</div>
-      <div class="ck-col">${weighSection(app, today)}
+      <div class="ck-col">${moneyCard(app, m, week)}</div>
+      <div class="ck-col">${dinnersCard(app, week)}${weighSection(app, today)}
         <details class="ck-card ck-day ck-settings" ${app.ui.ckSettingsOpen || app.ui.weighSetup ? 'open' : ''}><summary><span id="ckday-h">${offer ? 'Check-in day, the TV and a weigh-in' : 'Check-in day and the TV'}</span></summary>
           <div class="chip-grid" role="radiogroup" aria-label="Check-in day">${DAYS.map((d, i) => html`<button type="button" role="radio" aria-checked="${i === day ? 'true' : 'false'}" class="chip ${i === day ? 'is-on' : ''}" data-action="checkin:day" data-value="${i}" aria-label="${DAY_NAMES[i]}">${d}</button>`)}</div>
           <p class="muted small">The week ends on ${DAY_NAMES[day]}, and Tonight offers the check-in that day.</p>

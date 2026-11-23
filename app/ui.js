@@ -282,7 +282,7 @@ let toastTimer = null;
 let toastAbort = null;
 let toastAt = 0;
 /** A message from another screen doesn't follow you around (gauntlet r2); one shown just now stays. */
-export function hideStaleToast(ms = 1500) {
+export function hideStaleToast(ms = 600) { // only a toast from the tap that changed the screen stays (gauntlet r4)
   if (Date.now() - toastAt < ms) return;
   document.getElementById('toast')?.classList.remove('is-on');
 }

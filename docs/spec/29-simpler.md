@@ -131,7 +131,35 @@ explained everything twice.
   is in the summary card, a line per side; "Get everything out" comes right after it; safe temperatures close
   the screen. **Pantry**: search hits use shelf words ("6 packs, freezer"); rows wrap their controls at 320px.
 
-## 29.5 Tests
+## 29.5 Round 4 (final: shopper 9, accessibility 9, parent 8, first-timer 8, designer 8)
+
+Fixed after the last round, before shipping:
+- **Leftovers sheet after 2 PM**: leftovers from an earlier night offered no lunch at all (the choices stopped
+  at today's lunch, which the sheet then hid). Choices now start tomorrow (`leftoverLunchChoices({ after })`),
+  and an empty "For a lunch" section isn't shown.
+- **Tonight**: when the meat or three or more things aren't in the house, "Change dinner" is the big button
+  and "Start cooking anyway" the quiet one. Sides read mid-sentence ("with air-fryer fries").
+- **Change side** from a night is for that night ("Just tonight" / "Every time"); it's written to the night's
+  `sides` (`nightSideOps`). The recipe page and remembered or added sides stay "every time".
+- **Pantry**: each row is stepper · Running low · ›; the › sheet (picture, where it's kept) has "Take it off the
+  shelf". Undated freezer meat is asked about inside Use first, not again at the bottom; that line says
+  "freezer, not sure when". Chips are 44px.
+- **List**: "Add an item" adds to the store of the last item ticked (else the first store with something left)
+  and its toast names the store; "near here" and the how-to line are gone; online, Open sits at the end of the
+  price line. Item sheet: "1 bottle · $5.98", the three buttons, then what it's for.
+- **Check-in**: "$48.75 spent that week", then one quiet line "This month: about $163 over…", then Looks right and
+  A receipt is missing side by side; the record, the month and the tip share one "Details" fold; "1 of 2 planned
+  dinners". Dinners sit in the right column on wide screens.
+- **Plan ahead** starts on the range the Plan page shows; "Let it replace dinners it picked before"; the result
+  reads "About $535 to buy, $28 less". **Catch-up**: Cooked / Move / Skipped on one row. **Budget**: "This trip
+  covers 5 days. 5 more (about $109) skips the next store run." **Family**: "Packing for Jeff and Knox."; the target
+  links to Budget. **Lunch editor**: swap ideas under the items. Toasts from another screen clear after 0.6 s.
+
+Not done (named honestly): Thaw & prep jobs can't be ticked off yet; "See the shopping list" still starts a trip;
+Pantry steppers can still show part-packages (1¾ packs); the recipe page is still long (about 8 phone screens);
+cook-mode timing cues are worded by step number; Tonight-at-a-glance lunch packing still lives on the Lunch tab.
+
+## 29.6 Tests
 
 `tests/e2e/*.mjs` follow the new layout (rows tick, the › opens the item sheet, Plan's extra actions
 are under More, "Not for us" confirms). Unit tests cover the retire rule (nights after tonight only).

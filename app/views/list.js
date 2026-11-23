@@ -271,6 +271,11 @@ function amt(n, unit) {
   return `about ${unitText(r, unit)}`;
 }
 
+/** "1 bottle", "2 × ~3.1 lb pack", "3 lemons": what to pick up, without "(about 190 tbsp)" (gauntlet r4). */
+function buyText(i) {
+  return formatPackQty(i).replace(/\s*\(about [^)]*\)/, '').replace(/^1 × (?=[a-z])/, '1 ');
+}
+
 function detail(app, i) {
   if (i.freeText) return `${i.every === 'week' ? 'Every week' : 'Every trip'}${i.cost == null ? ', add a price to count it in the budget' : ''}`;
   const parts = [];
@@ -338,13 +343,12 @@ function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
   ].filter(Boolean);
   // The checkbox's name is the item; its description is the product, amount and price (gauntlet r3).
   const rid = `it-${String(i.key).replace(/[^\w-]/g, '_')}`;
-  const near = guess && mode === 'store';
   return html`<li class="item ${i.checked ? 'is-checked' : ''} has-thumb ${mode ? `is-${mode}` : ''}" data-name="${i.name}" ${i.reasons?.includes('lunches') ? 'data-lunch' : ''} ${guess ? 'data-guess' : ''}>
     <button type="button" class="check" role="checkbox" aria-checked="${i.checked ? 'true' : 'false'}" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-label="${label}${i.checked ? `, ${inCart}` : ''}" aria-describedby="${product ? `${rid}-p ` : ''}${rid}-q"><span class="check-box">${ic('check', { size: 18 })}</span></button>
     <span class="item-thumb-hit" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-hidden="true">${itemThumb(app, i, mode || 'store')}</span>
     <button type="button" class="item-main" data-action="list:check" data-key="${i.key}" data-list="${listKey}" tabindex="-1" aria-hidden="true">
       <span class="item-name">${label}</span>${product ? html`<span class="item-product" id="${rid}-p">${product}</span>` : ''}
-      <span class="item-qty" id="${rid}-q">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? 'total ' : ''}${money(i.cost)}</span>`}${tags}${near ? html`<span class="item-near">near here</span>` : ''}</span>
+      <span class="item-qty" id="${rid}-q">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? 'total ' : ''}${money(i.cost)}</span>`}${tags}</span>
     </button>
     ${when(mode === 'online' && !i.freeText, () => html`<a class="btn btn-small ${i.checked ? 'btn-quiet' : 'btn-secondary'} order-it" href="${orderUrl(app, i)}" target="_blank" rel="noopener" data-findit="${i.id}" data-order="${storeProductUrl(app.db, i.store, i.id) ? 'product' : 'search'}" aria-label="Open ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">${ic('cart', { size: 18 })}${i.checked ? 'Again' : 'Open'}</a>`)}
     <button type="button" class="item-more" data-action="list:item" data-key="${i.key}" aria-label="More about ${label}">${ic('right', { size: 20 })}</button>
@@ -485,18 +489,20 @@ function modeSwitch(app, list, trip) {
   const mode = listMode(app);
   return html`<section class="list-mode" aria-label="How are you shopping?">
     ${segmented('listMode', LIST_MODES, mode, { label: 'How are you shopping?', action: 'list:mode' })}
-    <div class="list-mode-row">${list.items.some((i) => i.checked) ? html`<span></span>` : html`<p class="muted small list-mode-how">${mode === 'online' ? 'Each item opens on the store’s site; tick it once it’s in your cart.' : 'In the order you walk the store. Tap an item to tick it.'}</p>`}${trip ? '' : html`<button type="button" class="link-btn trip-link" data-action="trip:new">Just this trip?</button>`}</div>
+    ${trip ? '' : html`<div class="list-mode-row"><span></span><button type="button" class="link-btn trip-link" data-action="trip:new">Just this trip?</button></div>`}
   </section>`;
 }
 
 /** "Grab paper towels": one field, on this list only. */
 function quickAdd(app, list, trip) {
-  // The store you're in, else the one with the most still to get (gauntlet r3: not always Jewel).
-  const store = trip && trip.store !== 'both' ? trip.store : (list.stores.sams?.remaining || 0) >= (list.stores.jewel?.remaining || 0) ? 'sams' : 'jewel';
+  // The trip's store; else the store of the last item ticked (that's the aisle you're in); else the
+  // first store on the page that still has something to get (gauntlet r4).
+  const store = trip && trip.store !== 'both' ? trip.store
+    : app.ui.addStore || ((list.stores.sams?.remaining || 0) > 0 || !(list.stores.jewel?.remaining > 0) ? 'sams' : 'jewel');
   return html`<form class="quick-add" data-submit="list:quick-add" aria-label="Add something to this list">
     <input class="input" name="name" placeholder="Add an item" maxlength="60" autocomplete="off" aria-label="Add an item to this list" required list="extra-ideas">
     <datalist id="extra-ideas">${Object.values(app.db.ingredients).filter((x) => x.extra).slice(0, 12).map((x) => html`<option value="${x.name}"></option>`)}</datalist>
-    ${trip && trip.store !== 'both' ? html`<input type="hidden" name="store" value="${store}">` : html`<select class="input quick-store" name="store" aria-label="Which store">${['sams', 'jewel'].map((x) => html`<option value="${x}" ${x === store ? 'selected' : ''}>${x === 'sams' ? 'Sam’s' : 'Jewel'}</option>`)}</select>`}
+    ${trip && trip.store !== 'both' ? html`<input type="hidden" name="store" value="${store}">` : html`<select class="input quick-store" name="store" aria-label="Which store" data-change="list:add-store">${['sams', 'jewel'].map((x) => html`<option value="${x}" ${x === store ? 'selected' : ''}>${x === 'sams' ? 'Sam’s Club' : 'Jewel-Osco'}</option>`)}</select>`}
     <button type="submit" class="btn btn-secondary">${ic('plus', { size: 20 })}<span class="sr-only">Add</span></button>
   </form>`;
 }
@@ -559,7 +565,7 @@ export function render(app) {
       ${when(list.leftovers.length, () => {
         const top = list.leftovers.filter((l) => l.storage === 'freezer' || l.storage === 'fridge').slice(0, 6);
         const rest = list.leftovers.length - top.length;
-        return html`<details class="leftovers"><summary class="section-title">Left over for next week</summary>
+        return html`<details class="leftovers"><summary class="section-title">Still in the house after these dinners</summary>
           ${when(top.length, () => html`<ul class="leftover-list">${top.map((l) => html`<li><span>${l.name}</span><b>${unitText(l.qty, l.unit)}</b></li>`)}</ul>`)}
           ${when(rest > 0, () => html`<p class="small">${top.length ? 'Plus ' : ''}${rest} pantry ${rest === 1 ? 'item' : 'items'} with some to spare.</p>`)}</details>`;
       })}
@@ -615,8 +621,7 @@ function itemSheet(app, key) {
       return html`
         ${ph ? photoImg(ph, 'item-sheet-photo', i.product?.label || i.name) : ''}
         ${when(i.product?.label && i.product.label !== i.name, () => html`<p class="item-sheet-product">${i.product.label}</p>`)}
-        <p class="sheet-text">${formatPackQty(i)}${i.cost == null ? '' : `, ${money(i.cost)}`}. ${detail(app, i) || ''}</p>
-        ${when(i.uses.length, () => html`<ul class="uses">${i.uses.map((u) => html`<li><span>${dayAndDate(u.date, app.today())}</span><span>${dinnerById(app.db, app.state, u.dinner)?.title}</span><span>${unitText(u.qty, i.unit)}</span></li>`)}</ul>`)}
+        <p class="sheet-text item-buy"><b>${buyText(i)}</b>${i.cost == null ? '' : ` · ${money(i.cost)}`}</p>
         ${when(i.coupon, () => html`<p class="hint">${ic('receipt', { size: 18 })}<span><b>Clip the coupon first:</b> ${i.coupon.text}${i.coupon.expires ? `, ends ${shortDate(i.coupon.expires)}` : ''}.</span></p>`)}
         <div class="action-list">
           <button type="button" class="action-row" data-action="item:have" data-id="${i.id}">${ic('pantry')}<span><b>We have it</b><small>Off the list, into the pantry.</small></span></button>
@@ -625,6 +630,8 @@ function itemSheet(app, key) {
             ? html`<button type="button" class="action-row" data-action="item:store" data-value="${OTHER[i.store]}">${ic('store')}<span><b>Get it at ${NAMES[OTHER[i.store]]} instead</b></span></button>`
             : html`<button type="button" class="action-row" data-action="item:notat" data-id="${i.id}" data-store="${i.store}">${ic('store')}<span><b>${NAMES[i.store]} doesn’t carry this</b></span></button>`}
         </div>
+        ${when(detail(app, i), () => html`<p class="muted small item-why">${detail(app, i)}.</p>`)}
+        ${when(i.uses.length, () => html`<ul class="uses">${i.uses.map((u) => html`<li><span>${dayAndDate(u.date, app.today())}</span><span>${dinnerById(app.db, app.state, u.dinner)?.title}</span><span>${unitText(u.qty, i.unit)}</span></li>`)}</ul>`)}
         ${aisleBox(app, i)}
         <details class="item-fix" ${itemFixOpen ? 'open' : ''}>
           <summary>Fix the product, price or store</summary>
@@ -770,7 +777,12 @@ export const actions = {
     const ops = [del(['skips', el.dataset.list, el.dataset.key])];
     app.commit({ ops, undo: undoFor(app.state, ops), message: 'Back on the list.' });
   },
-  'list:check': (app, el) => app.commit(toggleCheckOps(app.state, { listKey: el.dataset.list, key: el.dataset.key }), { quiet: true }),
+  'list:check': (app, el) => {
+    // The store you're ticking in is the one "Add an item" adds to (gauntlet r4).
+    const it = current(app).list.items.find((x) => x.key === el.dataset.key);
+    if (it?.store) app.ui.addStore = it.store;
+    app.commit(toggleCheckOps(app.state, { listKey: el.dataset.list, key: el.dataset.key }), { quiet: true });
+  },
   'list:item': (app, el) => itemSheet(app, el.dataset.key),
   'list:handoff': (app, el) => handoff(app, el.dataset.store),
   'list:coupons': (app, el) => openCoupons(app, el.dataset.store),
@@ -858,6 +870,7 @@ export const actions = {
     app.ui.focusNext = null;
   },
   'list:more': (app, el) => { app.ui.listMoreOpen = !el.parentElement.open; },
+  'list:add-store': (app, el) => { app.ui.addStore = el.value === 'sams' ? 'sams' : 'jewel'; },
   'list:clip': (app) => { app.ui.listMoreOpen = true; app.render(); setTimeout(() => document.getElementById('clip-h')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); },
   'list:extra-quick': (app, el) => app.commit(addExtraOps(app.db, app.state, { item: el.dataset.item, qty: 1, every: 'week' })),
   'list:extra-remove': (app, el) => { app.commit(removeExtraOps(app.state, { id: el.dataset.id })); if (itemSheet.key === el.dataset.id) closeSheet(); },

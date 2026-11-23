@@ -269,6 +269,10 @@ test('substituting a side is remembered for that dinner and survives a reload', 
   const dinner = await btn.getAttribute('data-dinner');
   await btn.click();
   await page.waitForSelector('dialog[open] .pick-row');
+  // From a night it's that night only unless you pick "Every time" (gauntlet r4).
+  assert.equal(await page.getAttribute('dialog[open] [data-sub-scope="night"]', 'aria-checked'), 'true');
+  await page.click('dialog[open] [data-sub-scope="always"]');
+  await page.waitForSelector('dialog[open] [data-sub-scope="always"][aria-checked="true"]');
   const choice = await page.$('dialog[open] .pick-row');
   const ref = await choice.getAttribute('data-ref');
   const title = (await choice.textContent()).trim();
@@ -1232,7 +1236,7 @@ test('lunches for whoever packs: add a person (name, spots, items), the list fol
   // Family & settings says who packs; nothing else there is about one person.
   await go(page, '#/family', '.page-family');
   assert.deepEqual(await page.$$eval('.packer-name b', (els) => els.map((e) => e.textContent)), ['Jeff', 'Candi', 'Knox']);
-  assert.match(await page.textContent('#lun-h + p'), /for Jeff, Candi and Knox\. Nobody else\./);
+  assert.match(await page.textContent('#lun-h + p'), /Packing for Jeff, Candi and Knox\./);
   assert.equal(await page.locator('.me-row').count(), 0, 'no “whose phone is this”');
   assert.equal(await page.locator('[data-action="sheet:who"]').count(), 0);
   // Pause from the editor: stays on the page, groceries off the list.

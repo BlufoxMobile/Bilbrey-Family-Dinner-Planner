@@ -326,7 +326,9 @@ function openPlanAhead(app) {
   const last = app.ui.aheadLast || aheadRecord(app.state, today);
   const pantryFirst = last ? last.pantryFirst !== false : true;
   const st = (openPlanAhead.state = {
-    end: last && last.end >= today ? last.end : aheadEnd(today, 'two'),
+    // Unless it was used before, it plans what the Plan page is showing (gauntlet r4: "1 week" on screen,
+    // "2 weeks" in the sheet planned 12 dinners nobody asked for).
+    end: last && last.end >= today ? last.end : (() => { const r = currentRange(app); return r.end >= today && r.end <= aheadLimit(today) ? r.end : aheadEnd(today, 'week'); })(),
     pantryFirst,
     // Re-plan the planner's own picks: on whenever the pantry goes first, unless switched by hand.
     replan: pantryFirst, replanSet: false,
@@ -352,7 +354,7 @@ function openPlanAhead(app) {
           <input class="input" type="date" id="ahead-end" min="${today}" max="${aheadLimit(today)}" value="${st.end}" data-change="ahead:end"></label></details>
         <details class="ahead-opts" ${aheadOptsOpen ? 'open' : ''}><summary>Options</summary>
         <div class="set-row ahead-switch"><span class="set-label">Use what we have first</span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
-        <div class="set-row ahead-switch"><span class="set-label">Can change the app’s picks<small>${own ? 'Never tonight, or anything set by hand.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Can change the app’s picks' })}</div>
+        <div class="set-row ahead-switch"><span class="set-label">Let it replace dinners it picked before<small>${own ? 'Never tonight, and never one you chose.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Let it replace dinners it picked before' })}</div>
         </details>
         <button type="button" class="btn btn-primary btn-block" data-action="ahead:go">${ic('sparkle', { size: 20 })}Plan it</button>`;
     },
@@ -386,7 +388,7 @@ function aheadCard(app) {
       <h2 id="ahead-h" class="section-title">${ic('checkCircle', { size: 22 })}<span>Planned through ${dayText(a.end, today)}</span></h2>
       <button type="button" class="icon-btn" data-action="ahead:close" aria-label="Close this summary">${ic('close', { size: 20 })}</button>
     </div>
-    ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html` <span class="ahead-save">· about ${money(saved, { whole: true })} less than the old plan</span>` : ''}</p>`)}
+    ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html`<span class="ahead-save">, ${money(saved, { whole: true })} less</span>` : ''}</p>`)}
     ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
     <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}See the shopping list</button>
     <details class="ahead-details"><summary>The pantry, each night and the cost</summary>
@@ -519,9 +521,9 @@ export function catchUpCard(app) {
     return html`<section class="forgot-card" id="catch-card" aria-labelledby="catch-h">
       <p class="forgot-q" id="catch-h"><b>${when}: ${n.title}.</b> Did you cook it?</p>
       <div class="forgot-acts">
-        <button type="button" class="btn btn-small btn-primary" data-action="night:cooked" data-date="${n.date}">${ic('checkCircle', { size: 18 })}Yes, cooked</button>
-        <button type="button" class="btn btn-small btn-secondary" data-action="night:move" data-date="${n.date}" aria-haspopup="dialog">Move it</button>
-        <button type="button" class="btn btn-small btn-quiet" data-action="catch:skip" data-date="${n.date}">We skipped it</button>
+        <button type="button" class="btn btn-small btn-primary" data-action="night:cooked" data-date="${n.date}">${ic('checkCircle', { size: 18 })}Cooked</button>
+        <button type="button" class="btn btn-small btn-secondary" data-action="night:move" data-date="${n.date}" aria-haspopup="dialog">Move</button>
+        <button type="button" class="btn btn-small btn-secondary" data-action="catch:skip" data-date="${n.date}">Skipped</button>
       </div>
     </section>`;
   }

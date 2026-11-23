@@ -315,11 +315,13 @@ function servingCost(db, state, date, l) {
  * from tomorrow (today, when the dinner was last night's) to the leftovers' use-by day.
  * → [{ name, date }]
  */
-export function leftoverLunchChoices(db, state, { from, today }) {
+export function leftoverLunchChoices(db, state, { from, today, after = null }) {
   const l = leftoversOnHand(state, today).find((x) => x.date === from);
   if (!l || l.daysLeft < 0) return [];
   const out = [];
-  const start = from < today ? today : addDays(from, 1);
+  // `after`: the first day worth offering (tomorrow once today's lunch has been eaten, gauntlet r4).
+  let start = from < today ? today : addDays(from, 1);
+  if (after && after > start) start = after;
   for (const name of packingNames(db, state)) {
     for (let day = start; day <= l.useBy; day = addDays(day, 1)) {
       const lunch = lunchFor(db, state, name, day);
@@ -333,7 +335,7 @@ export function leftoverLunchChoices(db, state, { from, today }) {
 export function leftoverLunchOps(db, state, { from, name, to, today }) {
   const l = state?.leftovers?.[from];
   if (!l || !(l.servings > 0)) return result(state, [], 'Those leftovers are already gone.', { error: true });
-  if (!leftoverLunchChoices(db, state, { from, today }).some((c) => c.name === name && c.date === to)) return result(state, [], 'Pick whose lunch it is.', { error: true });
+  if (!leftoverLunchChoices(db, state, { from, today, after: to }).some((c) => c.name === name && c.date === to)) return result(state, [], 'Pick whose lunch it is.', { error: true });
   const what = `leftover ${midSentence(l.title || 'dinner')}`;
   const left = l.servings - 1;
   const ops = [
@@ -408,6 +410,25 @@ export function substituteOps(db, state, { dinnerId, slot, ref }) {
     ? `Remembered for ${d.title}: ${newTitle} instead of ${oldTitle}.`
     : `Remembered for ${d.title}: ${newTitle}.`;
   return result(state, ops, message);
+}
+
+/**
+ * A side for one night only (gauntlet r4: one tap by a kid shouldn't change the family's side for good).
+ * It is written into that night's `sides`; a remembered substitution for the slot still wins, so the
+ * sheet only offers this when there isn't one.
+ */
+export function nightSideOps(db, state, { date, dinnerId, slot, ref }) {
+  const d = dinnerById(db, state, dinnerId);
+  const entry = state?.plan?.[date];
+  if (!d || !parseSideRef(ref) || entry?.dinner !== dinnerId) return result(state, [], "Couldn't use that side.", { error: true });
+  const before = effectiveSides(db, state, dinnerId, entry).find((s) => s.slot === slot);
+  const sides = Array.isArray(entry.sides) ? [...entry.sides] : [...d.sides];
+  while (sides.length <= slot) sides.push(null);
+  sides[slot] = ref;
+  const newTitle = sideInfo(db, state, parseSideRef(ref))?.title || 'that side';
+  const oldTitle = before ? sideInfo(db, state, before.parsed)?.title : null;
+  const ops = [set(['plan', date, 'sides'], sides)];
+  return result(state, ops, `${weekdayName(date)} only: ${newTitle}${oldTitle && before.ref !== ref ? ` instead of ${midSentence(oldTitle)}` : ''}.`);
 }
 
 export function resetSideOps(db, state, { dinnerId, slot }) {
@@ -699,7 +720,7 @@ export function addExtraOps(db, state, { name, item, qty = 1, unit = '', store, 
   const id = item ? `x-${item}` : `x-${slugify(name)}-${uid().slice(0, 4)}`;
   const x = { name: item ? db.ingredients[item]?.name || name : name, qty: Number(qty) || 1, unit, store: store || (item ? db.ingredients[item]?.defaultStore : 'jewel') || 'jewel', every, ...(item ? { item } : {}), ...(once ? { once } : {}) };
   if (!item && Number.isFinite(Number(price)) && price !== '' && price != null) x.price = round2(Number(price));
-  return result(state, [set(['extras', id], x)], once ? `${x.name} is on this list.` : `${x.name} added to every ${every === 'week' ? 'week' : 'trip'}.`);
+  return result(state, [set(['extras', id], x)], once ? `${x.name} added to the ${x.store === 'sams' ? 'Sam’s Club' : 'Jewel-Osco'} list.` : `${x.name} added to every ${every === 'week' ? 'week' : 'trip'}.`);
 }
 
 export function removeExtraOps(state, { id }) {

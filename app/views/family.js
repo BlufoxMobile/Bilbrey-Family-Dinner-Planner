@@ -192,7 +192,7 @@ function shopping(app) {
   const s = app.settings;
   return html`<section class="set-sec" aria-labelledby="shop-h">
     <h2 id="shop-h" class="section-title">Shopping and budget</h2>
-    <div class="set-row"><span class="set-label">Monthly grocery target</span><a class="btn btn-small btn-quiet" href="#/budget" aria-label="Monthly grocery target, $${s.monthlyTarget}. Change it on the Budget page">$${s.monthlyTarget}</a></div>
+    <div class="set-row"><span class="set-label">Monthly grocery target<small>$${s.monthlyTarget}</small></span><a class="link-btn trip-link" href="#/budget" aria-label="Change the $${s.monthlyTarget} monthly target on Budget">Change on Budget ›</a></div>
     <div class="set-row"><span class="set-label">Organic fruits and vegetables<small>When the store has one.</small></span>${switchToggle({ on: s.organic, action: 'fam:organic', label: 'Buy organic fruits and vegetables' })}</div>
     <div class="set-row set-col"><span class="set-label">Meat per dinner<small>Lighter uses 15% less meat.</small></span>${segmented('meatScale', MEAT_OPTS, String(s.meatScale), { label: 'Meat per dinner', action: 'fam:meat', small: true })}</div>
   </section>`;
@@ -228,7 +228,7 @@ function lunches(app) {
   const days = (cfg) => (cfg.days.length === 5 && [1, 2, 3, 4, 5].every((d) => cfg.days.includes(d)) ? 'Weekdays' : `${cfg.days.length} ${cfg.days.length === 1 ? 'day' : 'days'} a week`);
   return html`<section class="set-sec" aria-labelledby="lun-h">
     <h2 id="lun-h" class="section-title">Packed lunches</h2>
-    <p class="sheet-text">${packing.length ? `Lunches are planned, and their groceries bought, for ${listJoin(packing)}. Nobody else.` : 'No lunches are being packed, so no lunch groceries are bought.'}</p>
+    <p class="sheet-text">${packing.length ? `Packing for ${listJoin(packing)}.` : 'No lunches are being packed, so no lunch groceries are bought.'}</p>
     ${when(people.length, () => html`<ul class="packer-list">${people.map((p) => html`<li class="packer" style="${personStyle(p.name)}">
       ${avatar(p.name, { size: 'sm' })}<span class="packer-name"><b>${p.name}</b><small>${p.paused ? 'Paused: nothing packed or bought' : days(p.cfg)}</small></span>
       ${p.paused ? html`<button type="button" class="btn btn-small btn-secondary" data-action="lunch:resume" data-who="${p.name}">Resume</button>`
@@ -236,7 +236,6 @@ function lunches(app) {
     </li>`)}</ul>`)}
     <div class="set-actions">
       <button type="button" class="btn btn-secondary" data-action="lunch:add">${ic('plus', { size: 20 })}Add a person</button>
-      <a class="btn btn-quiet" href="#/lunch">Open the Lunch page</a>
     </div>
   </section>`;
 }

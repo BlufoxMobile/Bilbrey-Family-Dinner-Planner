@@ -265,11 +265,12 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .item .item-qty .item-near { font-size: var(--t-xs); color: var(--ink-3); font-weight: 400; }
 .store-total { display: flex; align-items: baseline; gap: 6px; }
 .store-total small { white-space: nowrap; }
+/* Online: the name gets the full width; Open sits at the right end of the price line (gauntlet r4). */
 .item.is-online.has-thumb { grid-template-columns: 44px 48px minmax(0, 1fr) 44px; column-gap: 8px; }
-.item.is-online .check, .item.is-online .item-thumb-hit { grid-row: 1 / span 2; }
-.item.is-online .item-main { grid-column: 3; grid-row: 1; padding-bottom: 6px; }
-.item.is-online .order-it { grid-column: 3; grid-row: 2; justify-self: start; align-self: start; margin: 0 0 10px; min-height: 44px; }
-.item.is-online .item-more { grid-column: 4; grid-row: 1 / span 2; }
+.item.is-online .item-main { grid-column: 3; grid-row: 1; }
+.item.is-online .item-main .item-qty { padding-right: 92px; min-height: 40px; }
+.item.is-online .order-it { grid-column: 3; grid-row: 1; justify-self: end; align-self: end; margin: 0 0 8px; min-height: 44px; position: relative; z-index: 1; }
+.item.is-online .item-more { grid-column: 4; grid-row: 1; }
 .item-sheet-product { margin: 0 0 4px; color: var(--ink-2); font-size: var(--t-sm); line-height: 1.4; }
 .left-freeze { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 4px 0 var(--s2); }
 .left-freeze .btn { flex: 1 1 160px; }
@@ -281,3 +282,32 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
 .ahead-opts { margin: 0 0 var(--s3); }
 .cook-facts li { align-items: flex-start; }
 .cook-facts li > .ic { margin-top: 3px; }
+.quick:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, 1fr); }
+
+/* Pantry rows, round 4: one control row on a 390px phone (the trash no longer drops onto its own line). */
+@media (min-width: 375px) {
+  .pan-ctrl { flex-wrap: nowrap; gap: 4px; }
+  .pan-ctrl .stepper-btn { width: 40px; }
+  .pan-ctrl .qty-input { width: 40px; }
+  .pan-ctrl .qty-edit .qty-unit { margin: 0 8px 0 0; }
+  .pan-ctrl .btn-small { padding: 0 8px; }
+  .pan-ctrl .icon-btn { width: 40px; flex: none; }
+}
+/* Check-in, round 4: the month in one quiet line under the week's number; the buttons side by side. */
+.ck-verdict { margin: 2px 0 12px; font-size: var(--t-sm); line-height: 1.45; color: var(--ink-2); }
+.ck-verdict b { color: var(--ink); }
+.ck-verdict.is-over b { color: var(--red); }
+.ck-money .ck-actions { flex-wrap: nowrap; }
+.ck-money .ck-actions .btn { flex: 1 1 0; min-width: 0; padding: 0 12px; }
+@media (max-width: 359px) { .ck-money .ck-actions { flex-wrap: wrap; } }
+.ck-details .ck-tips { margin: 8px 0 12px; }
+.ck-details .ck-sub { margin: 16px 0 6px; }
+.item-buy { margin-bottom: 4px; }
+.item-why { margin: 12px 0 4px; }
+.forgot-acts { display: flex; flex-wrap: nowrap; gap: 8px; } .forgot-acts .btn { flex: 1 1 auto; }
+.sub-scope { display: flex; width: 100%; margin-bottom: var(--s3); }
+.sub-scope .seg-opt { flex: 1 1 0; }
+.use-ask { display: grid; gap: 8px; padding: 10px 0; }
+.use-ask-name { display: grid; }
+.use-ask-name small { color: var(--ink-2); font-size: var(--t-xs); }
+.when-chips .chip { min-height: 44px; }

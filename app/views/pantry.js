@@ -91,7 +91,7 @@ function pantryRow(app, id, p) {
             ${when(pk?.counted, () => html`<span class="qty-unit">${m.unit}</span>`)}
           </span>`}
       <button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Running low'}</button>
-      <button type="button" class="icon-btn" data-action="pan:remove" data-id="${id}" aria-label="Remove ${m.name}">${ic('trash', { size: 20 })}</button>
+      <button type="button" class="icon-btn pan-more" data-action="pan:photo" data-id="${id}" aria-label="More about ${m.name}: picture, where it’s kept, take it off the shelf">${ic('right', { size: 20 })}</button>
     </span>
   </li>`;
 }
@@ -159,19 +159,23 @@ function useFirstCard(app, soon) {
   return html`<section class="use-first" aria-labelledby="use-h">
     <h2 id="use-h" class="section-title">${ic('clock', { size: 22 })}Use first</h2>
     <ul class="use-list">${soon.slice(0, 5).map((s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${bare(s.name)}</b><small>${useByText(app, s)} (${place(s.place)})</small></button></li>`)}
-      ${old.slice(0, Math.max(0, 6 - Math.min(5, soon.length))).map((w) => html`<li class="${w.past ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${w.id}"><b>${bare(w.name)}</b><small>${w.unknown ? 'Not sure when it went in: use it soon' : `In the freezer since ${shortDate(w.since)}`}</small></button></li>`)}</ul>
+      ${old.filter((w) => !w.unknown).slice(0, Math.max(0, 6 - Math.min(5, soon.length))).map((w) => html`<li class="${w.past ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${w.id}"><b>${bare(w.name)}</b><small>In the freezer since ${shortDate(w.since)}</small></button></li>`)}
+      ${old.filter((w) => w.unknown).map((w) => html`<li class="use-ask"><span class="use-ask-name"><b>${bare(w.name)}</b><small>Not sure when it went in: use it soon. When was it?</small></span>
+        <span class="when-chips" role="group" aria-label="When ${bare(w.name)} went in">${ABOUT_WHEN.map((a) => html`<button type="button" class="chip" data-action="pan:about" data-id="${w.id}" data-about="${a.id}">${a.label}</button>`)}</span></li>`)}</ul>
   </section>`;
 }
 
 /** Food with no came-home date can't get a use-by (SPEC §21.3): one tap says about when it went in. */
-function whenCard(app, rows) {
+function whenCard(app, all) {
+  // Undated meat in the freezer is asked about in Use first (gauntlet r4: the same question twice).
+  const rows = all.filter((r) => !(r.meat && r.place === 'freezer'));
   if (!rows.length) return '';
   const place = (id) => PLACES.find((p) => p.id === id)?.label.replace(/^(In|On) the /, '') || '';
   const shown = rows.slice(0, 6);
   return html`<section class="when-card" id="when-card" aria-labelledby="when-h">
     <h2 id="when-h" class="section-title">${ic('info', { size: 22 })}About when did these go in?</h2>
     <p class="small">A rough answer is enough.</p>
-    <ul class="when-list">${shown.map((r) => html`<li><span class="when-name"><b>${bare(r.name)}</b><small>${place(r.place)}${r.meat && r.place === 'freezer' ? ', counted as old until you say' : ''}</small></span>
+    <ul class="when-list">${shown.map((r) => html`<li><span class="when-name"><b>${bare(r.name)}</b><small>${place(r.place)}${r.meat && r.place === 'freezer' ? ', not sure when' : ''}</small></span>
       <span class="when-chips" role="group" aria-label="When ${bare(r.name)} went in">${ABOUT_WHEN.map((a) => html`<button type="button" class="chip" data-action="pan:about" data-id="${r.id}" data-about="${a.id}">${a.label}</button>`)}</span></li>`)}</ul>
     ${when(rows.length > shown.length, () => html`<p class="muted small">${rows.length - shown.length} more after these.</p>`)}
   </section>`;
@@ -265,7 +269,7 @@ function photoSheet(app, itemId) {
   openSheet({
     id: `photo:${itemId}`,
     title: m.name,
-    subtitle: 'Its picture, and where the family keeps it.',
+    subtitle: 'Its picture, where it’s kept, or take it off the shelf.',
     render: () => {
       const ph = itemPhoto(app.state, itemId);
       const canSave = app.store.device.key && !app.store.device.localOnly;
@@ -280,7 +284,8 @@ function photoSheet(app, itemId) {
           : html`<p class="sheet-text">Pictures are kept on the family server. Connect this device with the family passcode in Family & settings to add one.</p>`}
         ${when(ph, () => html`<button type="button" class="btn btn-quiet btn-block" data-action="pan:photo-off" data-id="${itemId}">Remove the picture</button>`)}
         <h3 class="sheet-h">Where it’s kept</h3>
-        <div class="chip-grid place-pick">${PLACES.map((pl) => html`<button type="button" class="chip ${placeOf(app.db, app.state, itemId) === pl.id ? 'is-on' : ''}" aria-pressed="${placeOf(app.db, app.state, itemId) === pl.id ? 'true' : 'false'}" data-action="pan:place" data-id="${itemId}" data-place="${pl.id}">${pl.label.replace(/^(In|On) the /, '').replace(/^./, (c) => c.toUpperCase())}</button>`)}</div>`;
+        <div class="chip-grid place-pick">${PLACES.map((pl) => html`<button type="button" class="chip ${placeOf(app.db, app.state, itemId) === pl.id ? 'is-on' : ''}" aria-pressed="${placeOf(app.db, app.state, itemId) === pl.id ? 'true' : 'false'}" data-action="pan:place" data-id="${itemId}" data-place="${pl.id}">${pl.label.replace(/^(In|On) the /, '').replace(/^./, (c) => c.toUpperCase())}</button>`)}</div>
+        ${when(app.state.pantry?.[itemId], () => html`<button type="button" class="btn btn-quiet btn-block pan-off" data-action="pan:remove" data-id="${itemId}">${ic('trash', { size: 20 })}Take it off the shelf</button>`)}`;
     },
   });
   setTimeout(() => hydratePhotos(document.getElementById('sheet'), app.store), 0);

@@ -10,7 +10,7 @@ import {
   dinnerFeasibleAt, sideSlotsFor, isRetired, isSideDropped,
 } from '../planner.js';
 import {
-  placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps,
+  placeDinnerOps, moveDisplacedOps, markAwayOps, bringBackOps, markCookedOps, unmarkCookedOps, substituteOps, nightSideOps,
   resetSideOps, clearNightOps, generateOps, customItemOps, setPantryOps, nightName, awayBlock, bringBackTripOps,
   voteOps, sideVoteOps, lunchVoteOps, saveLeftoversOps, useLeftoverOps, clearLeftoversOps, leftoverNightOps,
   leftoverLunchChoices, leftoverLunchOps, freezeLeftoversOps, tossLeftoversOps,
@@ -112,7 +112,7 @@ function nightBody(app, date) {
         ${costNote(costOf(app, d.id, e), { cls: 'night-cost' })}
       </div>
     </div>
-    <div class="night-rate"><span class="night-rate-q">What does the family think?</span>${thumbs(app, { kind: 'dinner', id: d.id, label: d.title, labels: true })}</div>
+    <div class="night-rate">${thumbs(app, { kind: 'dinner', id: d.id, label: d.title, labels: true })}</div>
     ${when(isRetired(app.state, d.id) && !cooked, () => html`<p class="hint">${ic('down_vote', { size: 18 })}<span>${d.title} is off the menu, so it won’t be planned again. <button type="button" class="link-btn" data-action="night:pick" data-date="${date}">Change dinner</button></span></p>`)}
     ${when(cooked, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked${byLabel(e.cookedBy) ? ` by ${byLabel(e.cookedBy)}` : ''}.</p>`)}
     ${when(cooked && !app.state.leftovers?.[date] && diffDays(today, date) <= 3, () => leftoversQuestion(app, date))}
@@ -345,16 +345,20 @@ export function openAway(app, date) {
 export function openSubstitute(app, { date, dinnerId, slot }) {
   const d = dinnerById(app.db, app.state, dinnerId);
   if (!d) return;
-  const st = { tab: 'box', qty: {}, newName: '', newQty: 2, newUnit: 'cans' };
   const adding = slot >= sideSlotsFor(d) && !app.state.substitutions?.[dinnerId]?.[String(slot)];
+  // From a night, a change is for that night unless you say every time (gauntlet r4). A slot with a
+  // remembered side, an added side, or the recipe page (no night) can only change it every time.
+  const canNight = !!date && !adding && app.state.plan?.[date]?.dinner === dinnerId && !app.state.substitutions?.[dinnerId]?.[String(slot)];
+  const st = { tab: 'box', qty: {}, newName: '', newQty: 2, newUnit: 'cans', scope: canNight ? 'night' : 'always', canNight };
   openSheet({
     id: `sub:${dinnerId}:${slot}`,
     size: 'tall',
     title: adding ? `Add a side to ${d.title}` : 'Change side',
-    subtitle: adding ? 'Remembered every time it’s on the menu.' : `For ${d.title}. Remembered every time it’s on the menu.`,
+    subtitle: adding ? 'Remembered every time it’s on the menu.' : canNight ? `For ${d.title}.` : `For ${d.title}. Remembered every time it’s on the menu.`,
     render: () => subBody(app, d, slot, st, date),
     onMount: (el) => {
       el.querySelectorAll('[data-sub-tab]').forEach((b) => b.addEventListener('click', () => { st.tab = b.dataset.subTab; renderSheet(); }));
+      el.querySelectorAll('[data-sub-scope]').forEach((b) => b.addEventListener('click', () => { st.scope = b.dataset.subScope; renderSheet(); }));
     },
   });
   openSubstitute.state = st;
@@ -394,12 +398,16 @@ function subBody(app, d, slot, st, date) {
       <span><small>${remembered ? 'Now (remembered)' : 'Now'}</small><b>${current.info?.title}</b></span>
       ${when(remembered, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:reset" data-dinner="${d.id}" data-slot="${slot}">${slot >= sideSlotsFor(d) ? 'Remove' : 'Reset to the recipe’s side'}</button>`)}
     </div>`)}
+    ${when(st.canNight, () => html`<div class="seg sub-scope" role="radiogroup" aria-label="How long">
+      <button type="button" role="radio" aria-checked="${tf(st.scope === 'night')}" class="seg-opt ${st.scope === 'night' ? 'is-on' : ''}" data-sub-scope="night">Just ${date === app.today() ? 'tonight' : weekdayName(date)}</button>
+      <button type="button" role="radio" aria-checked="${tf(st.scope === 'always')}" class="seg-opt ${st.scope === 'always' ? 'is-on' : ''}" data-sub-scope="always">Every time</button>
+    </div>`)}
     <div class="seg" role="tablist" aria-label="Where the side comes from">
       <button type="button" role="tab" aria-selected="${tf(st.tab === 'box')}" class="seg-opt ${st.tab === 'box' ? 'is-on' : ''}" data-sub-tab="box">Recipe box</button>
       <button type="button" role="tab" aria-selected="${tf(st.tab === 'shelf')}" class="seg-opt ${st.tab === 'shelf' ? 'is-on' : ''}" data-sub-tab="shelf">From the pantry</button>
     </div>
     ${st.tab === 'box'
-      ? html`<ul class="pick-list">${sides.map((s) => html`<li><button type="button" class="pick-row" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-ref="${s.id}">
+      ? html`<ul class="pick-list">${sides.map((s) => html`<li><button type="button" class="pick-row" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-date="${date || ''}" data-ref="${s.id}">
           ${sidePhoto(app, { parsed: { type: 'side', id: s.id }, info: { kind: s.kind } }, { size: 'thumb' })}
           <span class="pick-main"><b>${s.title}</b><small>${s.minutes ? fmtMinutes(s.minutes) : ''}${s.kind ? `${s.minutes ? ', ' : ''}${s.kind}` : ''}${(() => { const sn = showNutrition(app) ? sideNutrition(app.db, app.state, { type: 'side', id: s.id }) : null; return sn ? `, ${fmtKcal(sn.kcal)} cal a plate` : ''; })()}</small></span></button></li>`)}</ul>`
       : html`
@@ -408,10 +416,10 @@ function subBody(app, d, slot, st, date) {
           return html`<li class="shelf-row">
             <span class="shelf-name"><b>${it.name}</b><small>${typeof it.have === 'number' ? `${fmtQty(it.have)} ${it.unit} on the shelf` : 'Stocked'}</small></span>
             ${stepper({ value: fmtQty(q), step: it.unit === 'lb' ? 0.5 : 1, min: 0.5, action: 'side:qty', data: { id: it.id }, unit: it.unit, label: `How much ${it.name}` })}
-            <button type="button" class="btn btn-small btn-primary" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-ref="${shelfRef(it.type, it.id, q)}">Use</button>
+            <button type="button" class="btn btn-small btn-primary" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-date="${date || ''}" data-ref="${shelfRef(it.type, it.id, q)}">Use</button>
           </li>`;
         })}</ul>` : html`<p class="sheet-text">Nothing measured is in the pantry yet. Add what’s on the shelf below, or scan the pantry from the Pantry tab.</p>`}
-        <form class="form form-inline-card" data-submit="side:new" data-dinner="${d.id}" data-slot="${slot}">
+        <form class="form form-inline-card" data-submit="side:new" data-dinner="${d.id}" data-slot="${slot}" data-date="${date || ''}">
           <p class="field-label">Something else on the shelf</p>
           <input class="input" name="name" placeholder="Canned green beans" required maxlength="60" aria-label="Item name">
           <div class="field-row">
@@ -468,7 +476,7 @@ export function openLeftoverMore(app, from) {
       const l = leftoversOnHand(app.state, today).find((x) => x.date === from);
       if (!l) return html`<p class="sheet-text">Those leftovers are gone.</p><div class="sheet-actions"><button type="button" class="btn btn-primary btn-block" data-action="sheet:close">OK</button></div>`;
       // After 2 PM today's lunch has been eaten, so the choices start tomorrow (gauntlet r3).
-      const lunches = leftoverLunchChoices(app.db, app.state, { from, today }).filter((c) => c.date > today || hourIn() < 14);
+      const lunches = leftoverLunchChoices(app.db, app.state, { from, today, after: hourIn() >= 14 ? addDays(today, 1) : today });
       const plates = Math.max(1, Math.min(l.servings, st.plates ?? l.servings));
       const nights = l.night ? [] : leftoverNightChoices(app.state, l, today);
       return html`
@@ -476,9 +484,8 @@ export function openLeftoverMore(app, from) {
           <button type="button" class="action-row" data-action="leftovers:ate" data-date="${from}">${ic('bowl')}<span><b>Someone ate a serving</b><small>${servingsText(Math.max(0, l.servings - 1))} left after that.</small></span></button>
           ${when(l.servings >= 3 && nights.length, () => html`<button type="button" class="action-row" data-action="leftovers:night" data-date="${from}">${ic('tonight')}<span><b>Make them dinner one night</b><small>Instead of cooking; that dinner moves.</small></span></button>`)}
         </div>
-        <h3 class="sheet-h">For a lunch</h3>
-        ${lunches.length ? html`<div class="action-list left-choices">${lunches.map((c) => html`<button type="button" class="action-row" data-action="leftovers:lunch" data-from="${from}" data-name="${c.name}" data-to="${c.date}">${ic('lunch')}<span><b>${c.name}’s lunch ${dayName(c.date, today)}</b><small>One serving, instead of the packed lunch.</small></span></button>`)}</div>`
-          : html`<p class="muted small">Nobody packs a lunch before these are past their best.</p>`}
+        ${when(lunches.length, () => html`<h3 class="sheet-h">For a lunch</h3>
+          <div class="action-list left-choices">${lunches.map((c) => html`<button type="button" class="action-row" data-action="leftovers:lunch" data-from="${from}" data-name="${c.name}" data-to="${c.date}">${ic('lunch')}<span><b>${c.name}’s lunch ${dayName(c.date, today)}</b><small>One serving, instead of the packed lunch.</small></span></button>`)}</div>`)}
         <h3 class="sheet-h">Or freeze them</h3>
         <div class="left-freeze">
           <span class="qty-edit"><button type="button" class="stepper-btn" data-action="leftovers:plates" data-delta="-1" aria-label="One plate less" ${plates <= 1 ? 'disabled' : ''}>${ic('minus', { size: 18 })}</button>
@@ -628,7 +635,11 @@ export const actions = {
   },
   'side:sub': (app, el) => openSubstitute(app, { date: el.dataset.date, dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot) }),
   'side:use': (app, el) => {
-    app.commit(substituteOps(app.db, app.state, { dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot), ref: el.dataset.ref }));
+    const st = openSubstitute.state;
+    const date = el.dataset.date;
+    app.commit(st?.scope === 'night' && date
+      ? nightSideOps(app.db, app.state, { date, dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot), ref: el.dataset.ref })
+      : substituteOps(app.db, app.state, { dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot), ref: el.dataset.ref }));
     closeSheet();
   },
   'side:reset': (app, el) => { app.commit(resetSideOps(app.db, app.state, { dinnerId: el.dataset.dinner, slot: Number(el.dataset.slot) })); closeSheet(); },
@@ -650,7 +661,10 @@ export const actions = {
     const c = customItemOps(app.state, { name, unit });
     const pantry = setPantryOps(app.db, app.state, { id: c.id, qty: Math.max(qty, app.state.pantry?.[c.id]?.qty || 0), who: app.who() });
     app.store.commit([...c.ops, ...pantry.ops]);
-    app.commit(substituteOps(app.db, app.store.state, { dinnerId: form.dataset.dinner, slot: Number(form.dataset.slot), ref: shelfRef('custom', c.id, qty) }));
+    const args = { dinnerId: form.dataset.dinner, slot: Number(form.dataset.slot), ref: shelfRef('custom', c.id, qty) };
+    app.commit(openSubstitute.state?.scope === 'night' && form.dataset.date
+      ? nightSideOps(app.db, app.store.state, { ...args, date: form.dataset.date })
+      : substituteOps(app.db, app.store.state, args));
     closeSheet();
   },
   // A button from before the shared profile (an older page still open) lands on settings instead of a dead tap.
