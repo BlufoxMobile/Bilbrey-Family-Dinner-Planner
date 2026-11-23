@@ -521,8 +521,9 @@ test('the recipe box: search and the filters that matter to this family', async 
   assert.match(await page.textContent('.r-empty'), /can be made from the pantry alone/);
   await page.click('.r-empty [data-action="rec:clear"]');
   await waitFor(async () => (await cards(page)) === all);
-  await page.selectOption('#rf-sort', 'ready');
-  await waitFor(async () => (await page.inputValue('#rf-sort')) === 'ready');
+  // "What we have first" folded into Can make now and Cook from what we have (gauntlet r7).
+  await page.selectOption('#rf-sort', 'cheap');
+  await waitFor(async () => (await page.inputValue('#rf-sort')) === 'cheap');
   await page.selectOption('#rf-sort', 'az');
   await waitFor(async () => (await page.inputValue('#rf-sort')) === 'az' && (await cards(page)) === all);
   assert.ok(await noOverflow(page));
