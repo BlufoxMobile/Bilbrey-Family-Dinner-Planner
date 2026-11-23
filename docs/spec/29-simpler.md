@@ -248,6 +248,30 @@ screenshot or PDF.
   keep the pantry's word ("1 bag (8 buns)"). The Check-in buttons stack below 420px, and the day chips
   are a real 44px.
 
+### Round 8 (all five at 9; all five named the same gap)
+
+- **One decision.** `placeDinnerOps` moves a bumped dinner to the first open night after the night it
+  left (`nextOpenNight`), in the same change: one toast, one Undo. It comes off the plan only when six
+  weeks have no open night. The "What about …?" sheet is gone, along with its swipe-to-drop. The
+  connector's `plan_dinner` reports `replacedMovedTo`.
+- **Cook from what we have lands on Tonight** after any pick, leftovers included. The "anyway?"
+  question names what's missing and where tonight's dinner goes. It starts on Cancel
+  (`confirmSheet({ safe })`), and Cancel returns to the tapped row (`onCancel`).
+- **One answer.** "Ready" means the sides too (`readiness().makeable`, as Can make now). `pantryCheck`
+  uses the staple rule, so the recipe page, Tonight's line and the side picker agree. The list still
+  lists a staple nobody has recorded; "We have it" records it.
+- **Closest means closest.** `readiness().keyMissing` counts a missing first ingredient or meat. Thaw
+  dinners get "Ready after thawing" and, in the evening, "dinner about 7:15". "Uses the … you just
+  bought" counts only the dinner's own ingredients and names them. Closest first shows eight, then
+  Show more, then the two buttons.
+- **Small**:
+  - The current dinner isn't a choice for its own night.
+  - The star keeps to the last word, and a long time wraps.
+  - Short leftovers go after the ready groups.
+  - Mark cooked focuses "Any leftovers tonight?".
+  - Plan from the pantry opened elsewhere goes to Plan with the card focused.
+  - Cook from what we have ends the Use first card.
+
 ## 29.7 Tests
 
 `tests/e2e/*.mjs` follow the new layout (rows tick, the › opens the item sheet, Plan's extra actions
