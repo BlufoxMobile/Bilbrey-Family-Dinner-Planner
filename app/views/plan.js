@@ -62,7 +62,7 @@ function dayCard(app, date, { compact = false } = {}) {
   const label = away ? awayReason(e).label : d ? d.title : 'Nothing planned';
   const sides = d && !away ? sidesFor(app, d.id, e) : [];
   return html`<article class="${cls}" data-date="${date}" ${!cooked && !past ? html`draggable="true"` : ''}>
-    <button type="button" class="day-hit" data-action="plan:tap" data-date="${date}" aria-label="${shortDate(date)}: ${label}${cooked ? ', cooked' : ''}${app.ui.swapMode ? (picked ? ', selected for swap' : ', tap to swap') : ''}">
+    <button type="button" class="day-hit" id="day-${date}" data-action="plan:tap" data-date="${date}" aria-label="${shortDate(date)}: ${label}${cooked ? ', cooked' : ''}${app.ui.swapMode ? (picked ? ', selected for swap' : ', tap to swap') : ''}">
       ${dayStamp(date, today)}
       ${away ? html`<span class="day-ph day-ph-away">${ic('moon', { size: compact ? 20 : 26 })}</span>` : d ? dinnerPhoto(app, d, { size: compact ? 'thumb' : 'card' }) : html`<span class="day-ph">${ic('plus', { size: 22 })}</span>`}
       <span class="day-title">${label}</span>
@@ -119,7 +119,7 @@ export function render(app) {
   const away = range.dates.filter((d) => plan[d]?.status === 'away').length;
   return html`<div class="page page-plan">
     <header class="page-head">
-      <div class="title-row"><h1 class="page-title">Plan</h1><a class="btn btn-small btn-secondary recipes-link" href="#/recipes">${ic('recipes', { size: 18 })}Recipes</a></div>
+      <div class="title-row"><h1 class="page-title" id="page-title" tabindex="-1">Plan</h1><a class="btn btn-small btn-secondary recipes-link" href="#/recipes">${ic('recipes', { size: 18 })}Recipes</a></div>
     </header>
     ${periodNav(app, range)}
     <div class="plan-actions">

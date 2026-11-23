@@ -530,7 +530,7 @@ export function render(app) {
   const noNights = !list.nights.length;
   return html`<div class="page page-list">
     <header class="page-head">
-      <h1 class="page-title">List</h1>
+      <h1 class="page-title" id="page-title" tabindex="-1">List</h1>
       <div class="head-tools">
         ${trip ? '' : html`<button type="button" class="link-btn trip-link" data-action="trip:new">Just this trip?</button>`}
         <button type="button" class="icon-btn" data-action="list:share" aria-label="Share the list">${ic('share')}</button>

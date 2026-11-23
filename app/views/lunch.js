@@ -147,7 +147,7 @@ export function render(app) {
   const start = lunchWeekStart(app);
   const week = dateRange(start, 7);
   if (!app.db.lunch?.available) {
-    return html`<div class="page page-lunch"><header class="page-head"><h1 class="page-title">Lunch</h1></header>
+    return html`<div class="page page-lunch"><header class="page-head"><h1 class="page-title" id="page-title" tabindex="-1">Lunch</h1></header>
       <div class="empty"><span class="empty-ic">${ic('lunch', { size: 28 })}</span><h3 class="empty-title">The lunch library hasn’t loaded</h3>
       <p class="empty-body">Check the connection and open this page again. Dinners, the list and everything else still work.</p></div></div>`;
   }
@@ -166,7 +166,7 @@ export function render(app) {
   // The packing card above already shows this person's next lunch: here it folds to "Change tomorrow's lunch" (gauntlet r5).
   const onCard = !!focus && focus === packDay(app) && (() => { const l = lunchFor(app.db, app.state, name, focus); return !!l && !l.empty; })();
   return html`<div class="page page-lunch">
-    <header class="page-head"><h1 class="page-title">Lunch</h1></header>
+    <header class="page-head"><h1 class="page-title" id="page-title" tabindex="-1">Lunch</h1></header>
     ${packCard(app, people)}
     <div class="people" role="tablist" aria-label="Whose lunches">
       ${people.map((p) => html`<button type="button" role="tab" class="person ${p.name === name ? 'is-on' : ''} ${p.paused ? 'is-paused' : ''}" style="${personStyle(p.name)}" aria-selected="${tf(p.name === name)}" data-action="lunch:who" data-who="${p.name}">${avatar(p.name, { size: 'sm' })}<span>${p.name}${p.paused ? html`<small> · paused</small>` : ''}</span></button>`)}

@@ -87,7 +87,7 @@ function pantryRow(app, id, p) {
   const count = byPack ? packagesFor(typeof p.qty === 'number' ? p.qty : 0, pk.per) : null;
   return html`<li class="pan-row ${p.low ? 'is-low' : ''}" id="pan-${id}">
     <button type="button" class="pan-thumb ${ph ? 'has-photo' : ''}" data-action="pan:photo" data-id="${id}" aria-label="${ph ? `Picture of ${m.name}` : `Add a picture of ${m.name}`}">${ph ? html`<img data-photo="${ph}" alt="" loading="lazy" decoding="async">` : ic('camera', { size: 20 })}</button>
-    <span class="pan-name"><b>${m.name}</b>
+    <span class="pan-name"><b>${app.db.ingredients[id]?.short || m.name}</b>
       ${when(soon, () => html`<small class="pan-soon ${soon.daysLeft <= 0 ? 'is-now' : ''}">${useByText(app, soon)}</small>`)}
       ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
       <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `${m.unit === 'lb' || meatItem(app, id) ? '' : openedText(count, pk.word)}about ${unitText(p.qty, m.unit)}` : pk?.counted ? '' : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}</small></span>
@@ -240,7 +240,7 @@ export function render(app) {
   const canScan = app.store.device.key && !app.store.device.localOnly && app.store.health?.ai !== false;
   const cov = coverLine(app);
   return html`<div class="page page-pantry">
-    <header class="page-head"><h1 class="page-title">Pantry</h1></header>
+    <header class="page-head"><h1 class="page-title" id="page-title" tabindex="-1">Pantry</h1></header>
     <section class="pan-add" aria-labelledby="add-h">
       <h2 id="add-h" class="sr-only">Add to the pantry</h2>
       <label class="search">${ic('search', { size: 20 })}<input type="search" id="pantry-search" placeholder="Find or add: chicken, rice…" value="${app.ui.pantryQuery}" data-input="pan:search" aria-label="Find something in the pantry, or add it" autocomplete="off"></label>

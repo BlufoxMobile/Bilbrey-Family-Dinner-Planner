@@ -2,7 +2,7 @@
 // start it. Below it, only what needs you today: a dinner nobody marked cooked, leftovers, what to
 // thaw or pack, and the weekly check-in on its day. Everything else lives on its own tab.
 // On a TV-size screen it lays out as a kitchen display.
-import { html, ic, when } from '../ui.js';
+import { html, ic, when, toast, announce } from '../ui.js';
 import { addDays, dateRange, longDay, money, relativeDay, rangeLabel, fmtQty, listJoin, hourIn, weekdayName, shortDate, midSentence, byLabel } from '../util.js';
 import { dinnerById, periodRange, itemsForNight } from '../planner.js';
 import { buildList, plannedNights } from '../shopping.js';
@@ -31,7 +31,7 @@ export const title = () => 'Tonight';
 function heroNote(app, today) {
   const n = app.ui.heroNote;
   if (!n || n.date !== today) return '';
-  return html`<p class="hero-note">${ic('swap', { size: 16 })}<span>${n.text}${when(n.undo?.length, () => html` <button type="button" class="link-btn hero-note-undo" data-action="hero:undo">Undo</button>`)}</span></p>`;
+  return html`<p class="hero-note">${ic('swap', { size: 16 })}<span>${n.text.replace(/ (\d{1,2})\.$/, '\u00a0$1.')}${when(n.undo?.length, () => html`&nbsp;<button type="button" class="link-btn hero-note-undo" data-action="hero:undo">Undo</button>`)}</span></p>`;
 }
 
 function leftoverHero(app, today, e, d) {
@@ -241,7 +241,13 @@ export const actions = {
     const n = app.ui.heroNote;
     if (!n?.undo?.length) return;
     app.ui.focusNext = 'hero-title';
-    app.commit({ ops: n.undo, undo: [], message: 'Undone: tonight is back the way it was.' });
+    app.commit({ ops: n.undo, undo: [], message: 'Undone: tonight is back the way it was.' }, { quiet: true });
+    // Said once, to everyone: the title now shows the dinner that's back (gauntlet r11: the live region
+    // still held the note).
+    const back = app.state.plan?.[app.today()];
+    const t = back?.dinner && back.status === 'planned' ? dinnerById(app.db, app.state, back.dinner)?.title : null;
+    announce('');
+    toast(t ? `Undone: ${t} is back on for tonight.` : 'Undone: tonight is back the way it was.');
   },
   'tonight:plan-week': (app) => {
     const today = app.today();

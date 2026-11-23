@@ -137,7 +137,7 @@ export function render(app) {
   rows.sort((a, b) => (!!b.mine - !!a.mine) || AISLES.indexOf(a.ing.aisle) - AISLES.indexOf(b.ing.aisle) || a.ing.name.localeCompare(b.ing.name));
   return html`<div class="page page-products">
     <a class="back" href="#/list">${ic('left', { size: 20 })}Shopping list</a>
-    <header class="page-head"><h1 class="page-title">My products</h1></header>
+    <header class="page-head"><h1 class="page-title" id="page-title" tabindex="-1">My products</h1></header>
     <p class="muted small">The exact product you buy at each store. Receipts fill this in.</p>
     ${segmented('productsStore', [{ id: 'sams', label: "Sam's Club" }, { id: 'jewel', label: 'Jewel-Osco' }], store, { label: 'Store', action: 'prod:store' })}
     <label class="search">${ic('search', { size: 20 })}<input type="search" id="products-search" placeholder="Search chicken, cheese, tortillas…" value="${app.ui.productsQuery || ''}" data-input="prod:search" aria-label="Search products" autocomplete="off"></label>

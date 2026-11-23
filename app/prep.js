@@ -65,8 +65,15 @@ function thawTasks(db, state, today, end, pairs) {
   const folded = new Map(pairs.map((p) => [`${p.b.date}|${p.id}`, p]));
   const joined = new Map(pairs.map((p) => [`${p.a.date}|${p.id}`, p]));
   const rem = {};
-  // What's in the freezer: a pack that came home in the last day is still fresh in the fridge (gauntlet r10).
-  for (const [id, p] of Object.entries(state?.pantry || {})) if (p && !p.low && typeof p.qty === 'number' && p.qty > 0) rem[id] = p.qty - freshMeatQty(db, state, id, today);
+  const fresh = {};
+  // What's in the freezer, and a pack that came home in the last day, still fresh in the fridge until
+  // it's bagged (gauntlet r10). The fresh pack covers tonight and tomorrow first (gauntlet r11: Tonight
+  // said to thaw the chicken Jeff had just carried in).
+  for (const [id, p] of Object.entries(state?.pantry || {})) {
+    if (!(p && !p.low && typeof p.qty === 'number' && p.qty > 0)) continue;
+    fresh[id] = freshMeatQty(db, state, id, today);
+    rem[id] = p.qty - fresh[id];
+  }
   const nights = plannedNights(db, state, datesBetween(today, addDays(end, 2))).sort((a, b) => a.date.localeCompare(b.date));
   for (const { date, entry } of nights) {
     const d = dinnerById(db, state, entry.dinner);
@@ -77,7 +84,8 @@ function thawTasks(db, state, today, end, pairs) {
       if (!(ing?.meat || meta.aisle === 'Meat')) continue;
       if (folded.has(`${date}|${id}`)) continue; // thawed with the first night of its pair
       const pair = joined.get(`${date}|${id}`);
-      const want = need + (pair ? pair.b.qty : 0);
+      let want = need + (pair ? pair.b.qty : 0);
+      if (fresh[id] > 0 && date <= addDays(today, 1)) { const use = Math.min(want, fresh[id]); fresh[id] -= use; want -= use; }
       const qty = Math.min(want, rem[id] || 0); // only what's actually in the freezer; the rest is bought fresh
       if (!(qty > 0)) continue;
       rem[id] -= qty;
@@ -158,8 +166,11 @@ function portionTasks(db, state, today, end) {
     if (!on || diffDays(today, on) > 1 || on > end) continue;
     const uses = nights.map((n) => ({ date: n.date, qty: itemsForNight(db, state, n.entry.dinner, n.entry)[id] || 0 })).filter((u) => u.qty > 0);
     const soon = uses.filter((u) => diffDays(u.date, on) <= 2);
-    const keep = Math.min(p.qty, soon.reduce((t, u) => t + u.qty, 0));
-    const freeze = Math.round((p.qty - keep) * 100) / 100;
+    // Only what came home is portioned; the lot already in the freezer stays put (gauntlet r11: it said
+    // to freeze 10¼ lb when 6½ lb came home).
+    const came = Math.min(b.qty, p.qty);
+    const keep = Math.min(came, soon.reduce((t, u) => t + u.qty, 0));
+    const freeze = Math.round((came - keep) * 100) / 100;
     if (freeze < 0.75) continue;
     const later = uses.filter((u) => diffDays(u.date, on) > 2).slice(0, 3);
     const bag = later.length ? later[0].qty : 1;

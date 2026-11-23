@@ -181,12 +181,15 @@ export function readyText(r, { eatAt = '', ahead = false } = {}) {
   return 'All in the house';
 }
 
-/** The ❄ on a row that needs something and whose meat is frozen too: "❄ 7:15", "❄ 1½ hr", "❄ tonight". */
+/**
+ * The ❄ on a row that needs something and whose meat is frozen too, in words (gauntlet r11: "❄ 7:15"
+ * was a code to decode): "❄ dinner about 7:15", "❄ 1½ hr to thaw", "❄ to the fridge tonight".
+ */
 export function thawMark(r, { eatAt = '', ahead = false } = {}) {
   if (r.makeable || !r.thaw.length) return '';
   const m = Math.max(...r.thaw.map((x) => x.minutes));
-  const [sr, shown] = ahead ? ['frozen: move it to the fridge ', 'tonight'] : eatAt ? ['frozen, dinner about ', eatAt] : ['frozen, thaw ', thawFor(m).replace(/^about /, '')];
-  return html`<span class="pick-thaw">${ic('snow', { size: 13 })}<span class="sr-only">${sr}</span>${shown}</span>`;
+  const shown = ahead ? 'to the fridge tonight' : eatAt ? `dinner about ${eatAt}` : `${thawFor(m).replace(/^about /, '')} to thaw`;
+  return html`<span class="pick-thaw">${ic('snow', { size: 13 })}<span class="sr-only">frozen: </span>${shown}</span>`;
 }
 
 /** When dinner would be on the table after a thaw, in the evening only ("7:15"); '' otherwise. */
@@ -296,7 +299,7 @@ function pickBody(app, st) {
     const cost = c?.perServing > 0 ? `≈ ${money(c.perServing)} a serving` : '';
     // A dinner on another night trades places with this night's, and the row says so (gauntlet r9).
     // "on Sat": a pick trades places with it, and the toast says so (gauntlet r10: shorter rows).
-    const whereText = where ? (d.id === current ? `on for ${tonight ? 'tonight' : 'that night'}` : `on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)}`) : '';
+    const whereText = where ? (d.id === current ? `on for ${relativeDay(date, today).toLowerCase()}` : `on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)}`) : '';
     const at = r ? eatAt(d, r) : '';
     // A row that already says when dinner would be doesn't also say how long it cooks.
     const time = at ? '' : timeLabel(d);
@@ -331,7 +334,7 @@ function pickBody(app, st) {
   };
   const shortAt = groups.findIndex((x) => x.g !== 'ready' && x.g !== 'thaw');
   return html`
-    ${when(st.saved, () => html`<p class="have-saved">${ic('checkCircle', { size: 18 })}<span>${st.saved.text}</span>${when(st.saved.undo?.length, () => html` <button type="button" class="link-btn" data-action="have:undo-receipt">Undo</button>`)}</p>`)}
+    ${when(st.saved, () => html`<p class="have-saved">${ic('checkCircle', { size: 18 })}<span>${st.saved.text}${when(st.saved.undo?.length, () => html`&nbsp;· <button type="button" class="link-btn" data-action="have:undo-receipt">Undo</button>`)}</span></p>`)}
     ${when(noneReady, () => html`<p class="have-none">${ic('info', { size: 18 })}<span>Nothing is all in the house yet. These need the fewest things.</span></p>`)}
     <label class="search">${ic('search', { size: 20 })}<input type="search" placeholder="Search dinners" value="${query || ''}" data-input="pick:query" data-date="${date}" aria-label="Search dinners" autocomplete="off"></label>
     <ul class="pick-list">
@@ -396,6 +399,9 @@ export async function place(app, { dinnerId, date, fromDate, land = false }) {
 
 /** "Blackstone smashburgers moved to Monday, Nov 23." — what a pick for tonight did to the plan. */
 function changeNote(app, res, before, today) {
+  return changeNoteText(app, res, before, today).replace(/ (\d{1,2})\.$/, '\u00a0$1.'); // "Nov 23." stays together
+}
+function changeNoteText(app, res, before, today) {
   const t = dinnerById(app.db, app.state, before)?.title || dinnerById(app.db, app.state, res.displaced?.dinner)?.title;
   if (res.kind === 'swap' && t) return `${t} moved to ${nightName(res.other, today)}.`;
   if (res.kind === 'move' && res.other) return `${nightName(res.other, today).replace(/^./, (c) => c.toUpperCase())} is open now.`;
@@ -410,9 +416,10 @@ function landOnTonight(app) {
   app.navigate('#/tonight');
 }
 
-/** A pick for tomorrow (tonight is cooked): Plan, where tomorrow's card shows it (gauntlet r10). */
-function landOnPlan(app) {
+/** A pick for tomorrow (tonight is cooked): Plan, with focus on tomorrow's card (gauntlet r10, r11). */
+function landOnPlan(app, date) {
   closeSheet({ instant: true });
+  app.ui.focusNext = [`day-${date}`, 'page-title'];
   app.navigate('#/plan');
 }
 
@@ -864,7 +871,7 @@ export const actions = {
     const st = openPick.state;
     const date = el.dataset.date || st?.date || today;
     const ahead = date !== today; // tonight is cooked: this is tomorrow's dinner (gauntlet r10)
-    const land = () => (ahead ? landOnPlan(app) : landOnTonight(app));
+    const land = () => (ahead ? landOnPlan(app, date) : landOnTonight(app));
     const cur = app.state.plan?.[date];
     if (cur?.dinner === dinnerId && cur.status === 'planned') { land(); return; }
     const r = readiness(app.db, app.state, dinnerId);

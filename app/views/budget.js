@@ -119,7 +119,7 @@ export function render(app) {
   const over = heading > b.target + 0.004;
   const month = monthOnly(today);
   return html`<div class="page page-budget">
-    <header class="page-head"><h1 class="page-title">Budget</h1><a class="text-link" href="#/checkin">Weekly check-in</a></header>
+    <header class="page-head"><h1 class="page-title" id="page-title" tabindex="-1">Budget</h1><a class="text-link" href="#/checkin">Weekly check-in</a></header>
     <section class="budget-card" aria-labelledby="bud-h">
       <h2 id="bud-h" class="budget-month">${month} groceries</h2>
       <!-- The answer first (gauntlet r2), then the number it comes from. -->

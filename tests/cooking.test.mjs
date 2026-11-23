@@ -504,3 +504,19 @@ test('a meat pack bought in the last day is fresh, not frozen, and a freezer lot
   assert.equal(mergedSince(db, old, 'chicken', '2026-11-15'), '2026-09-10', 'the freezer lot keeps its date');
   assert.equal(mergedSince(db, { pantry: { milk: { qty: 4, since: '2026-11-01' } } }, 'milk', '2026-11-15'), '2026-11-15', 'fridge food takes the new date');
 });
+
+test('the fresh pack covers tonight before the freezer lot, and only what came home is portioned (gauntlet r11)', async () => {
+  const db = realDb();
+  const { thawNow, prepSchedule } = await import('../app/prep.js');
+  const state = {
+    plan: { [TODAY]: { dinner: 'blackened-cajun-chicken', status: 'planned' } },
+    pantry: { chicken: { qty: 12.5, since: '2026-09-10', bought: { qty: 6.5, on: '2026-11-15' } } },
+  };
+  assert.deepEqual(thawNow(db, state, TODAY).filter((t) => t.id === 'chicken'), [], 'nothing to thaw: the new pack is in the fridge');
+  const jobs = prepSchedule(db, state, { today: TODAY, days: 2 }).flatMap((d) => d.tasks).filter((t) => t.kind === 'freeze' && t.id === 'chicken');
+  assert.equal(jobs.length, 1);
+  assert.match(jobs[0].text, /freeze 4¼ lb/, jobs[0].text);
+  // Without the new pack, the freezer lot thaws as before.
+  const old = { ...state, pantry: { chicken: { qty: 6, since: '2026-09-10' } } };
+  assert.equal(thawNow(db, old, TODAY).filter((t) => t.id === 'chicken').length, 1);
+});

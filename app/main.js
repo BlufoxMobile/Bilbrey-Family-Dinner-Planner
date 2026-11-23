@@ -89,7 +89,7 @@ export const app = {
         // page's title, made focusable for this (gauntlet r9: focus fell to <body>).
         requestAnimationFrame(() => setTimeout(() => {
           if (tv.focusBySignature(document, origin)) return;
-          const h = document.querySelector('#view h1, #view .page-title');
+          const h = document.querySelector('#hero-title, #page-title, #view h1, #view .page-title');
           if (!h) return;
           if (!h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
           h.focus({ preventScroll: true });

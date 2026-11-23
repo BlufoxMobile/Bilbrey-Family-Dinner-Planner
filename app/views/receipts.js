@@ -300,7 +300,7 @@ export function render(app) {
   }
   return html`<div class="page page-receipts">
     <a class="back" href="#/budget">${ic('left', { size: 20 })}Budget</a>
-    <header class="page-head"><h1 class="page-title">Receipts</h1></header>
+    <header class="page-head"><h1 class="page-title" id="page-title" tabindex="-1">Receipts</h1></header>
     <button type="button" class="btn btn-primary" data-action="rcpt:scan">${ic('camera', { size: 20 })}Scan a receipt</button>
     <p class="muted small">Every saved receipt, with what was on it. Deleting one takes it out of the Budget and forgets the prices it taught.</p>
     ${list.length ? [...months.entries()].map(([m, rs]) => html`<section class="rcpt-month"><h2 class="section-title">${monthName(`${m}-01`)}<small>${money(round2(rs.reduce((t, r) => t + Number(r.total || 0), 0)))}</small></h2>${rs.map((r) => receiptDetails(app, r))}</section>`)

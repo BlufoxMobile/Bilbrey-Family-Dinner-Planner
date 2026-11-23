@@ -248,7 +248,17 @@ export function closeSheet({ instant = false, focusTo = null } = {}) {
     pendingFocus = null;
     const page = document.getElementById('app') || document.body;
     const to = focusTo && document.getElementById(focusTo);
-    if (to) to.focus({ preventScroll: true });
+    if (to) {
+      to.focus({ preventScroll: true });
+      // …and into view, clear of the header (gauntlet r11: a pick from Tonight's own picker left the
+      // focused title above the screen).
+      const r = to.getBoundingClientRect();
+      const top = (document.querySelector('.topbar')?.getBoundingClientRect().bottom || 0) + 8;
+      if (r.top < top || r.bottom > window.innerHeight - 8) {
+        const y = window.scrollY + r.top - top - 8;
+        window.scrollTo({ top: Math.max(0, y), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+      }
+    }
     else if (back && document.contains(back) && back !== document.body) back.focus?.({ preventScroll: true });
     else if (!restoreFocus(page, snap) && tvOn()) focusFirst(document.getElementById('view') || document.body);
   };

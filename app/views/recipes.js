@@ -129,7 +129,7 @@ export function render(app) {
       <option value="">${any}</option>${opts.map((o) => html`<option value="${o.id}" ${f[key] === o.id ? 'selected' : ''}>${o.label}</option>`)}
     </select>`;
   return html`<div class="page page-recipes">
-    <header class="page-head"><h1 class="page-title">Recipes</h1></header>
+    <header class="page-head"><h1 class="page-title" id="page-title" tabindex="-1">Recipes</h1></header>
     <div class="tabs" role="tablist" aria-label="Which dinners">
       ${TABS.map((t) => html`<button type="button" role="tab" id="rt-${t.id}" class="tab-opt ${app.ui.recipeTab === t.id ? 'is-on' : ''}" aria-selected="${tf(app.ui.recipeTab === t.id)}" data-action="rec:tab" data-tab="${t.id}">${t.label}<small>${counts[t.id]}</small></button>`)}
     </div>

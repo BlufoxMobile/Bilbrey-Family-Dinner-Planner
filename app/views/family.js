@@ -262,7 +262,7 @@ export function render(app) {
   // needs attention (docs/spec/29).
   const synced = app.store.status === 'synced';
   return html`<div class="page page-family">
-    <header class="page-head"><h1 class="page-title">Family & settings</h1></header>
+    <header class="page-head"><h1 class="page-title" id="page-title" tabindex="-1">Family & settings</h1></header>
     ${when(!synced, () => syncSection(app))}
     ${rules(app)}
     ${shopping(app)}

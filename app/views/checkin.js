@@ -257,7 +257,7 @@ export function render(app) {
   const day = checkinDay(app.state);
   const offer = weighOffer(app);
   return html`<div class="page page-checkin">
-    <header class="page-head"><div><h1 class="page-title">Weekly check-in</h1>
+    <header class="page-head"><div><h1 class="page-title" id="page-title" tabindex="-1">Weekly check-in</h1>
       <p class="muted ck-week">${m.week.done ? 'The week of' : 'This week so far,'} ${weekLabel(week)}</p></div></header>
     <div class="ck-grid">
       <div class="ck-col">${moneyCard(app, m, week)}</div>
