@@ -134,7 +134,7 @@ export function render(app) {
     <p class="plan-summary">${planned} ${planned === 1 ? 'dinner' : 'dinners'} planned${away ? `, ${away} ${away === 1 ? 'night' : 'nights'} away` : ''}${(() => {
       // What the food on the plates costs (docs/spec/24 §24.7), which is not what the trip costs: the list buys whole packs, lunches and extras.
       const pc = planCost(app.db, app.state, range.dates, { today });
-      return pc.dinners && pc.total > 0 ? html`: ${pc.estimated ? 'about ' : ''}<b>${money(pc.perServing)}</b> a plate` : '';
+      return pc.dinners && pc.total > 0 ? html`: ${pc.estimated ? 'about ' : ''}<b>${money(pc.perServing)}</b> a serving` : '';
     })()}. <a href="#/list">${money(list.total)} on the list</a>.</p>
     ${tripAdviceCard(app)}
     ${prepCard(app, { days: 7, title: 'Thaw & prep for the week', collapsed: true, skip: ['use'] })}
@@ -337,9 +337,7 @@ function openPlanAhead(app) {
     subtitle: 'Dinners and lunches from tonight on.',
     render: () => {
       const dates = datesBetween(today, st.end);
-      const open = dates.filter((d) => isFillable(app.state.plan?.[d], 'fill')).length;
       const own = dates.filter((d) => d > today && app.state.plan?.[d]?.dinner && isFillable(app.state.plan[d], 'replan')).length; // never tonight's
-      const kept = dates.length - open - own;
       return html`
         <h3 class="sheet-h" id="ahead-through-h">Plan through</h3>
         <div class="ahead-quick" role="group" aria-labelledby="ahead-through-h">
@@ -352,13 +350,18 @@ function openPlanAhead(app) {
         <details class="ahead-date"><summary>Pick a date</summary>
           <label class="field"><span class="field-label">Last night to plan</span>
           <input class="input" type="date" id="ahead-end" min="${today}" max="${aheadLimit(today)}" value="${st.end}" data-change="ahead:end"></label></details>
-        <p class="muted small ahead-count">${count(dates.length, 'night')}: ${listJoin([open ? `${open} empty` : '', own ? `${own} the app picked` : '', kept ? `${kept} stay as ${kept === 1 ? 'it is' : 'they are'}` : ''])}.</p>
+        <details class="ahead-opts" ${aheadOptsOpen ? 'open' : ''}><summary>Options</summary>
         <div class="set-row ahead-switch"><span class="set-label">Use what we have first</span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
         <div class="set-row ahead-switch"><span class="set-label">Can change the app’s picks<small>${own ? 'Never tonight, or anything set by hand.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Can change the app’s picks' })}</div>
+        </details>
         <button type="button" class="btn btn-primary btn-block" data-action="ahead:go">${ic('sparkle', { size: 20 })}Plan it</button>`;
     },
   });
 }
+
+// The Plan ahead options fold keeps its open state while the sheet redraws.
+let aheadOptsOpen = false;
+if (typeof document !== 'undefined') document.addEventListener('toggle', (ev) => { if (ev.target?.classList?.contains('ahead-opts')) aheadOptsOpen = ev.target.open; }, true);
 
 /** After planning: how far the pantry carries the plan, the old food it uses up, what still needs the store. */
 function aheadCard(app) {
@@ -372,7 +375,7 @@ function aheadCard(app) {
   const was = a.before && start === a.start ? a.before : null;
   const need = s.nights.filter((n) => n.dinner && n.dinnerMissing.length);
   const lunchDays = s.nights.filter((n) => n.lunchMissing.length).length;
-  const oldest = s.usesUp.slice(0, 3);
+  const oldest = s.usesUp.slice(0, 2);
   const covers = [s.dinnersCovered ? count(s.dinnersCovered, 'dinner') : '', s.lunchesCovered ? count(s.lunchesCovered, 'packed lunch', 'packed lunches') : ''].filter(Boolean);
   const gap = s.firstGap ? s.nights.find((n) => n.date === s.firstGap) : null;
   const row = (n) => html`<li><span class="cover-day">${n.date === today ? 'Tonight' : `${weekdayShort(n.date)} ${shortDate(n.date)}`}</span><span class="cover-what"><b>${n.title}</b><small>Needs ${listJoin(n.dinnerMissing.slice(0, 4).map((m) => foodName(m.name)))}${n.dinnerMissing.length > 4 ? ` and ${n.dinnerMissing.length - 4} more` : ''}</small></span></li>`;
@@ -383,9 +386,9 @@ function aheadCard(app) {
       <h2 id="ahead-h" class="section-title">${ic('checkCircle', { size: 22 })}<span>Planned through ${dayText(a.end, today)}</span></h2>
       <button type="button" class="icon-btn" data-action="ahead:close" aria-label="Close this summary">${ic('close', { size: 20 })}</button>
     </div>
-    ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html` <span class="ahead-save">· about ${money(saved, { whole: true })} less than before</span>` : ''}</p>`)}
+    ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html` <span class="ahead-save">· about ${money(saved, { whole: true })} less than the old plan</span>` : ''}</p>`)}
     ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
-    <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}Make the shopping list</button>
+    <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}See the shopping list</button>
     <details class="ahead-details"><summary>The pantry, each night and the cost</summary>
     <p class="ahead-covers"><b>${s.dinnersCovered || s.lunchesCovered ? `Your pantry covers ${listJoin(covers)}.` : 'No dinner is all in the pantry yet.'}</b></p>
     <p class="ahead-through">${s.coveredThrough
@@ -419,7 +422,7 @@ function aheadCost(app, start, end) {
   const about = c.estimated ? 'about ' : '';
   const house = c.pantryValue >= 1 ? `${money(c.pantryValue, { whole: true })} of it is already in the house; ` : '';
   const trip = c.toBuy >= 1 ? `the trip for them comes to ${about}${money(c.toBuy, { whole: true })}.` : 'nothing more to buy for them.';
-  return html`<p class="ahead-cost cost-line" id="ahead-cost">${c.dinners === 1 ? 'This dinner' : `These ${c.dinners} dinners`}: ${about}<b>${money(c.total, { whole: true })}</b> of food${c.dinners > 1 ? html`, <b>${money(c.perDinner)}</b> a dinner` : ''}, <b>${money(c.perServing)}</b> a plate.
+  return html`<p class="ahead-cost cost-line" id="ahead-cost">${c.dinners === 1 ? 'This dinner' : `These ${c.dinners} dinners`}: ${about}<b>${money(c.total, { whole: true })}</b> of food${c.dinners > 1 ? html`, <b>${money(c.perDinner)}</b> a dinner` : ''}, <b>${money(c.perServing)}</b> a serving.
     <span class="cost-have">${(house + trip).replace(/^./, (ch) => ch.toUpperCase())}</span></p>`;
 }
 

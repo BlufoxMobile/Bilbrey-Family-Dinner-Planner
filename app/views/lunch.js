@@ -83,15 +83,16 @@ function swapIdeas(app, name, { inEditor = false } = {}) {
   if (!inEditor) sws = sws.filter((sw) => !isDismissed(app, key(sw))).slice(0, 1);
   const extra = (sw) => {
     if (!showNutrition(app) || sw.saves == null) return '';
-    if (sw.saves >= 20) return `About ${fmtKcal(sw.saves)} fewer calories a lunch.`;
-    if (sw.proteinGain >= 5) return `About ${Math.round(sw.proteinGain)} g more protein${sw.saves <= -20 ? ` and ${fmtKcal(-sw.saves)} more calories` : ''} a lunch.`;
+    if (sw.saves >= 20) return ` (about ${fmtKcal(sw.saves)} fewer calories)`;
+    if (sw.proteinGain >= 5) return ` (about ${Math.round(sw.proteinGain)} g more protein)`;
     return '';
   };
+  // One line each (gauntlet r3): the swap and, when it's worth saying, the one number.
   return sws.map((sw) => lighterChip(app, {
     key: key(sw),
     kind: SWAP_KIND[sw.kind] || 'Idea',
-    text: `${sw.toItem.title} instead of ${sw.fromItem.title}.`,
-    why: [sw.why, extra(sw)].filter(Boolean).join(' '),
+    text: `${sw.toItem.title} instead of ${sw.fromItem.title}${extra(sw)}.`,
+    why: '',
     action: 'lunch:swap',
     data: { who: name, from: sw.from, to: sw.to },
   }));
@@ -162,8 +163,8 @@ export function render(app) {
           ${when(focus && days.some((d) => d < focus), () => { const earlier = days.filter((d) => d < focus); return html`<details class="lunch-earlier"><summary>Earlier this week (${earlier.length})</summary><div class="lunch-days">${earlier.map((d) => dayCard(app, name, d))}</div></details>`; })}`
           : html`<p class="empty-body pad">No lunch days picked for ${name}. Edit ${name}’s lunches to choose days.</p>`}
       </section>`}
-    ${when(person, () => html`<p class="muted small lunch-foot">${showNutrition(app) ? 'Calories count packed lunches and dinners at home; breakfast and snacks aren’t tracked. ' : ''}${packing
-      ? html`Lunch groceries are on the <a href="#/list" data-action="lunch:tolist">shopping list</a>, marked Lunch, for ${packing} only.`
+    ${when(person, () => html`<p class="muted small lunch-foot">${packing
+      ? html`Lunch groceries go on the <a href="#/list" data-action="lunch:tolist">shopping list</a> for ${packing} only.`
       : html`No lunches are being packed, so no lunch groceries are on the <a href="#/list" data-action="lunch:tolist">shopping list</a>.`} <button type="button" class="link-btn" data-action="lunch:add">Add a person</button></p>`)}
   </div>`;
 }

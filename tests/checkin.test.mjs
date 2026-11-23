@@ -63,7 +63,7 @@ test('money check-in: the week, the month against the target, and something to d
   // Over the target: says so, and points at the pantry.
   const over = moneyCheckin(db, { receipts: [{ id: 'x', date: '2026-11-10', store: 'sams', amount: 900 }], settings: { monthlyTarget: 650 } }, MON);
   assert.equal(over.status, 'over');
-  assert.match(over.verdict, /^Over budget/);
+  assert.match(over.verdict, /^About \$[\d,]+ over the \$650 target\. The month is heading for \$[\d,]+\.\d\d\.$/);
   assert.ok(over.tips.some((t) => t.href === '#/plan'));
   assert.equal(over.month.perWeekLeft, 0);
   // What was thrown out that week is counted.
@@ -144,14 +144,14 @@ test('the check-in page: weigh-ins are shared in the open, the TV included, unle
   const weigh = { name: 'Candi', goal: 'gain', keep: 'device', weights: { '2026-11-02': 117.4, '2026-11-09': 118.6 } };
   const phone = checkinView.render(fakeApp({ state, weigh })).s;
   assert.match(phone, /\$176\.46/);
-  assert.match(phone, /Candi’s weigh-in/);
+  assert.match(phone, /Candi’s weekly weigh-in/);
   assert.match(phone, /Up 1\.2 lb since last week/);
   assert.match(phone, /Only on this phone/);
   // Shared weigh-ins show on every screen by default.
   const shared = { ...state, checkin: { people: { Jeff: { goal: 'lose' } }, weights: { Jeff: { '2026-11-02': 212, '2026-11-09': 210.5 } } } };
-  assert.match(checkinView.render(fakeApp({ state: shared })).s, /Jeff’s weigh-in/);
+  assert.match(checkinView.render(fakeApp({ state: shared })).s, /Jeff’s weekly weigh-in/);
   const tv = checkinView.render(fakeApp({ state: shared, tv: true })).s;
-  assert.match(tv, /Jeff’s weigh-in/);
+  assert.match(tv, /Jeff’s weekly weigh-in/);
   assert.match(tv, /Down 1\.5 lb since last week/);
   assert.match(tv, /Week by week \(2 weigh-ins\)/, 'the record is there to track progress');
   const both = { ...shared, checkin: { people: { ...shared.checkin.people, Candi: { goal: 'gain' } }, weights: { ...shared.checkin.weights, Candi: { '2026-11-02': 117.4, '2026-11-09': 118.6 } } } };
@@ -160,14 +160,14 @@ test('the check-in page: weigh-ins are shared in the open, the TV included, unle
   const off = { ...shared, settings: { ...state.settings, weighOnTv: false } };
   const hidden = checkinView.render(fakeApp({ state: off, weigh, tv: true })).s;
   assert.match(hidden, /\$176\.46/);
-  assert.doesNotMatch(hidden, /210\.5|118\.6|Jeff’s weigh-in|Candi’s/);
+  assert.doesNotMatch(hidden, /210\.5|118\.6|Jeff’s weekly weigh-in|Candi’s/);
   assert.match(hidden, /turned off for the TV/);
-  assert.match(checkinView.render(fakeApp({ state: off })).s, /Jeff’s weigh-in/, 'phones still show them');
+  assert.match(checkinView.render(fakeApp({ state: off })).s, /Jeff’s weekly weigh-in/, 'phones still show them');
   // New weigh-ins are shared with the family unless the person chooses their own phone.
   assert.match(checkinView.render(fakeApp({ state, ui: { weighSetup: true } })).s, /value="family" checked/);
   // Nobody set up: an offer, with the caution, and no form until asked.
   const fresh = checkinView.render(fakeApp({ state })).s;
-  assert.match(fresh, /A weekly weigh-in, if you want one/);
+  assert.match(fresh, /Check-in day, the TV and a weigh-in[\s\S]*Weekly weigh-in[\s\S]*Set up my weigh-in/, 'the offer waits in the settings fold');
   assert.match(fresh, /one for a doctor/);
   assert.doesNotMatch(fresh, /data-submit="weigh:setup"/);
   assert.match(checkinView.render(fakeApp({ state, ui: { weighSetup: true } })).s, /data-submit="weigh:setup"/);

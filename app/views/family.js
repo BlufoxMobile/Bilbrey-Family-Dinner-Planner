@@ -180,7 +180,7 @@ function rules(app) {
   const s = app.settings;
   return html`<section class="set-sec" aria-labelledby="rules-h">
     <h2 id="rules-h" class="section-title">House rules</h2>
-    <div class="set-row set-col"><span class="set-label">Burger nights<small>With fries.</small></span>
+    <div class="set-row set-col"><span class="set-label">Burger nights (with fries)</span>
       <div class="chip-grid days-pick">${DAYS.map((d, i) => html`<button type="button" class="chip ${s.burgerNights.includes(i) ? 'is-on' : ''}" aria-pressed="${tf(s.burgerNights.includes(i))}" data-action="fam:burger" data-day="${i}">${d}</button>`)}</div></div>
     <div class="set-row"><span class="set-label">Frozen pizza nights a month<small>On Saturdays.</small></span>${stepper({ value: s.pizzaPerMonth, step: 1, min: 0, action: 'fam:num', data: { key: 'pizzaPerMonth', max: 4 }, label: 'Pizza nights a month' })}</div>
     <div class="set-row"><span class="set-label">Rice dinners a week, at most<small>Candi’s rule.</small></span>${stepper({ value: s.riceMaxPerWeek, step: 1, min: 0, action: 'fam:num', data: { key: 'riceMaxPerWeek', max: 3 }, label: 'Rice dinners a week' })}</div>
@@ -253,7 +253,7 @@ function display(app) {
     ${raw(tvSettingRow())}
     <div class="set-row set-col"><span class="set-label">Text size</span>${segmented('textSize', [{ id: 'regular', label: 'Regular' }, { id: 'large', label: 'Large' }], d.textSize || 'regular', { label: 'Text size', action: 'fam:text', small: true })}</div>
     <div class="set-row"><span class="set-label">Show calories and protein<small>Lunches and dinners; breakfast and snacks aren’t tracked.</small></span>${switchToggle({ on: !d.hideNutrition, action: 'fam:nutrition', label: 'Show calories and protein on this device' })}</div>
-    ${when(!d.hideNutrition, () => html`<div class="set-row set-col"><span class="set-label">Today’s total on Tonight<small>One line adding up a packed lunch and a dinner plate for one person. Pick whose shows on this device.</small></span>${segmented('todayFor', todayOpts, d.todayFor || '', { label: 'Whose daily total shows on Tonight', action: 'fam:today', small: true })}</div>`)}
+    ${when(!d.hideNutrition, () => html`<div class="set-row set-col"><span class="set-label">Show a day’s calories on Tonight<small>A packed lunch plus a dinner plate, for one person.</small></span>${segmented('todayFor', todayOpts, d.todayFor || '', { label: 'Whose daily total shows on Tonight', action: 'fam:today', small: true })}</div>`)}
   </section>`;
 }
 

@@ -128,7 +128,7 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   await page.click(`dialog[open] [data-action="ahead:quick"][data-end="${end}"]`);
   assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:pantry"]', 'aria-checked'), 'true');
   assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:replan"]', 'aria-checked'), 'true', 're-planning is on by default with “use what we have first”');
-  assert.match(await page.textContent('dialog[open] .ahead-count'), /14 nights: 7 empty, 5 the app picked,? and 2 stay as they are\./);
+  await page.click('dialog[open] .ahead-opts > summary');
   // Turning the pantry off turns re-planning off with it; back on, it follows.
   await page.click('dialog[open] [data-action="ahead:pantry"]');
   assert.equal(await page.getAttribute('dialog[open] [data-action="ahead:replan"]', 'aria-checked'), 'false');
@@ -138,7 +138,7 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   await shot(page, 'planner-01-plan-ahead-sheet-390');
   await page.click('dialog[open] [data-action="ahead:go"]');
   await toastMatch(page, /^Planned \d+ dinners? through Sunday, Nov 29\./);
-  await page.waitForSelector('#ahead-card #ahead-ba');
+  await page.waitForSelector('#ahead-card #ahead-ba', { state: 'attached' });
   let s = await familyState();
   for (let d = 16; d <= 29; d++) assert.ok(s.plan[`2026-11-${d}`]?.dinner, `Nov ${d} is planned`);
   assert.deepEqual(s.plan['2026-11-19'], thu, 'the night Candi set by hand is exactly as she left it');
@@ -156,7 +156,7 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   assert.match(ba, /Against planning the open nights the usual way: \d+ more dinners? from what’s already here/);
   // What those dinners cost (docs/spec/24 §24.7): the food, the average dinner and plate, and the trip named as a trip.
   const cost = (await page.textContent('#ahead-cost')).replace(/\s+/g, ' ').trim();
-  assert.match(cost, /^These 14 dinners: (about )?\$[\d,]+ of food, \$\d+\.\d\d a dinner, \$\d+\.\d\d a plate\. \$[\d,]+ of it is already in the house; the trip for them comes to (about )?\$[\d,]+\.$/);
+  assert.match(cost, /^These 14 dinners: (about )?\$[\d,]+ of food, \$\d+\.\d\d a dinner, \$\d+\.\d\d a serving\. \$[\d,]+ of it is already in the house; the trip for them comes to (about )?\$[\d,]+\.$/);
   const [food, perDinner, perPlate] = cost.match(/\$[\d,.]+\d/g).map((x) => Number(x.replace(/[$,]/g, '')));
   assert.ok(Math.abs(food / 14 - perDinner) < 0.6 && Math.abs(perDinner / 5 - perPlate) < 0.01, `${food} of food is ${perDinner} a dinner and ${perPlate} a plate`);
   const card = await page.textContent('#ahead-card');
@@ -170,11 +170,11 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   // It survives a reload, and shows on the family's other screens.
   await waitFor(async () => (await (await fetch(`${apiBase}/__mock/state`)).json()).state.planAhead?.end === end);
   await page.reload();
-  await page.waitForSelector('#ahead-card #ahead-ba');
+  await page.waitForSelector('#ahead-card #ahead-ba', { state: 'attached' });
   assert.match(await page.textContent('#ahead-ba'), /of 14 dinners (now )?come from the pantry/);
   const desk = await newPage(ctx, DESKTOP);
   await go(desk, '#/plan', '.page-plan');
-  await desk.waitForSelector('#ahead-card #ahead-ba');
+  await desk.waitForSelector('#ahead-card #ahead-ba', { state: 'attached' });
   assert.ok(await noOverflow(desk));
   await shotOf(desk, '#ahead-card', 'planner-03-plan-ahead-result-1280');
   await desk.close();
@@ -237,7 +237,7 @@ test('lean by default and busy nights are family settings under More on the Plan
   const fz = await page.textContent('.use-first');
   assert.match(fz, /Eye of round steak/i);
   assert.match(fz, /ground beef/i);
-  assert.match(fz, /No date on it, so it counts as old/);
+  assert.match(fz, /Not sure when it went in: use it soon/);
   clean(fz, 'use first');
   assert.ok(await noOverflow(page));
   await shotOf(page, '.use-first', 'planner-05-use-first-390');
@@ -256,7 +256,7 @@ test('taking food off the shelf asks why: “threw it out” goes in the waste l
   assert.equal((await familyState()).pantry.beef.since, '2026-08-18', '“older” is about three months back');
   await closeToast(page);
   await waitFor(async () => (await page.locator('#when-card .when-list li').count()) === 2);
-  await textMatch(page, '.use-first', /In the freezer about 3 months, since Aug 18/);
+  await textMatch(page, '.use-first', /Lean ground beefIn the freezer since Aug 18/);
 
   // The trash can on a row opens the question.
   const corn = (await familyState()).pantry.cornCobs.qty;
@@ -455,8 +455,11 @@ test('after dinner is cooked the app asks about leftovers once; they can go in a
   assert.match(await page.textContent(`#pan-${left[0]}`), /Leftover [\s\S]+3 plates on hand/);
   assert.equal(await page.locator('#catch-card').count(), 0, 'the catch-up is Tonight’s, not the Pantry’s');
 
-  // Catch-up: Saturday's and Sunday's dinners were never marked. Tonight asks.
+  // Catch-up: Saturday's and Sunday's dinners were never marked. Tonight asks, once tonight's own
+  // after-dinner questions are answered (one question at a time, docs/spec/29).
   await go(page, '#/tonight', '.page-tonight');
+  if (await page.$('.howwas [data-action="lighter:dismiss"]')) await page.click('.howwas [data-action="lighter:dismiss"]');
+  await page.waitForSelector('#catch-card');
   const card = await page.textContent('#catch-card');
   assert.match(card, /Is the pantry still right\?/);
   assert.match(card, /2 dinners from the last week never came off the shelves/);

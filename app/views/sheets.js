@@ -3,7 +3,7 @@
 import { html, ic, when, openSheet, closeSheet, toast, renderSheet, confirmSheet, stepper, sheetId, tf } from '../ui.js';
 import { AWAY_REASONS } from '../config.js';
 import {
-  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate, byLabel, listJoin,
+  addDays, datesBetween, diffDays, fmtQty, longDay, relativeDay, shortDate, shortWeekday, isISODate, weekdayName, dayWord, dayAndDate, byLabel, listJoin, hourIn,
 } from '../util.js';
 import {
   dinnerById, rotationList, findInPlan, openNights, parseSideRef, shelfRef, sideInfo, isFavorite, kindOf,
@@ -128,18 +128,27 @@ function nightBody(app, date) {
       </li>`)}
     </ul>
     ${when(!cooked && slots === 1 && sides.length < 2, () => html`<button type="button" class="btn btn-quiet btn-small add-side" data-action="side:sub" data-date="${date}" data-dinner="${d.id}" data-slot="1">${ic('plus', { size: 18 })}Add a side</button>`)}
-    <div class="action-list">
-      ${when(!cooked, () => html`<a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>Step by step, with timers.</small></span></a>`)}
-      ${when(!cooked && date !== today && !past, () => html`<button type="button" class="action-row" data-action="night:tonight" data-date="${date}">${ic('tonight')}<span><b>Make this tonight</b><small>Tonight’s dinner moves to ${diffDays(date, today) === 1 ? 'tomorrow' : dayAndDate(date, today)}.</small></span></button>`)}
-      ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('swap')}<span><b>Change dinner</b></span></button>`)}
-      ${when(!cooked, () => html`<button type="button" class="action-row" data-action="night:move" data-date="${date}">${ic('move')}<span><b>Move to another night</b><small>Trades places if that night has a dinner.</small></span></button>`)}
-      ${when(!cooked && !past, () => html`<button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('away')}<span><b>Not eating at home</b></span></button>`)}
-      ${cooked
-        ? html`<button type="button" class="action-row" data-action="night:uncook" data-date="${date}">${ic('undo')}<span><b>Mark as not cooked</b><small>Puts it back in the pantry.</small></span></button>`
-        : html`<button type="button" class="action-row" data-action="night:cooked" data-date="${date}">${ic('checkCircle')}<span><b>Mark cooked</b><small>Takes it out of the pantry.</small></span></button>`}
-      <a class="action-row" href="#/recipe/${d.id}">${ic('recipes')}<span><b>Open the recipe</b></span></a>
-      ${when(!cooked, () => html`<button type="button" class="action-row action-quiet" data-action="night:clear" data-date="${date}">${ic('trash')}<span><b>Clear this night</b></span></button>`)}
-    </div>`;
+    <div class="action-list">${nightActions(app, { date, d, today, past, cooked })}</div>`;
+}
+
+// Tonight leads with cooking; a night ahead leads with changing it; a night gone by with "Mark cooked".
+function nightActions(app, { date, d, today, past, cooked }) {
+  const isToday = date === today;
+  const later = diffDays(date, today) === 1 ? 'tomorrow' : dayAndDate(date, today);
+  const recipe = html`<a class="action-row" href="#/recipe/${d.id}">${ic('recipes')}<span><b>Open the recipe</b></span></a>`;
+  if (cooked) {
+    return html`<button type="button" class="action-row" data-action="night:uncook" data-date="${date}">${ic('undo')}<span><b>Mark as not cooked</b><small>Puts it back in the pantry.</small></span></button>${recipe}`;
+  }
+  const cook = html`<a class="action-row" href="#/cook/${date}">${ic('flame')}<span><b>Start cooking</b><small>Step by step, with timers.</small></span></a>`;
+  const change = html`<button type="button" class="action-row" data-action="night:pick" data-date="${date}">${ic('swap')}<span><b>Change dinner</b></span></button>`;
+  const move = html`<button type="button" class="action-row" data-action="night:move" data-date="${date}">${ic('move')}<span><b>Move to another night</b><small>Trades places if that night has a dinner.</small></span></button>`;
+  const away = html`<button type="button" class="action-row" data-action="night:away" data-date="${date}">${ic('away')}<span><b>Not eating at home</b></span></button>`;
+  const tonight = html`<button type="button" class="action-row" data-action="night:tonight" data-date="${date}">${ic('tonight')}<span><b>Make this tonight</b><small>Tonight’s dinner moves to ${later}.</small></span></button>`;
+  const markCooked = html`<button type="button" class="action-row" data-action="night:cooked" data-date="${date}">${ic('checkCircle')}<span><b>Mark cooked</b><small>Takes it out of the pantry.</small></span></button>`;
+  const clear = html`<button type="button" class="action-row action-quiet" data-action="night:clear" data-date="${date}">${ic('trash')}<span><b>Clear this night</b></span></button>`;
+  if (isToday) return html`${cook}${change}${move}${away}${markCooked}${recipe}${clear}`;
+  if (past) return html`${markCooked}${change}${move}${recipe}${clear}`;
+  return html`${change}${move}${away}${tonight}${recipe}${clear}`;
 }
 
 // ---------------------------------------------------------------- pick a dinner
@@ -458,7 +467,8 @@ export function openLeftoverMore(app, from) {
       const today = app.today();
       const l = leftoversOnHand(app.state, today).find((x) => x.date === from);
       if (!l) return html`<p class="sheet-text">Those leftovers are gone.</p><div class="sheet-actions"><button type="button" class="btn btn-primary btn-block" data-action="sheet:close">OK</button></div>`;
-      const lunches = leftoverLunchChoices(app.db, app.state, { from, today });
+      // After 2 PM today's lunch has been eaten, so the choices start tomorrow (gauntlet r3).
+      const lunches = leftoverLunchChoices(app.db, app.state, { from, today }).filter((c) => c.date > today || hourIn() < 14);
       const plates = Math.max(1, Math.min(l.servings, st.plates ?? l.servings));
       const nights = l.night ? [] : leftoverNightChoices(app.state, l, today);
       return html`
@@ -470,12 +480,11 @@ export function openLeftoverMore(app, from) {
         ${lunches.length ? html`<div class="action-list left-choices">${lunches.map((c) => html`<button type="button" class="action-row" data-action="leftovers:lunch" data-from="${from}" data-name="${c.name}" data-to="${c.date}">${ic('lunch')}<span><b>${c.name}’s lunch ${dayName(c.date, today)}</b><small>One serving, instead of the packed lunch.</small></span></button>`)}</div>`
           : html`<p class="muted small">Nobody packs a lunch before these are past their best.</p>`}
         <h3 class="sheet-h">Or freeze them</h3>
-        <div class="left-plates"><span class="set-label">How many plates?</span>
+        <div class="left-freeze">
           <span class="qty-edit"><button type="button" class="stepper-btn" data-action="leftovers:plates" data-delta="-1" aria-label="One plate less" ${plates <= 1 ? 'disabled' : ''}>${ic('minus', { size: 18 })}</button>
             <b class="left-n" aria-live="polite">${plates}</b>
-            <button type="button" class="stepper-btn" data-action="leftovers:plates" data-delta="1" aria-label="One plate more" ${plates >= l.servings ? 'disabled' : ''}>${ic('plus', { size: 18 })}</button></span></div>
-        <div class="action-list">
-          <button type="button" class="action-row" data-action="leftovers:freeze" data-from="${from}" data-n="${plates}">${ic('snow')}<span><b>Put ${plates === l.servings ? (plates === 1 ? 'it' : 'them all') : plates} in the freezer</b><small>Good for about 3 months.</small></span></button>
+            <button type="button" class="stepper-btn" data-action="leftovers:plates" data-delta="1" aria-label="One plate more" ${plates >= l.servings ? 'disabled' : ''}>${ic('plus', { size: 18 })}</button></span>
+          <button type="button" class="btn btn-secondary" data-action="leftovers:freeze" data-from="${from}" data-n="${plates}">${ic('snow', { size: 20 })}Freeze ${plates === 1 ? '1 plate' : `${plates} plates`}</button>
         </div>`;
     },
   });

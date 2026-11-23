@@ -55,12 +55,13 @@ export function ingredients(app, items, { check = true } = {}) {
   const rows = pantryCheck(app.db, app.state, items).rows;
   return html`<ul class="ingredients ${check ? 'ingredients-check' : ''}">${rows.map((r) => {
     const light = lighter && app.db.ingredients[r.id]?.meat;
-    // Only what's missing gets words (gauntlet r1); what's in the house gets a quiet check.
+    // A quiet check for what's in the house and a small cart for what isn't (gauntlet r3); the summary
+    // above the list says it in words.
     const state = r.status === 'have' ? 'In the pantry' : r.status === 'short' ? `Need ${unitText(r.short, r.unit)} more` : 'Need to buy';
     return html`<li class="ing ing-${r.status}">
       <span class="ing-amt">${r.amount}</span>
       <span class="ing-name">${r.name}${light ? html` <span class="tag">lighter</span>` : ''}</span>
-      ${check ? html`<span class="ing-state">${r.status === 'have' ? html`${ic('check', { size: 16 })}<span class="sr-only">${state}</span>` : html`<span>${state}</span>`}</span>` : ''}
+      ${check ? html`<span class="ing-state">${ic(r.status === 'have' ? 'check' : 'cart', { size: 16 })}${r.status === 'short' ? html`<span class="ing-more" aria-hidden="true">${unitText(r.short, r.unit)} more</span>` : ''}<span class="sr-only">${state}</span></span>` : ''}
     </li>`;
   })}</ul>`;
 }
@@ -75,8 +76,8 @@ function votes(app, d) {
       <button type="button" class="btn vote-btn vote-down ${mine === -1 ? 'is-on' : ''}" aria-pressed="${tf(mine === -1)}" data-action="vote:dinner" data-id="${d.id}" data-value="-1">${ic('down_vote', { size: 20 })}Not for us</button>
     </div>
     <p class="muted small">${mine === 1 ? 'A family favorite: it gets planned more often. Tap Loved again to go back to fine.'
-      : mine === -1 ? 'Off the menu, and a dinner from the bench took its place. Tap “Not for us” again to bring this one back.'
-        : 'Loved makes it a family favorite, planned more often. Not for us takes it off the menu and brings in a dinner from the bench; it waits in Recipes, Dropped, if you change your minds.'}</p>
+      : mine === -1 ? 'Off the menu; another dinner took its place. Tap “Not for us” again to bring it back.'
+        : 'Loved: planned more often. Not for us: off the menu; it waits in Recipes under “Not for us” if you change your minds.'}</p>
   </section>`;
 }
 
@@ -184,10 +185,11 @@ export function render(app) {
           ${when(where.length, () => html`<span class="badge badge-plan">${ic('plan', { size: 14 })}Planned ${where.slice(0, 2).map((w) => (w === today ? 'tonight' : relativeDay(w, today))).join(' and ')}</span>`)}
         </div>
         <div class="recipe-actions">
-          ${when(!cookedTonight, () => html`<a class="btn btn-primary" id="rec-cook" href="${cookHref}">${ic('flame', { size: 20 })}${cookLabel}</a>`)}
+          ${when(!cookedTonight && !late, () => html`<a class="btn btn-primary" id="rec-cook" href="${cookHref}">${ic('flame', { size: 20 })}${cookLabel}</a>`)}
           ${when(cookedTonight, () => html`<p class="status-note status-cooked">${ic('checkCircle', { size: 18 })}Cooked tonight.</p>`)}
           ${when(!isTonight && !late, () => html`<button type="button" class="btn btn-secondary" data-action="rec:tonight" data-dinner="${d.id}">${ic('tonight', { size: 20 })}Make this tonight</button>`)}
-          <button type="button" class="btn btn-secondary" data-action="rec:addplan" data-dinner="${d.id}">${ic('plan', { size: 20 })}${isTonight ? 'Move or plan again…' : 'Add to plan on…'}</button>
+          <button type="button" class="btn ${late ? 'btn-primary' : 'btn-secondary'}" data-action="rec:addplan" data-dinner="${d.id}">${ic('plan', { size: 20 })}${isTonight ? 'Move or plan again…' : 'Add to plan on…'}</button>
+          ${when(!cookedTonight && late, () => html`<a class="btn btn-secondary" id="rec-cook" href="${cookHref}">${ic('flame', { size: 20 })}${cookLabel}</a>`)}
         </div>
         ${when(!isTonight && late, () => html`<p class="muted small">Too long for tonight: it takes ${fmtMinutes(Number(d.minutes) || 0)}.</p>`)}
       </div>
@@ -198,11 +200,11 @@ export function render(app) {
       <div class="recipe-need">
         ${when(gear.length, () => html`<section aria-labelledby="gear-h" class="recipe-gear">
           <h2 id="gear-h" class="section-title">Equipment</h2>
-          <ul class="gear">${gear.map((g) => html`<li>${equipIcon(g.id, { size: 22 })}<span><b>${equipLabel(g.id)}</b>${g.settings.length ? html`<small>${g.settings.join(', ')}</small>` : ''}</span></li>`)}</ul>
+          <ul class="gear">${gear.map((g) => html`<li>${equipIcon(g.id, { size: 22 })}<span><b>${equipLabel(g.id)}${g.id === 'possible cooker' ? ' (slow cooker)' : ''}</b>${g.settings.length ? html`<small>${g.settings.join(', ')}</small>` : ''}</span></li>`)}</ul>
           <p class="muted small">No oven needed, ever.</p>
         </section>`)}
         <section class="recipe-ings" aria-labelledby="ing-h">
-          <h2 id="ing-h" class="section-title">For five, all adult plates</h2>
+          <h2 id="ing-h" class="section-title">Ingredients <span class="title-note">(for five)</span></h2>
           ${when(total, () => html`<p class="pantry-sum ${missing.length ? '' : 'is-ready'}">${missing.length
             ? html`${cic('pantry', { size: 18 })}<span><b>${total - missing.length} of ${total}</b> ingredients are in the pantry. Missing: ${listJoin(missing.slice(0, 5).map((m) => plainName(m.name)))}${missing.length > 5 ? `, and ${missing.length - 5} more` : ''}. ${where.length ? html`<a href="#/list">They’re on the list.</a>` : 'Plan it and they go on the list.'}</span>`
             : html`${ic('checkCircle', { size: 18 })}<span><b>Everything is in the pantry.</b> Nothing to buy.</span>`}</p>`)}
@@ -238,7 +240,7 @@ export function render(app) {
             return html`<div class="side-block"><details class="side-detail" open>
               <summary>${sidePhoto(app, s, { size: 'thumb' })}<span><b>${s.info?.title}</b>${replacedNote(app, s)}${when(s.remembered && !s.replaced, () => html`<small>Remembered substitute</small>`)}
                 <small class="side-kcal">${[s.info?.minutes ? fmtMinutes(s.info.minutes) : '', ...sGear.map((g) => `${equipLabel(g.id)}${g.settings.length ? ` (${g.settings.join(', ')})` : ''}`), showNutrition(app) ? (sn ? `${fmtKcal(sn.kcal)} cal a plate` : 'no calorie data') : ''].filter(Boolean).join(' · ')}</small></span></summary>
-              ${when(cue, () => html`<p class="side-cue">${ic('clock', { size: 16 })}<span>${cue.text}</span></p>`)}
+              ${when(cue && tl.tracks.length < 2, () => html`<p class="side-cue">${ic('clock', { size: 16 })}<span>${cue.text}</span></p>`)}
               <ol class="steps steps-small steps-side">${sSteps.map((st) => html`<li>${st.text}${st.timers.length ? html` <span class="step-chip">${cic('timer', { size: 14 })}${st.timers.map((t) => t.label).join(', ')}</span>` : ''}</li>`)}</ol>
             </details>${when(s.parsed.type === 'side' && app.db.sides[s.parsed.id], () => html`<div class="side-rate">${thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', compact: true, labels: true })}</div>`)}</div>`;
           }) : html`<p class="muted">No sides with this one.</p>`}
@@ -267,7 +269,7 @@ export function render(app) {
       ${retired ? html`<button type="button" class="btn btn-secondary" data-action="rec:restore" data-dinner="${d.id}">${ic('undo', { size: 20 })}Put it back on the menu</button>`
         : html`<button type="button" class="btn btn-secondary" data-action="rec:promote" data-dinner="${d.id}">${ic('plus', { size: 20 })}Put it on the menu</button>`}
     </section>`)}
-    ${when(!cookedTonight, () => html`<div class="recipe-bar is-hidden"><a class="btn btn-primary btn-lg btn-block" href="${cookHref}">${ic('flame', { size: 22 })}${cookLabel}</a></div>`)}
+    ${when(!cookedTonight && !late, () => html`<div class="recipe-bar is-hidden"><a class="btn btn-primary btn-lg btn-block" href="${cookHref}">${ic('flame', { size: 22 })}${cookLabel}</a></div>`)}
   </div>`;
 }
 

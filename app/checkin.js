@@ -107,9 +107,9 @@ export function moneyCheckin(db, state, today, week = shownWeek(state, today)) {
   const status = b.ifPlanned > target ? 'over' : b.ifPlanned > target * 0.97 ? 'tight' : 'on';
   const nights = `${b.unplanned} open ${b.unplanned === 1 ? 'night' : 'nights'}`;
   // One number, the same one the Budget page leads with (docs/spec/29): where the month is heading.
-  const verdict = status === 'over'
-    ? `Over budget: heading for about ${money(b.ifPlanned)} of ${money(target, { whole: true })}, about ${money(b.ifPlanned - target, { whole: true })} over.`
-    : `${status === 'tight' ? 'Close to the line' : 'On budget'}: heading for about ${money(b.ifPlanned)} of ${money(target, { whole: true })}, about ${money(target - b.ifPlanned, { whole: true })} under.`;
+  // Worded the way the Budget page leads ("About $163 over / the $650 target").
+  const gap = money(Math.abs(b.ifPlanned - target), { whole: true });
+  const verdict = `About ${gap} ${status === 'over' ? 'over' : 'under'} the ${money(target, { whole: true })} target${status === 'tight' ? ', close to the line' : ''}. The month is heading for ${money(b.ifPlanned)}.`;
 
   const tips = [];
   const anyThisMonth = b.receipts.length > 0;

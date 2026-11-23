@@ -320,23 +320,20 @@ function readyScreen(app, t, p, s) {
     if (had) { for (const v of e.settings) if (!had.settings.includes(v)) had.settings.push(v); } else settings.push({ ...e, settings: [...e.settings] });
   }
   const temps = safeTemps(t.d);
+  // The summary card holds the timing in a line per side; the checklist comes right after it, and
+  // the safe temperatures close the screen (gauntlet r3).
+  const cue = (c) => `${c.text.split(/(?<=\.)\s/)[0]}`;
   return html`<article class="cook-ready">
     <div class="cook-card">
       <h1 class="cook-dish">${t.d.title}</h1>
       ${when(p.recs.length > 1, () => html`<p class="cook-with">with ${listJoin(p.recs.slice(1).map((r) => midSentence(r.title)))}</p>`)}
       <ul class="facts cook-facts">
-        ${when(p.tl.total, () => html`<li>${ic('clock', { size: 20 })}<span>About ${fmtMinutes(p.tl.total)} for the whole plate</span></li>`)}
+        ${when(p.tl.total, () => html`<li>${ic('clock', { size: 20 })}<span>About ${fmtMinutes(p.tl.total)} for the whole plate${p.tl.tracks.length > 1 ? html`<small class="cook-cue-line">${p.tl.cues.map((c) => html`<span><b>${c.title}:</b> ${cue(c)}</span>`)}</small>` : ''}</span></li>`)}
         ${settings.map((e) => html`<li>${equipIcon(e.id, { size: 20 })}<span>${equipLabel(e.id)}${e.settings.length ? html`: <b>${e.settings.join(', ')}</b>` : ''}</span></li>`)}
       </ul>
-      ${temps.map((x) => html`<p class="cook-temp">${cic('thermo', { size: 20 })}<span>${x.food}: <b>${x.temp}°F</b>, ${x.note}.</span></p>`)}
       ${when(t.date === app.today(), () => thawLine(app, app.today()))}
-      <p class="muted small" data-wake>${'wakeLock' in navigator ? 'The screen stays on while you cook.' : 'This screen may dim while you cook: turn auto-lock up, or tap it now and then.'}</p>
     </div>
     ${when(!p.n, () => html`<p class="hint">${ic('info', { size: 18 })}<span>This recipe has no steps written down. Cook it your way, then tap Finish to mark it cooked.</span></p>`)}
-    ${when(p.tl.tracks.length > 1, () => html`<section class="cook-plan" aria-labelledby="cook-plan-h">
-      <h2 id="cook-plan-h" class="cook-sec-h">Timing the whole plate</h2>
-      <ul class="cook-cues">${p.tl.cues.map((c) => html`<li><b>${c.title}.</b> ${c.text}</li>`)}</ul>
-    </section>`)}
     <section class="cook-need" aria-labelledby="cook-need-h">
       <h2 id="cook-need-h" class="cook-sec-h">Get everything out</h2>
       <p class="muted small">Tap each one as it comes out.</p>
@@ -352,6 +349,10 @@ function readyScreen(app, t, p, s) {
             </button></li>`;
           })}</ul>`;
       })}
+    </section>
+    <section class="cook-safe">
+      ${temps.map((x) => html`<p class="cook-temp">${cic('thermo', { size: 20 })}<span>${x.food}: <b>${x.temp}°F</b>, ${x.note}.</span></p>`)}
+      <p class="muted small" data-wake>${'wakeLock' in navigator ? 'The screen stays on while you cook.' : 'This screen may dim while you cook: turn auto-lock up, or tap it now and then.'}</p>
     </section>
   </article>`;
 }
@@ -660,10 +661,12 @@ export const actions = {
     const h = here(app);
     if (!h || h.s.i < 0 || h.s.i >= h.p.n) return;
     const step = h.p.tl.steps[h.s.i];
-    if (!step.timers.length) return;
-    const t = timerById(timerId(h.s, step, 0));
+    // The first timer the step shows (a timer under 30 seconds isn't offered).
+    const k = step.timers.findIndex((t0) => !(Number(t0.seconds) > 0 && Number(t0.seconds) < 30));
+    if (k < 0) return;
+    const t = timerById(timerId(h.s, step, k));
     const now = Date.now();
-    if (!t || timerPhase(t, now) === 'done') { startTimer(app, step.key, 0); return; }
+    if (!t || timerPhase(t, now) === 'done') { startTimer(app, step.key, k); return; }
     setTimer(timerPhase(t, now) === 'paused' ? resumeTimer(t, now) : pauseTimer(t, now));
     app.render();
   },

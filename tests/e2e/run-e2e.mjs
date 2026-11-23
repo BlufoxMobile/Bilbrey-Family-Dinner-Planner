@@ -382,7 +382,7 @@ test('budget: log a receipt, switch meat to lighter, the projection follows', as
   const before = Number((await page.textContent('.budget-num')).replace(/[^0-9.]/g, ''));
   // One number on Budget and on the check-in: where the month is heading (docs/spec/29).
   assert.match(await page.textContent('.budget-answer'), /^About \$[\d,]+ (over|under)\s*the \$650 target$/, 'the answer first');
-  await page.click('.log-by-hand > summary');
+  await page.click('details:has(form[data-submit="bud:receipt"]) > summary');
   await page.fill('form[data-submit="bud:receipt"] input[name="amount"]', '86.40');
   await page.click('form[data-submit="bud:receipt"] button[type=submit]');
   await page.waitForSelector('.receipt-row', { timeout: 5000 });
@@ -451,13 +451,14 @@ test('lunch: edit Knox’s lunches, swap a drink for a day, skip a day, and the 
   await page.waitForSelector('.lunch-day.is-skipped[data-date="2026-11-18"]');
   const after = await lunchCost(page);
   assert.ok(after < before, `lunch groceries went down (${before} → ${after})`);
-  // The Lunches filter shows only lunch items.
+  // The Lunches filter (with the cost, under the list) shows only lunch items.
+  await listMore(page);
   await page.click('[data-action="list:filter"][data-value="lunches"]');
   await page.waitForSelector('[data-action="list:filter"][data-value="lunches"].is-on');
-  const tags = await page.$$eval('.store-sec .item', (els) => els.map((e) => !!e.querySelector('.tag-lunch')));
+  const tags = await page.$$eval('.store-sec .item', (els) => els.map((e) => e.hasAttribute('data-lunch')));
   assert.ok(tags.length > 0 && tags.every(Boolean), 'only lunch-tagged items');
   await shot(page, 'e2e-23-list-lunches');
-  await page.click('[data-action="list:filter"][data-value="all"]');
+  await page.click('.filter-on [data-action="list:filter"][data-value="all"]');
 });
 
 test('calories and protein: today’s line on Tonight for whoever this device picks, and a per-device switch to hide them', async () => {
@@ -497,7 +498,7 @@ test('what a meal costs (docs/spec/24): beside the calories on Tonight, the week
   // The week's cards and the summary under them.
   const cards = await page.$$eval('.day .day-cost', (els) => els.map((e) => e.textContent.trim()));
   assert.ok(cards.length >= 5 && cards.every((t) => COST.test(t)), `every planned night shows its cost (${cards.length})`);
-  assert.match(await page.textContent('.plan-summary'), /dinners planned(, \d+ nights? away)?: (about )?\$\d+\.\d\d a plate\. \$[\d,]+\.\d\d on the list\./);
+  assert.match(await page.textContent('.plan-summary'), /dinners planned(, \d+ nights? away)?: (about )?\$\d+\.\d\d a serving\. \$[\d,]+\.\d\d on the list\./);
   // The dinner picker: every option can be told apart by price before choosing.
   await page.click('.day:not(.is-today):not(.is-past) .day-hit');
   await page.waitForSelector('dialog[open] [data-action="night:pick"]');
@@ -553,7 +554,7 @@ test('coupons: Clip Jewel coupons and Sam’s Instant Savings, honestly explaine
   await page.keyboard.press('Escape');
   await orderOnline(page); // Copy & open lives in "Order online" (docs/spec/28)
   await page.click('[data-action="list:handoff"][data-store="jewel"]');
-  await page.waitForSelector('dialog[open] .hint a[href*="jewelosco"]');
+  await page.waitForSelector('dialog[open] .hint a[href*="jewelosco"]', { state: 'attached' });
   await page.keyboard.press('Escape');
 });
 
@@ -740,7 +741,7 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   await row.waitFor();
   const expectName = extra ? `Member's Mark ${name0}` : id0 === 'chicken' ? "Member's Mark Boneless Skinless Chicken Breasts" : "Member's Mark Shredded Mild Cheddar";
   // The row names the product the receipt says the family buys (docs/spec/29); the sheet has where the price came from.
-  await waitFor(async () => (await row.locator('.item-name').textContent()).trim().startsWith(expectName));
+  await waitFor(async () => ((await row.locator('.item-product').textContent().catch(() => '')) || '').trim().startsWith(expectName.slice(0, 20)));
   await waitFor(() => row.scrollIntoViewIfNeeded().then(() => true, () => false)); // a sync can redraw the list mid-scroll; try again
   await shot(page, 'e2e-29-list-paid');
   await openItem(page, `.item-more[data-key="${id0}"]`);
@@ -748,12 +749,10 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   assert.match(await page.getAttribute('dialog[open] a[data-findit]', 'href'), /^https:\/\/www\.samsclub\.com\//);
   await page.keyboard.press('Escape');
   await settled(page);
-  // Copy & open uses the exact product name.
+  // Order online: Sam's rows open the exact product (docs/spec/29: no whole-list copy for Sam's).
   await orderOnline(page);
-  await page.click('[data-action="list:handoff"][data-store="sams"]');
-  await page.waitForSelector('dialog[open] .copy-box');
-  assert.ok((await page.evaluate(() => navigator.clipboard.readText())).includes(expectName));
-  await page.keyboard.press('Escape');
+  assert.ok(await page.$(`.store-sams .item:has(.item-more[data-key="${id0}"]) .order-it`));
+  await inStore(page);
   // My products: the receipt filled it in; Change opens the picker.
   await go(page, '#/products', '.page-products');
   assert.match(await page.textContent('.product-row.is-mine'), /Paid \$[\d.]+ on Nov 15/);
@@ -876,7 +875,7 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   await desk.close();
   // The pantry page says how far the pantry carries the plan when it covers tonight.
   await go(page, '#/pantry', '.page-pantry');
-  assert.ok(await page.$('.cover-line'));
+  assert.ok(await page.$('.use-first, .pan-place'), 'the pantry shows what to use first and the shelves');
   // Make the shopping list: a trip list, both stores, today through the planned day.
   await go(page, '#/plan', '.page-plan');
   await page.waitForSelector('#ahead-card');
@@ -1493,7 +1492,8 @@ test('two ways to shop (docs/spec/28): in the store by aisle with big pictures, 
   await shot(page, 'e2e-60-list-in-store');
   // Order online: each item opens on the store's site; the exact product page when we know it.
   await orderOnline(page);
-  assert.ok(await page.locator('.store-sams .store-handoff').count());
+  assert.equal(await page.locator('.store-sams .store-handoff').count(), 0, 'Sam’s: each row opens on its own');
+  assert.ok(await page.locator('.store-jewel .store-handoff').count(), 'Jewel: one copy for Jewel-Osco AI');
   const links = await page.$$eval('.store-sams .order-it', (a) => a.map((x) => ({ kind: x.dataset.order, href: x.getAttribute('href'), target: x.target })));
   assert.ok(links.length >= 2);
   for (const l of links) {

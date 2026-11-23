@@ -65,7 +65,7 @@ function tripBar(app, trip, range, list) {
     <p class="trip-what"><b>This trip: ${trip.store === 'both' ? 'Sam’s Club and Jewel-Osco' : NAMES[trip.store]}</b> <small>through ${dayAndDate(range.end, app.today())}</small></p>
     <span class="trip-acts">
       <button type="button" class="btn btn-small btn-quiet" data-action="trip:new">Change</button>
-      <button type="button" class="btn btn-small btn-quiet" data-action="trip:end">End</button>
+      <button type="button" class="btn btn-small btn-quiet" data-action="trip:end">End trip</button>
     </span>
   </div>`;
 }
@@ -264,19 +264,26 @@ function usesText(app, item) {
   return days.length ? `for ${listJoin(days)}` : '';
 }
 
+/** "1¼ lb" as it is; 10.66 oz reads "about 11 oz" and 0.33 cup "about ¼ cup" (gauntlet r3: one way of writing amounts). */
+function amt(n, unit) {
+  if (Math.abs(n * 4 - Math.round(n * 4)) < 0.01) return unitText(n, unit);
+  const r = n >= 4 ? Math.round(n) : Math.max(0.25, Math.round(n * 4) / 4);
+  return `about ${unitText(r, unit)}`;
+}
+
 function detail(app, i) {
   if (i.freeText) return `${i.every === 'week' ? 'Every week' : 'Every trip'}${i.cost == null ? ', add a price to count it in the budget' : ''}`;
   const parts = [];
   if (i.reasons.includes('dinners') || i.reasons.includes('lunches')) {
     const who = [...new Set((i.lunchUses || []).map((u) => u.person))];
     const forWhat = [i.reasons.includes('dinners') ? usesText(app, i) : '', who.length ? `${listJoin(who)}’s lunches` : ''].filter(Boolean);
-    let t = `${unitText(i.shortfall, i.unit)} needed ${forWhat.length ? (i.reasons.includes('dinners') ? forWhat.join(' and ') : `for ${forWhat.join(' and ')}`) : ''}`.trim();
-    if (i.have > 0) t += `, ${fmtQty(i.have)} on hand`;
+    let t = `${amt(i.shortfall, i.unit)} needed ${forWhat.length ? (i.reasons.includes('dinners') ? forWhat.join(' and ') : `for ${forWhat.join(' and ')}`) : ''}`.trim();
+    if (i.have > 0) t += `, ${amt(i.have, i.unit)} on hand`;
     parts.push(t);
   }
   if (i.extraPacks) parts.push(`${i.extraPacks} for everyday`);
   if (i.reasons.includes('low')) parts.push('running low');
-  if (i.leftover > 0.01 && i.kind !== 'staple' && (i.reasons.includes('dinners') || i.reasons.includes('lunches'))) parts.push(`${unitText(i.leftover, i.unit)} left over`);
+  if (i.leftover > 0.01 && i.kind !== 'staple' && (i.reasons.includes('dinners') || i.reasons.includes('lunches'))) parts.push(`${amt(i.leftover, i.unit)} left over`);
   if (i.storeFallback) parts.push(`not at ${NAMES[OTHER[i.store]]}`);
   return parts.join('; ');
 }
@@ -329,12 +336,15 @@ function itemRow(app, i, listKey, mode = null, { guess = false } = {}) {
     i.pack?.sale ? html`<span class="tag tag-sale">Sale</span>` : '',
     i.coupon ? html`<span class="tag tag-coupon">Clip coupon</span>` : '',
   ].filter(Boolean);
+  // The checkbox's name is the item; its description is the product, amount and price (gauntlet r3).
+  const rid = `it-${String(i.key).replace(/[^\w-]/g, '_')}`;
+  const near = guess && mode === 'store';
   return html`<li class="item ${i.checked ? 'is-checked' : ''} has-thumb ${mode ? `is-${mode}` : ''}" data-name="${i.name}" ${i.reasons?.includes('lunches') ? 'data-lunch' : ''} ${guess ? 'data-guess' : ''}>
-    <button type="button" class="check" role="checkbox" aria-checked="${i.checked ? 'true' : 'false'}" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-label="${label}${i.checked ? `, ${inCart}` : ''}"><span class="check-box">${ic('check', { size: 18 })}</span></button>
+    <button type="button" class="check" role="checkbox" aria-checked="${i.checked ? 'true' : 'false'}" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-label="${label}${i.checked ? `, ${inCart}` : ''}" aria-describedby="${product ? `${rid}-p ` : ''}${rid}-q"><span class="check-box">${ic('check', { size: 18 })}</span></button>
     <span class="item-thumb-hit" data-action="list:check" data-key="${i.key}" data-list="${listKey}" aria-hidden="true">${itemThumb(app, i, mode || 'store')}</span>
     <button type="button" class="item-main" data-action="list:check" data-key="${i.key}" data-list="${listKey}" tabindex="-1" aria-hidden="true">
-      <span class="item-name">${label}</span>${product ? html`<span class="item-product">${product}</span>` : ''}
-      <span class="item-qty">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? 'total ' : ''}${money(i.cost)}</span>`}${tags}</span>
+      <span class="item-name">${label}</span>${product ? html`<span class="item-product" id="${rid}-p">${product}</span>` : ''}
+      <span class="item-qty" id="${rid}-q">${many ? html`<b class="item-many">${many}</b>` : ''}${i.cost == null ? '' : html`<span class="item-price">${many ? 'total ' : ''}${money(i.cost)}</span>`}${tags}${near ? html`<span class="item-near">near here</span>` : ''}</span>
     </button>
     ${when(mode === 'online' && !i.freeText, () => html`<a class="btn btn-small ${i.checked ? 'btn-quiet' : 'btn-secondary'} order-it" href="${orderUrl(app, i)}" target="_blank" rel="noopener" data-findit="${i.id}" data-order="${storeProductUrl(app.db, i.store, i.id) ? 'product' : 'search'}" aria-label="Open ${chosen ? productLabel(i.product) : i.name} on ${NAMES[i.store]}">${ic('cart', { size: 18 })}${i.checked ? 'Again' : 'Open'}</a>`)}
     <button type="button" class="item-more" data-action="list:item" data-key="${i.key}" aria-label="More about ${label}">${ic('right', { size: 20 })}</button>
@@ -386,7 +396,7 @@ function storeSection(app, list, store, listKey) {
     <header class="store-head">
       <h2 id="sec-${store}" class="store-name">${info?.name || NAMES[store]}</h2>
       ${f === 'all'
-        ? html`<p class="store-total"><b>${left ? `${left} left` : 'All in the cart'}</b><small>${s.items.length} ${s.items.length === 1 ? 'item' : 'items'}, ${money(s.subtotal)}</small></p>`
+        ? html`<p class="store-total"><b>${left ? `${left} left` : 'All in the cart'}</b><small>· ${money(s.subtotal)}</small></p>`
         : html`<p class="store-total"><b>${money(share)}</b><small>for ${f}: ${visible} of ${s.items.length} ${s.items.length === 1 ? 'item' : 'items'}</small></p>`}
     </header>
     ${when(store === 'jewel' && list.coupons.some((c) => c.store === 'jewel' && !c.clipped), () => { const n = list.coupons.filter((c) => c.store === 'jewel' && !c.clipped).length; return html`<button type="button" class="btn btn-small btn-quiet clip-link" data-action="list:clip">${ic('receipt', { size: 18 })}${n} ${n === 1 ? 'coupon' : 'coupons'} to clip first</button>`; })}
@@ -451,7 +461,7 @@ function openCoupons(app, focus) {
 }
 
 function extrasSection(app) {
-  const extras = Object.entries(app.state.extras || {});
+  const extras = Object.entries(app.state.extras || {}).filter(([, x]) => !x.once); // one-offs aren't "every list"
   const have = new Set(extras.map(([, x]) => x.item).filter(Boolean));
   const quick = Object.values(app.db.ingredients).filter((i) => i.extra && !have.has(i.id)).slice(0, 8);
   return html`<section class="extras" aria-labelledby="ex-h">
@@ -475,17 +485,18 @@ function modeSwitch(app, list, trip) {
   const mode = listMode(app);
   return html`<section class="list-mode" aria-label="How are you shopping?">
     ${segmented('listMode', LIST_MODES, mode, { label: 'How are you shopping?', action: 'list:mode' })}
-    <div class="list-mode-row"><p class="muted small list-mode-how">${mode === 'online' ? 'Each item opens on the store’s site; tick it once it’s in your cart.' : 'In the order you walk the store. Tap an item to tick it.'}</p>${trip ? '' : html`<button type="button" class="link-btn trip-link" data-action="trip:new">Just this trip?</button>`}</div>
+    <div class="list-mode-row">${list.items.some((i) => i.checked) ? html`<span></span>` : html`<p class="muted small list-mode-how">${mode === 'online' ? 'Each item opens on the store’s site; tick it once it’s in your cart.' : 'In the order you walk the store. Tap an item to tick it.'}</p>`}${trip ? '' : html`<button type="button" class="link-btn trip-link" data-action="trip:new">Just this trip?</button>`}</div>
   </section>`;
 }
 
 /** "Grab paper towels": one field, on this list only. */
 function quickAdd(app, list, trip) {
-  const store = trip && trip.store !== 'both' ? trip.store : 'jewel';
+  // The store you're in, else the one with the most still to get (gauntlet r3: not always Jewel).
+  const store = trip && trip.store !== 'both' ? trip.store : (list.stores.sams?.remaining || 0) >= (list.stores.jewel?.remaining || 0) ? 'sams' : 'jewel';
   return html`<form class="quick-add" data-submit="list:quick-add" aria-label="Add something to this list">
     <input class="input" name="name" placeholder="Add an item" maxlength="60" autocomplete="off" aria-label="Add an item to this list" required list="extra-ideas">
     <datalist id="extra-ideas">${Object.values(app.db.ingredients).filter((x) => x.extra).slice(0, 12).map((x) => html`<option value="${x.name}"></option>`)}</datalist>
-    ${trip && trip.store !== 'both' ? html`<input type="hidden" name="store" value="${store}">` : html`<select class="input quick-store" name="store" aria-label="Which store"><option value="jewel">Jewel</option><option value="sams">Sam's</option></select>`}
+    ${trip && trip.store !== 'both' ? html`<input type="hidden" name="store" value="${store}">` : html`<select class="input quick-store" name="store" aria-label="Which store">${['sams', 'jewel'].map((x) => html`<option value="${x}" ${x === store ? 'selected' : ''}>${x === 'sams' ? 'Sam’s' : 'Jewel'}</option>`)}</select>`}
     <button type="submit" class="btn btn-secondary">${ic('plus', { size: 20 })}<span class="sr-only">Add</span></button>
   </form>`;
 }
@@ -519,7 +530,7 @@ export function render(app) {
       ${onDaySection(app, list)}
       ${skippedSection(app, list, listKey)}
       <details class="list-more" ${app.ui.listMoreOpen ? 'open' : ''}>
-        <summary data-action="list:more"><span class="section-title">${ic('receipt', { size: 22 })}Cost, coupons & more</span><small>${money(list.total)}</small></summary>
+        <summary data-action="list:more"><span class="section-title">${ic('receipt', { size: 22 })}Cost & coupons</span><small>${money(list.total)}</small></summary>
         ${when(list.lunches.length, () => html`<div class="list-filter"><p class="field-label">Show</p>${segmented('listFilter', FILTERS, activeFilter(app, list), { label: 'Show', action: 'list:filter', small: true })}</div>`)}
         <section class="totals" aria-label="Estimated cost">
           <p class="total-big"><span class="total-num">${money(list.total)}</span><span class="total-label">estimated for ${listJoin([
@@ -603,7 +614,7 @@ function itemSheet(app, key) {
       if (ph) hydrateSheetSoon(app);
       return html`
         ${ph ? photoImg(ph, 'item-sheet-photo', i.product?.label || i.name) : ''}
-        ${when(i.product?.label && i.product.label !== i.name, () => html`<h3 class="item-sheet-name">${i.product.label}</h3>`)}
+        ${when(i.product?.label && i.product.label !== i.name, () => html`<p class="item-sheet-product">${i.product.label}</p>`)}
         <p class="sheet-text">${formatPackQty(i)}${i.cost == null ? '' : `, ${money(i.cost)}`}. ${detail(app, i) || ''}</p>
         ${when(i.uses.length, () => html`<ul class="uses">${i.uses.map((u) => html`<li><span>${dayAndDate(u.date, app.today())}</span><span>${dinnerById(app.db, app.state, u.dinner)?.title}</span><span>${unitText(u.qty, i.unit)}</span></li>`)}</ul>`)}
         ${when(i.coupon, () => html`<p class="hint">${ic('receipt', { size: 18 })}<span><b>Clip the coupon first:</b> ${i.coupon.text}${i.coupon.expires ? `, ends ${shortDate(i.coupon.expires)}` : ''}.</span></p>`)}
@@ -722,7 +733,7 @@ function handoff(app, store) {
           <label class="field"><span class="field-label">${ok ? 'What was copied' : 'Select and copy this'}</span><textarea class="input copy-box" readonly rows="8">${text}</textarea></label>
           <button type="button" class="btn btn-quiet btn-block" data-action="list:copy-again" data-store="${store}">${ic('copy', { size: 20 })}${ai.length ? 'Copy the full list (with pack sizes)' : 'Copy again'}</button>
         </details>
-        ${when(info.address || info.phone, () => html`<p class="muted small">${[info.address, info.phone, info.hours].filter(Boolean).join('. ')}</p>`)}`,
+`,
     });
   });
 }

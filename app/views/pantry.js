@@ -53,7 +53,7 @@ let useBy = null; // id → useSoon row, set while the page renders
 let noDate = null; // ids of perishables nobody dated, set while the page renders
 
 function useByText(app, s) {
-  if (s.daysLeft < 0) return 'Past its usual use-by. Check it';
+  if (s.daysLeft < 0) return 'Check it: past its usual use-by';
   if (s.daysLeft === 0) return 'Use today';
   if (s.daysLeft === 1) return 'Use by tomorrow';
   return `Use by ${weekdayName(s.useBy)}`;
@@ -74,7 +74,7 @@ function pantryRow(app, id, p) {
     <span class="pan-name"><b>${m.name}</b>
       ${when(soon, () => html`<small class="pan-soon ${soon.daysLeft <= 0 ? 'is-now' : ''}">${useByText(app, soon)}</small>`)}
       ${when(p.label && !m.custom, () => html`<small class="pan-label">${p.label}</small>`)}
-      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `${fmtQty(count)} ${plural(pk.word, count)} (about ${unitText(p.qty, m.unit)})` : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}</small></span>
+      <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `about ${unitText(p.qty, m.unit)}` : pk?.counted ? '' : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}</small></span>
     <span class="pan-ctrl">
       ${staple
         ? html`<span class="have-it"><span class="have-label" aria-hidden="true">Have it</span>${switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `Have ${m.name}` })}</span>`
@@ -90,7 +90,7 @@ function pantryRow(app, id, p) {
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${pk?.counted ? 1 : stepFor(m.unit)}" aria-label="More ${m.name}">${ic('plus', { size: 18 })}</button>
             ${when(pk?.counted, () => html`<span class="qty-unit">${m.unit}</span>`)}
           </span>`}
-      <button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Add to list'}</button>
+      <button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Running low'}</button>
       <button type="button" class="icon-btn" data-action="pan:remove" data-id="${id}" aria-label="Remove ${m.name}">${ic('trash', { size: 20 })}</button>
     </span>
   </li>`;
@@ -158,8 +158,8 @@ function useFirstCard(app, soon) {
   const place = (id) => PLACES.find((p) => p.id === id)?.label.replace(/^(In|On) the /, '') || '';
   return html`<section class="use-first" aria-labelledby="use-h">
     <h2 id="use-h" class="section-title">${ic('clock', { size: 22 })}Use first</h2>
-    <ul class="use-list">${soon.slice(0, 5).map((s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${bare(s.name)}</b><small>${useByText(app, s)}, ${place(s.place)}</small></button></li>`)}
-      ${old.slice(0, Math.max(0, 6 - Math.min(5, soon.length))).map((w) => html`<li class="${w.past ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${w.id}"><b>${bare(w.name)}</b><small>${w.unknown ? 'No date on it, so it counts as old' : `In the freezer ${agoText(w.age)}, since ${shortDate(w.since)}`}</small></button></li>`)}</ul>
+    <ul class="use-list">${soon.slice(0, 5).map((s) => html`<li class="${s.daysLeft <= 0 ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${s.id}"><b>${bare(s.name)}</b><small>${useByText(app, s)} (${place(s.place)})</small></button></li>`)}
+      ${old.slice(0, Math.max(0, 6 - Math.min(5, soon.length))).map((w) => html`<li class="${w.past ? 'is-now' : ''}"><button type="button" class="link-row" data-action="pan:jump" data-target="pan-${w.id}"><b>${bare(w.name)}</b><small>${w.unknown ? 'Not sure when it went in: use it soon' : `In the freezer since ${shortDate(w.since)}`}</small></button></li>`)}</ul>
   </section>`;
 }
 
@@ -223,7 +223,6 @@ export function render(app) {
       <p class="muted small pan-add-how">${canScan ? 'Photos of the shelves: the app suggests what it sees, you confirm.' : app.store.device.localOnly ? 'Photo scanning needs the family server; this device is set to “this device only.”' : !app.store.device.key ? 'Photo scanning needs the family passcode (Family & settings).' : 'Photo scanning isn’t available right now.'} Just shopped? <button type="button" class="link-btn" data-action="rcpt:scan">Scan the receipt</button>.</p>
     </section>
     ${useFirstCard(app, soon)}
-    ${when(cov, () => cov)}
     ${syncCard(app)}
     ${when(low.length, () => html`<section class="pan-group"><h2 class="section-title">Running low</h2><ul class="pan-list">${low.map(([id, p]) => pantryRow(app, id, p))}</ul></section>`)}
     ${entries.length ? html`
@@ -288,6 +287,20 @@ function photoSheet(app, itemId) {
   photoSheet.state = st;
 }
 
+/** "6 packs, freezer": a search hit in the words the shelf uses (gauntlet r3). */
+function shelfWords(app, id, p) {
+  const m = meta(app, id);
+  const where = PLACES.find((x) => x.id === placeOf(app.db, app.state, id))?.label.replace(/^(In|On) the /, '') || '';
+  let amount = '';
+  if (m.kind === 'staple') amount = p.stocked ? 'have it' : 'not stocked';
+  else if (typeof p.qty === 'number') {
+    const pk = packageOf(app.db, app.state, id);
+    if (pk && !pk.counted) { const n = packagesFor(p.qty, pk.per); amount = `${fmtQty(n)} ${n > 0 && n <= 1 ? pk.word : plural(pk.word, 2)}`; }
+    else amount = unitText(p.qty, m.unit);
+  }
+  return [amount, where, p.low ? 'running low' : ''].filter(Boolean).join(', ');
+}
+
 function results(app) {
   const q = app.ui.pantryQuery.trim();
   if (!q) return '';
@@ -299,7 +312,7 @@ function results(app) {
   const rows = searchCatalog(app, q).filter((r) => !haveIds.has(r.id));
   return html`<ul class="pick-list">
     ${have.map(([id, p]) => html`<li><button type="button" class="pick-row is-have" data-action="pan:jump" data-target="pan-${id}">
-      <span class="pick-main"><b>${meta(app, id).name}</b><small>In the pantry${typeof p.qty === 'number' ? `: ${unitText(p.qty, meta(app, id).unit)}` : p.stocked ? ': have it' : ''}${p.low ? ', running low' : ''}</small></span>${ic('right', { size: 20 })}</button></li>`)}
+      <span class="pick-main"><b>${meta(app, id).name}</b><small>${shelfWords(app, id, p) || 'In the pantry'}</small></span>${ic('right', { size: 20 })}</button></li>`)}
     ${rows.map((r) => html`<li><button type="button" class="pick-row" data-action="pan:add" data-id="${r.id}">
       <span class="pick-main"><b>Add ${r.name}</b></span>${ic('plus', { size: 20 })}</button></li>`)}
     ${when(!rows.some((r) => r.name.toLowerCase() === q.toLowerCase()) && !have.some(([id]) => meta(app, id).name.toLowerCase() === q.toLowerCase()), () => html`<li><button type="button" class="pick-row" data-action="pan:new" data-name="${q}"><span class="pick-main"><b>Add “${q}” to the pantry</b></span>${ic('plus', { size: 20 })}</button></li>`)}

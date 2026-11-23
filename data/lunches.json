@@ -218,7 +218,7 @@
    ],
    "prep": "Scoop about 1.5 oz (a big handful) into a resealable snack bag.",
    "photo": "A handful of ranch-seasoned triangle tortilla chips in a clear zip snack bag.",
-   "batch": "Split the Cool Ranch Doritos party bag into {n} snack bags (about 1½ oz each)"
+   "batch": "Bag the Doritos into {n} snack bags, about 1½ oz each,"
   },
   {
    "id": "baked-chips-bag",
@@ -610,7 +610,7 @@
     "from your pantry"
    ],
    "prep": "Count about 9 Ritz into a snack bag.",
-   "batch": "Bag {n} snack bags of about 9 Ritz each",
+   "batch": "Bag the Ritz into {n} snack bags, about 9 each,",
    "photo": "About nine round buttery crackers in a small clear zip snack bag."
   },
   {

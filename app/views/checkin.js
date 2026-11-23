@@ -3,7 +3,7 @@
 // weigh-ins are shared with the family and shown on every screen, the TV included, unless a person
 // keeps theirs on their own phone or the family turns the TV off for them.
 import { html, ic, when, toast, segmented, confirmSheet, switchToggle } from '../ui.js';
-import { money, shortDate, mediumDate, weekdayName, datesBetween, diffDays, cleanName } from '../util.js';
+import { money, shortDate, mediumDate, weekdayName, datesBetween, diffDays, cleanName, listJoin } from '../util.js';
 import { tvOn } from '../tv.js';
 import { PARENTS } from '../config.js';
 import { settingOps } from '../actions.js';
@@ -126,16 +126,13 @@ function moneyCard(app, m, week) {
 function dinnersCard(app, week) {
   const s = weekSummary(app.db, app.state, datesBetween(week.start, week.end));
   if (!s.home && !s.away && !s.leftoverNights) return '';
-  const tiles = [
-    [`${s.cooked} of ${s.home}`, `${s.home === 1 ? 'dinner' : 'dinners'} cooked at home`],
-    [`${s.withVeg} of ${s.home}`, 'had a vegetable or salad'],
-  ];
-  if (s.counted) tiles.push([String(s.lean), `lean ${s.lean === 1 ? 'plate' : 'plates'}`]);
-  tiles.push([String(s.away + s.leftoverNights), 'nights out or on leftovers']);
+  const parts = [`${s.cooked} of ${s.home} ${s.home === 1 ? 'dinner' : 'dinners'} cooked at home`, `${s.withVeg} with a vegetable or salad`];
+  if (s.counted && s.lean) parts.push(`${s.lean} lean`);
+  const out = s.away + s.leftoverNights;
+  // One sentence, not four tiles (gauntlet r3).
   return html`<section class="ck-card" aria-labelledby="ckd-h">
     <h2 id="ckd-h" class="section-title">${ic('leaf', { size: 22 })}Dinners</h2>
-    <dl class="week-stats">${tiles.map(([v, k]) => html`<div><dt>${k}</dt><dd>${v}</dd></div>`)}</dl>
-    <p class="muted small">Every dinner eaten at home is one that wasn’t bought twice. <a href="#/plan">Open the Plan</a></p>
+    <p class="ck-dinners">${listJoin(parts)}${out ? `; ${out} ${out === 1 ? 'night' : 'nights'} out or on leftovers` : ''}. <a class="text-link" href="#/plan">Open the Plan</a></p>
   </section>`;
 }
 
@@ -189,7 +186,7 @@ function myWeighCard(app, me, today) {
   const t = weighTrend(weights, { today, goal: me.goal, day: checkinDay(app.state) });
   const thisWeek = t.doneThisWeek ? t.latest : null;
   return html`<section class="ck-card ck-weigh" id="ck-weigh" aria-labelledby="ckw-h">
-    <div class="section-head"><h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}${possessive(me.name)} weigh-in</h2>
+    <div class="section-head"><h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}${possessive(me.name)} weekly weigh-in</h2>
       <span class="ck-where">${ic(me.keep === 'family' ? 'cloud' : 'lock', { size: 16 })}${me.keep === 'family' ? 'Shared with the family' : 'Only on this phone'}</span></div>
     ${trendBlock(t)}
     ${weighLine(t.weeks, me.name)}
@@ -200,7 +197,7 @@ function myWeighCard(app, me, today) {
     </form>
     <p class="muted small">Once a week is plenty: same day, same time of day, same scale. Skipping a week is fine.</p>
     ${progressTable(weights, checkinDay(app.state), { remove: true })}
-    <details class="cover-more ck-settings"><summary>Weigh-in settings</summary>
+    <details class="cover-more ck-weigh-settings"><summary>Weigh-in settings</summary>
       <div class="opt"><span class="opt-label">Working toward</span>${segmented('weighGoal', WEIGH_GOALS, me.goal, { label: 'Working toward', action: 'weigh:goal', small: true })}</div>
       <div class="opt"><span class="opt-label">Kept</span>${segmented('weighKeep', [{ id: 'family', label: 'With the family' }, { id: 'device', label: 'Only on this phone' }], me.keep, { label: 'Where the weigh-ins are kept', action: 'weigh:keep', small: true })}</div>
       <button type="button" class="btn btn-danger-quiet btn-small" data-action="weigh:forget">Stop, and erase my weigh-ins</button>
@@ -210,8 +207,8 @@ function myWeighCard(app, me, today) {
 
 function sharedCard(app, s, today, canClaim) {
   const t = weighTrend(s.weights, { today, goal: s.goal, day: checkinDay(app.state) });
-  return html`<section class="ck-card ck-weigh ck-shared" aria-label="${possessive(s.name)} weigh-in">
-    <div class="section-head"><h2 class="section-title">${ic('chart', { size: 22 })}${possessive(s.name)} weigh-in</h2><span class="ck-where">${ic('cloud', { size: 16 })}Shared by ${s.name}</span></div>
+  return html`<section class="ck-card ck-weigh ck-shared" aria-label="${possessive(s.name)} weekly weigh-in">
+    <div class="section-head"><h2 class="section-title">${ic('chart', { size: 22 })}${possessive(s.name)} weekly weigh-in</h2><span class="ck-where">${ic('cloud', { size: 16 })}Shared by ${s.name}</span></div>
     ${trendBlock({ ...t, doctor: '' })}
     ${weighLine(t.weeks, s.name)}
     ${progressTable(s.weights, checkinDay(app.state))}
@@ -221,7 +218,7 @@ function sharedCard(app, s, today, canClaim) {
 
 function weighSection(app, today) {
   if (hiddenHere(app)) {
-    return html`<section class="ck-card ck-weigh ck-tv" aria-labelledby="ckw-h"><h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}Weigh-in</h2>
+    return html`<section class="ck-card ck-weigh ck-tv" aria-labelledby="ckw-h"><h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}Weekly weigh-in</h2>
       <p class="small">Weigh-ins are turned off for the TV. Open the app on a phone to add or see them.</p></section>`;
   }
   const me = app.store.device.weigh;
@@ -235,13 +232,19 @@ function weighSection(app, today) {
       <h2 id="ckt-h" class="section-title">${ic('heart', { size: 22 })}Progress so far</h2>
       <ul class="ck-progress-list">${lines.map((x) => html`<li><b>${x.name}</b><span>${x.line}</span></li>`)}</ul>
     </section>`)}
-    ${me ? myWeighCard(app, me, today)
-    : html`<section class="ck-card ck-weigh" id="ck-weigh" aria-labelledby="ckw-h">
-        <h2 id="ckw-h" class="section-title">${ic('chart', { size: 22 })}A weekly weigh-in, if you want one</h2>
-        <p class="small">Optional: one number a week, no goals or scores. Skip it if it adds stress; weight dropping without trying is one for a doctor.</p>
-        ${app.ui.weighSetup ? setupForm(app, shared) : html`<button type="button" class="btn btn-secondary" data-action="weigh:open-setup">Set up my weigh-in</button>`}
-      </section>`}
+    ${me ? myWeighCard(app, me, today) : ''}
     ${shared.map((s) => sharedCard(app, s, today, !me))}`;
+}
+
+/** No weigh-in on this phone yet: the offer waits in the settings fold, not on the page (gauntlet r3). */
+function weighOffer(app) {
+  if (hiddenHere(app) || app.store.device.weigh) return '';
+  const shared = sharedWeighIns(app.state);
+  return html`<div class="ck-offer" id="ck-weigh">
+    <h3 class="sheet-h" id="ckw-h">Weekly weigh-in</h3>
+    <p class="small">Optional: one number a week, no goals or scores. Skip it if it adds stress; weight dropping without trying is one for a doctor.</p>
+    ${app.ui.weighSetup ? setupForm(app, shared) : html`<button type="button" class="btn btn-secondary" data-action="weigh:open-setup">Set up my weigh-in</button>`}
+  </div>`;
 }
 
 // ---------------------------------------------------------------- the page
@@ -251,16 +254,18 @@ export function render(app) {
   const week = shownWeek(app.state, today);
   const m = moneyCheckin(app.db, app.state, today, week);
   const day = checkinDay(app.state);
+  const offer = weighOffer(app);
   return html`<div class="page page-checkin">
     <header class="page-head"><div><h1 class="page-title">Weekly check-in</h1>
       <p class="muted ck-week">${m.week.done ? 'The week of' : 'This week so far,'} ${weekLabel(week)}</p></div></header>
     <div class="ck-grid">
       <div class="ck-col">${moneyCard(app, m, week)}${dinnersCard(app, week)}</div>
       <div class="ck-col">${weighSection(app, today)}
-        <details class="ck-card ck-day ck-settings" ${app.ui.ckSettingsOpen ? 'open' : ''}><summary><span id="ckday-h">Check-in day and the TV</span></summary>
+        <details class="ck-card ck-day ck-settings" ${app.ui.ckSettingsOpen || app.ui.weighSetup ? 'open' : ''}><summary><span id="ckday-h">${offer ? 'Check-in day, the TV and a weigh-in' : 'Check-in day and the TV'}</span></summary>
           <div class="chip-grid" role="radiogroup" aria-label="Check-in day">${DAYS.map((d, i) => html`<button type="button" role="radio" aria-checked="${i === day ? 'true' : 'false'}" class="chip ${i === day ? 'is-on' : ''}" data-action="checkin:day" data-value="${i}" aria-label="${DAY_NAMES[i]}">${d}</button>`)}</div>
           <p class="muted small">The week ends on ${DAY_NAMES[day]}, and Tonight offers the check-in that day.</p>
           <div class="set-row ck-tv-row"><span class="set-label">Show weigh-ins on the TV<small>Off hides them on the TV only; phones still show them.</small></span>${switchToggle({ on: weighOnTv(app), action: 'checkin:tv', label: 'Show weigh-ins on the TV' })}</div>
+          ${offer}
         </details>
       </div>
     </div>

@@ -10,9 +10,9 @@
    (styles/parts/tv.css): there, Large is one small step more, so every screen still fits. */
 html.is-tv[data-text="large"] { font-size: 121.875%; }
 
-/* On a phone the top bar has no room to grow: the sync pill keeps its dot (and its spoken label)
-   and drops the word, as it already does on the narrowest phones. */
-@media (max-width: 520px) {
+/* The wordmark's text steps aside for the sync pill (styles/parts/simple.css), so the pill keeps its
+   word at Large too; only the narrowest phones drop it to the icon (and its spoken label). */
+@media (max-width: 360px) {
   :root[data-text="large"] .topbar .sync-label { display: none; }
   :root[data-text="large"] .topbar .sync { padding: 0 13px; }
 }

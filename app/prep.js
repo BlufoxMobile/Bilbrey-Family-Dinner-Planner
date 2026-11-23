@@ -114,7 +114,7 @@ function lunchTasks(db, state, today, end) {
     }
   }
   for (const { item, people, n } of batch.values()) {
-    out.push({ date: today, when: 'anytime', kind: 'lunch', text: `${item.batch.replace(/\{n\}/g, String(n))} (${listJoin([...people])}’s lunches this week).` });
+    out.push({ date: today, when: 'anytime', kind: 'lunch', text: `${item.batch.replace(/\{n\}/g, String(n))} for ${listJoin([...people])}’s lunches.` });
   }
   // Each evening: tomorrow's lunches. Each morning: anything bought fresh that day.
   const byDate = new Map();

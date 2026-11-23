@@ -74,7 +74,64 @@ explained everything twice.
   editor.
 - **Easy tonight:** only dinners that need no store trip.
 
-## 29.3 Tests
+## 29.3 Round 2 (all five reviewers at 7)
+
+- **List rows** lead with the plain item in bold ("Honey"), the store's product small under it on one line,
+  then the amount and price ("2 packs total $38.26"); names wrap to three lines. No "aisle?" or "Lunch"
+  chips on rows; the picture ticks too. "Add an item" (one field, with suggestions) sits at the top; repeating
+  extras and the Dinners/Lunches filter live under "Cost, coupons & more". Done is one line and sticks only
+  once half the list is ticked. The trip bar is one line. Order online: a compact Open per row; Sam's has no
+  whole-list copy; Jewel's copy sheet is three steps with the rest folded.
+- **Tonight** says whether dinner can happen from the house: "Everything's in the house" or "Not in the house:
+  sliced cheese and frozen fries" (shortfalls included). "Low on energy?" shows only when an easier dinner is
+  really there. After cooking: one question at a time (leftovers, then how it was) and "Not cooked after all".
+  Leftovers: "Use them…" opens one sheet (a serving, a leftover night, a lunch, the freezer). Thaw & prep on
+  Tonight is today only; the check-in reminder is one line.
+- **Plan**: how much to show (1 week to Month) is in More, so Plan ahead's range is the only one on the page;
+  Plan ahead is primary only with empty nights. Day cards keep the per-serving cost (the family asked for the
+  cost per meal) and drop calories. Plan ahead's result leads with "Planned through Sun, Nov 29 · about $535 to
+  buy"; its toast is one line.
+- **Night sheet**: short cost line, no Lighter idea chip; "Not for us" names the night the replacement takes.
+  A night already gone by moves only into an empty night ahead.
+- **Budget** leads with the answer ("About $163 over / the $650 target"), then the amount; breakdown, trips,
+  waste, the year and the target are folded. **Check-in**: verdict, the month folded, one tip, "Looks right".
+- **Pantry** search finds what you have first; amounts read 1¼, not 1.25; one row of controls.
+- **Cook mode**: labelled Steps, Sound and one text-size button; Get ready gives the timing in sentences.
+- **Receipt check**: sure lines are one read-only row each. **Header**: a status pill hides the wordmark text so
+  Budget and Family never fall off. Toasts from another screen go away when the screen changes.
+
+## 29.4 Round 3 (all five reviewers at 8)
+
+- **Tonight**: "Short on something? Change dinner" replaces "See the whole recipe" when the house is short;
+  an after-dinner question comes before the catch-up card, one card at a time. The weekly snack-bag job reads
+  "Bag the Doritos into 5 snack bags, about 1½ oz each, for Knox's lunches."
+- **Night sheet** follows the night: tonight leads with Start cooking; a night ahead leads with Change dinner,
+  Move, Not eating at home, Make this tonight (no Start cooking or Mark cooked); a night gone by leads with
+  Mark cooked.
+- **Plan ahead**: the two switches fold under "Options"; the night-count sentence is gone. The result says
+  "about $28 less than the old plan", names at most two things it uses up, and its button is "See the shopping
+  list". Cost reads "a serving" everywhere (Plan's summary and the cost line too).
+- **Check-in**: the dinners are one sentence; the verdict is worded like Budget ("About $163 over the $650
+  target. The month is heading for $813.28."); the slogan is gone; chart labels are 14px; the weigh-in offer
+  waits in the settings fold ("Check-in day, the TV and a weigh-in"); headings say "weekly weigh-in".
+- **Recipe page**: "Ingredients (for five)"; a quiet check or a small cart on each row instead of "Need to buy"
+  (the summary above says it in words); "PossibleCooker (slow cooker)" under Equipment; no side timing repeated
+  under the side when the plate's timing is shown; when it's too late for tonight, "Add to plan on…" is the
+  primary button and there's no sticky bar.
+- **List**: the store head is one line ("19 left · $196.81"); the add field picks the store you're in, else the
+  one with more to get; the checkbox is described by the product, amount and price; one-off adds aren't listed
+  under "On every list"; a toast rides above the sticky Done bar; the how-to line goes once anything is ticked;
+  "End trip"; "Cost & coupons"; online, Open sits under the name; rows riding along with a nearby aisle say
+  "near here". Item sheet: the product is body text, amounts are written one way ("about 11 oz left over").
+- **Leftovers sheet**: after 2 PM the lunch choices start tomorrow; one "Freeze 3 plates" button.
+- **Budget**: all four folds look the same. **Family**: "Burger nights (with fries)", "Show a day's calories on
+  Tonight". **Lunch**: swap ideas are one line; the footnote is one sentence. **Header**: the status pill keeps
+  its word at Large text (icon only below 360px).
+- **Plan cards at 1280**: two clean lines of sides, no sliver of a third. **Cook mode, Get ready**: the timing
+  is in the summary card, a line per side; "Get everything out" comes right after it; safe temperatures close
+  the screen. **Pantry**: search hits use shelf words ("6 packs, freezer"); rows wrap their controls at 320px.
+
+## 29.5 Tests
 
 `tests/e2e/*.mjs` follow the new layout (rows tick, the › opens the item sheet, Plan's extra actions
 are under More, "Not for us" confirms). Unit tests cover the retire rule (nights after tonight only).
