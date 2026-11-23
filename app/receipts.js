@@ -10,6 +10,7 @@
 
 import { set, push, applyOps } from './state.js';
 import { round2, isISODate, chicagoDay, SHARED_PROFILE } from './util.js';
+import { mergedSince } from './freshness.js';
 
 export const RECEIPT_STORES = ['sams', 'jewel'];
 export const HISTORY_MAX = 12;
@@ -456,7 +457,7 @@ export function receiptPantryOps(db, state, receiptId, { who = SHARED_PROFILE, a
     if (a.staple) ops.push(set(['pantry', a.id], { qty: null, stocked: true, since, ...keep, by: who, at: now }));
     else {
       const base = typeof prev.qty === 'number' && !prev.low ? prev.qty : 0;
-      ops.push(set(['pantry', a.id], { ...keep, ...(prev.label ? { label: prev.label } : {}), qty: round2(base + a.add), stocked: false, since, bought: { qty: a.add, on: since }, by: who, at: now }));
+      ops.push(set(['pantry', a.id], { ...keep, ...(prev.label ? { label: prev.label } : {}), qty: round2(base + a.add), stocked: false, since: mergedSince(db, state, a.id, since), bought: { qty: a.add, on: since }, by: who, at: now }));
     }
   }
   ops.push(set(['receiptLog', receiptId, 'pantry'], now));

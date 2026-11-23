@@ -467,3 +467,16 @@ html.has-sheet body:has(.done-shopping.is-ready) .toast-root { bottom: calc(var(
   .store-name .store-long { display: none; }
   .store-name .store-short { display: inline; }
 }
+
+/* gauntlet r10: a frozen main on a row is a small mark, not a clause; what a pick did is said under
+   Tonight's title with its Undo; a saved receipt is said at the top of Cook from what we have. */
+.pick-thaw { display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; white-space: nowrap; color: var(--dusk-text); font-weight: 700; }
+.pick-thaw .ic { display: inline-block; }
+.hero-note { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 8px; margin: 8px 0 0; font-size: var(--t-sm); color: var(--ink-2); }
+.hero-note .ic { color: var(--pine); transform: translateY(3px); }
+.hero-note .link-btn { min-height: 44px; margin-left: 4px; font-weight: 700; vertical-align: middle; }
+.hero-leftover .hero-note, .hero-leftover .hero-note .ic { color: inherit; }
+.have-saved { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 12px; padding: 10px 14px; border-radius: var(--r-ctl); background: var(--sage-tint); color: var(--ink); font-weight: 600; }
+.have-saved .ic { color: var(--pine); flex: none; }
+.have-saved .link-btn { min-height: 44px; font-weight: 700; }
+.hero-leftover .hero-note .link-btn { color: inherit; text-decoration: underline; }

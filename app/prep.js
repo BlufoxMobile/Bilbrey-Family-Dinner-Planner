@@ -17,7 +17,7 @@ import { itemsForNight, dinnerById } from './planner.js';
 import { lunchesIn } from './lunch.js';
 import { addDays, datesBetween, diffDays, weekdayName, listJoin, midSentence } from './util.js';
 import { isSlowCooked } from './health.js';
-import { useSoon } from './freshness.js';
+import { useSoon, freshMeatQty } from './freshness.js';
 
 const WHEN = { morning: 0, anytime: 1, evening: 2 };
 /** Brown once, use twice: ground meats that go in the pan the same way every time. */
@@ -65,7 +65,8 @@ function thawTasks(db, state, today, end, pairs) {
   const folded = new Map(pairs.map((p) => [`${p.b.date}|${p.id}`, p]));
   const joined = new Map(pairs.map((p) => [`${p.a.date}|${p.id}`, p]));
   const rem = {};
-  for (const [id, p] of Object.entries(state?.pantry || {})) if (p && !p.low && typeof p.qty === 'number' && p.qty > 0) rem[id] = p.qty;
+  // What's in the freezer: a pack that came home in the last day is still fresh in the fridge (gauntlet r10).
+  for (const [id, p] of Object.entries(state?.pantry || {})) if (p && !p.low && typeof p.qty === 'number' && p.qty > 0) rem[id] = p.qty - freshMeatQty(db, state, id, today);
   const nights = plannedNights(db, state, datesBetween(today, addDays(end, 2))).sort((a, b) => a.date.localeCompare(b.date));
   for (const { date, entry } of nights) {
     const d = dinnerById(db, state, entry.dinner);

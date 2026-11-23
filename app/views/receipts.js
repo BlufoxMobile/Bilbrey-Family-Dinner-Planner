@@ -1,7 +1,7 @@
 // RECEIPTS (SPEC §9.3–9.4): scan a paper receipt or the store app's digital receipt (1–4
 // images), check every line, save — the Budget counts it once, prices learned feed the next
 // list, and the exact products land in "My products". Plus the history of saved receipts.
-import { html, ic, when, openSheet, closeSheet, renderSheet, toast, confirmSheet, segmented } from '../ui.js';
+import { html, ic, when, openSheet, closeSheet, renderSheet, toast, confirmSheet, segmented, announce } from '../ui.js';
 import { money, shortDate, mediumDate, monthName, fmtQty, round2, isISODate, byLabel } from '../util.js';
 import { resizeImage, LIMITS } from '../images.js';
 import {
@@ -259,11 +259,17 @@ async function save(app) {
   const message = stocked
     ? `Saved ${money(ops.total)} · ${stocked} ${stocked === 1 ? 'item' : 'items'} in the pantry`
     : `Saved ${money(ops.total)} from ${where}, ${shortDate(ops.date)}.${ops.counted ? '' : ' It was already in the Budget, so it’s not counted twice.'}${learned}`;
-  app.commit({ ops: [...ops], undo: undoFor(app.state, ops), message });
+  const undo = undoFor(app.state, ops);
+  // With groceries in the pantry, the "Saved" line and its Undo sit at the top of Cook from what we
+  // have, not in a toast over its first rows (gauntlet r10).
+  app.commit({ ops: [...ops], undo, message }, { quiet: !!stocked });
   closeSheet();
   const here = location.hash;
   const bought = new Set(receipt.lines.filter((l) => l.matchId).map((l) => l.matchId));
-  if (stocked) setTimeout(() => { if (location.hash === here) openHave(app, { bought }); }, 350);
+  if (stocked) {
+    announce(`${message}.`);
+    setTimeout(() => { if (location.hash === here) openHave(app, { bought, saved: { text: message, undo } }); }, 350);
+  }
 }
 
 // ---------------------------------------------------------------- 3. history

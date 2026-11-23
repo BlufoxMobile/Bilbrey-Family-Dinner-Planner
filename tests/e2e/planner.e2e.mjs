@@ -431,7 +431,7 @@ test('after dinner is cooked the app asks about leftovers once; they can go in a
   await page.waitForSelector('#catch-card');
   assert.equal(await page.locator('#catch-card, .forgot-card').count(), 1, 'one prompt, not two');
   await page.click('[data-action="tonight:cooked"]');
-  await toastMatch(page, /marked cooked/);
+  await toastMatch(page, /^Cooked( · \d+ things? out of the pantry)?$/);
   await closeToast(page);
   // Tonight asks about leftovers once: its own card, and no prep job repeating the question.
   await page.waitForSelector('.lo-card .lo-ask');

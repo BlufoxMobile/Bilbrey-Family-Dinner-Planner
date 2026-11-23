@@ -122,6 +122,32 @@ const onShelf = (p) => !!p && !p.low && (typeof p.qty === 'number' ? p.qty > 0 :
 
 export const isMeatItem = (db, state, id) => !!db.ingredients[id]?.meat || itemMeta(db, state, id).aisle === 'Meat';
 
+/**
+ * How much of a freezer meat came home in the last day and is still fresh in the fridge (gauntlet r10:
+ * the chicken just carried in from Sam's read "frozen, dinner about 7:15"). The portion-and-freeze job
+ * (prep.js) keeps it there until it's bagged. 0 when nothing came home lately.
+ */
+export function freshMeatQty(db, state, id, today = chicagoDay()) {
+  const p = state?.pantry?.[id];
+  const b = p?.bought;
+  if (!b || !(b.qty > 0) || !(typeof p.qty === 'number' && p.qty > 0) || p.low) return 0;
+  if (placeOf(db, state, id) !== 'freezer' || !isMeatItem(db, state, id)) return 0;
+  const on = String(b.on || '').slice(0, 10);
+  if (!on || diffDays(today, on) > 1 || on > today) return 0;
+  return Math.min(b.qty, p.qty);
+}
+
+/**
+ * The date a pantry lot carries after more of it comes home. Freezer food keeps the older date, so
+ * the two-month-old chicken still shows in Use first after a Sam's run (gauntlet r10); anything else
+ * takes the new date.
+ */
+export function mergedSince(db, state, id, day) {
+  const p = state?.pantry?.[id];
+  const old = p && !p.low && typeof p.qty === 'number' && p.qty > 0 && /^\d{4}-\d{2}-\d{2}$/.test(String(p.since || '')) ? p.since : null;
+  return old && old < day && placeOf(db, state, id) === 'freezer' ? old : day;
+}
+
 /** Anything in the freezer this long counts as "use soon" (Jeff threw out freezer-burnt steak and corn). */
 export const FREEZER_OLD_DAYS = 60;
 

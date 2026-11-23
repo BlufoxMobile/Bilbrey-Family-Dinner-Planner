@@ -489,3 +489,18 @@ test('readiness: what the dinner is made of counts as far, a side keeps it off "
   assert.equal(pantryCheck(db, {}, { honey: 1 }).rows[0].status, 'have');
   assert.equal(pantryCheck(db, { pantry: { honey: { qty: null, stocked: false } } }, { honey: 1 }).rows[0].status, 'none');
 });
+
+test('a meat pack bought in the last day is fresh, not frozen, and a freezer lot keeps its older date (gauntlet r10)', async () => {
+  const db = realDb();
+  const { readiness } = await import('../app/coverage.js');
+  const { freshMeatQty, mergedSince } = await import('../app/freshness.js');
+  const old = { pantry: { chicken: { qty: 6, since: '2026-09-10' } } };
+  const fresh = { pantry: { chicken: { qty: 12.5, since: '2026-09-10', bought: { qty: 6.5, on: '2026-11-15' } } } };
+  assert.equal(freshMeatQty(db, fresh, 'chicken', '2026-11-16'), 6.5);
+  assert.equal(freshMeatQty(db, fresh, 'chicken', '2026-11-18'), 0, 'two days later it has been bagged and frozen');
+  const id = 'blackened-cajun-chicken';
+  assert.ok(readiness(db, old, id, undefined, '2026-11-16').thaw.length, 'old chicken thaws');
+  assert.equal(readiness(db, fresh, id, undefined, '2026-11-16').thaw.length, 0, 'the new pack is in the fridge');
+  assert.equal(mergedSince(db, old, 'chicken', '2026-11-15'), '2026-09-10', 'the freezer lot keeps its date');
+  assert.equal(mergedSince(db, { pantry: { milk: { qty: 4, since: '2026-11-01' } } }, 'milk', '2026-11-15'), '2026-11-15', 'fridge food takes the new date');
+});

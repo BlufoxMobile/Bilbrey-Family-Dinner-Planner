@@ -279,9 +279,9 @@ export function leftoversAskCard(app) {
  * Leftovers in the fridge, each with what can be done with it: eat one, a leftover night, a lunch
  * or the freezer, or gone (thrown out goes in the waste log). Shared by Tonight and Plan. '' when none.
  */
-export function leftoverRows(app) {
+export function leftoverRows(app, { skipNight = null } = {}) {
   const today = app.today();
-  const left = leftoversOnHand(app.state, today);
+  const left = leftoversOnHand(app.state, today).filter((l) => !skipNight || l.night !== skipNight);
   if (!left.length) return '';
   return html`<ul class="lo-list">${left.map((l) => {
     const nights = l.night ? [] : leftoverNightChoices(app.state, l, today);

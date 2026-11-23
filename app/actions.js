@@ -12,6 +12,7 @@ import {
 import { boughtToPantry, readableId, dinnerFoodCost } from './shopping.js';
 import { personConfig, lunchItem, swappedConfig, lunchSlots, lunchPackers, isPacker, newPackerName, packingNames, lunchFor } from './lunch.js';
 import { addDays } from './util.js';
+import { mergedSince } from './freshness.js';
 
 const isISO = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
 
@@ -242,7 +243,9 @@ export function markCookedOps(db, state, { date, who, at, today }) {
   }
   ops.unshift(set(['plan', date], { ...clone(e), status: 'cooked', cookedAt: at || new Date().toISOString(), cookedBy: who || SHARED_PROFILE, deducted }));
   const n = Object.keys(deducted).length;
-  const message = `${titleOf(db, state, e.dinner)} marked cooked.${n ? ` Took ${n} ${n === 1 ? 'item' : 'items'} out of the pantry.` : ''}`;
+  // One line (gauntlet r10): "Cooked · 5 things out of the pantry", with the dinner's name when it
+  // isn't tonight's ("Hamburger steaks cooked · …").
+  const message = `${today && date === today ? 'Cooked' : `${titleOf(db, state, e.dinner)} cooked`}${n ? ` · ${n} ${n === 1 ? 'thing' : 'things'} out of the pantry` : ''}`;
   return result(state, ops, message, { deducted });
 }
 
@@ -696,7 +699,7 @@ export function doneShoppingOps(db, state, { list, who, at }) {
     const since = chicagoDay(s.at); // an evening shop is dated today in Glen Ellyn, not tomorrow (UTC)
     const keep = { ...(prev.place ? { place: prev.place } : {}) };
     if (a.staple) ops.push(set(['pantry', a.id], { qty: null, stocked: true, since, ...keep, ...s }));
-    else ops.push(set(['pantry', a.id], { ...keep, ...(prev.label ? { label: prev.label } : {}), qty: round2((typeof prev.qty === 'number' && !prev.low ? prev.qty : 0) + a.add), stocked: false, since, bought: { qty: a.add, on: since }, ...s }));
+    else ops.push(set(['pantry', a.id], { ...keep, ...(prev.label ? { label: prev.label } : {}), qty: round2((typeof prev.qty === 'number' && !prev.low ? prev.qty : 0) + a.add), stocked: false, since: mergedSince(db, state, a.id, since), bought: { qty: a.add, on: since }, ...s }));
   }
   if (state?.checked?.[list.listKey]) ops.push(del(['checked', list.listKey]));
   return result(state, ops, adds.length ? `Put ${adds.length} ${adds.length === 1 ? 'item' : 'items'} in the pantry. The list now shows only what's still needed.` : 'Check off what you bought first.', { count: adds.length });

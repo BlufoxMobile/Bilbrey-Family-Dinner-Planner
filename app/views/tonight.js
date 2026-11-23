@@ -27,6 +27,13 @@ import { checkinCard } from './checkin.js';
 
 export const title = () => 'Tonight';
 
+/** What a pick just did, said under the dinner's name with its Undo (gauntlet r10: not a toast over it). */
+function heroNote(app, today) {
+  const n = app.ui.heroNote;
+  if (!n || n.date !== today) return '';
+  return html`<p class="hero-note">${ic('swap', { size: 16 })}<span>${n.text}${when(n.undo?.length, () => html` <button type="button" class="link-btn hero-note-undo" data-action="hero:undo">Undo</button>`)}</span></p>`;
+}
+
 function leftoverHero(app, today, e, d) {
   const from = e.away?.from;
   const l = from ? leftoversOnHand(app.state, today).find((x) => x.date === from) : null;
@@ -35,7 +42,8 @@ function leftoverHero(app, today, e, d) {
       <span class="away-ic">${ic('bowl', { size: 34 })}</span>
       <p class="hero-kicker"><span class="dot" aria-hidden="true"></span>Tonight</p>
       <h1 class="hero-title" id="hero-title" tabindex="-1">Leftover night</h1>
-      <p class="hero-sub">${e.away?.note || 'Dinner is already in the fridge.'}${l ? ` ${servingsText(l.servings).replace(/^./, (c) => c.toUpperCase())}, ${useByText(l, today)}.` : ''}${l && l.servings < 5 ? ' Not enough for all 5 on its own: add a side or a salad.' : ''} Reheat it until it’s steaming hot all the way through (165°F).</p>
+      ${heroNote(app, today)}
+      <p class="hero-sub">${e.away?.note ? `${e.away.note.replace(/[.!]$/, '')}.` : 'Dinner is already in the fridge.'}${l ? ` ${servingsText(l.servings).replace(/^./, (c) => c.toUpperCase())}, ${useByText(l, today)}.` : ''}${l && l.servings < 5 ? ' Not enough for all 5 on its own: add a side or a salad.' : ''} Reheat it until it’s steaming hot all the way through (165°F).</p>
       <div class="hero-actions">
         ${when(l, () => html`<button type="button" class="btn btn-on-dusk" data-action="leftovers:gone" data-date="${from}">${ic('checkCircle', { size: 20 })}We ate them</button>`)}
         <button type="button" class="btn btn-quiet btn-on-dusk-quiet" data-action="night:back" data-date="${today}">${d ? `Cook ${d.title} after all` : 'Cook something after all'}</button>
@@ -89,6 +97,7 @@ function hero(app, today) {
     <div class="index-card">
       <p class="hero-kicker"><span class="dot" aria-hidden="true"></span>Tonight${cooked ? html`<span class="kicker-done">${ic('check', { size: 16 })}Cooked</span>` : ''}</p>
       <h1 class="hero-title" id="hero-title" tabindex="-1">${d.title}</h1>
+      ${heroNote(app, today)}
       ${when(sides.length, () => html`<p class="hero-sides">with ${listJoin(sides.map((s) => midSentence(s.info?.title || '')))}</p>`)}
       ${sides.filter((x) => x.replaced).map((x) => html`<p class="hero-replaced">${x.info?.title}: ${replacedText(app, x).replace(/^In/, 'in')}.</p>`)}
       <div class="hero-meta">${equipment(d)}${favoriteBadge(app, d)}</div>
@@ -208,7 +217,8 @@ function howWas(app, today) {
 
 export function render(app) {
   const today = app.today();
-  const left = leftoverRows(app);
+  // Leftovers that are tonight's dinner are in the hero; the fridge card doesn't repeat them (gauntlet r10).
+  const left = leftoverRows(app, { skipNight: today });
   return html`<div class="page page-tonight">
     <p class="dateline">${longDay(today)}</p>
     <div class="tonight-grid">
@@ -227,6 +237,12 @@ export function render(app) {
 }
 
 export const actions = {
+  'hero:undo': (app) => {
+    const n = app.ui.heroNote;
+    if (!n?.undo?.length) return;
+    app.ui.focusNext = 'hero-title';
+    app.commit({ ops: n.undo, undo: [], message: 'Undone: tonight is back the way it was.' });
+  },
   'tonight:plan-week': (app) => {
     const today = app.today();
     const range = periodRange(today, 'week', app.settings.weekStartsOn);

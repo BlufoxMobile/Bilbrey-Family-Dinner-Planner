@@ -5,7 +5,7 @@ import { Store, settingsOf } from './state.js';
 import { todayISO, SHARED_PROFILE } from './util.js';
 import { followRenames } from './planner.js';
 import {
-  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, sheetOpen, hideStaleToast,
+  html, ic, setHTML, toast, closeSheet, refreshLiveSheet, renderSheet, installPhotoFallback, sheetOpen, hideStaleToast, announce,
 } from './ui.js';
 import * as tonight from './views/tonight.js';
 import * as planView from './views/plan.js';
@@ -69,7 +69,7 @@ export const app = {
   /** The one per-person thing a device can choose: whose daily calories line Tonight shows here (or null). */
   todayFor() { return this.store.device.todayFor || null; },
   /** Apply an action result: commit ops, show its message with Undo. */
-  commit(res, { quiet = false, undoable = true, onUndo, top = false } = {}) {
+  commit(res, { quiet = false, undoable = true, onUndo, top = false, note = null } = {}) {
     if (!res) return false;
     if (res.error || !res.ops?.length) {
       if (res.message && !quiet) toast(res.message, { top });
@@ -77,7 +77,11 @@ export const app = {
     }
     // Undo puts focus back on the control the change came from (gauntlet r7: it fell to the page top).
     const origin = tv.signatureOf(document.activeElement);
+    // `note`: say it on Tonight, under the dinner's name, with its Undo there, instead of a toast over
+    // the screen (gauntlet r10). Any other change clears it, so its Undo never undoes more than it says.
+    this.ui.heroNote = note ? { text: note, undo: undoable ? res.undo : null, date: this.today() } : null;
     this.store.commit(res.ops);
+    if (note) { announce(note); return true; }
     if (!quiet && res.message) {
       toast(res.message, undoable && res.undo?.length ? { top, undo: () => {
         this.store.commit(res.undo); onUndo?.(); renderSheet(); toast('Undone.', { top });
@@ -217,6 +221,7 @@ export function render() {
   const v = VIEWS[app.route.view];
   const changedView = lastView !== `${app.route.view}/${app.route.params.join('/')}`;
   if (changedView && lastView) hideStaleToast();
+  if (changedView && app.route.view !== 'tonight') app.ui.heroNote = null; // the note belongs to the screen it was said on
   const y = window.scrollY;
   // What has focus, and where every row and number sits, so both survive the redraw.
   const focus = tv.captureFocus(root);
@@ -263,8 +268,11 @@ function focusNext() {
   const el = [].concat(ids).map((id) => document.getElementById(id)).find(Boolean);
   if (!el) return;
   el.focus({ preventScroll: true }); // the text is left as typed, not selected: one slipped letter shouldn't cost the whole passcode
-  // A heading that takes focus after an action (Mark cooked → "Any leftovers tonight?") comes into view too.
-  if (/^H\d$/.test(el.tagName)) el.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  // Whatever takes focus after an action comes into view, clear of the header (gauntlet r10: "Cooked."
+  // took focus above the screen).
+  const r = el.getBoundingClientRect();
+  const top = (document.querySelector('.topbar')?.getBoundingClientRect().bottom || 0) + 8;
+  if (r.top < top || r.bottom > window.innerHeight - 8) el.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
 }
 
 // How deep a screen sits, so a transition knows whether it is going in, coming back, or moving sideways.

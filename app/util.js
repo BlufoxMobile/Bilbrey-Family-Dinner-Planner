@@ -263,7 +263,8 @@ export function midSentence(title) {
   const t = String(title || '');
   const words = t.split(/\s+/);
   const first = words[0] || '';
-  if (!/^[A-Z][a-z]/.test(first) || BRAND_START.test(first)) return t; // "BBQ", "7-layer", already lowercase
+  // "BBQ", "7-layer", already lowercase, a proper name, or one hyphened to a word ("French-style"; gauntlet r10)
+  if (!/^[A-Z][a-z]/.test(first) || BRAND_START.test(first) || BRAND_START.test(first.split('-')[0])) return t;
   if (words.length > 1 && !/^[a-z&(]/.test(words[1]) && !COMMON_START.test(first)) return t; // a brand or proper name
   return first[0].toLowerCase() + t.slice(1);
 }
