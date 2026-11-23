@@ -563,6 +563,10 @@ test('dead ends: nothing planned, a night out, and a recipe that isn’t on toni
 });
 
 test('a dinner that was cooked but never marked: Tonight asks the next day, then asks about leftovers', async () => {
+  // The leftover night above moved Tuesday's tikka masala on (gauntlet r9); put it back for this story.
+  const plan = (await familyState(page)).plan;
+  const was = Object.entries(plan).find(([d, e]) => d > TOMORROW && e?.dinner === 'tikka-masala');
+  await seed(page, [{ op: 'set', path: ['plan', TOMORROW], value: { ...(was?.[1] || { dinner: 'tikka-masala' }), status: 'planned' } }, ...(was ? [{ op: 'del', path: ['plan', was[0]] }] : [])]);
   await page.clock.setSystemTime(new Date('2026-11-18T07:45:00-06:00'));
   await go(page, '#/tonight', '.page-tonight');
   await page.waitForSelector('.forgot-card');

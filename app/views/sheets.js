@@ -266,7 +266,7 @@ function pickBody(app, st) {
     ready: 'Ready now',
     thaw: 'Ready after thawing',
     bought: `Uses what you just bought: ${boughtNames}`,
-    rest: bought?.size && have ? 'Everything else, closest first' : 'Closest first',
+    rest: boughtTop.size ? 'Everything else, closest first' : 'Closest first',
   };
   let first = true;
   const autof = () => { const a = first ? html`data-autofocus` : ''; first = false; return a; };
