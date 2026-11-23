@@ -728,7 +728,8 @@ test('receipts: scan → check every line → save; the list shows “paid”, F
   await toastMatch(page, /^Saved \$[\d.,]+ · \d+ items? in the pantry$/);
   await page.waitForSelector('dialog[open] .have-acts');
   assert.match(await page.textContent('dialog[open] .sheet-title'), /Cook from what we have/);
-  assert.match(await page.textContent('dialog[open] .pick-list'), /Uses what you just bought|Ready now/);
+  // The group names what came home (gauntlet r8): "Uses the boneless chicken breast … you just bought".
+  assert.match(await page.textContent('dialog[open] .pick-list'), /Uses the [^\n]*boneless chicken breast[^\n]* you just bought|Ready now/);
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('dialog[open]'));
   const s = (await familyState(page)).state;
