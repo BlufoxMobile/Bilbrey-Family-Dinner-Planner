@@ -243,7 +243,7 @@ export function render(app) {
                 <small class="side-kcal">${[s.info?.minutes ? fmtMinutes(s.info.minutes) : '', ...sGear.map((g) => `${equipLabel(g.id)}${g.settings.length ? ` (${g.settings.join(', ')})` : ''}`), showNutrition(app) ? (sn ? `${fmtKcal(sn.kcal)} cal a plate` : 'no calorie data') : ''].filter(Boolean).join(' · ')}</small></span></summary>
               ${when(cue && tl.tracks.length < 2, () => html`<p class="side-cue">${ic('clock', { size: 16 })}<span>${cue.text}</span></p>`)}
               <ol class="steps steps-small steps-side">${sSteps.map((st) => html`<li>${st.text}${st.timers.length ? html` <span class="step-chip">${cic('timer', { size: 14 })}${st.timers.map((t) => t.label).join(', ')}</span>` : ''}</li>`)}</ol>
-            </details>${when(s.parsed.type === 'side' && app.db.sides[s.parsed.id], () => html`<div class="side-rate">${thumbs(app, { kind: 'side', id: s.parsed.id, label: s.info?.title || 'this side', compact: true, labels: true })}</div>`)}</div>`;
+            </details></div>`;
           }) : html`<p class="muted">No sides with this one.</p>`}
         </section>
 
@@ -254,7 +254,7 @@ export function render(app) {
 
         <section class="recipe-safe" aria-labelledby="safe-h">
           <h2 id="safe-h" class="section-title">Done and safe</h2>
-          <ul class="temps">${temps.map((x) => html`<li>${cic('thermo', { size: 20 })}<span><b>${x.temp}°F</b> ${x.food}, ${x.note}</span></li>`)}
+          <ul class="temps">${temps.map((x) => html`<li>${cic('thermo', { size: 20 })}<span>${x.past ? html`<b>${x.food}:</b> ${x.note} (well past ${x.temp}°F)` : html`<b>${x.temp}°F</b> ${x.food}, ${x.note}`}</span></li>`)}
             ${when(!temps.length, () => html`<li>${cic('thermo', { size: 20 })}<span>Cook meat until a thermometer in the thickest part reads <b>165°F</b> for chicken and turkey, <b>160°F</b> for ground meat, <b>145°F</b> for chops and steaks.</span></li>`)}</ul>
           <h3 class="sub-title">Leftovers</h3>
           <p class="recipe-leftovers">${leftoversNote(d)}</p>
@@ -263,7 +263,7 @@ export function render(app) {
     </div>
 
     ${nutritionSection(app, d, entry, sides, facts)}
-    ${when(showNutrition(app), () => html`<p class="pg-again"><button type="button" class="link-btn" data-action="rec:plate-guide">One dinner, two plates: a lighter one and a fuller one</button></p>`)}
+    ${when(showNutrition(app), () => html`<button type="button" class="recipe-fold-row" data-action="rec:plate-guide"><span class="section-title">One dinner, two plates</span><small>A lighter plate and a fuller one</small></button>`)}
     ${votes(app, d)}
     ${when(retired || bench, () => html`<section class="parent-tools">
       <h2 class="section-title">${retired ? 'Not for us' : 'Maybe later'}</h2>

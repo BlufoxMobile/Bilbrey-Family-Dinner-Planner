@@ -535,7 +535,7 @@ export function render(app) {
         <button type="button" class="icon-btn" data-action="list:print" aria-label="Print the list">${ic('print')}</button>
       </div>
     </header>
-    ${trip ? html`${tripBar(app, trip, range, list)}${afterTrip(app, trip, list)}` : html`${periodNav(app, range, { compact: true })}${when(range.span, () => html`<p class="span-note">Everything Plan ahead planned, tonight through ${dayAndDate(range.end, app.today())}. <button type="button" class="link-btn" data-action="list:span-clear">Just this week</button></p>`)}`}
+    ${trip ? html`${tripBar(app, trip, range, list)}${afterTrip(app, trip, list)}` : html`${periodNav(app, range, { compact: true })}${when(range.span, () => html`<p class="span-note">Groceries for every planned night through ${shortWeekday(range.end)}, ${shortDate(range.end)} · <button type="button" class="link-btn" data-action="list:span-clear">Just this week</button></p>`)}`}
     ${noNights && !list.lunches.length && !list.items.length ? html`<div class="empty">
         <span class="empty-ic">${ic('list', { size: 28 })}</span>
         <h3 class="empty-title">Nothing planned for ${rangeLabel(range.start, range.end)}</h3>
@@ -614,7 +614,8 @@ function itemSheet(app, key) {
     live: false,
     size: 'tall',
     // The sheet is named for what it is ("Honey"), not "Item" (gauntlet r2).
-    get title() { return current(app).list.items.find((x) => x.key === key)?.name || 'On the list'; },
+    // The row's own short name ("Black Forest ham"); the store's full product name is the line under it (gauntlet r6).
+    get title() { const it = current(app).list.items.find((x) => x.key === key); return (it && !it.freeText && app.db.ingredients[it.id]?.short) || it?.name || 'On the list'; },
     render: () => {
       const { list } = current(app);
       const i = list.items.find((x) => x.key === key);
@@ -885,7 +886,9 @@ export const actions = {
     app.ui.focusNext = null;
   },
   'list:more': (app, el) => { app.ui.listMoreOpen = !el.parentElement.open; },
-  'list:add-store': (app, el) => { app.ui.addStore = el.value === 'sams' ? 'sams' : 'jewel'; },
+  // A pick by hand holds until an item is ticked at the other store; the redraw makes it the page's own
+  // choice, so the same rule holds on this page and after a trip to another tab (gauntlet r6).
+  'list:add-store': (app, el) => { app.ui.addStore = el.value === 'sams' ? 'sams' : 'jewel'; app.render(); },
   'list:clip': (app) => { app.ui.listMoreOpen = true; app.render(); setTimeout(() => document.getElementById('clip-h')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); },
   'list:extra-quick': (app, el) => app.commit(addExtraOps(app.db, app.state, { item: el.dataset.item, qty: 1, every: 'week' })),
   'list:extra-remove': (app, el) => { app.commit(removeExtraOps(app.state, { id: el.dataset.id })); if (itemSheet.key === el.dataset.id) closeSheet(); },

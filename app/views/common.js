@@ -346,7 +346,7 @@ const prepActionButton = (a) => html`<button type="button" class="btn btn-small 
 let prepFoldOpen = false;
 if (typeof document !== 'undefined') document.addEventListener('toggle', (ev) => { if (ev.target?.classList?.contains('prep-fold')) prepFoldOpen = ev.target.open; }, true);
 
-export function prepCard(app, { days = 7, title = 'Thaw & prep', empty = true, emptyText = 'Nothing to thaw or pack in the next few days.', skip = [], collapsed = false, skipTonightThaw = false } = {}) {
+export function prepCard(app, { days = 7, title = 'Thaw & prep', countSuffix = '', empty = true, emptyText = 'Nothing to thaw or pack in the next few days.', skip = [], collapsed = false, skipTonightThaw = false } = {}) {
   const today = app.today();
   // skipTonightThaw: Tonight already says it right above "Start cooking".
   const all = prepSchedule(app.db, app.state, { today, days })
@@ -361,10 +361,10 @@ export function prepCard(app, { days = 7, title = 'Thaw & prep', empty = true, e
   const body = sched.length ? html`<ol class="prep-days">${sched.map((d) => html`<li class="prep-day">
       <h3 class="prep-date">${d.date === today ? 'Today' : relativeDay(d.date, today)}</h3>
       <ul class="prep-tasks">${d.tasks.map((t) => html`<li class="prep-task prep-${t.kind}"><span class="prep-ic" aria-hidden="true">${ic(PREP_ICON[t.kind] || 'check', { size: 18 })}</span><span class="prep-text"><small>${whenLabel(d, t)}</small>${t.text}${t.action ? prepAction(t.action) : ''}</span>${when(t.kind !== 'use', () => html`<button type="button" class="prep-check" role="checkbox" aria-checked="false" data-action="prep:done" data-date="${d.date}" data-key="${prepKey(t)}" aria-label="Done: ${t.text}"><span class="check-box">${ic('check', { size: 18 })}</span></button>`)}</li>`)}</ul>
-    </li>`)}</ol>${when(doneCount, () => html`<p class="muted small prep-done-line" tabindex="-1">${ic('checkCircle', { size: 16 })}${doneCount} ${doneCount === 1 ? 'job' : 'jobs'} done</p>`)}` : html`<p class="muted small prep-done-line" tabindex="-1">${doneCount ? `All done${days === 1 ? ' for today' : ''}.` : emptyText}</p>`;
+    </li>`)}</ol>${when(doneCount, () => html`<p class="muted small prep-done-line" id="prep-done-${days}" tabindex="-1">${ic('checkCircle', { size: 16 })}${doneCount} ${doneCount === 1 ? 'job' : 'jobs'} done</p>`)}` : html`<p class="muted small prep-done-line" id="prep-done-${days}" tabindex="-1">${doneCount ? `All done${days === 1 ? ' for today' : ''}.` : emptyText}</p>`;
   if (collapsed) {
     const n = sched.reduce((k, d) => k + d.tasks.length, 0);
-    return html`<details class="prep-card prep-fold" id="prep-card-${days}" ${prepFoldOpen ? 'open' : ''}><summary class="section-title">${ic('clock', { size: 22 })}<span>${title}</span><small>${n ? `${n} ${n === 1 ? 'job' : 'jobs'}` : 'nothing yet'}</small></summary>${body}</details>`;
+    return html`<details class="prep-card prep-fold" id="prep-card-${days}" ${prepFoldOpen ? 'open' : ''}><summary class="section-title">${ic('clock', { size: 22 })}<span>${title}</span><small>${n ? `${n} ${n === 1 ? 'job' : 'jobs'}${countSuffix}` : 'nothing yet'}</small></summary>${body}</details>`;
   }
   return html`<section class="prep-card" id="prep-card-${days}" aria-labelledby="prep-h-${days}">
     <h2 id="prep-h-${days}" class="section-title">${ic('clock', { size: 22 })}${title}</h2>

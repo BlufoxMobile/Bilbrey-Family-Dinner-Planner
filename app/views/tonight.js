@@ -121,7 +121,13 @@ function hero(app, today) {
  * out.) "Everything's in the house", or what's missing, shortfalls included.
  */
 function haveLine(app, d, e) {
-  const miss = plateRecipes(app.db, app.state, d.id, e).flatMap((r) => pantryCheck(app.db, app.state, r.recipe.items).missing).filter((m) => !m.staple);
+  const recs = plateRecipes(app.db, app.state, d.id, e);
+  const checks = recs.map((r) => ({ r, missing: pantryCheck(app.db, app.state, r.recipe.items).missing.filter((m) => !m.staple) }));
+  const miss = checks.flatMap((c) => c.missing);
+  // A side that can't be made gets its fix right here, not three screens away (gauntlet r6).
+  const sideShort = checks.find((c) => c.r.kind === 'side' && c.missing.length);
+  const sideSlot = sideShort ? (sidesFor(app, d.id, e)[Number(sideShort.r.id.slice(4))]?.slot ?? Number(sideShort.r.id.slice(4))) : null;
+  const fix = sideShort ? html` <button type="button" class="link-btn hero-fix" data-action="side:sub" data-date="${app.today()}" data-dinner="${d.id}" data-slot="${sideSlot}">Change the ${midSentence(sideShort.r.title)}</button>` : '';
   const seen = new Set();
   const uniq = miss.filter((m) => !seen.has(m.id) && seen.add(m.id));
   if (!uniq.length) return { short: false, html: html`<p class="hero-have is-ok">${ic('checkCircle', { size: 18 })}<span>Everything’s in the house.</span></p>` };
@@ -135,7 +141,7 @@ function haveLine(app, d, e) {
   const body = meat
     ? html`<b>Only ${unitText(meat.have, meat.unit)} of the ${unitText(meat.need, meat.unit)} ${plainName(meat.name).toLowerCase()} is here${frozen ? ', and it’s frozen' : ''}.</b>${rest.length ? ` Also missing: ${list}.` : ''}`
     : html`<b>Not in the house:</b> ${list}.`;
-  return { short: true, blocker, meatId: meat?.id || null, html: html`<p class="hero-have is-short">${ic('cart', { size: 18 })}<span>${body}</span></p>` };
+  return { short: true, blocker, meatId: meat?.id || null, html: html`<p class="hero-have is-short">${ic('cart', { size: 18 })}<span>${body}${fix}</span></p>` };
 }
 
 /** Easy tonight is offered only when it has something real to show: a dinner that needs no store. */

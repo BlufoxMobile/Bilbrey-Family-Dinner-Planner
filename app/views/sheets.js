@@ -20,11 +20,12 @@ import {
   plate, leanMark, isLeftoverNight, leftoversQuestion, costOf, costNote,
 } from './common.js';
 import { sideNutrition, lighterSide, fmtKcal } from '../nutrition.js';
-import { leftoversOnHand, leftoverNightChoices, servingsText, useByText, timeLabel } from '../cooking.js';
+import { leftoversOnHand, leftoverNightChoices, servingsText, useByText, timeLabel, pantryCheck } from '../cooking.js';
 import { finishCooking } from './cook.js';
 import { waitText } from '../state.js';
 import { fmtMinutes } from '../data.js';
 import { readiness } from '../easy.js';
+import { costLine } from '../cost.js';
 import { onHand } from '../coverage.js';
 
 const STORE_NAMES = { sams: "Sam's Club", jewel: 'Jewel-Osco' };
@@ -155,55 +156,66 @@ function nightActions(app, { date, d, today, past, cooked }) {
 
 // ---------------------------------------------------------------- pick a dinner
 
-/** "All in the house", "Needs: sliced cheese", "Chicken thighs are frozen (about 1 hr to thaw)". */
+/** "All in the house", "Needs chicken thighs and 6 more", "Chicken thighs are frozen (about 1 hr to thaw)". */
 function readyText(r) {
-  const few = (xs) => { const l = xs.map((x) => x.toLowerCase()); return l.length <= 2 ? listJoin(l) : `${l[0]}, ${l[1]} and ${l.length - 2} more`; };
-  if (!r.ready) return `Needs: ${few(r.missing)}`;
+  const few = (xs) => { const l = xs.map((x) => x.toLowerCase()); return l.length <= 2 ? listJoin(l) : `${l[0]} and ${l.length - 1} more`; };
+  if (!r.ready) return `Needs ${few(r.missing)}`;
   if (r.thaw.length) { const t = r.thaw[0]; const m = Math.max(...r.thaw.map((x) => x.minutes)); return `${t.name} ${/s$/.test(t.name) ? 'are' : 'is'} frozen (about ${m >= 60 ? `${Math.round(m / 30) / 2} hr` : `${m} min`} to thaw)`; }
   if (r.sideOut.length) return `All in but a side: ${few(r.sideOut)}`;
   return 'All in the house';
 }
+
+const FAMILY_SIZE = 5;
 
 function pickBody(app, { date, query }) {
   const today = app.today();
   const q = (query || '').trim().toLowerCase();
   const planStore = app.settings.planStore;
   const tonight = date === today;
-  // Tonight: what can be made now first, then this week's planned dinners (a trade), then the rest (gauntlet r5).
+  // Tonight: what can be made now first, then this week's planned dinners (a trade), then the rest,
+  // each group under its own small heading, fewest things missing first (gauntlet r5, r6).
   const rem = tonight ? onHand(app.db, app.state) : null;
   const ready = new Map();
-  const rank = (d) => {
-    if (!tonight) return 0;
-    if (!ready.has(d.id)) ready.set(d.id, readiness(app.db, app.state, d.id, rem));
-    const r = ready.get(d.id);
-    const planned = findInPlan(app.state, d.id, { exclude: date, from: today }).some((w) => w <= addDays(today, 6));
-    return r.ready ? (r.thaw.length ? 1 : r.sideOut.length ? 0.5 : 0) : planned ? 2 : 3 + Math.min(r.missing.length, 5) / 10;
-  };
+  const readyOf = (d) => { if (!ready.has(d.id)) ready.set(d.id, readiness(app.db, app.state, d.id, rem)); return ready.get(d.id); };
+  const plannedSoon = (d) => findInPlan(app.state, d.id, { exclude: date, from: today }).some((w) => w <= addDays(today, 6));
+  const group = (d) => (!tonight ? 0 : readyOf(d).ready ? 0 : plannedSoon(d) ? 1 : 2);
+  const need = (d) => (tonight ? readyOf(d).missing.length + (readyOf(d).thaw.length ? 0.5 : 0) + readyOf(d).sideOut.length * 0.1 : 0);
   const list = rotationList(app.db, app.state)
     .filter((d) => !q || d.title.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || d.protein.includes(q))
-    .sort((a, b) => (rank(a) - rank(b)) || (isFavorite(app.state, b) - isFavorite(app.state, a)) || a.title.localeCompare(b.title));
+    .sort((a, b) => (group(a) - group(b)) || (need(a) - need(b)) || (isFavorite(app.state, b) - isFavorite(app.state, a)) || a.title.localeCompare(b.title));
   const current = app.state.plan?.[date]?.dinner;
   const lefts = tonight && !q ? leftoversOnHand(app.state, today).filter((l) => !l.night && l.daysLeft >= 0 && l.servings >= 3 && l.date !== today) : [];
+  const HEADS = ['Ready now', 'This week’s dinners (they trade places)', 'Everything else'];
+  let first = true;
+  const row = (d) => {
+    const r = tonight ? readyOf(d) : null;
+    const where = findInPlan(app.state, d.id, { exclude: date, from: today, near: date })[0];
+    const off = planStore !== 'both' && !dinnerFeasibleAt(app.db, app.state, d.id, planStore);
+    const facts = !tonight && showNutrition(app) ? plate(app, d.id, null) : null;
+    const cost = costLine(costOf(app, d.id, null), { short: true });
+    const whereText = where ? `on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)}${tonight ? '' : ' (they’ll trade)'}` : '';
+    // Three lines: the name, whether it can happen tonight, then time · when · cost (gauntlet r6: rows were 5–6 lines).
+    const meta = [timeLabel(d), isFavorite(app.state, d) ? 'family favorite' : '', whereText, off ? `needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : '', cost].filter(Boolean).join(' · ');
+    const auto = first ? html`autofocus` : '';
+    first = false;
+    return html`<li><button type="button" class="pick-row ${d.id === current ? 'is-current' : ''}" data-action="pick:choose" data-date="${date}" data-dinner="${d.id}" ${d.id === current ? html`aria-current="true"` : ''} ${auto}>
+      ${dinnerPhoto(app, d, { size: 'thumb' })}
+      <span class="pick-main"><b>${d.title}</b>
+        ${when(r, () => html`<small class="pick-ready ${r.ready && !r.thaw.length ? 'is-ready' : r.ready ? 'is-thaw' : 'is-need'}">${r.ready && !r.thaw.length ? ic('checkCircle', { size: 14 }) : r.ready ? ic('snow', { size: 14 }) : ''}${readyText(r)}</small>`)}
+        <small class="pick-meta">${meta}</small>
+        ${when(facts, () => html`<small class="pick-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein a plate${leanMark(facts, { compact: true })}</small>`)}</span>
+    </button></li>`;
+  };
+  const groups = tonight && !q ? [0, 1, 2].map((g) => ({ g, items: list.filter((d) => group(d) === g) })).filter((x) => x.items.length) : [{ g: -1, items: list }];
   return html`
     <label class="search">${ic('search', { size: 20 })}<input type="search" placeholder="Search dinners" value="${query || ''}" data-input="pick:query" data-date="${date}" aria-label="Search dinners" autocomplete="off"></label>
     <ul class="pick-list">
-      ${lefts.map((l) => html`<li><button type="button" class="pick-row pick-left" data-action="leftovers:night-set" data-from="${l.date}" data-night="${date}">
+      ${when(lefts.length, () => html`<li class="pick-head" role="presentation">Leftovers</li>`)}
+      ${lefts.map((l) => { const auto = first ? html`autofocus` : ''; first = false; return html`<li><button type="button" class="pick-row pick-left" data-action="leftovers:night-set" data-from="${l.date}" data-night="${date}" ${auto}>
           <span class="pick-ic" aria-hidden="true">${ic('bowl', { size: 22 })}</span>
-          <span class="pick-main"><b>Leftovers: ${l.title}</b><small class="pick-ready is-ready">${servingsText(l.servings)} in the fridge. Nothing to cook.</small></span></button></li>`)}
-      ${list.length ? list.map((d) => {
-        const r = tonight ? ready.get(d.id) || readiness(app.db, app.state, d.id, rem) : null;
-        const where = findInPlan(app.state, d.id, { exclude: date, from: today, near: date })[0];
-        const off = planStore !== 'both' && !dinnerFeasibleAt(app.db, app.state, d.id, planStore);
-        const facts = showNutrition(app) ? plate(app, d.id, null) : null;
-        return html`<li><button type="button" class="pick-row ${d.id === current ? 'is-current' : ''}" data-action="pick:choose" data-date="${date}" data-dinner="${d.id}" ${d.id === current ? html`aria-current="true"` : ''}>
-          ${dinnerPhoto(app, d, { size: 'thumb' })}
-          <span class="pick-main"><b>${d.title}</b>
-            ${when(r, () => html`<small class="pick-ready ${r.ready && !r.thaw.length ? 'is-ready' : r.ready ? 'is-thaw' : 'is-need'}">${r.ready && !r.thaw.length ? ic('checkCircle', { size: 14 }) : r.ready ? ic('snow', { size: 14 }) : ''}${readyText(r)}</small>`)}
-            <small>${timeLabel(d)}${isFavorite(app.state, d) ? ', family favorite' : ''}${where ? `, on ${relativeDay(where, today).toLowerCase() === 'tonight' ? 'tonight' : shortWeekday(where)} (they’ll trade)` : ''}${off ? `, needs ${planStore === 'jewel' ? "Sam's" : 'Jewel'}` : ''}</small>
-            ${when(facts, () => html`<small class="pick-nutri">≈ ${fmtKcal(facts.kcal)} cal, ${Math.round(facts.protein)} g protein a plate${leanMark(facts, { compact: true })}</small>`)}
-            ${costNote(costOf(app, d.id, null), { short: true, tag: 'small', cls: 'pick-cost' })}</span>
-        </button></li>`;
-      }) : html`<li class="muted pad">${q ? `No dinners match “${query}”. Try another word, or browse the recipe box.` : 'Nothing is on the menu. Bring some back from Recipes, Not for us.'}</li>`}
+          <span class="pick-main"><b>Leftovers: ${l.title}</b><small class="pick-ready is-ready">${servingsText(l.servings)} in the fridge${l.servings < FAMILY_SIZE ? `, not enough for all ${FAMILY_SIZE} on its own` : '. Nothing to cook'}.</small></span></button></li>`; })}
+      ${list.length ? groups.map((x) => html`${when(x.g >= 0, () => html`<li class="pick-head" role="presentation">${HEADS[x.g]}</li>`)}${x.items.map(row)}`)
+        : html`<li class="muted pad">${q ? `No dinners match “${query}”. Try another word, or browse the recipe box.` : 'Nothing is on the menu. Bring some back from Recipes, Not for us.'}</li>`}
     </ul>`;
 }
 
@@ -417,17 +429,19 @@ function subBody(app, d, slot, st, date) {
   const current = sidesFor(app, d.id, date ? app.state.plan?.[date] : null).find((s) => s.slot === slot);
   const other = sidesFor(app, d.id, null).filter((s) => s.slot !== slot).map((s) => s.ref);
   const remembered = !!app.state.substitutions?.[d.id]?.[String(slot)];
-  const sides = app.db.sideList.filter((s) => s.id !== current?.ref && !other.includes(s.id) && !isSideDropped(app.state, s.id));
+  // What can be made from the house comes first, and every side says so (gauntlet r6: a missing side
+  // sent you hunting through 30 names).
+  const canMake = new Map();
+  const missingFor = (s) => { if (!canMake.has(s.id)) canMake.set(s.id, pantryCheck(app.db, app.state, s.items || {}).missing.filter((m) => !m.staple)); return canMake.get(s.id); };
+  const sides = app.db.sideList.filter((s) => s.id !== current?.ref && !other.includes(s.id) && !isSideDropped(app.state, s.id))
+    .sort((a, b) => (Math.min(missingFor(a).length, 3) - Math.min(missingFor(b).length, 3)) || a.title.localeCompare(b.title));
   const shelf = shelfItems(app);
+  const nm = (x) => (app.db.ingredients[x.id]?.short || String(x.name || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/,.*$/, '').trim()).toLowerCase();
   return html`
     ${when(current, () => html`<div class="current-side">
       ${sidePhoto(app, current, { size: 'thumb' })}
       <span><small>${remembered ? 'Now (remembered)' : 'Now'}</small><b>${current.info?.title}</b></span>
       ${when(remembered, () => html`<button type="button" class="btn btn-small btn-quiet" data-action="side:reset" data-dinner="${d.id}" data-slot="${slot}">${slot >= sideSlotsFor(d) ? 'Remove' : 'Reset to the recipe’s side'}</button>`)}
-    </div>`)}
-    ${when(st.canNight, () => html`<div class="set-row sub-scope">
-      <span class="set-label">Use it every time<small>${st.scope === 'always' ? `Whenever ${d.title} is on the menu.` : `Off: just ${date === app.today() ? 'tonight' : weekdayName(date)}.`}</small></span>
-      ${switchToggle({ on: st.scope === 'always', action: 'side:scope', label: `Use the new side every time ${d.title} is on the menu` })}
     </div>`)}
     <div class="seg" role="tablist" aria-label="Where the side comes from">
       <button type="button" role="tab" aria-selected="${tf(st.tab === 'box')}" class="seg-opt ${st.tab === 'box' ? 'is-on' : ''}" data-sub-tab="box">Recipe box</button>
@@ -436,7 +450,7 @@ function subBody(app, d, slot, st, date) {
     ${st.tab === 'box'
       ? html`<ul class="pick-list">${sides.map((s) => html`<li><button type="button" class="pick-row" data-action="side:use" data-dinner="${d.id}" data-slot="${slot}" data-date="${date || ''}" data-ref="${s.id}">
           ${sidePhoto(app, { parsed: { type: 'side', id: s.id }, info: { kind: s.kind } }, { size: 'thumb' })}
-          <span class="pick-main"><b>${s.title}</b><small>${s.minutes ? fmtMinutes(s.minutes) : ''}${s.kind ? `${s.minutes ? ', ' : ''}${s.kind}` : ''}${(() => { const sn = showNutrition(app) ? sideNutrition(app.db, app.state, { type: 'side', id: s.id }) : null; return sn ? `, ${fmtKcal(sn.kcal)} cal a plate` : ''; })()}</small></span></button></li>`)}</ul>`
+          <span class="pick-main"><b>${s.title}</b>${(() => { const m = missingFor(s); return m.length ? html`<small class="pick-ready is-need">Needs ${m.length <= 2 ? listJoin(m.map((x) => nm(x))) : `${nm(m[0])} and ${m.length - 1} more`}</small>` : html`<small class="pick-ready is-ready">${ic('checkCircle', { size: 14 })}All in the house</small>`; })()}<small>${s.minutes ? fmtMinutes(s.minutes) : ''}${s.kind ? `${s.minutes ? ', ' : ''}${s.kind}` : ''}${(() => { const sn = showNutrition(app) ? sideNutrition(app.db, app.state, { type: 'side', id: s.id }) : null; return sn ? `, ${fmtKcal(sn.kcal)} cal a plate` : ''; })()}</small></span></button></li>`)}</ul>`
       : html`
         ${shelf.length ? html`<ul class="shelf-list">${shelf.map((it) => {
           const q = st.qty[it.id] ?? Math.min(defaultQty(it.unit), typeof it.have === 'number' ? it.have : defaultQty(it.unit));
@@ -454,7 +468,11 @@ function subBody(app, d, slot, st, date) {
             <select class="input" name="unit" aria-label="Unit">${['cans', 'lb', 'oz', 'bags', 'boxes', 'jars', 'each'].map((u) => html`<option>${u}</option>`)}</select>
           </div>
           <button type="submit" class="btn btn-secondary btn-block">Use it as the side</button>
-        </form>`}`;
+        </form>`}
+    ${when(st.canNight, () => html`<div class="set-row sub-scope">
+      <span class="set-label">Use it every time<small>${st.scope === 'always' ? `Whenever ${d.title} is on the menu.` : `Off: just ${date === app.today() ? 'tonight' : weekdayName(date)}.`}</small></span>
+      ${switchToggle({ on: st.scope === 'always', action: 'side:scope', label: `Use it every time for ${d.title}` })}
+    </div>`)}`;
 }
 
 // ---------------------------------------------------------------- leftovers (SPEC §22.5)
@@ -725,6 +743,8 @@ export const actions = {
     const boxes = [...card.querySelectorAll('.prep-check')];
     const at = boxes.indexOf(el);
     const cardId = card.id;
+    // The last one: the redraw itself lands on the "done" line (and a later redraw keeps it there).
+    if (at >= boxes.length - 1 && boxes.length <= 1) app.ui.focusNext = (card.querySelector?.('.prep-done-line')?.id) || `prep-done-${(cardId || '').replace('prep-card-', '')}`;
     if (!app.commit(prepDoneOps(app.state, { date: el.dataset.date, key: el.dataset.key, who: app.who(), today: app.today() }))) return;
     requestAnimationFrame(() => setTimeout(() => {
       const root = (cardId && document.getElementById(cardId)) || document;

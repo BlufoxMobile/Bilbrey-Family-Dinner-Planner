@@ -93,7 +93,7 @@ function pantryRow(app, id, p) {
       <small>${p.low ? 'Running low, on the shopping list' : staple ? (p.stocked ? 'Stocked until low' : 'Not stocked') : `${typeof p.qty === 'number' ? (byPack ? `${m.unit === 'lb' || meatItem(app, id) ? '' : openedText(count, pk.word)}about ${unitText(p.qty, m.unit)}` : pk?.counted ? '' : `${unitText(p.qty, m.unit)} on hand`) : byPack ? `How many ${plural(pk.word, 2)}?` : `Amount in ${m.unit}`}${m.custom ? ', shelf item' : ''}`}</small></span>
     <span class="pan-ctrl">
       ${staple
-        ? html`<span class="have-it"><span class="have-label" aria-hidden="true">Have it</span>${switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `Have ${m.name}` })}</span>`
+        ? html`<span class="have-it"><span class="have-label" aria-hidden="true">Have it</span>${switchToggle({ on: !!p.stocked && !p.low, action: 'pan:stock', data: { id }, label: `Have it: ${m.name}` })}</span>`
         : byPack ? html`<span class="qty-edit qty-pack">
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="-${pk.per}" aria-label="One less ${pk.word} of ${m.name}">${ic('minus', { size: 18 })}</button>
             <input class="qty-input" type="text" inputmode="decimal" value="${typeof p.qty === 'number' ? String(wholePacks(count)) : ''}" data-change="pan:qty" data-id="${id}" data-per="${pk.per}" aria-label="How many ${plural(pk.word, 2)} of ${m.name} (an opened one counts)">
@@ -106,7 +106,7 @@ function pantryRow(app, id, p) {
             <button type="button" class="stepper-btn" data-action="pan:step" data-id="${id}" data-delta="${pk?.counted ? 1 : stepFor(m.unit)}" aria-label="More ${m.name}">${ic('plus', { size: 18 })}</button>
             ${when(pk?.counted, () => html`<span class="qty-unit">${m.unit}</span>`)}
           </span>`}
-      <button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Running low'}</button>
+      ${staple ? '' : html`<button type="button" class="btn btn-small ${p.low ? 'btn-secondary' : 'btn-quiet'}" data-action="pan:low" data-id="${id}" aria-pressed="${p.low ? 'true' : 'false'}">${p.low ? 'Restocked' : 'Running low'}</button>`}
       <button type="button" class="icon-btn pan-more" data-action="pan:photo" data-id="${id}" aria-label="More about ${m.name}: picture, where it’s kept, take it off the shelf">${ic('right', { size: 20 })}</button>
     </span>
   </li>`;
@@ -608,7 +608,8 @@ export const actions = {
     const id = el.dataset.id;
     const p = app.state.pantry?.[id];
     const on = !(p?.stocked && !p?.low);
-    app.commit(setPantryOps(app.db, app.state, { id, stocked: on, low: false, who: app.who() }), { quiet: true });
+    // One switch for a staple (gauntlet r6): off means we're out, so it goes on the shopping list.
+    app.commit(setPantryOps(app.db, app.state, { id, stocked: on, low: !on, who: app.who() }), { quiet: true });
   },
   'pan:low': (app, el) => {
     const id = el.dataset.id;

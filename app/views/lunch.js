@@ -39,11 +39,10 @@ function lunchPhoto(app, item, slot, size = 'thumb') {
 }
 
 function slotRow(app, l, s, name, date) {
-  const n = s.item ? lunchItemNutrition(app.db, s.item) : null;
+  // The short name, as on the packing card; the day's calories are once, in its header (gauntlet r6).
   return html`<li><button type="button" class="ld-slot ${s.removed ? 'is-removed' : ''}" data-action="lunch:slot" data-who="${name}" data-date="${date}" data-slot="${s.slot}" aria-label="${s.label}: ${s.item ? s.item.title : 'left out'}. Change it for this day">
     ${lunchPhoto(app, s.item, s.slot)}
-    <span class="ld-main"><small>${s.label}${s.override ? ' (just this day)' : ''}</small><b>${s.item ? s.item.title : 'Left out this day'}</b></span>
-    ${when(showNutrition(app) && s.item, () => html`<span class="ld-kcal">${n ? `${fmtKcal(n.kcal)} cal` : '—'}</span>`)}
+    <span class="ld-main"><small>${s.label}${s.override ? ' (just this day)' : ''}</small><b>${s.item ? s.item.short || s.item.title : 'Left out this day'}</b></span>
   </button></li>`;
 }
 

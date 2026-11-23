@@ -137,7 +137,7 @@ export function render(app) {
       return pc.dinners && pc.total > 0 ? html`: ${pc.estimated ? 'about ' : ''}<b>${money(pc.perServing)}</b> a serving` : '';
     })()}. <a href="#/list">${money(list.total)} on the list</a>.</p>
     ${tripAdviceCard(app)}
-    ${prepCard(app, { days: 7, title: 'Thaw & prep for the week', collapsed: true, skip: ['use'] })}
+    ${prepCard(app, { days: 7, title: 'Thaw & prep', countSuffix: ' this week', collapsed: true, skip: ['use'] })}
   </div>`;
 }
 
@@ -264,9 +264,20 @@ export const actions = {
     closeSheet();
     app.ui.aheadLast = { end, pantryFirst: st.pantryFirst, replan: st.replan };
     // The result card is part of what's saved (state.planAhead), so Undo takes it back with the plan,
-    // and it's still there after a reload.
-    if (!app.commit(res)) app.render();
+    // and it's still there after a reload. The card is the answer, with its own Undo; no toast repeats
+    // its title (gauntlet r6). A press that changed nothing is still one line.
+    const rec = res.ops.find((o) => o.path?.[0] === 'planAhead');
+    if (!rec) { app.commit(res); app.render(); return; }
+    app.ui.aheadUndo = { at: rec.value.at, undo: res.undo };
+    app.ui.focusNext = 'ahead-h';
+    app.commit(res, { quiet: true });
     setTimeout(() => document.getElementById('ahead-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+  },
+  'ahead:undo': (app) => {
+    const u = app.ui.aheadUndo;
+    if (!u) return;
+    app.ui.aheadUndo = null;
+    app.commit({ ops: u.undo, undo: [], message: 'Undone: the plan is back the way it was.' });
   },
   'ahead:list': (app) => {
     const a = aheadRecord(app.state, app.today());
@@ -348,7 +359,16 @@ function openPlanAhead(app) {
       const own = dates.filter((d) => d > today && app.state.plan?.[d]?.dinner && isFillable(app.state.plan[d], 'replan')).length; // never tonight's
       const empty = dates.filter((d) => isFillable(app.state.plan?.[d], 'fill')).length;
       // Nothing to plan: say so, and Plan it waits (gauntlet r5: it "planned" a full week with an Undo for nothing).
-      const idle = !empty && !(st.replan && own > 0);
+      // With re-planning on, a dry run (about 60 ms, once per choice) says whether it would change anything (r6).
+      let idle = !empty && !(st.replan && own > 0);
+      if (!empty && !idle) {
+        const key = `${st.end}|${st.pantryFirst}|${st.replan}|${JSON.stringify(app.state.plan || {}).length}`;
+        if (st.dryKey !== key) {
+          st.dryKey = key;
+          try { const r = planAheadOps(app.db, app.state, { start: today, end: clampAheadEnd(today, st.end), today, pantryFirst: st.pantryFirst, replan: st.replan, record: false }); st.dryIdle = !r.count && !(r.lunchPicks || []).length; } catch { st.dryIdle = false; }
+        }
+        idle = st.dryIdle;
+      }
       return html`
         <h3 class="sheet-h" id="ahead-through-h">Plan through</h3>
         <div class="ahead-quick" role="group" aria-labelledby="ahead-through-h">
@@ -370,7 +390,7 @@ function openPlanAhead(app) {
         <div class="set-row ahead-switch"><span class="set-label">Use what we have first</span>${switchToggle({ on: st.pantryFirst, action: 'ahead:pantry', label: 'Use what we have first' })}</div>
         <div class="set-row ahead-switch"><span class="set-label">Let it replace dinners it picked before<small>${own ? 'Never tonight, and never one you chose.' : 'Only empty nights get planned.'}</small></span>${switchToggle({ on: st.replan && own > 0, action: 'ahead:replan', label: 'Let it replace dinners it picked before' })}</div>
         </details>
-        ${idle ? html`<p class="ahead-idle" id="ahead-idle">Every night through ${weekdayName(st.end)}, ${shortDate(st.end)} is planned. Pick a longer stretch to plan more.</p>` : ''}
+        ${idle ? html`<p class="ahead-idle" id="ahead-idle">Every night through ${weekdayName(st.end)}, ${shortDate(st.end)} is planned${own ? ', and nothing better turned up' : ''}. Pick a longer stretch to plan more.</p>` : ''}
         <button type="button" class="btn btn-primary btn-block" data-action="ahead:go" ${idle ? 'disabled aria-describedby="ahead-idle"' : ''}>${ic('sparkle', { size: 20 })}Plan it</button>`;
     },
   });
@@ -400,10 +420,11 @@ function aheadCard(app) {
   const saved = was ? Math.round((was.groceries - now.groceries) * 100) / 100 : 0;
   return html`<section class="ahead-card" id="ahead-card" aria-labelledby="ahead-h">
     <div class="ahead-head">
-      <h2 id="ahead-h" class="section-title">${ic('checkCircle', { size: 22 })}<span>Planned through ${dayText(a.end, today)}</span></h2>
+      <h2 id="ahead-h" class="section-title" tabindex="-1">${ic('checkCircle', { size: 22 })}<span>Planned through ${dayText(a.end, today)}</span></h2>
+      ${when(app.ui.aheadUndo?.at === a.at, () => html`<button type="button" class="btn btn-small btn-quiet ahead-undo" data-action="ahead:undo">${ic('undo', { size: 18 })}Undo</button>`)}
       <button type="button" class="icon-btn" data-action="ahead:close" aria-label="Close this summary">${ic('close', { size: 20 })}</button>
     </div>
-    ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html`<span class="ahead-save">, ${money(saved, { whole: true })} less</span>` : ''}</p>`)}
+    ${when(now.dinners, () => html`<p class="ahead-big">About <b>${money(now.groceries, { whole: true })}</b> to buy${saved >= 1 ? html`<span class="ahead-save">, ${money(saved, { whole: true })} less than before</span>` : ''}</p>`)}
     ${when(oldest.length, () => html`<p class="ahead-uses">${ic('clock', { size: 18 })}<span>Uses up ${listJoin(oldest.map((u) => `the ${foodName(u.name)} from ${shortDate(u.since)}`))}.</span></p>`)}
     <button type="button" class="btn btn-primary btn-block" data-action="ahead:list">${ic('cart', { size: 20 })}See the shopping list</button>
     <details class="ahead-details"><summary>The pantry, each night and the cost</summary>

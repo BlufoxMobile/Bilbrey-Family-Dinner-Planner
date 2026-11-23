@@ -106,7 +106,9 @@ export function captureFocus(scope) {
   if (!act || act === doc.body || act === scope || !scope.contains(act)) return null;
   const sig = signature(act);
   const same = focusables(scope).filter((e) => signature(e) === sig);
-  const snap = { sig, n: Math.max(0, same.indexOf(act)), rect: rectOf(act), nav: !!act.closest('.rail, .tabbar, .topbar'), start: null, end: null };
+  // id: a line focused on purpose (tabindex −1, like "All done for today.") isn't in the tab order,
+  // so a redraw finds it again by its id (gauntlet r6: focus fell to the page after the last tick).
+  const snap = { sig, id: act.id || '', n: Math.max(0, same.indexOf(act)), rect: rectOf(act), nav: !!act.closest('.rail, .tabbar, .topbar'), start: null, end: null };
   try { snap.start = act.selectionStart; snap.end = act.selectionEnd; } catch { /* not a text box */ }
   return snap;
 }
@@ -117,6 +119,10 @@ export function captureFocus(scope) {
  */
 export function restoreFocus(scope, snap, { nearest = keysMode(), only = null } = {}) {
   if (!snap) return null;
+  if (snap.id && !snap.sig?.startsWith?.('input')) {
+    const byId = scope.querySelector(`#${CSS.escape(snap.id)}`);
+    if (byId && byId.getAttribute('tabindex') === '-1') { byId.focus({ preventScroll: true }); return byId; }
+  }
   const all = focusables(scope).filter((e) => !only || e.closest(only));
   const same = all.filter((e) => signature(e) === snap.sig);
   let el = same[snap.n] || same[0] || null;

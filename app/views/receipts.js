@@ -42,7 +42,6 @@ export function openReceiptScan(app) {
   }
   openSheet({
     id: 'rcpt-scan',
-    size: 'tall',
     title: 'Scan a receipt',
     subtitle: 'A photo of the receipt, or screenshots from the store’s app.',
     render: () => html`

@@ -122,15 +122,37 @@ export function formatPackQty(item) {
 }
 
 /** What goes in the cart: "bag", "bottle", "bulb", "pack" (a multipack), or null for meat sold by the pound. */
+// Brand names that hold a package word ("Boar's Head" is not a head of anything; gauntlet r6).
+const BRANDS = /\b(boar['’]s head|head country|bag balm)\b/gi;
+
 function cartWord(item) {
-  const { unit, name = '', aisle } = item;
-  const label = `${item.product?.label || ''} ${item.pack?.label || ''}`;
-  let w = /\b\d+\s*(pk|pack|ct|count)\b/i.test(label) ? 'pack' : wordFrom(label) || wordFrom(name);
+  const { unit, aisle } = item;
+  const name = String(item.name || '').replace(BRANDS, ' ');
+  const label = `${item.product?.label || ''} ${item.pack?.label || ''}`.replace(BRANDS, ' ');
   const weight = WEIGHT_UNITS.has(unit);
-  if (!w) w = weight ? (aisle === 'Produce' ? 'bag' : defaultWord(name, unit)) : COUNT_UNITS.has(unit) ? (aisle === 'Produce' ? 'bag' : defaultWord(name, unit)) : containerWord(item);
+  const meat = /\b(pork|chicken|beef|turkey|sausages?|steaks?|roasts?|bacon|chorizo)\b/i.test(name);
+  const both = `${label} ${name}`;
+  let w;
+  if (/\bpiece\b/i.test(label) && weight) w = 'piece';
+  // Several packages sold as one ("16 oz × 6", "12 pk", "2 × 16 oz"): you pick up one pack.
+  else if (/\b\d+\s*(pk|ct|count)\b|×\s*\d|\d\s*×|\b\d+[\s-]*pack\b/i.test(label)) w = 'pack';
+  else if (/\bcereal\b/i.test(both)) w = 'box';
+  else if (/\b(yogurt|cream cheese|sour cream|cottage cheese|hummus)\b/i.test(name) && !COUNT_UNITS.has(unit)) w = 'tub';
+  else if (/\b(juice|creamer)\b/i.test(name) && !COUNT_UNITS.has(unit)) w = 'carton';
+  else if (/\bshredded\b/i.test(both) && weight) w = 'bag';
+  else if (!meat && /\b(grated|coffee|oats|panko|bread crumbs|crispy fried onions)\b/i.test(both) && weight) w = 'canister';
+  else {
+    w = wordFrom(label) || wordFrom(name);
+    // "Garlic Bulbs, 2 lb": the word is the thing inside; the bag (or pack) is what you pick up.
+    if (w && new RegExp(`\\b${w}(e?s)\\b`, 'i').test(label) && !new RegExp(`\\b${w}\\b`, 'i').test(label)) w = aisle === 'Produce' ? 'bag' : 'pack';
+    // With no word on the label, a weight is shown as it is ("18.37 oz") rather than a guessed "pack".
+    if (!w) w = weight ? (aisle === 'Produce' ? 'bag' : meat || defaultWord(name, unit) === 'pack' ? null : defaultWord(name, unit)) : COUNT_UNITS.has(unit) ? (aisle === 'Produce' ? 'bag' : defaultWord(name, unit)) : containerWord(item);
+  }
+  if (!w) return null;
   // "1 box (40 boxes)" says nothing: the thing around them is a case, or a box.
   if (w === singular(unit)) w = w === 'box' ? 'case' : 'box';
-  return weight && w === 'pack' ? null : w;
+  // Meat in a single store pack is bought by its weight ("2 × 3.1 lb").
+  return weight && meat && w === 'pack' && !/×|\bpk\b/i.test(label) ? null : w;
 }
 
 /**
@@ -146,8 +168,11 @@ export function shelfQty(item) {
   const volume = !WEIGHT_UNITS.has(unit) && !COUNT_UNITS.has(unit);
   if (COUNT_UNITS.has(unit) && (!(sizeN > 0) || Math.abs(sizeN - 1) < 1e-9)) return unitText(n, unit);
   const w = cartWord(item);
-  if (volume || !(sizeN > 0)) return `${n} ${plural(w || 'pack', n)}`;
+  // A count that isn't whole ("4.58 cans" of 20-oz cans in a box of six 15-oz ones) says nothing useful.
+  if (volume || !(sizeN > 0) || (COUNT_UNITS.has(unit) && Math.abs(sizeN - Math.round(sizeN)) > 0.05)) return `${n} ${plural(w || 'pack', n)}`;
   const size = unitText(sizeN, unit);
+  // Deli meat is asked for by weight at the counter: "1 lb, sliced", never "1 head (1 lb)".
+  if (WEIGHT_UNITS.has(unit) && /deli-sliced|sliced at|shaved|ask for|per lb\W+ask/i.test(`${item.name || ''} ${item.product?.label || ''} ${item.pack?.label || ''}`)) return `${n > 1 ? `${n} × ` : ''}${size}, sliced`;
   if (!w) return n > 1 ? `${n} × ${size}` : size;
   return n > 1 ? `${n} ${plural(w, n)} (${size} each)` : `1 ${w} (${size})`;
 }

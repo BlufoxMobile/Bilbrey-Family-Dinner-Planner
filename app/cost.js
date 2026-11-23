@@ -175,8 +175,9 @@ const dollars = (n) => `$${(Math.round((Number(n) || 0) * 100) / 100).toFixed(2)
  */
 export function costLine(cost, { short = false } = {}) {
   if (!cost || !(cost.total > 0)) return '';
-  const about = cost.estimated ? 'about ' : '';
   const n = cost.servings;
+  // A serving is a share of whole packs, so it's always "about" (gauntlet r6: one form everywhere).
+  const about = cost.estimated || n > 1 ? 'about ' : '';
   const each = `${about}${dollars(cost.perServing)} ${n === 1 ? 'a lunch' : 'a serving'}`;
   if (short || n === 1) return each;
   const group = n === 5 ? 'five' : String(n);

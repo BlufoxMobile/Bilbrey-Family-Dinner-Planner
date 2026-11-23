@@ -846,8 +846,7 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   await page.waitForTimeout(400);
   await shot(page, 'e2e-31-plan-ahead-sheet');
   await page.click('dialog[open] [data-action="ahead:go"]');
-  await toastMatch(page, /^Planned \d+ dinners? through Sunday, Nov 29\./);
-  await page.waitForSelector('#ahead-card');
+  await page.waitForSelector('#ahead-card .ahead-undo');
   const s = (await familyState(page)).state;
   for (let d = 23; d <= 29; d++) assert.ok(s.plan[`2026-11-${d}`]?.dinner, `Nov ${d} is planned`);
   // SPEC §21.1: the planner's own nights are re-planned too, so the thighs may get a night this week.
@@ -871,9 +870,10 @@ test('plan ahead (SPEC §16): two weeks, pantry first, a result card, then the l
   await go(desk, '#/plan', '.page-plan');
   await desk.click('[data-action="ahead:open"]');
   await desk.click(`dialog[open] [data-action="ahead:quick"][data-end="${end}"]`);
-  await desk.click('dialog[open] [data-action="ahead:go"]');
+  await desk.waitForSelector('dialog[open] [data-action="ahead:go"][disabled]');
+  assert.match(await desk.textContent('dialog[open] #ahead-idle'), /Every night through Sunday, Nov 29 is planned/);
+  await desk.keyboard.press('Escape');
   await desk.waitForSelector('#ahead-card');
-  await toastMatch(desk, /Every night through Sunday, Nov 29 is already planned/);
   assert.ok(await noOverflow(desk));
   await desk.locator('.toast-root .toast-x').click({ timeout: 1000 }).catch(() => {});
   await desk.evaluate(() => { const el = document.getElementById('ahead-card'); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 140); });

@@ -209,7 +209,7 @@ export function safeTemps(recipe) {
   // A braise or slow-cooked roast is done long after it's safe: by the fork, not the thermometer.
   const braised = (protein === 'beef' || protein === 'pork') && texts.some((t) => /pulls? apart|fork-tender|shreds? easily/i.test(t));
   return [...found].sort((a, b) => b - a).map((temp) => {
-    if (braised && temp === 145) return { temp, food: protein === 'beef' ? 'Beef roast' : 'Pork roast', note: 'done when it pulls apart with a fork, well past this' };
+    if (braised && temp === 145) return { temp, food: protein === 'beef' ? 'Beef roast' : 'Pork roast', note: 'done when it pulls apart with a fork', past: true };
     if (protein === 'seafood' && temp === 145) return { temp, food: 'Shrimp and fish', note: 'opaque all the way through' };
     return { temp, food: FOODS[protein]?.[temp] || SAFE[temp].food, note: SAFE[temp].note };
   });

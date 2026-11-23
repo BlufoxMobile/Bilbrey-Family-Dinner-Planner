@@ -137,7 +137,8 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   await page.waitForTimeout(350);
   await shot(page, 'planner-01-plan-ahead-sheet-390');
   await page.click('dialog[open] [data-action="ahead:go"]');
-  await toastMatch(page, /^Planned \d+ dinners? through Sunday, Nov 29\./);
+  // The card is the answer, with its own Undo; no toast repeats its title (gauntlet r6).
+  await page.waitForSelector('#ahead-card .ahead-undo');
   await page.waitForSelector('#ahead-card #ahead-ba', { state: 'attached' });
   let s = await familyState();
   for (let d = 16; d <= 29; d++) assert.ok(s.plan[`2026-11-${d}`]?.dinner, `Nov ${d} is planned`);
@@ -186,11 +187,12 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   // The two weeks are planned, so the sheet moves on to the first stretch with an empty night (gauntlet r5).
   assert.ok((await page.inputValue('dialog[open] #ahead-end')) > end, 'it never opens on a stretch that is already planned');
   await page.click(`dialog[open] [data-action="ahead:quick"][data-end="${end}"]`);
-  await page.click('dialog[open] [data-action="ahead:go"]');
-  await toastMatch(page, /^Every night through Sunday, Nov 29 is already planned\.$/);
-  assert.equal(await page.locator('.toast-root .toast-btn').count(), 0, 'no Undo for a press that changed nothing');
+  // Nothing would change (a dry run says so), so Plan it waits and the sheet says why (gauntlet r6).
+  await page.waitForSelector('dialog[open] [data-action="ahead:go"][disabled]');
+  await textMatch(page, 'dialog[open] #ahead-idle', /^Every night through Sunday, Nov 29 is planned/);
   assert.deepEqual((await familyState()).plan, planned);
-  await closeToast(page);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog[open]'));
 
   // Undo takes a plan-ahead back, card and all. (Close the card, plan again, undo.)
   await page.click('[data-action="ahead:close"]');
@@ -200,10 +202,9 @@ test('plan ahead re-plans the planner’s own nights from the pantry, shows befo
   const beforeUndo = (await familyState()).plan;
   await page.click('.plan-actions [data-action="ahead:open"]');
   await page.click('dialog[open] [data-action="ahead:go"]');
-  await toastMatch(page, /^Planned \d+ dinners? through Sunday, Nov 29/);
-  await page.waitForSelector('#ahead-card');
-  assert.ok((await familyState()).plan['2026-11-29']?.dinner);
-  await page.click('.toast-root .toast-btn');
+  await page.waitForSelector('#ahead-card .ahead-undo');
+  await waitFor(async () => !!(await familyState()).plan['2026-11-29']?.dinner);
+  await page.click('#ahead-card .ahead-undo');
   await toastMatch(page, /Undone/);
   s = await familyState();
   assert.deepEqual(s.plan, beforeUndo, 'Undo puts every night back');

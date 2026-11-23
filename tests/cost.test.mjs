@@ -235,7 +235,7 @@ test('costLine says it in words, and says "about" while any price is an estimate
   const c = dinnerCost(tiny, {}, 'chix-grill');
   assert.equal(costLine(c), 'about $2.33 a serving · $11.65 for five');
   assert.equal(costLine(c, { short: true }), 'about $2.33 a serving');
-  assert.equal(costLine({ ...c, estimated: false }), '$2.33 a serving · $11.65 for five');
+  assert.equal(costLine({ ...c, estimated: false }), 'about $2.33 a serving · $11.65 for five', 'a serving is always a share of whole packs');
   assert.equal(costLine(dinnerCost(tiny, {}, 'chix-grill', null, { servings: 4 })), 'about $2.91 a serving · $11.65 for 4');
   assert.equal(costLine(lunchCost(real, {}, 'bonduelle-chicken-blt')), 'about $4.99 a lunch');
   assert.equal(costLine({ total: 0, perServing: 0, servings: 5 }), '');

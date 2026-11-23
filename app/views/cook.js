@@ -351,7 +351,7 @@ function readyScreen(app, t, p, s) {
       })}
     </section>
     <section class="cook-safe">
-      ${temps.map((x) => html`<p class="cook-temp">${cic('thermo', { size: 20 })}<span>${x.food}: <b>${x.temp}°F</b>, ${x.note}.</span></p>`)}
+      ${temps.map((x) => html`<p class="cook-temp">${cic('thermo', { size: 20 })}<span>${x.food}: ${x.past ? html`${x.note} (well past <b>${x.temp}°F</b>)` : html`<b>${x.temp}°F</b>, ${x.note}`}.</span></p>`)}
       <p class="muted small" data-wake>${'wakeLock' in navigator ? 'The screen stays on while you cook.' : 'This screen may dim while you cook: turn auto-lock up, or tap it now and then.'}</p>
     </section>
   </article>`;
@@ -402,7 +402,7 @@ function finishScreen(app, t, p) {
       <span class="cook-finish-ic" aria-hidden="true">${ic('checkCircle', { size: 44 })}</span>
       <h1 class="cook-dish">Dinner’s ready</h1>
       <p class="cook-with">${t.d.title}${p.recs.length > 1 ? ` with ${listJoin(p.recs.slice(1).map((r) => midSentence(r.title)))}` : ''}. Turn everything off, then plate it up.</p>
-      ${temps.map((x) => html`<p class="cook-temp">${cic('thermo', { size: 20 })}<span>${x.food}: <b>${x.temp}°F</b>, ${x.note}.</span></p>`)}
+      ${temps.map((x) => html`<p class="cook-temp">${cic('thermo', { size: 20 })}<span>${x.food}: ${x.past ? html`${x.note} (well past <b>${x.temp}°F</b>)` : html`<b>${x.temp}°F</b>, ${x.note}`}.</span></p>`)}
       <div class="cook-finish-acts">
         <button type="button" class="btn btn-primary btn-lg" id="cook-done" data-action="cook:done" data-date="${t.date}">${ic('checkCircle', { size: 22 })}Mark cooked</button>
       </div>

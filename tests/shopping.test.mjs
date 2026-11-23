@@ -144,6 +144,11 @@ test('store list text is clean and in packs', () => {
   assert.equal(shelfQty({ name: 'Capri Sun juice pouches', unit: 'pouches', product: { label: 'Capri Sun Variety Pack, 6 fl oz, 40 ct' }, pack: { size: 40 }, packs: 1 }), '1 pack (40 pouches)');
   assert.equal(shelfQty({ name: 'Oreo Mini snack packs', unit: 'packs', product: { label: 'Nabisco Classic Mix, 40 ct' }, pack: { size: 40 }, packs: 1 }), '1 box (40 packs)');
   assert.equal(shelfQty({ name: 'Oranges', aisle: 'Produce', unit: 'oranges', product: { label: 'Navel Oranges, 6 lb' }, pack: { size: 12 }, packs: 2 }), '2 bags (12 oranges each)');
+  // Brand names never become the package (gauntlet r6: "Boar's Head" read "1 head (1 lb)"); deli meat is by weight.
+  assert.equal(shelfQty({ name: "Boar's Head Black Forest ham (deli-sliced)", unit: 'lb', product: { label: "Boar's Head SmokeMaster Black Forest Ham, sliced at the Jewel deli" }, pack: { size: 1 }, packs: 1 }), '1 lb, sliced');
+  assert.equal(shelfQty({ name: 'Fresh ginger', aisle: 'Produce', unit: 'oz', product: { label: 'Fresh ginger root, ~4 oz piece' }, pack: { size: 4 }, packs: 1 }), '1 piece (4 oz)');
+  assert.equal(shelfQty({ name: 'Plain Greek yogurt', unit: 'oz', product: { label: "Member's Mark Nonfat Plain Greek Yogurt, 48 oz" }, pack: { size: 48 }, packs: 1 }), '1 tub (48 oz)');
+  assert.equal(shelfQty({ name: 'Black beans', unit: 'cans', product: { label: "Bush's Black Beans, 15 oz × 6 cans" }, pack: { size: 6 }, packs: 1 }), '1 pack (6 cans)');
 });
 
 test('budget: receipts + still to buy, savings vs $1,000', () => {
